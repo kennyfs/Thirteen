@@ -74,6 +74,8 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   var me by mutableStateOf(-1); private set
   var deal by mutableStateOf<Deal?>(null); private set
   var outcomes by mutableStateOf<List<HandOutcome>>(emptyList()); private set
+  /** Each row's category of the plays shown (by their rows, sorted within each row), for laying them out. */
+  var categories by mutableStateOf<Map<List<List<Int>>, List<Int>>>(emptyMap()); private set
   var submitting by mutableStateOf(false); private set
   /** The room is gone but its results stay to look at. */
   var finished by mutableStateOf(false); private set
@@ -230,6 +232,7 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     me = -1
     deal = null
     outcomes = emptyList()
+    categories = emptyMap()
     submitting = false
     finished = false
     busy = false
@@ -341,7 +344,17 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
       known[o.index] = o
     }
     outcomes = known.values.sortedBy { it.index }
+    val rules = room?.rules ?: return
+    viewModelScope.launch {
+      for (o in list) for (rows in o.plays.map { it.rows } + listOfNotNull(o.best)) {
+        val key = rows.map { it.sorted() }
+        if (key in categories) continue
+        runCatching { Engine.rows(rows, rules).categories }.onSuccess { categories = categories + (key to it) }
+      }
+    }
   }
+
+  fun categoriesOf(rows: List<List<Int>>): List<Int>? = categories[rows.map { it.sorted() }]
 
   /** The player's play of a closed hand goes to the records, labelled "battle". */
   private fun record(o: HandOutcome) {

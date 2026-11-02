@@ -256,9 +256,15 @@
   <string name="battle_timed_out">\u0020(time out)</string>
   <string name="battle_next">Next hand</string>
   <string name="battle_over">Final standings</string>
-  <string name="battle_total_loss">−%1$s in total</string>
+  <string name="battle_total_loss">lost %1$s</string>
   <string name="battle_hand_list">Hands (tap one for its analysis)</string>
   <string name="battle_back">Back</string>
   <string name="battle_done">Done</string>
   <string name="battle_nearby_host_note">This phone hosts the room: the others join it nearby, and it computes the networks\' seats.</string>
+  <string name="battle_col_hand">This hand</string>
+  <string name="battle_col_total">Total</string>
+  <string name="battle_col_hand_loss">Lost</string>
+  <string name="battle_col_total_loss">Total lost</string>
+  <string name="battle_col_hand_rank">Place</string>
+  <string name="battle_hand_rank">%1$d of %2$d</string>
 </resources>

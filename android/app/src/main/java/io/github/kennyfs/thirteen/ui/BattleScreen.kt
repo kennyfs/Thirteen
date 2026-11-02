@@ -8,6 +8,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -293,49 +301,104 @@ private fun PlayingPage(vm: BattleViewModel, room: RoomView) {
 @Composable
 private fun WaitingPage(vm: BattleViewModel, room: RoomView) {
   Text(handHeader(vm, room), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
-  Row(Modifier.fillMaxSize().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-      Text(stringResource(R.string.battle_waiting), style = MaterialTheme.typography.titleSmall)
-      val eval = vm.arranger.rowsEval
-      for (r in 0 until 3) RowCards(vm.arranger.rows[r], eval?.categories?.get(r) ?: 0, width = 34.dp)
+  Row(Modifier.fillMaxSize().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    BoxWithConstraints(Modifier.weight(1.3f)) {
+      val card = ((maxWidth - CARD_GAP * 4) / 5).coerceAtMost(56.dp)
+      Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(stringResource(R.string.battle_waiting), style = MaterialTheme.typography.titleSmall)
+        val eval = vm.arranger.rowsEval
+        for (r in 0 until 3) RowCards(vm.arranger.rows[r], eval?.categories?.get(r) ?: 0, width = card)
+      }
     }
     Standings(vm, room, Modifier.weight(1f).verticalScroll(rememberScrollState()), marks = true)
   }
 }
 
-/** One play's rows, small, in a line. */
+private val ROW_GAP = 8.dp
+
+/** The card width at which 13 cards in three rows fill `width`, up to `max`. */
+private fun cardFor(width: Dp, max: Dp = 48.dp): Dp = ((width - CARD_GAP * 10 - ROW_GAP * 2) / 13).coerceIn(14.dp, max)
+
+/** One play's three rows as the analysis shows them: the cards that make each hand first, tinted by its category. */
 @Composable
-private fun PlayRows(rows: List<List<Int>>) {
-  Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { for (r in rows) RowCards(r, 0, width = 20.dp) }
+private fun PlayRows(vm: BattleViewModel, rows: List<List<Int>>, card: Dp) {
+  val cats = vm.categoriesOf(rows)
+  Row(horizontalArrangement = Arrangement.spacedBy(ROW_GAP)) {
+    for (r in 0 until 3) RowCards(rows[r], cats?.get(r) ?: 0, width = card)
+  }
 }
 
+/** A hand's value: a puzzle's loss ("0.144", nothing lost "0"), or a table's points ("+3"). */
+private fun handValue(o: HandOutcome, i: Int): String =
+  o.losses?.get(i)?.let { if (it < 0.0005) "0" else fmtLoss(it) } ?: o.score?.result?.get(i)?.let(::signed) ?: ""
+
 @Composable
-private fun OutcomeTable(vm: BattleViewModel, room: RoomView, o: HandOutcome) {
-  val names = room.players.associateBy { it.id }
-  val losses = o.losses
-  val order = o.plays.indices.let { idx -> if (losses != null) idx.sortedBy { losses[it] } else idx.toList() }
-  Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-    o.best?.let {
-      Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.battle_best_rows), Modifier.width(110.dp), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
-        PlayRows(it)
-      }
-    }
-    for (i in order) {
-      val play = o.plays[i]
-      val p = names[play.player]
+private fun handColor(room: RoomView, o: HandOutcome, i: Int): Color {
+  val loss = o.losses?.get(i)
+  return when {
+    loss != null && loss < 0.0005 -> GOOD
+    loss != null -> if (loss >= 0.5 * Rules.notableQGap(Rules.values(room.rules))) BAD else MaterialTheme.colorScheme.onSurface
+    (o.score?.result?.get(i) ?: 0.0) > 0 -> GOOD
+    (o.score?.result?.get(i) ?: 0.0) < 0 -> BAD
+    else -> MaterialTheme.colorScheme.onSurface
+  }
+}
+
+/** Rank by standing, equal totals sharing a rank. */
+private fun rankOf(room: RoomView, p: PlayerView): Int {
+  val puzzle = room.settings.mode == Mode.PUZZLE
+  return 1 + room.players.count { if (puzzle) it.total < p.total - 1e-9 else it.total > p.total + 1e-9 }
+}
+
+/**
+ * A closed hand for everyone: the network's best (a puzzle), then each player by standing with their rows, what this
+ * hand gave them and their total. The cards take the width the names and numbers leave.
+ */
+@Composable
+private fun ResultTable(vm: BattleViewModel, room: RoomView, o: HandOutcome, maxCard: Dp = 48.dp) {
+  val puzzle = room.settings.mode == Mode.PUZZLE
+  val nameStyle = MaterialTheme.typography.bodyMedium
+  val numStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+  val measurer = rememberTextMeasurer()
+  val density = LocalDensity.current
+  val best = stringResource(R.string.battle_best_rows)
+  val names = room.players.map { it.name } + if (puzzle) listOf(best) else emptyList()
+  val nameNeeded = with(density) { names.maxOf { measurer.measure(it, nameStyle).size.width }.toDp() } + 8.dp
+  val handHead = stringResource(if (puzzle) R.string.battle_col_hand_loss else R.string.battle_col_hand)
+  val totalHead = stringResource(if (puzzle) R.string.battle_col_total_loss else R.string.battle_col_total)
+  val numWidth = with(density) { listOf(handHead, totalHead, "00.000").maxOf { measurer.measure(it, numStyle).size.width }.toDp() } + 8.dp
+  val rankWidth = textRoom(22)
+  BoxWithConstraints(Modifier.fillMaxWidth()) {
+    val nameWidth = minOf(nameNeeded, maxWidth * 0.2f)
+    val card = cardFor(maxWidth - rankWidth - nameWidth - numWidth * 2 - 8.dp * 4, maxCard)
+    @Composable
+    fun Line(rank: String, name: String, note: String?, rows: List<List<Int>>?, hand: String, handColor: Color, total: String, me: Boolean) {
       Row(
-        Modifier.background(if (play.player == vm.me) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface),
+        Modifier.fillMaxWidth().background(if (me) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent).padding(vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
       ) {
-        Text(
-          (p?.name ?: "?") + if (play.timedOut) stringResource(R.string.battle_timed_out) else "", Modifier.width(110.dp),
-          style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis,
+        Text(rank, Modifier.width(rankWidth), style = numStyle, textAlign = TextAlign.End)
+        Column(Modifier.width(nameWidth)) {
+          Text(name, style = nameStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+          if (note != null) Text(note, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        }
+        if (rows != null) PlayRows(vm, rows, card) else Spacer(Modifier.width(card * 13 + CARD_GAP * 10 + ROW_GAP * 2))
+        Text(hand, Modifier.width(numWidth), style = numStyle, color = handColor, textAlign = TextAlign.End, maxLines = 1)
+        Text(total, Modifier.width(numWidth), style = numStyle, textAlign = TextAlign.End, maxLines = 1)
+      }
+    }
+    Column {
+      Line("", "", null, null, handHead, MaterialTheme.colorScheme.onSurfaceVariant, totalHead, false)
+      o.best?.let { Line("", best, null, it, "", MaterialTheme.colorScheme.onSurface, "", false) }
+      for (p in standings(room)) {
+        val i = o.plays.indexOfFirst { it.player == p.id }
+        if (i < 0) continue
+        Line(
+          // The player's own line is highlighted: no "(you)" to cut the name short.
+          stringResource(R.string.battle_rank, rankOf(room, p)), p.name,
+          if (o.plays[i].timedOut) stringResource(R.string.battle_timed_out).trim() else null,
+          o.plays[i].rows, handValue(o, i), handColor(room, o, i), if (puzzle) fmtLoss(p.total) else signed(p.total), p.id == vm.me,
         )
-        PlayRows(play.rows)
-        val value = o.losses?.get(i)?.let { "−" + fmtLoss(it) } ?: o.score?.result?.get(i)?.let(::signed) ?: ""
-        val good = o.losses?.get(i)?.let { it < 1e-9 } ?: ((o.score?.result?.get(i) ?: 0.0) >= 0)
-        Text(value, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium, color = if (good) GOOD else BAD)
       }
     }
   }
@@ -349,47 +412,77 @@ private fun ReviewPage(vm: BattleViewModel, room: RoomView) {
     Text(handHeader(vm, room), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
     Button(onClick = vm::ready, enabled = me?.ready != true) { Text(stringResource(R.string.battle_next)) }
   }
-  Row(Modifier.fillMaxSize().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-    Column(Modifier.weight(1.4f).verticalScroll(rememberScrollState())) {
-      if (o != null) OutcomeTable(vm, room, o)
+  // As large as both the width and the height allow, so that a table of four fits without scrolling.
+  BoxWithConstraints(Modifier.fillMaxSize().padding(top = 4.dp)) {
+    val lines = room.players.size + (if (o?.best != null) 1 else 0)
+    val maxCard = (((maxHeight - textRoom(24)) / lines - 6.dp) / 1.4f).coerceIn(20.dp, 48.dp)
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+      if (o != null) ResultTable(vm, room, o, maxCard)
     }
-    Standings(vm, room, Modifier.weight(1f).verticalScroll(rememberScrollState()), marks = true)
   }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SummaryPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) {
+  val puzzle = room.settings.mode == Mode.PUZZLE
   Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    Text(stringResource(R.string.battle_over) + " · " + modeName(room.settings.mode), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+    Text(stringResource(R.string.battle_over) + " · " + modeName(room.settings.mode), style = MaterialTheme.typography.titleSmall)
+    Text(settingsLine(room, app), Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
     Button(onClick = vm::dismiss) { Text(stringResource(R.string.battle_done)) }
   }
-  Text(settingsLine(room, app), style = MaterialTheme.typography.bodySmall)
-  Row(Modifier.fillMaxSize().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-    Column(Modifier.weight(1.4f)) {
-      Text(stringResource(R.string.battle_hand_list), style = MaterialTheme.typography.labelLarge)
+  // The standings, one entry per player, across the width.
+  FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    for (p in standings(room)) {
+      val mine = p.id == vm.me
+      Text(
+        "${stringResource(R.string.battle_rank, rankOf(room, p))} ${p.name}  " + (if (puzzle) stringResource(R.string.battle_total_loss, fmtLoss(p.total)) else signed(p.total)),
+        Modifier.background(if (mine) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(6.dp))
+          .padding(horizontal = 8.dp, vertical = 4.dp),
+        style = MaterialTheme.typography.bodyMedium, fontWeight = if (mine) FontWeight.Bold else FontWeight.Normal,
+      )
+    }
+  }
+  val numStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+  val handHead = stringResource(if (puzzle) R.string.battle_col_hand_loss else R.string.battle_col_hand)
+  val rankHead = stringResource(R.string.battle_col_hand_rank)
+  val measurer = rememberTextMeasurer()
+  val numWidth = with(LocalDensity.current) { listOf(handHead, rankHead, "00.000").maxOf { measurer.measure(it, numStyle).size.width }.toDp() } + 8.dp
+  BoxWithConstraints(Modifier.fillMaxSize()) {
+    val indexWidth = textRoom(24)
+    // A little smaller than a hand's result, so that more hands show at once.
+    val card = cardFor(maxWidth - indexWidth - numWidth * 2 - 8.dp * 3, 40.dp)
+    Column {
+      Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.battle_hand_list), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
+        Text(handHead, Modifier.width(numWidth), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.End)
+        Text(rankHead, Modifier.width(numWidth), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.End)
+      }
       LazyColumn {
         items(vm.outcomes) { o ->
           val i = o.plays.indexOfFirst { it.player == vm.me }
           Row(
             Modifier.fillMaxWidth().clickable(enabled = i >= 0) { vm.openDetail(o.index) }.padding(vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
           ) {
-            Text("${o.index + 1}", Modifier.width(24.dp), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+            Text("${o.index + 1}", Modifier.width(indexWidth), style = numStyle, textAlign = TextAlign.End)
             if (i >= 0) {
-              Row(horizontalArrangement = Arrangement.spacedBy(CARD_GAP)) {
-                for (c in o.plays[i].rows.flatten().sortedDescending()) CardFace(c, 20.dp)
+              Box(Modifier.weight(1f)) { PlayRows(vm, o.plays[i].rows, card) }
+              Column(Modifier.width(numWidth), horizontalAlignment = Alignment.End) {
+                Text(handValue(o, i), style = numStyle, color = handColor(room, o, i))
+                if (o.plays[i].timedOut)
+                  Text(stringResource(R.string.battle_timed_out).trim(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
               }
-              val value = o.losses?.get(i)?.let { "−" + fmtLoss(it) } ?: o.score?.result?.get(i)?.let(::signed) ?: ""
-              val good = o.losses?.get(i)?.let { it < 1e-9 } ?: ((o.score?.result?.get(i) ?: 0.0) >= 0)
-              Text(value, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium, color = if (good) GOOD else BAD)
-              if (o.plays[i].timedOut) Text(stringResource(R.string.battle_timed_out), style = MaterialTheme.typography.bodySmall)
+              // The player's place in this hand alone, equal results sharing it.
+              val mine = o.losses?.get(i) ?: -(o.score?.result?.get(i) ?: 0.0)
+              val place = 1 + o.plays.indices.count { j -> (o.losses?.get(j) ?: -(o.score?.result?.get(j) ?: 0.0)) < mine - 1e-9 }
+              Text(stringResource(R.string.battle_hand_rank, place, o.plays.size), Modifier.width(numWidth), style = numStyle, textAlign = TextAlign.End)
             }
           }
           HorizontalDivider()
         }
       }
     }
-    Standings(vm, room, Modifier.weight(1f).verticalScroll(rememberScrollState()))
   }
 }
 
@@ -403,7 +496,7 @@ private fun DetailPage(vm: BattleViewModel, room: RoomView) {
     mine?.let { for (c in it.rows.flatten().sortedDescending()) CardFace(c, SMALL_CARD) }
   }
   // At a table the others had other hands: their rows and the score are shown as they were.
-  if (room.settings.mode == Mode.GAME) OutcomeTable(vm, room, o)
+  if (room.settings.mode == Mode.GAME) ResultTable(vm, room, o)
   val a = vm.detailAnalysis
   if (a == null) LinearProgressIndicator(Modifier.fillMaxWidth())
   else CandidateList(a, mine?.rows, expandBest = true, legacyNote = null, tags = vm.detailTags)
