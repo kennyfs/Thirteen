@@ -108,6 +108,14 @@ In the app, the server's address is that name (`thirteen.example.com`; the app a
 on the same machine as an emulator, without TLS, is `ws://10.0.2.2:PORT` (only localhost, 127.0.0.1 and 10.0.2.2 may
 go without TLS).
 
+On Kubernetes, the `bundled` target has the network inside (fetched from the release and checked); behind
+Cloudflare and then an ingress, set `TRUST_PROXY=2` so that limits apply to the client's address, not
+Cloudflare's:
+
+```bash
+docker build -f server/Dockerfile --target bundled -t ghcr.io/kennyfs/thirteen-server:VERSION .
+```
+
 Without Docker, for development:
 
 ```bash

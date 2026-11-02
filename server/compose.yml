@@ -8,6 +8,7 @@ services:
     build:
       context: ..
       dockerfile: server/Dockerfile
+      target: runtime
     restart: unless-stopped
     environment:
       THIRTEEN_MODEL_SHA256: "56b56733ae86e3038c1ebb2ee274e3b1c19cf49b66e494e334e15580a052b7e8"
@@ -17,7 +18,7 @@ services:
       MAX_ROOMS: "200"
       MAX_CONNECTIONS: "2000"
       CONNECTIONS_PER_ADDRESS: "16"
-      # Caddy writes X-Forwarded-For; the server is reachable only through it (no ports below).
+      # One proxy, Caddy, writes X-Forwarded-For; the server is reachable only through it (no ports below).
       TRUST_PROXY: "1"
     volumes:
       - ./models:/models:ro

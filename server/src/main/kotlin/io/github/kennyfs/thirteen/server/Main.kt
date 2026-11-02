@@ -53,8 +53,11 @@ data class Config(
   val maxRooms: Int = env("MAX_ROOMS", "200").toInt(),
   val maxConnections: Int = env("MAX_CONNECTIONS", "2000").toInt(),
   val connectionsPerAddress: Int = env("CONNECTIONS_PER_ADDRESS", "16").toInt(),
-  /** Behind a reverse proxy that sets X-Forwarded-For to the client's address (Caddy in compose.yml) only. */
-  val trustProxy: Boolean = env("TRUST_PROXY", "0") == "1",
+  /**
+   * How many reverse proxies in front append to X-Forwarded-For: 1 behind Caddy (compose.yml), 2 behind Cloudflare
+   * and then Traefik; 0 when clients reach the server directly.
+   */
+  val proxies: Int = env("TRUST_PROXY", "0").toInt(),
 )
 
 private fun env(name: String, default: String) = System.getenv(name)?.takeIf { it.isNotBlank() } ?: default
@@ -93,7 +96,7 @@ fun Application.battle(hub: Hub, config: Config) {
     get("/health") { call.respondText("ok") }
     webSocket("/ws") {
       val address = clientAddress(
-        call.request.origin.remoteAddress, if (config.trustProxy) call.request.header("X-Forwarded-For") else null,
+        call.request.origin.remoteAddress, call.request.header("X-Forwarded-For"), config.proxies,
       )
       val mine = perAddress.computeIfAbsent(address) { AtomicInteger(0) }
       try {
@@ -127,11 +130,13 @@ fun Application.battle(hub: Hub, config: Config) {
 }
 
 /**
- * What limits apply to: the client's address (the last X-Forwarded-For entry, which the proxy wrote, when trusted),
- * an IPv6 address by its /64, since one client usually has a whole /64.
+ * What limits apply to: the client's address, an IPv6 address by its /64, since one client usually has a whole /64.
+ * Behind [proxies] trusted proxies, it is that many X-Forwarded-For entries from the end, which those proxies wrote;
+ * with fewer entries (a proxy that drops the header from sources it does not trust), the first.
  */
-fun clientAddress(remote: String, forwarded: String?): String {
-  val raw = forwarded?.split(",")?.lastOrNull()?.trim()?.takeIf { it.isNotEmpty() } ?: remote
+fun clientAddress(remote: String, forwarded: String?, proxies: Int = 1): String {
+  val entries = if (proxies > 0) forwarded?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }.orEmpty() else emptyList()
+  val raw = entries.getOrNull(entries.size - proxies) ?: entries.firstOrNull() ?: remote
   // Only an address literal is parsed: a name would be looked up.
   if (!raw.matches(Regex("[0-9a-fA-F:.\\[\\]]+"))) return raw
   val ip = runCatching { InetAddress.getByName(raw.removePrefix("[").substringBefore("]")) }.getOrNull() ?: return raw

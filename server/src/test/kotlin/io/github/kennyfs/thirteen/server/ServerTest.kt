@@ -59,7 +59,7 @@ class ServerTest {
     val pool = EnginePool(binary, 2, 16, 10_000)
     val hub = Hub(EngineClient(model, pool::call), CoroutineScope(SupervisorJob() + Dispatchers.Default))
     testApplication {
-      application { battle(hub, Config(trustProxy = false)) }
+      application { battle(hub, Config(proxies = 0)) }
       val client = createClient { install(WebSockets) }
       client.webSocket("/ws") {
         send(Hello(PROTOCOL_VERSION, "Host"))
@@ -95,6 +95,9 @@ class ServerTest {
   @Test
   fun addressesForLimits() {
     assertEquals("1.2.3.4", clientAddress("10.0.0.2", "9.9.9.9, 1.2.3.4"))
+    assertEquals("9.9.9.9", clientAddress("10.0.0.2", "8.8.8.8, 9.9.9.9, 1.2.3.4", proxies = 2))
+    assertEquals("1.2.3.4", clientAddress("10.0.0.2", "1.2.3.4", proxies = 2))
+    assertEquals("10.0.0.2", clientAddress("10.0.0.2", "1.2.3.4", proxies = 0))
     assertEquals("10.0.0.2", clientAddress("10.0.0.2", null))
     assertEquals("20:01:0d:b8:00:00:00:01::/64", clientAddress("2001:db8:0:1:2:3:4:5", null))
     assertEquals("example.com", clientAddress("10.0.0.2", "example.com"))
