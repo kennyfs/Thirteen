@@ -62,8 +62,7 @@ android {
       ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
     }
     release {
-      // armeabi-v7a for phones with a 64-bit CPU but a 32-bit Android (entry-level Samsungs, for one).
-      ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
+      ndk { abiFilters += "arm64-v8a" }
       isMinifyEnabled = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName(if (keystorePath != null) "release" else "debug")
