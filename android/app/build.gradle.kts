@@ -22,12 +22,12 @@ val keystorePath: String? = System.getenv("THIRTEEN_KEYSTORE")
 
 android {
   namespace = "io.github.kennyfs.thirteen"
-  compileSdk = 35
+  compileSdk = 36
 
   defaultConfig {
     applicationId = "io.github.kennyfs.thirteen"
     minSdk = 26
-    targetSdk = 35
+    targetSdk = 36
     // Minutes from 2026-01-01 to the last commit: rises with every commit on any branch or machine, so a newer
     // build always installs over an older one. The name is the vX.Y.Z tag of a release, or a beta
     // after the latest tag for any other build.
@@ -40,7 +40,8 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     externalNativeBuild {
       cmake {
-        arguments += listOf("-DORT_DIR=${ortDir.get().asFile.absolutePath}", "-DANDROID_STL=c++_shared")
+        // 16 KB pages, which Google Play requires.
+        arguments += listOf("-DORT_DIR=${ortDir.get().asFile.absolutePath}", "-DANDROID_STL=c++_shared", "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON")
       }
     }
   }
@@ -93,6 +94,8 @@ android {
   packaging {
     // The AAR and the imported library in CMake both bring it.
     jniLibs.pickFirsts += "**/libonnxruntime.so"
+    // The Java API's JNI library: unused (the engine calls the C API), and not aligned to 16 KB pages.
+    jniLibs.excludes += "**/libonnxruntime4j_jni.so"
   }
 }
 

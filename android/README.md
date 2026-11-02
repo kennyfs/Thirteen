@@ -33,9 +33,9 @@ C++ (`cpp/`, through `cpp/command/guiengine.h` and JNI) with ONNX Runtime for An
 
 ## Building
 
-`android/build-apk.sh` builds the release APK locally (after the unit tests) and copies it to
-`android/build/apk/thirteen-<version>.apk` (or `$THIRTEEN_APK_DIR`). It needs JDK 17, Gradle, and the Android SDK
-with platform 35, build-tools 35, NDK 27.0.12077973 and CMake 3.22.1. Their paths come from the environment or from
+`android/build-apk.sh` builds the release APK and the bundle for Google Play locally (after the unit tests) and
+copies them to `android/build/apk/thirteen-<version>.apk` and `.aab` (or `$THIRTEEN_APK_DIR`). It needs JDK 17, Gradle,
+and the Android SDK with platform 36, build-tools 35, NDK 27.0.12077973 and CMake 3.22.1. Their paths come from the environment or from
 `android/local.env` (shell assignments such as `ANDROID_HOME=...`, `GRADLE=...`, kept out of the repository); see the
 script for the variables. The built-in network is not in the repository: put it at
 `android/app/src/main/assets/run2_net10.onnx` (any network exported by `python/train.py`, see docs/training.md)
@@ -60,4 +60,6 @@ the font, and a page that still does not fit scrolls.
 Updates install over the old version (keeping the records) only when every APK is signed with the same key: a
 keystore kept outside the repository, described by `~/.android/thirteen-release.txt` (or `$THIRTEEN_SIGNING`), with
 lines `keystore PATH`, `alias NAME` and `password PASS`, which `build-apk.sh` reads. Without it the APK is signed with
-the debug key.
+the debug key. Google Play signs with the same key (uploaded to Play App Signing), which is also the upload key, so
+the Play version and the APKs on GitHub install over each other. The store page's text is in
+[play/listing.md](play/listing.md), and the privacy policy in [docs/privacy.md](../docs/privacy.md).
