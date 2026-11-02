@@ -1,0 +1,10 @@
+.gradle/
+build/
+app/.cxx/
+local.properties
+local.env
+*.jks
+build-apk.log
+device-tests.log
+emulator.log
+app/src/main/assets/*.onnx

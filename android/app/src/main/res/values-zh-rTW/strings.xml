@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">十三支</string>
+  <string name="nav_play">對局</string>
+  <string name="nav_analyze">分析</string>
+  <string name="nav_records">紀錄</string>
+  <string name="nav_settings">設定</string>
+  <string name="ok">確定</string>
+  <string name="cancel">取消</string>
+  <string name="info">說明</string>
+  <string name="hand_n">第 %1$d 局</string>
+  <string name="you">你</string>
+  <string name="cards_to_place">還有 %1$d 張牌</string>
+  <string name="ready">可以出牌</string>
+  <string name="fouled">倒水：須頭墩 ≤ 中墩 ≤ 尾墩</string>
+  <string name="sort_by_suit">按花色排</string>
+  <string name="sort_by_rank">按點數排</string>
+  <string name="clear_rows">清空三墩</string>
+  <string name="confirm">確定出牌</string>
+  <string name="next_hand">下一局</string>
+  <string name="analyze_my_hand">分析我的牌</string>
+  <string name="fouled_short">倒水</string>
+  <string name="home_run">全壘打</string>
+  <string name="seat_n">%1$d 號位</string>
+  <string name="row_room">%1$s只剩 %2$d 個位置</string>
+  <string name="fill_rows_first">請先放滿三墩</string>
+  <string name="n_cards">%1$d/13 張</string>
+  <string name="random">隨機</string>
+  <string name="last_hand">上一局</string>
+  <string name="clear">清除</string>
+  <string name="network">神經網路</string>
+  <string name="analyze_info">Q 是這手牌的期望得分：對手是三個像這個神經網路的玩家。列表只列出沒有被其他擺法在每一墩都壓過的擺法，依 Q 由高到低排列；點一下可看牌與神經網路估計的各項機率。手牌來自對局時，你的擺法會固定在最上方；與首選差距明顯的數字，比首選好的標綠色、差的標紅色。列表上方會顯示分析用的規則；在特殊墩只在贏時才算分的規則下，也會列出被對手特殊墩贏走的機率。列表上方是簡短評語：你的擺法明顯較差時才說怎麼擺更好（網路並非完全精確，差一點可算一樣好）；首選和其他牌型組合中最好的擺法相比是哪種選擇（攻擊型：打槍多、被打槍也多；防守型：兩者都少；算墩數的規則下則是搶墩或打槍為主）；以及常見擺法的名稱，例如五輪車。</string>
+  <string name="dragon">這手牌是一條龍。</string>
+  <string name="show_all">顯示全部 %1$d 個</string>
+  <string name="yours">你的擺法</string>
+  <string name="pick_13">請選 13 張牌</string>
+  <string name="n_recorded">已記錄 %1$d 局</string>
+  <string name="total">總分 %1$s</string>
+  <string name="export">匯出 JSONL</string>
+  <string name="clear_records">清除紀錄</string>
+  <string name="reset_scores">重設分數</string>
+  <string name="delete">刪除</string>
+  <string name="reset">重設</string>
+  <string name="clear_records_confirm">刪除全部 %1$d 局紀錄？需要的話請先匯出。</string>
+  <string name="reset_confirm">重設累計分數與局數？紀錄會保留。</string>
+  <string name="opponents">對手（下一局起生效）</string>
+  <string name="mc_samples">蒙地卡羅樣本數（對手模型：indep）</string>
+  <string name="networks">神經網路</string>
+  <string name="load_weights">載入 .onnx 權重</string>
+  <string name="built_in">%1$s（內建）</string>
+  <string name="not_usable">無法使用的神經網路：%1$s</string>
+  <string name="best">首選</string>
+  <string name="pick_n">再選 %1$d 張</string>
+  <string name="tab_result">結果</string>
+  <string name="back_to_hand">← 手牌</string>
+  <string name="to_analyze">帶入分析</string>
+  <string name="seat_pos">%1$d 號</string>
+  <string name="this_hand">本局 %1$s</string>
+  <string name="analyze_go">分析 →</string>
+  <string name="to_candidates">候選列表 →</string>
+  <string-array name="row_names">
+    <item>頭墩</item>
+    <item>中墩</item>
+    <item>尾墩</item>
+  </string-array>
+  <string-array name="row_labels">
+    <item></item>
+    <item>散牌</item>
+    <item>一對</item>
+    <item>兩對</item>
+    <item>三條</item>
+    <item>順子到</item>
+    <item>同花</item>
+    <item>葫蘆</item>
+    <item>鐵支</item>
+    <item>同花順到</item>
+  </string-array>
+  <string-array name="kinds">
+    <item>神經網路</item>
+    <item>蒙地卡羅</item>
+    <item>獨立墩（indep）</item>
+  </string-array>
+  <string-array name="prob_names">
+    <item>打槍</item>
+    <item>被打槍</item>
+    <item>全壘打</item>
+    <item>對手全壘打</item>
+    <item>當洗牌者</item>
+    <item>贏頭墩</item>
+    <item>贏中墩</item>
+    <item>贏尾墩</item>
+    <item>輸頭墩</item>
+    <item>輸中墩</item>
+    <item>輸尾墩</item>
+    <item>被衝三贏</item>
+    <item>被中墩葫蘆贏</item>
+    <item>被中墩鐵支贏</item>
+    <item>被中墩同花順贏</item>
+    <item>被尾墩鐵支贏</item>
+    <item>被尾墩同花順贏</item>
+  </string-array>
+  <string name="ready_royalty">可以出牌 · 特殊墩 +%1$s</string>
+  <string name="fouled_strict">倒水：嚴格墩規則下各墩不可同大</string>
+  <string name="nav_rules">規則</string>
+  <string name="custom">自訂</string>
+  <string name="custom_from">自訂（由 %1$s 修改）</string>
+  <string name="restore_preset">還原預設</string>
+  <string name="rules_next_hand">修改從下一局起生效，屆時累計分數會歸零。</string>
+  <string name="rules_play">影響玩法</string>
+  <string name="rules_play_note">這兩項會改變哪些擺法算倒水、牌型大小。</string>
+  <string name="rules_scoring">計分：每位對手付的分數</string>
+  <string name="rules_royalties">特殊墩</string>
+  <string name="strict_rows">嚴格墩：頭 &lt; 中 &lt; 尾（同大算倒水）</string>
+  <string name="wheel">A-2-3-4-5</string>
+  <string name="on_win">特殊墩只在贏過對方那一墩時才收分</string>
+  <string name="legacy_warning">%1$s 是舊格式的網路，沒有規則輸入，不論規則都照 family 下。</string>
+  <string name="rules_label">規則：%1$s</string>
+  <string name="this_game_rules">（該局）</string>
+  <string name="use_current_rules">改用目前規則</string>
+  <string name="total_so_far">累計 %1$s</string>
+  <string name="vs_you">你對他 %1$s</string>
+  <string-array name="preset_notes">
+    <item>家庭規則：只算打槍、全壘打與特殊墩，各 1 分。</item>
+    <item>同家庭規則，但中墩鐵支、同花順算 2 分。</item>
+    <item>台灣計墩：每墩 1 分，打槍 3，全壘打每人再 6；衝三 3、中墩鐵支 8／同花順 10、尾墩鐵支 4／同花順 5、一條龍 36。</item>
+    <item>pagat.com 的 Chinese poker：每墩 1 分，打槍 3，特殊墩只在贏那一墩時才算，嚴格墩。</item>
+  </string-array>
+  <string-array name="wheel_options">
+    <item>最小的順子</item>
+    <item>第二大的順子</item>
+    <item>不算順子</item>
+  </string-array>
+  <string-array name="point_labels">
+    <item>每墩</item>
+    <item>打槍</item>
+    <item>全壘打（每人再付）</item>
+    <item>一條龍</item>
+  </string-array>
+  <string-array name="royalty_labels">
+    <item>頭墩三條（衝三）</item>
+    <item>中墩葫蘆</item>
+    <item>中墩鐵支</item>
+    <item>中墩同花順</item>
+    <item>尾墩鐵支</item>
+    <item>尾墩同花順</item>
+  </string-array>
+  <string-array name="category_names">
+    <item></item>
+    <item>散牌</item>
+    <item>一對</item>
+    <item>兩對</item>
+    <item>三條</item>
+    <item>順子</item>
+    <item>同花</item>
+    <item>葫蘆</item>
+    <item>鐵支</item>
+    <item>同花順</item>
+  </string-array>
+  <string-array name="shape_names">
+    <item>三輪車</item>
+    <item>四輪車</item>
+    <item>五輪車</item>
+    <item>雙同花</item>
+    <item>三同花</item>
+    <item>雙順</item>
+    <item>三順子</item>
+    <item>一順一花</item>
+    <item>雙葫蘆</item>
+    <item>雙三條</item>
+  </string-array>
+  <string name="remark_same_best">你的擺法就是首選。</string>
+  <string name="remark_same_close">你的擺法與首選的差距在網路誤差內，可算一樣好。</string>
+  <string name="remark_mistake">你的擺法：%1$s</string>
+  <string name="remark_sep"></string>
+  <string name="remark_missed">漏看了%1$s。</string>
+  <string name="remark_swapped">用%1$s取代%2$s更好。</string>
+  <string name="remark_times_two">兩個%1$s</string>
+  <string name="remark_broke">這手拆掉你的%1$s反而更好。</string>
+  <string name="remark_pair_to_front">把對子放頭墩更好。</string>
+  <string name="remark_pair_out_of_front">對子留在中尾墩，頭墩放大散牌更好。</string>
+  <string name="remark_stronger_front">牌型一樣，但頭墩可以更大。</string>
+  <string name="remark_detail">牌型一樣，差在搭配。</string>
+  <string name="remark_other">換一種牌型組合更好。</string>
+  <string name="remark_vs_mine_both">首選的打槍與被打槍機率全面勝過你的擺法。</string>
+  <string name="remark_vs_mine_attack">首選打槍較多，但被打槍也較多。</string>
+  <string name="remark_vs_mine_defense">首選被打槍較少，但打槍也較少。</string>
+  <string name="remark_only">這手只有一種牌型組合。</string>
+  <string name="remark_close">也有其他牌型組合幾乎一樣好。</string>
+  <string name="remark_both">首選的打槍與被打槍機率全面勝過其他牌型組合。</string>
+  <string name="remark_attack">首選是攻擊型：%1$s較大，打槍多、被打槍也多。</string>
+  <string name="remark_defense">首選是防守型：%1$s較大，被打槍少、打槍也少。</string>
+  <string name="remark_rows_both">首選的墩數與打槍都勝過其他牌型組合。</string>
+  <string name="remark_rows">首選以搶墩為主，不拚打槍。</string>
+  <string name="remark_scoops_first">首選以打槍為主，犧牲一些墩數。</string>
+  <string name="remark_clear">其他牌型組合都差很多。</string>
+  <string name="remark_strong">這手牌很強。</string>
+  <string name="remark_weak">這手牌偏弱，重點是少被打槍。</string>
+  <string name="remark_home_run">有機會全壘打。</string>
+</resources>

@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thirteen Play</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --panel: #ffffff; --text: #1d1d1f; --muted: #6b6b70; --border: #d9d7d0;
+    --accent: #2f6fdb; --accent-text: #ffffff; --ok: #1f8a4c; --bad: #c23a2b; --select: #f2c94c;
+    --card: #ffffff; --red: #c8102e; --black: #1d1d1f; --hl: #eaf1fd;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17181a; --panel: #212226; --text: #ececee; --muted: #9a9aa2; --border: #3a3b40;
+      --accent: #5b8ff0; --accent-text: #0e1116; --ok: #48c07b; --bad: #ef6b5b; --select: #e0b43a;
+      --card: #f4f3ee; --red: #c8102e; --black: #1d1d1f; --hl: #263247;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--panel); position: sticky; top: 0; z-index: 2; }
+  h1 { font-size: 18px; margin: 0; }
+  main { max-width: 1200px; margin: 0 auto; padding: 12px 16px; }
+  .muted { color: var(--muted); }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 12px 0; }
+  .panel h2 { font-size: 15px; margin: 0 0 8px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  label { display: inline-flex; gap: 6px; align-items: center; }
+  input, select { padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; }
+  input[type=number] { width: 5em; }
+  button { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); color: var(--text); cursor: pointer; font: inherit; }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  button.on { background: var(--hl); border-color: var(--accent); }
+  button:disabled { opacity: 0.45; cursor: default; }
+  .tabs button { border-radius: 8px; }
+  .cards { display: flex; flex-wrap: wrap; gap: 6px; min-height: 64px; }
+  .card { width: 44px; height: 62px; border-radius: 6px; background: var(--card); border: 1px solid #b9b7ae; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; font-weight: 600; font-size: 17px; cursor: pointer; user-select: none; color: var(--black); }
+  .card .s { width: 18px; height: 18px; margin-top: 2px; }
+  .card.red { color: var(--red); }
+  .card.selected { outline: 3px solid var(--select); transform: translateY(-4px); }
+  .card.small { width: 30px; height: 42px; font-size: 13px; cursor: default; }
+  .card.small .s { width: 12px; height: 12px; }
+  /* Cards that make a row's hand, tinted with one hue per category. A hand of two groups (two pair, full house)
+     shows its first group (the higher pair, the trips) dark and the second light. */
+  .t2 { --h: 48; } .t3 { --h: 26; } .t4 { --h: 130; } .t5 { --h: 185; } .t6 { --h: 218; } .t7 { --h: 268; }
+  .t8 { --h: 335; } .t9 { --h: 0; }
+  .card.tint, .arr .tint { background: hsl(var(--h) 85% 74%); }
+  .card.tint.lite, .arr .tint.lite { background: hsl(var(--h) 85% 90%); }
+  .arr .tint { color: var(--black); border-radius: 3px; padding: 0 1px; }
+  .arr .tint.r { color: var(--red); }
+  .card.off { opacity: 0.3; }
+  .row { border: 1px dashed var(--border); border-radius: 10px; padding: 8px; margin: 8px 0; cursor: pointer; }
+  .row h3 { font-size: 14px; margin: 0 0 6px; display: flex; justify-content: space-between; gap: 8px; }
+  .cat { font-weight: 400; color: var(--muted); }
+  .status { font-weight: 600; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); }
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+  .seats { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
+  .seat { border: 1px solid var(--border); border-radius: 10px; padding: 8px; }
+  .seat.me { border-color: var(--accent); }
+  .seat h3 { margin: 0 0 4px; font-size: 14px; display: flex; justify-content: space-between; gap: 6px; }
+  .rowline { display: flex; gap: 6px; align-items: center; margin: 3px 0; }
+  .rowline .cat { font-size: 12px; min-width: 6.5em; }
+  .badge { display: inline-block; font-size: 12px; padding: 0 6px; border-radius: 10px; border: 1px solid var(--border); margin-right: 4px; }
+  .badge.good { border-color: var(--ok); color: var(--ok); } .badge.badc { border-color: var(--bad); color: var(--bad); }
+  .big { font-size: 20px; font-weight: 700; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 3px 6px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+  th { cursor: pointer; position: sticky; top: 0; background: var(--panel); }
+  td.l, th.l { text-align: left; }
+  tr.sel td { background: var(--hl); }
+  tbody tr { cursor: pointer; }
+  .arr { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .arr .r { color: var(--red); }
+  @media (prefers-color-scheme: dark) { .arr .r { color: #ff7b7b; } }
+  .arr .sep { color: var(--muted); padding: 0 3px; }
+  .tag { font-size: 11px; padding: 0 5px; border-radius: 8px; background: var(--hl); margin-left: 3px; }
+  .picker { display: grid; grid-template-columns: repeat(13, minmax(0, 1fr)); gap: 3px; max-width: 620px; }
+  .picker .card { width: auto; height: 44px; font-size: 14px; }
+  .picker .card .s { width: 12px; height: 12px; }
+  .hidden { display: none !important; }
+  .err { color: var(--bad); white-space: pre-wrap; }
+  .spin::after { content: " …"; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Thirteen</h1>
+  <span class="bar tabs"><button id="tabPlay" class="on">Play</button><button id="tabAna">Analyze</button></span>
+  <label title="Dealer cost: the player with the largest back pays c">c <input id="cost" type="number" min="0" max="1" step="0.05" value="0.5"></label>
+  <label title="Scoring rules (docs/rules.md section 11): a preset, plus optional name=value overrides such as scoop=2,on_win=1">Rules
+    <select id="rulesPreset"><option>family</option><option>family_mid2</option><option>taiwan</option><option>pagat</option></select>
+    <input id="rulesExtra" placeholder="e.g. strict=1,wheel=2" size="16"></label>
+  <label>Model <select id="model"></select></label>
+  <label title="Which population the model responds to">Pop <select id="pop"><option value="0">0 league</option><option value="1">1 human</option></select></label>
+  <span id="err" class="err"></span>
+</header>
+
+<main>
+<!-- ============================ Play ============================ -->
+<section id="play">
+  <div class="panel bar">
+    <label>Seat 1 <select id="seat0"></select></label>
+    <label>Seat 2 <select class="opp" data-seat="1"></select></label>
+    <label>Seat 3 <select class="opp" data-seat="2"></select></label>
+    <label>Seat 4 <select class="opp" data-seat="3"></select></label>
+    <button id="dealBtn" class="primary" title="N">Deal</button>
+  </div>
+
+  <div id="mySetup" class="grid2">
+    <div class="panel">
+      <h2>Your hand <span class="muted" id="aiStatus"></span></h2>
+      <div class="cards" id="hand"></div>
+      <div class="bar" style="margin-top: 8px">
+        <button id="sortBtn">Sort by suit</button>
+        <button id="clearBtn" title="R">Back to hand</button>
+        <button id="autoBtn" title="Set the hand as the model would">Model's choice</button>
+        <button id="hintBtn" title="H">Hint</button>
+      </div>
+      <div class="muted" style="font-size: 13px">Select cards, then click a row (or press 1, 2, 3). Click a placed card to take it back.</div>
+      <div id="hint" class="hidden" style="margin-top: 8px"></div>
+    </div>
+    <div class="panel">
+      <div class="row" data-row="0"><h3><span>Front (3)</span><span class="cat"></span></h3><div class="cards"></div></div>
+      <div class="row" data-row="1"><h3><span>Middle (5)</span><span class="cat"></span></h3><div class="cards"></div></div>
+      <div class="row" data-row="2"><h3><span>Back (5)</span><span class="cat"></span></h3><div class="cards"></div></div>
+      <div class="bar" style="justify-content: space-between">
+        <span class="status" id="status"></span>
+        <button id="submitBtn" class="primary" title="Enter">Show down</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="result" class="panel hidden">
+    <h2>Result <span class="muted" id="resultSub"></span></h2>
+    <div class="seats" id="seats"></div>
+    <div id="review" style="margin-top: 10px"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Session <span class="muted" id="sessionSub"></span> <button id="resetBtn" style="margin-left: auto">Reset</button></h2>
+    <div class="scroll"><table id="board"><thead><tr><th class="l">Player</th><th>Hands</th><th>Total</th><th>Per hand</th><th>Dealer rate</th><th>Scoops</th><th>Scooped</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============================ Analyze ============================ -->
+<section id="ana" class="hidden">
+  <div class="panel">
+    <h2>Hand <span class="muted" id="anaCount"></span></h2>
+    <div class="picker" id="picker"></div>
+    <div class="bar" style="margin-top: 8px">
+      <input id="handText" type="text" placeholder="e.g. As Kd Qh 9s 9d ..." style="width: 22em" spellcheck="false">
+      <button id="randBtn">Random</button>
+      <button id="clearPickBtn">Clear</button>
+      <button id="fromPlayBtn">Hand from Play</button>
+      <button id="anaBtn" class="primary" title="Enter">Analyze</button>
+      <button id="sweepBtn" title="The model's choice for c = 0, 0.1, ..., 1">c sweep</button>
+    </div>
+    <div class="bar" style="margin-top: 8px">
+      <label>Also show <select id="cmpPlayer"></select></label><button id="cmpBtn">Add</button>
+      <input id="customArr" type="text" placeholder="front | middle | back" style="width: 22em" spellcheck="false">
+      <button id="customBtn">Add arrangement</button>
+    </div>
+  </div>
+
+  <div class="panel" id="selPanel">
+    <h2>Selected <span class="muted" id="selSub"></span></h2>
+    <div id="selRows"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Candidates <span class="muted" id="candSub"></span>
+      <span class="bar" style="margin-left: auto; font-weight: 400">
+        <label>MC vs <select id="mcOpp"></select></label>
+        <label>samples <input id="mcSamples" type="number" min="50" step="50" value="300"></label>
+        <label>top <input id="mcTop" type="number" min="1" value="10"></label>
+        <button id="mcBtn" title="Monte Carlo means against three opponents of this type, for the top rows and the marked ones">Run MC</button>
+        <button id="allBtn">Show all</button>
+      </span>
+    </h2>
+    <div class="scroll" style="max-height: 70vh"><table id="cands"><thead></thead><tbody></tbody></table></div>
+    <div class="muted" style="font-size: 12px; margin-top: 6px">
+      Q is the model's expected result for this hand, in points (the Result column of a match: points won minus
+      points paid, minus the dealer cost if you pay it), against three opponents drawn from the population it was
+      trained against (pop 0: the league of its own past versions, greedy and indep). Q no dealer = Q + c × Dealer.
+      MC is the same expectation measured by Monte Carlo against three copies of the chosen opponent.
+      Probabilities are per opponent (the net's estimate of the fraction of the three opponents): Scoop = I scoop them,
+      Scooped = they scoop me, Opp HR = they scoop all three of us. Dealer = my expected share of the dealer cost.
+      Win F / M / B: my front, middle, back beats theirs (losses and ties are under Selected). Q is composed from these
+      by the rules: under family, Q = 3 Scoop − 3 Scooped + 3 HR − 3 Opp HR + 3 bonus − c Dealer − opp bonus; with
+      row points, also 3 × row × (wins − losses) per row; royalties paid only on a won row use the Win columns.
+    </div>
+  </div>
+
+  <div class="panel hidden" id="sweepPanel">
+    <h2>c sweep <span class="muted">the model's choice</span></h2>
+    <div class="scroll"><table id="sweep"><thead><tr><th>c</th><th>Q</th><th class="l">Arrangement</th><th class="l"></th></tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+</main>
+
+<script src="thirteen-eval.js"></script>
+<script>
+"use strict";
+const E = window.ThirteenEval;
+const SIZES = [3, 5, 5];
+const ROW_NAMES = ["Front", "Middle", "Back"];
+const SUIT_PATHS = [
+  '<circle cx="12" cy="7.3" r="4.4"/><circle cx="6.9" cy="13.4" r="4.4"/><circle cx="17.1" cy="13.4" r="4.4"/>' +
+    '<circle cx="12" cy="12.6" r="2.6"/><path d="M10.9 13h2.2l1.9 9H9z"/>',
+  '<path d="M12 1.8 20.2 12 12 22.2 3.8 12z"/>',
+  '<path d="M12 21.6S2.6 15.8 2.2 9.4C1.9 5.6 4.4 3 7.4 3c2.1 0 3.6 1.2 4.6 2.9C13 4.2 14.5 3 16.6 3c3 0 5.5 2.6 5.2 6.4-.4 6.4-9.8 12.2-9.8 12.2z"/>',
+  '<path d="M12 1.8S2.4 8.6 2.4 13.8c0 2.9 2.2 4.9 4.8 4.9 1.6 0 2.9-.7 3.7-1.8-.3 2.2-1.3 3.9-3 5.1h8.2c-1.7-1.2-2.7-2.9-3-5.1.8 1.1 2.1 1.8 3.7 1.8 2.6 0 4.8-2 4.8-4.9C21.6 8.6 12 1.8 12 1.8z"/>',
+];
+const SUIT_SVG = SUIT_PATHS.map((p) => `<svg class="s" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">${p}</svg>`);
+// Scoring::Target order. Row losses (8 to 10) are left out of the table: win + lose = 1 - tie, and ties are rare.
+const PROB_COLS = [["Scoop", 0], ["Scooped", 1], ["HR", 2], ["Opp HR", 3], ["Dealer", 4],
+  ["Win F", 5], ["Win M", 6], ["Win B", 7]];
+const SETTINGS = "thirteen-play-settings-v1";
+const SESSION = "thirteen-play-session-v1";
+const $ = (id) => document.getElementById(id);
+
+let config = { models: [], players: [] };
+
+// ---------------------------------------------------------------- helpers
+function storageGet(key, fallback) {
+  try { const v = localStorage.getItem(key); return v === null ? fallback : JSON.parse(v); } catch (e) { return fallback; }
+}
+function storageSet(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* optional */ } }
+
+// Every request carries the rules: the ones given, else the current ones.
+async function engine(req) {
+  req = { rules: rulesSpec(), ...req };
+  const res = await fetch("api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(req) });
+  const body = await res.json();
+  if (body.error) throw new Error(body.error);
+  return body;
+}
+function showError(e) { $("err").textContent = e ? String(e.message || e) : ""; }
+async function guarded(fn) {
+  showError(null);
+  try { return await fn(); } catch (e) { showError(e); }
+}
+
+function cost() { return Math.min(1, Math.max(0, Number($("cost").value) || 0)); }
+// The parts of a rules spec that change keys and validity: { wheel, strict }.
+function ruleOpts(spec = rulesSpec()) {
+  const parts = (spec || "family").split(",");
+  const opts = { wheel: 0, strict: parts[0] === "pagat" };
+  for (const p of parts.slice(1)) {
+    const [k, v] = p.split("=");
+    if (k === "wheel") opts.wheel = Number(v) || 0;
+    if (k === "strict") opts.strict = Number(v) > 0.5;
+  }
+  return opts;
+}
+function rulesSpec() {
+  const extra = $("rulesExtra").value.replace(/\s+/g, "");
+  return $("rulesPreset").value + (extra ? "," + extra : "");
+}
+function modelPath() { return $("model").value; }
+function pop() { return Number($("pop").value); }
+function modelSpec() { return `net:model=${modelPath()},pop=${pop()}`; }
+function isRed(c) { return E.suitOf(c) === 1 || E.suitOf(c) === 2; }
+function rankText(c) { const r = E.RANKS[E.rankOf(c)]; return r === "T" ? "10" : r; }
+const byRankDesc = (a, b) => b - a;
+
+function cardEl(c, cls = "") {
+  const el = document.createElement("div");
+  el.className = `card ${cls}` + (isRed(c) ? " red" : "");
+  el.innerHTML = `<span>${rankText(c)}</span>${SUIT_SVG[E.suitOf(c)]}`;
+  return el;
+}
+// A full row in reading order, with each card's tint class ("" for kickers): the cards that make the hand first,
+// larger groups first and then higher ranks (2 2 3 3 5 reads 3 3 2 2 5), then the kickers; a straight, flush or
+// straight flush is one group, from its top card (A-2-3-4-5 reads 5 4 3 2 A). The tint's hue is the row's category;
+// the second group of a two pair or full house is light. A row that is not full is just sorted.
+function rowLayout(cards) {
+  const sorted = [...cards].sort(byRankDesc);
+  if (cards.length !== 3 && cards.length !== 5) return sorted.map((c) => ({ c, t: "" }));
+  const cat = E.categoryOf(cards.length === 3 ? E.eval3(cards) : E.withWheel(E.eval5(cards), ruleOpts().wheel));
+  if (cat === 5 || cat === 6 || cat === 9) {
+    const ranks = new Set(sorted.map(E.rankOf));
+    const wheel = cat !== 6 && ranks.has(12) && ranks.has(0);
+    const order = wheel ? [...sorted.filter((c) => E.rankOf(c) !== 12), ...sorted.filter((c) => E.rankOf(c) === 12)] : sorted;
+    return order.map((c) => ({ c, t: `tint t${cat}` }));
+  }
+  const count = new Map();
+  for (const c of cards) count.set(E.rankOf(c), (count.get(E.rankOf(c)) || 0) + 1);
+  const ranks = [...count.keys()].sort((a, b) => count.get(b) - count.get(a) || b - a);
+  const out = [];
+  let g = 0;
+  for (const r of ranks) {
+    const t = count.get(r) >= 2 ? `tint t${cat}` + (g++ > 0 ? " lite" : "") : "";
+    out.push(...sorted.filter((c) => E.rankOf(c) === r).map((c) => ({ c, t })));
+  }
+  return out;
+}
+function rowCards(row, cls = "small") { return rowLayout(row).map(({ c, t }) => cardEl(c, `${cls} ${t}`)); }
+function arrText(arr) {
+  return arr.map((row) => rowLayout(row).map(({ c, t }) =>
+    `<span class="${isRed(c) ? "r" : ""} ${t}">${rankText(c)}${E.SUIT_SYMBOLS[E.suitOf(c)]}</span>`).join(" ")).join('<span class="sep">|</span>');
+}
+function catName(cat) { return E.CATEGORY_NAMES[cat]; }
+// A row's hand in short, from its key (cpp/game/handeval.h): the category and the ranks that define it, e.g.
+// "Pair A", "Two pair K 7", "Straight to 9"; kickers are left out.
+const ROW_LABELS = ["", "High", "Pair", "Two pair", "Trips", "Straight to", "Flush", "Full house", "Quads", "Str. flush to"];
+function rowLabel(key) {
+  const cat = E.categoryOf(key);
+  // Under wheel 1, straights to A have 13 and A-2-3-4-5 has 12.
+  const wheelHigh = (cat === 5 || cat === 9) && ruleOpts().wheel === 1;
+  const rank = (i) => {
+    let n = (key >> (16 - 4 * i)) & 15;
+    if (wheelHigh && i === 0) n = n === 13 ? 12 : n === 12 ? 3 : n;
+    const r = E.RANKS[n];
+    return r === "T" ? "10" : r;
+  };
+  return `${ROW_LABELS[cat]} ${rank(0)}` + (cat === 3 ? ` ${rank(1)}` : "");
+}
+function arrLabel(info) { return info.keys.map(rowLabel).join('<span class="sep">|</span>'); }
+function sameArr(a, b) {
+  return a.every((row, r) => row.length === b[r].length && [...row].sort().join() === [...b[r]].sort().join());
+}
+function fmt(x, d = 3) { return (x >= 0 ? "+" : "") + x.toFixed(d); }
+function pct(x) { return (100 * x).toFixed(1); }
+function playerName(spec) {
+  const p = config.players.find((p) => p.spec === spec);
+  return p ? p.name : spec;
+}
+function fillPlayerSelect(sel, value, includeYou) {
+  sel.replaceChildren();
+  if (includeYou) sel.add(new Option("You", "you"));
+  for (const p of config.players) sel.add(new Option(p.name, p.spec));
+  sel.add(new Option("Custom spec…", "custom"));
+  if (value && ![...sel.options].some((o) => o.value === value)) sel.add(new Option(playerName(value), value), sel.options.length - 1);
+  if (value) sel.value = value;
+}
+function bindCustom(sel) {
+  sel.addEventListener("change", () => {
+    if (sel.value !== "custom") return saveSettings();
+    const spec = prompt("Player spec, e.g. mc:samples=300,opp=indep or net:model=/path/net.onnx,temp=0.1");
+    if (spec) { sel.add(new Option(spec, spec), sel.options.length - 1); sel.value = spec; }
+    else sel.selectedIndex = 0;
+    saveSettings();
+  });
+}
+
+// ---------------------------------------------------------------- settings
+function saveSettings() {
+  storageSet(SETTINGS, {
+    cost: $("cost").value, model: $("model").value, pop: $("pop").value, seat0: $("seat0").value,
+    opps: [...document.querySelectorAll(".opp")].map((s) => s.value), mcOpp: $("mcOpp").value,
+  });
+}
+
+// ================================================================ Play
+const play = { hands: null, ai: [null, null, null, null], rowOf: new Map(), selected: new Set(), sortBySuit: false,
+  done: false, specs: null, cost: 0.5, aiPending: 0 };
+let session = storageGet(SESSION, { players: {}, hands: 0 });
+
+function myHand() { return play.hands ? play.hands[0] : []; }
+function cardsIn(row) { return myHand().filter((c) => play.rowOf.get(c) === row); }
+function sortCards(cards) {
+  const key = play.sortBySuit ? (c) => E.suitOf(c) * 13 + E.rankOf(c) : (c) => c;
+  return [...cards].sort((a, b) => key(b) - key(a));
+}
+function myArrangement() { return [0, 1, 2].map(cardsIn); }
+function myEval() {
+  const rows = myArrangement();
+  if (rows.some((r, i) => r.length !== SIZES[i])) return null;
+  return E.evaluateArrangement(rows[0], rows[1], rows[2], ruleOpts(play.rules));
+}
+
+function seatSpecs() {
+  return [$("seat0").value, ...[...document.querySelectorAll(".opp")].map((s) => s.value)];
+}
+
+async function deal() {
+  await guarded(async () => {
+    play.specs = seatSpecs();
+    play.cost = cost();
+    play.rules = rulesSpec();
+    const { hands } = await engine({ cmd: "deal" });
+    play.hands = hands;
+    play.ai = [null, null, null, null];
+    play.rowOf = new Map(hands[0].map((c) => [c, -1]));
+    play.selected.clear();
+    play.done = false;
+    $("result").classList.add("hidden");
+    $("hint").classList.add("hidden");
+    $("hintBtn").classList.remove("on");
+    renderPlay();
+    // The other seats set their hands now (hidden until the show down), one request at a time.
+    play.aiPending = 0;
+    const seats = [0, 1, 2, 3].filter((s) => play.specs[s] !== "you");
+    play.aiPending = seats.length;
+    renderPlay();
+    for (const s of seats) {
+      const r = await engine({ cmd: "arrange", player: play.specs[s], hand: hands[s], c: play.cost, rules: play.rules });
+      play.ai[s] = r.arrangement;
+      play.aiPending--;
+      renderPlay();
+    }
+    if (play.specs[0] !== "you") showDown();
+  });
+}
+
+function placeCards(row) {
+  if (play.done || play.selected.size === 0) return;
+  const room = SIZES[row] - cardsIn(row).length;
+  if (play.selected.size > room) { setStatus(`That row has room for ${room} more card${room === 1 ? "" : "s"}.`, false); return; }
+  for (const c of play.selected) play.rowOf.set(c, row);
+  play.selected.clear();
+  renderPlay();
+}
+function setArrangement(arr) {
+  arr.forEach((row, r) => row.forEach((c) => play.rowOf.set(c, r)));
+  play.selected.clear();
+  renderPlay();
+}
+function setStatus(text, ok) {
+  $("status").textContent = text;
+  $("status").className = "status" + (ok === true ? " ok" : ok === false ? " bad" : "");
+}
+
+function playCard(c, t = "") {
+  const el = cardEl(c, `${play.selected.has(c) ? "selected" : ""} ${t}`);
+  el.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    if (play.done) return;
+    if (play.rowOf.get(c) === -1) { if (play.selected.has(c)) play.selected.delete(c); else play.selected.add(c); }
+    else play.rowOf.set(c, -1);
+    renderPlay();
+  });
+  return el;
+}
+
+function renderPlay() {
+  const you = !play.specs || play.specs[0] === "you";
+  $("mySetup").classList.toggle("hidden", !you);
+  $("hand").replaceChildren(...sortCards(cardsIn(-1)).map((c) => playCard(c)));
+  document.querySelectorAll("#play .row").forEach((rowEl) => {
+    const r = Number(rowEl.dataset.row);
+    const cards = cardsIn(r);
+    rowEl.querySelector(".cards").replaceChildren(...(cards.length === SIZES[r]
+      ? rowLayout(cards).map(({ c, t }) => playCard(c, t)) : sortCards(cards).map((c) => playCard(c))));
+    rowEl.querySelector(".cat").textContent = cards.length === SIZES[r]
+      ? catName(E.categoryOf(r === 0 ? E.eval3(cards) : E.withWheel(E.eval5(cards), ruleOpts(play.rules).wheel)))
+      : `${cards.length} / ${SIZES[r]}`;
+  });
+  const ev = myEval();
+  if (!play.hands) setStatus("Press Deal", null);
+  else if (!ev) setStatus("", null);
+  else if (!ev.valid) {
+    const k = ev.keys;
+    setStatus(k[0] > k[1] ? "Foul: front beats middle" : k[0] === k[1] ? "Foul: front ties middle (strict rows)"
+      : k[1] > k[2] ? "Foul: middle beats back" : "Foul: middle ties back (strict rows)", false);
+  }
+  else setStatus("Valid", true);
+  $("submitBtn").disabled = !(ev && ev.valid) || play.done || play.aiPending > 0;
+  $("sortBtn").textContent = play.sortBySuit ? "Sort by rank" : "Sort by suit";
+  $("aiStatus").textContent = play.aiPending > 0 ? `(other seats setting: ${play.aiPending} left)` : "";
+  $("aiStatus").classList.toggle("spin", play.aiPending > 0);
+  for (const id of ["autoBtn", "hintBtn", "clearBtn"]) $(id).disabled = !play.hands || play.done;
+}
+
+async function showHint() {
+  if ($("hintBtn").classList.toggle("on") === false) { $("hint").classList.add("hidden"); return; }
+  await guarded(async () => {
+    const r = await engine({ cmd: "analyze", hand: myHand(), c: play.cost, rules: play.rules, model: modelPath(), pop: pop() });
+    const rows = r.cands.slice(0, 5).map((cd, i) =>
+      `<tr data-i="${i}"><td>${i + 1}</td><td>${fmt(cd.q)}</td><td class="l arr">${arrText(cd.arrangement)}</td></tr>`).join("");
+    $("hint").innerHTML = `<table><thead><tr><th>#</th><th>Q</th><th class="l">Model's top 5 (click to use)</th></tr></thead><tbody>${rows}</tbody></table>`;
+    $("hint").querySelectorAll("tbody tr").forEach((tr) => tr.addEventListener("click", () => setArrangement(r.cands[Number(tr.dataset.i)].arrangement)));
+    $("hint").classList.remove("hidden");
+  });
+}
+
+async function autoSet() {
+  await guarded(async () => {
+    const r = await engine({ cmd: "arrange", player: modelSpec(), hand: myHand(), c: play.cost, rules: play.rules });
+    setArrangement(r.arrangement);
+  });
+}
+
+async function showDown() {
+  await guarded(async () => {
+    if (play.specs[0] === "you") {
+      const ev = myEval();
+      if (!ev || !ev.valid) return;
+      play.ai[0] = myArrangement();
+    }
+    play.done = true;
+    renderPlay();
+    const score = await engine({ cmd: "score", arrangements: play.ai, c: play.cost, rules: play.rules });
+    renderResult(score);
+    recordSession(score);
+    if (play.specs[0] === "you") reviewMyChoice();
+    else $("review").innerHTML = "";
+  });
+}
+
+function seatName(s) { return s === 0 && play.specs[0] === "you" ? "You" : playerName(play.specs[s]); }
+
+function renderResult(score) {
+  const maxBack = Math.max(...score.info.map((i) => (i.valid ? i.keys[2] : -1)));
+  $("seats").replaceChildren(...[0, 1, 2, 3].map((s) => {
+    const info = score.info[s];
+    const el = document.createElement("div");
+    el.className = "seat" + (s === 0 ? " me" : "");
+    const scooped = [0, 1, 2, 3].filter((t) => score.scoops[s][t]).map((t) => t + 1);
+    const scoopedBy = [0, 1, 2, 3].filter((t) => score.scoops[t][s]).map((t) => t + 1);
+    const badges = [];
+    if (score.home_run[s]) badges.push('<span class="badge good">Home run</span>');
+    if (scooped.length) badges.push(`<span class="badge good">Scoops ${scooped.join(", ")}</span>`);
+    if (scoopedBy.length) badges.push(`<span class="badge badc">Scooped by ${scoopedBy.join(", ")}</span>`);
+    if (score.dealer_cost[s] > 0) badges.push(`<span class="badge badc">Dealer ${score.dealer_cost[s] < play.cost ? "(shared)" : ""}</span>`);
+    if (info.bonus) badges.push(`<span class="badge good">Bonus ×${info.bonus}</span>`);
+    el.innerHTML = `<h3><span>${s + 1}. ${seatName(s)}</span><span class="big ${score.result[s] >= 0 ? "ok" : "bad"}">${fmt(score.result[s], 2)}</span></h3>`;
+    play.ai[s].forEach((row, r) => {
+      const line = document.createElement("div");
+      line.className = "rowline";
+      const cat = document.createElement("span");
+      cat.className = "cat";
+      cat.textContent = catName(info.categories[r]) + (r === 2 && info.keys[2] === maxBack ? " ★" : "");
+      line.append(cat, ...rowCards(row));
+      el.append(line);
+    });
+    const foot = document.createElement("div");
+    foot.style.fontSize = "13px";
+    foot.innerHTML = `${badges.join("")}<div class="muted">points ${fmt(score.points[s], 2)}, dealer cost ${score.dealer_cost[s].toFixed(2)}</div>`;
+    el.append(foot);
+    return el;
+  }));
+  $("resultSub").textContent = `c = ${play.cost}; ★ = largest back`;
+  $("result").classList.remove("hidden");
+}
+
+async function reviewMyChoice() {
+  const r = await engine({ cmd: "analyze", hand: myHand(), c: play.cost, rules: play.rules, model: modelPath(), pop: pop(), extra: [play.ai[0]] });
+  const idx = r.cands.findIndex((cd) => sameArr(cd.arrangement, play.ai[0]));
+  const mine = r.cands[idx], best = r.cands[0];
+  const loss = best.q - mine.q;
+  $("review").innerHTML =
+    `<div><b>Your choice:</b> Q ${fmt(mine.q)} — rank ${idx + 1} of ${r.cands.length}${mine.extra ? " (dominated)" : ""}` +
+    (idx === 0 ? ' <span class="ok">= the model\'s choice</span>' : `, <span class="bad">${loss.toFixed(3)} below the model's choice</span>`) + "</div>" +
+    (idx === 0 ? "" : `<div><b>Model's choice:</b> Q ${fmt(best.q)} <span class="arr">${arrText(best.arrangement)}</span></div>`) +
+    `<div class="muted" style="font-size: 13px">Q from ${$("model").selectedOptions[0].text}, pop ${pop()}.</div>` +
+    `<button id="toAnaBtn" style="margin-top: 6px">Analyze this hand</button>`;
+  $("toAnaBtn").addEventListener("click", () => { pickFromPlay(); switchTab("ana"); analyze(); });
+}
+
+function recordSession(score) {
+  session.hands++;
+  for (let s = 0; s < 4; s++) {
+    const name = seatName(s);
+    const p = session.players[name] || (session.players[name] = { hands: 0, total: 0, dealer: 0, scoops: 0, scooped: 0 });
+    p.hands++;
+    p.total += score.result[s];
+    p.dealer += score.dealer_cost[s] > 0 ? 1 : 0;
+    p.scoops += score.scoops[s].filter(Boolean).length;
+    p.scooped += [0, 1, 2, 3].filter((t) => score.scoops[t][s]).length;
+  }
+  storageSet(SESSION, session);
+  renderSession();
+}
+function renderSession() {
+  const rows = Object.entries(session.players).sort((a, b) => b[1].total / b[1].hands - a[1].total / a[1].hands);
+  $("board").tBodies[0].innerHTML = rows.map(([name, p]) =>
+    `<tr><td class="l">${name}</td><td>${p.hands}</td><td>${fmt(p.total, 2)}</td><td>${fmt(p.total / p.hands, 3)}</td>` +
+    `<td>${pct(p.dealer / p.hands)}%</td><td>${(p.scoops / p.hands).toFixed(2)}</td><td>${(p.scooped / p.hands).toFixed(2)}</td></tr>`).join("");
+  $("sessionSub").textContent = `${session.hands} hand${session.hands === 1 ? "" : "s"}; totals per player name across seats`;
+}
+
+// ================================================================ Analyze
+const ana = { hand: new Set(), result: null, cost: 0.5, extra: [], tags: new Map(), mc: new Map(), sel: 0, showAll: false,
+  sortCol: null, sortDesc: true };
+
+function renderPicker() {
+  const picker = $("picker");
+  picker.replaceChildren();
+  for (let suit = 3; suit >= 0; suit--)
+    for (let rank = 12; rank >= 0; rank--) {
+      const c = rank * 4 + suit;
+      const el = cardEl(c, ana.hand.has(c) ? "selected" : "off");
+      el.addEventListener("click", () => {
+        if (ana.hand.has(c)) ana.hand.delete(c);
+        else if (ana.hand.size < 13) ana.hand.add(c);
+        handChanged();
+      });
+      picker.append(el);
+    }
+  $("anaCount").textContent = `${ana.hand.size} / 13`;
+  $("anaBtn").disabled = $("sweepBtn").disabled = ana.hand.size !== 13;
+}
+function handChanged() {
+  ana.extra = []; ana.tags = new Map(); ana.mc = new Map(); ana.result = null;
+  $("handText").value = [...ana.hand].sort(byRankDesc).map(E.cardToString).join(" ");
+  renderPicker();
+}
+function setAnaHand(cards) { ana.hand = new Set(cards); handChanged(); }
+function pickFromPlay() { if (play.hands) setAnaHand(play.hands[0]); }
+
+function parseCards(text) {
+  const cards = text.split(/[\s,]+/).filter(Boolean).map(E.parseCard);
+  if (cards.some((c) => c < 0)) throw new Error("Bad card in: " + text);
+  if (new Set(cards).size !== cards.length) throw new Error("Repeated card in: " + text);
+  return cards;
+}
+
+function tagKey(arr) { return arr.map((r) => [...r].sort((a, b) => a - b).join(".")).join("|"); }
+function addTag(arr, tag) {
+  const k = tagKey(arr);
+  if (!ana.tags.has(k)) ana.tags.set(k, []);
+  if (!ana.tags.get(k).includes(tag)) ana.tags.get(k).push(tag);
+  if (!ana.extra.some((a) => tagKey(a) === k)) ana.extra.push(arr);
+}
+
+async function analyze() {
+  if (ana.hand.size !== 13) return;
+  await guarded(async () => {
+    $("candSub").textContent = "running…";
+    // Marked arrangements and Monte Carlo results belong to the rules and c they were made under.
+    if (ana.rules !== undefined && (ana.cost !== cost() || ana.rules !== rulesSpec())) {
+      ana.extra = []; ana.tags = new Map(); ana.mc = new Map();
+    }
+    ana.cost = cost();
+    ana.rules = rulesSpec();
+    const hand = [...ana.hand];
+    const r = await engine({ cmd: "analyze", hand, c: ana.cost, rules: ana.rules, model: modelPath(), pop: pop(), extra: ana.extra });
+    ana.result = r;
+    ana.sel = 0;
+    addTag(r.cands[0].arrangement, $("model").selectedOptions[0].text);
+    renderCands();
+  });
+}
+
+function candRows() {
+  const cands = ana.result.cands.map((cd, i) => ({ ...cd, rank: i + 1, mc: ana.mc.get(tagKey(cd.arrangement)) }));
+  if (ana.sortCol !== null) {
+    const val = (cd) => ana.sortCol === "q" ? cd.q : ana.sortCol === "q0" ? qNoDealer(cd) :
+      ana.sortCol === "mc" ? (cd.mc ? cd.mc.mean : -1e9) : cd.probs[ana.sortCol];
+    cands.sort((a, b) => (ana.sortDesc ? val(b) - val(a) : val(a) - val(b)));
+  }
+  return cands;
+}
+
+// Q with the dealer cost added back: the same estimate as if the largest back paid nothing (the opponents still play
+// for this c).
+function qNoDealer(cd) { return cd.q + ana.cost * cd.probs[4]; }
+
+function renderCands() {
+  const r = ana.result;
+  if (!r) return;
+  const hasMc = ana.mc.size > 0;
+  const hasQ0 = ana.cost > 0;
+  const head = `<tr><th>#</th><th class="l">Arrangement</th><th data-col="q">Q</th>` +
+    (hasQ0 ? '<th data-col="q0" title="Q + c × Dealer: Q without the dealer cost">Q no dealer</th>' : "") +
+    (hasMc ? '<th data-col="mc">MC</th>' : "") +
+    PROB_COLS.map(([n, i]) => `<th data-col="${i}">${n}</th>`).join("") + "</tr>";
+  $("cands").tHead.innerHTML = head;
+  const cands = candRows();
+  const tagged = (cd) => ana.tags.has(tagKey(cd.arrangement));
+  const shown = ana.showAll ? cands : cands.filter((cd, i) => i < 30 || tagged(cd));
+  $("cands").tBodies[0].innerHTML = shown.map((cd) => {
+    const tags = (ana.tags.get(tagKey(cd.arrangement)) || []).map((t) => `<span class="tag">${t}</span>`).join("");
+    const mc = hasMc ? `<td>${cd.mc ? `${fmt(cd.mc.mean)}<span class="muted">±${cd.mc.std_err.toFixed(3)}</span>` : ""}</td>` : "";
+    return `<tr data-rank="${cd.rank}" class="${cd.rank - 1 === ana.sel ? "sel" : ""}"><td>${cd.rank}</td>` +
+      `<td class="l">${arrLabel(cd.info)}${cd.extra ? `<span class="tag">${cd.info.valid ? "dominated" : "foul"}</span>` : ""}${tags}</td>` +
+      `<td><b>${fmt(cd.q)}</b></td>${hasQ0 ? `<td>${fmt(qNoDealer(cd))}</td>` : ""}${mc}` + PROB_COLS.map(([, i]) => `<td>${pct(cd.probs[i])}</td>`).join("") + "</tr>";
+  }).join("");
+  $("cands").tBodies[0].querySelectorAll("tr").forEach((tr) => tr.addEventListener("click", () => {
+    ana.sel = Number(tr.dataset.rank) - 1; renderCands();
+  }));
+  $("cands").tHead.querySelectorAll("th[data-col]").forEach((th) => th.addEventListener("click", () => {
+    const col = ["q", "q0", "mc"].includes(th.dataset.col) ? th.dataset.col : Number(th.dataset.col);
+    if (ana.sortCol === col) ana.sortDesc = !ana.sortDesc; else { ana.sortCol = col; ana.sortDesc = true; }
+    renderCands();
+  }));
+  $("candSub").textContent = `${r.cands.length} undominated of ${r.num_valid} valid; rules ${ana.rules}, c = ${ana.cost}; ` +
+    `expected opponents' bonus ${r.opp_bonus.toFixed(3)}${r.dragon ? "; dragon!" : ""}` +
+    (r.legacy_model && !ana.rules.startsWith("family,") && ana.rules !== "family"
+      ? "; this model predates the rules input and plays as under family" : "") +
+    (ana.showAll || cands.length <= 30 ? "" : `; showing the top 30 and marked rows`);
+  $("allBtn").textContent = ana.showAll ? "Top 30" : "Show all";
+  renderSelected();
+}
+
+function renderSelected() {
+  const cd = ana.result.cands[ana.sel];
+  const box = $("selRows");
+  box.replaceChildren();
+  cd.arrangement.forEach((row, r) => {
+    const line = document.createElement("div");
+    line.className = "rowline";
+    const name = document.createElement("span");
+    name.className = "cat";
+    name.style.minWidth = "11em";
+    name.textContent = `${ROW_NAMES[r]}: ${catName(cd.info.categories[r])}`;
+    line.append(name, ...rowCards(row));
+    box.append(line);
+  });
+  const p = cd.probs;
+  $("selSub").textContent = `rank ${ana.sel + 1}, Q ${fmt(cd.q)}; scoop ${pct(p[0])}%, scooped ${pct(p[1])}%, ` +
+    `dealer ${pct(p[4])}%${cd.info.bonus ? `, bonus ×${cd.info.bonus}` : ""}`;
+  const rowsInfo = document.createElement("div");
+  rowsInfo.className = "muted";
+  rowsInfo.style.fontSize = "13px";
+  rowsInfo.textContent = "Per opponent, win / tie / lose: " + ROW_NAMES.map((n, r) =>
+    `${n} ${pct(p[5 + r])} / ${pct(Math.max(0, 1 - p[5 + r] - p[8 + r]))} / ${pct(p[8 + r])}`).join(", ");
+  box.append(rowsInfo);
+}
+
+async function compare() {
+  if (ana.hand.size !== 13) return;
+  await guarded(async () => {
+    const spec = $("cmpPlayer").value;
+    const r = await engine({ cmd: "arrange", player: spec, hand: [...ana.hand], c: cost() });
+    addTag(r.arrangement, playerName(spec));
+    await analyze();
+  });
+}
+
+async function addCustom() {
+  await guarded(async () => {
+    const parts = $("customArr").value.split("|");
+    if (parts.length !== 3) throw new Error("Write the arrangement as: front | middle | back");
+    const arr = parts.map(parseCards);
+    if (ana.hand.size !== 13) setAnaHand(arr.flat());
+    addTag(arr, "custom");
+    await analyze();
+  });
+}
+
+async function runMc() {
+  if (!ana.result) return;
+  await guarded(async () => {
+    const top = Math.max(1, Number($("mcTop").value) || 10);
+    const cands = ana.result.cands.filter((cd, i) => i < top || ana.tags.has(tagKey(cd.arrangement)) || i === ana.sel)
+      .map((cd) => cd.arrangement);
+    $("candSub").textContent = `Monte Carlo on ${cands.length} arrangements…`;
+    const r = await engine({ cmd: "mc", hand: [...ana.hand], c: ana.cost, rules: ana.rules, opp: $("mcOpp").value,
+      samples: Math.max(1, Number($("mcSamples").value) || 300), cands });
+    cands.forEach((a, i) => ana.mc.set(tagKey(a), r.stats[i]));
+    renderCands();
+  });
+}
+
+async function sweep() {
+  if (ana.hand.size !== 13) return;
+  await guarded(async () => {
+    $("sweepPanel").classList.remove("hidden");
+    const body = $("sweep").tBodies[0];
+    body.innerHTML = "";
+    let prev = null;
+    for (let i = 0; i <= 10; i++) {
+      const c = i / 10;
+      const r = await engine({ cmd: "analyze", hand: [...ana.hand], c, model: modelPath(), pop: pop() });
+      const best = r.cands[0];
+      const changed = prev && !sameArr(prev, best.arrangement);
+      body.insertAdjacentHTML("beforeend", `<tr><td>${c.toFixed(1)}</td><td>${fmt(best.q)}</td>` +
+        `<td class="l arr">${arrText(best.arrangement)}</td><td class="l">${changed ? '<span class="tag">changed</span>' : ""}</td></tr>`);
+      prev = best.arrangement;
+    }
+  });
+}
+
+function randomHand() {
+  const deck = [...Array(52).keys()];
+  for (let i = 51; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
+  setAnaHand(deck.slice(0, 13));
+}
+
+// ================================================================ wiring
+function switchTab(tab) {
+  $("play").classList.toggle("hidden", tab !== "play");
+  $("ana").classList.toggle("hidden", tab !== "ana");
+  $("tabPlay").classList.toggle("on", tab === "play");
+  $("tabAna").classList.toggle("on", tab === "ana");
+}
+
+async function init() {
+  config = await (await fetch("api/config")).json();
+  const settings = storageGet(SETTINGS, {});
+  for (const m of config.models) $("model").add(new Option(m.name, m.path));
+  if (!config.models.length) $("model").add(new Option("(no models: start with --models DIR)", ""));
+  if (settings.model && config.models.some((m) => m.path === settings.model)) $("model").value = settings.model;
+  if (settings.cost !== undefined) $("cost").value = settings.cost;
+  if (settings.pop !== undefined) $("pop").value = settings.pop;
+  fillPlayerSelect($("seat0"), settings.seat0 || "you", true);
+  const defaultOpp = config.players.length ? config.players[0].spec : "indep";
+  document.querySelectorAll(".opp").forEach((sel, i) => { fillPlayerSelect(sel, (settings.opps || [])[i] || defaultOpp, false); bindCustom(sel); });
+  bindCustom($("seat0"));
+  fillPlayerSelect($("cmpPlayer"), "greedy", false);
+  bindCustom($("cmpPlayer"));
+  fillPlayerSelect($("mcOpp"), settings.mcOpp || defaultOpp, false);
+  bindCustom($("mcOpp"));
+  for (const id of ["cost", "model", "pop"]) $(id).addEventListener("change", saveSettings);
+
+  document.querySelectorAll("#play .row").forEach((el) => el.addEventListener("click", () => placeCards(Number(el.dataset.row))));
+  $("dealBtn").addEventListener("click", deal);
+  $("submitBtn").addEventListener("click", showDown);
+  $("clearBtn").addEventListener("click", () => { myHand().forEach((c) => play.rowOf.set(c, -1)); play.selected.clear(); renderPlay(); });
+  $("sortBtn").addEventListener("click", () => { play.sortBySuit = !play.sortBySuit; renderPlay(); });
+  $("autoBtn").addEventListener("click", autoSet);
+  $("hintBtn").addEventListener("click", showHint);
+  $("resetBtn").addEventListener("click", () => { if (confirm("Reset the session scores?")) { session = { players: {}, hands: 0 }; storageSet(SESSION, session); renderSession(); } });
+  $("tabPlay").addEventListener("click", () => switchTab("play"));
+  $("tabAna").addEventListener("click", () => switchTab("ana"));
+  $("randBtn").addEventListener("click", randomHand);
+  $("clearPickBtn").addEventListener("click", () => setAnaHand([]));
+  $("fromPlayBtn").addEventListener("click", pickFromPlay);
+  $("handText").addEventListener("change", () => guarded(async () => {
+    const cards = parseCards($("handText").value);
+    if (cards.length > 13) throw new Error("A hand has 13 cards");
+    setAnaHand(cards);
+  }));
+  $("anaBtn").addEventListener("click", analyze);
+  $("sweepBtn").addEventListener("click", sweep);
+  $("cmpBtn").addEventListener("click", compare);
+  $("customBtn").addEventListener("click", addCustom);
+  $("mcBtn").addEventListener("click", runMc);
+  $("allBtn").addEventListener("click", () => { ana.showAll = !ana.showAll; renderCands(); });
+  document.addEventListener("keydown", (ev) => {
+    if (ev.target.tagName === "INPUT" || ev.target.tagName === "SELECT") return;
+    if ($("ana").classList.contains("hidden")) {
+      if (ev.key === "1" || ev.key === "2" || ev.key === "3") placeCards(Number(ev.key) - 1);
+      else if (ev.key === "Enter") { if (!$("submitBtn").disabled) showDown(); }
+      else if (ev.key === "n" || ev.key === "N") deal();
+      else if (ev.key === "h" || ev.key === "H") showHint();
+      else if (ev.key === "r" || ev.key === "R") $("clearBtn").click();
+      else if (ev.key === "Escape") { play.selected.clear(); renderPlay(); }
+    } else if (ev.key === "Enter") analyze();
+  });
+  renderPlay();
+  renderSession();
+  randomHand();
+}
+init().catch(showError);
+</script>
+</body>
+</html>

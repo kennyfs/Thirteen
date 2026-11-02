@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thirteen Hand Recorder</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --panel: #ffffff; --text: #1d1d1f; --muted: #6b6b70; --border: #d9d7d0;
+    --accent: #2f6fdb; --accent-text: #ffffff; --ok: #1f8a4c; --bad: #c23a2b; --select: #f2c94c;
+    --card: #ffffff; --red: #c8102e; --black: #1d1d1f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17181a; --panel: #212226; --text: #ececee; --muted: #9a9aa2; --border: #3a3b40;
+      --accent: #5b8ff0; --accent-text: #0e1116; --ok: #48c07b; --bad: #ef6b5b; --select: #e0b43a;
+      --card: #f4f3ee; --red: #c8102e; --black: #1d1d1f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .muted { color: var(--muted); }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 12px 0; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  label { display: inline-flex; gap: 6px; align-items: center; }
+  input[type=number], input[type=text] { width: 7em; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); }
+  button { padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); color: var(--text); cursor: pointer; font: inherit; }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  button:disabled { opacity: 0.45; cursor: default; }
+  .cards { display: flex; flex-wrap: wrap; gap: 6px; min-height: 64px; }
+  .card { width: 44px; height: 62px; border-radius: 6px; background: var(--card); border: 1px solid #b9b7ae; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; font-weight: 600; font-size: 17px; cursor: pointer; user-select: none; color: var(--black); }
+  .card .s { width: 18px; height: 18px; margin-top: 2px; }
+  .card.red { color: var(--red); }
+  .card.selected { outline: 3px solid var(--select); transform: translateY(-4px); }
+  .row { border: 1px dashed var(--border); border-radius: 10px; padding: 8px; margin: 8px 0; cursor: pointer; }
+  .row h2 { font-size: 14px; margin: 0 0 6px; display: flex; justify-content: space-between; gap: 8px; }
+  .row .cat { font-weight: 400; color: var(--muted); }
+  .status { font-weight: 600; }
+  .status.ok { color: var(--ok); }
+  .status.bad { color: var(--bad); }
+  .keys { font-size: 13px; }
+  @media (max-width: 480px) { .card { width: 38px; height: 54px; font-size: 15px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Thirteen Hand Recorder</h1>
+  <div class="muted">Set each dealt hand the way you would at the table. Records stay in this browser until you export them.</div>
+
+  <div class="panel bar">
+    <label>Dealer cost c <input id="cost" type="number" min="0" max="1" step="0.05" value="0.5"></label>
+    <label>Name <input id="label" type="text" placeholder="optional"></label>
+    <span class="muted" id="count"></span>
+  </div>
+
+  <div class="panel">
+    <div class="bar" style="justify-content: space-between">
+      <strong>Hand</strong>
+      <span class="bar">
+        <button id="sortBtn">Sort by suit</button>
+        <button id="clearBtn" title="Shortcut: R">Back to hand</button>
+      </span>
+    </div>
+    <div class="cards" id="hand" style="margin-top: 8px"></div>
+    <div class="muted keys">Select cards, then click a row (or press 1, 2, 3). Click a placed card to take it back.</div>
+  </div>
+
+  <div class="panel">
+    <div class="row" data-row="0"><h2><span>Front (3)</span><span class="cat"></span></h2><div class="cards"></div></div>
+    <div class="row" data-row="1"><h2><span>Middle (5)</span><span class="cat"></span></h2><div class="cards"></div></div>
+    <div class="row" data-row="2"><h2><span>Back (5)</span><span class="cat"></span></h2><div class="cards"></div></div>
+    <div class="bar" style="justify-content: space-between">
+      <span class="status" id="status"></span>
+      <span class="bar">
+        <button id="skipBtn">Skip hand</button>
+        <button id="submitBtn" class="primary" title="Shortcut: Enter">Submit</button>
+      </span>
+    </div>
+  </div>
+
+  <div class="panel bar">
+    <button id="exportBtn">Export JSONL</button>
+    <label><button id="importBtn">Import JSONL</button><input id="importFile" type="file" accept=".jsonl,.json,.txt" hidden></label>
+    <button id="undoBtn">Undo last</button>
+    <button id="wipeBtn">Delete all</button>
+  </div>
+</main>
+
+<script src="thirteen-eval.js"></script>
+<script>
+"use strict";
+const E = window.ThirteenEval;
+const SIZES = [3, 5, 5];
+// Suit icons drawn in one 24x24 box with similar visual weight; font glyphs differ a lot in size between suits.
+const SUIT_PATHS = [
+  // Clubs
+  '<circle cx="12" cy="7.3" r="4.4"/><circle cx="6.9" cy="13.4" r="4.4"/><circle cx="17.1" cy="13.4" r="4.4"/>' +
+    '<circle cx="12" cy="12.6" r="2.6"/><path d="M10.9 13h2.2l1.9 9H9z"/>',
+  // Diamonds
+  '<path d="M12 1.8 20.2 12 12 22.2 3.8 12z"/>',
+  // Hearts
+  '<path d="M12 21.6S2.6 15.8 2.2 9.4C1.9 5.6 4.4 3 7.4 3c2.1 0 3.6 1.2 4.6 2.9C13 4.2 14.5 3 16.6 3c3 0 5.5 2.6 5.2 6.4-.4 6.4-9.8 12.2-9.8 12.2z"/>',
+  // Spades
+  '<path d="M12 1.8S2.4 8.6 2.4 13.8c0 2.9 2.2 4.9 4.8 4.9 1.6 0 2.9-.7 3.7-1.8-.3 2.2-1.3 3.9-3 5.1h8.2c-1.7-1.2-2.7-2.9-3-5.1.8 1.1 2.1 1.8 3.7 1.8 2.6 0 4.8-2 4.8-4.9C21.6 8.6 12 1.8 12 1.8z"/>',
+];
+const SUIT_SVG = SUIT_PATHS.map((p) => `<svg class="s" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">${p}</svg>`);
+const STORE = "thirteen-records-v1";
+const SETTINGS = "thirteen-settings-v1";
+
+let hand = [];          // 13 card ids
+let rowOf = new Map();  // card -> -1 (hand) or row index
+let selected = new Set();
+let sortBySuit = false;
+let dealtAt = 0;
+let records = loadRecords();
+
+function storageGet(key, fallback) {
+  try { const v = localStorage.getItem(key); return v === null ? fallback : JSON.parse(v); } catch (e) { return fallback; }
+}
+function storageSet(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; }
+}
+function loadRecords() { const r = storageGet(STORE, []); return Array.isArray(r) ? r : []; }
+function saveRecords() {
+  if (!storageSet(STORE, records)) alert("Could not save to browser storage. Export your records now.");
+}
+
+function randomInt(n) {
+  const buf = new Uint32Array(1);
+  const limit = Math.floor(0x100000000 / n) * n;
+  do { crypto.getRandomValues(buf); } while (buf[0] >= limit);
+  return buf[0] % n;
+}
+function deal() {
+  const deck = [...Array(52).keys()];
+  for (let i = 51; i > 0; i--) { const j = randomInt(i + 1); [deck[i], deck[j]] = [deck[j], deck[i]]; }
+  hand = deck.slice(0, 13);
+  rowOf = new Map(hand.map((c) => [c, -1]));
+  selected.clear();
+  dealtAt = Date.now();
+  render();
+}
+
+function sorted(cards) {
+  const key = sortBySuit ? (c) => E.suitOf(c) * 13 + E.rankOf(c) : (c) => c;
+  return [...cards].sort((a, b) => key(b) - key(a));
+}
+function cardsIn(row) { return hand.filter((c) => rowOf.get(c) === row); }
+function cardStr(cards) { return sorted(cards).map(E.cardToString).join(" "); }
+
+function cardElement(c) {
+  const el = document.createElement("div");
+  el.className = "card" + (E.suitOf(c) === 1 || E.suitOf(c) === 2 ? " red" : "") + (selected.has(c) ? " selected" : "");
+  el.innerHTML = `<span>${E.RANKS[E.rankOf(c)] === "T" ? "10" : E.RANKS[E.rankOf(c)]}</span>${SUIT_SVG[E.suitOf(c)]}`;
+  el.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    if (rowOf.get(c) === -1) {
+      if (selected.has(c)) selected.delete(c); else selected.add(c);
+    } else {
+      rowOf.set(c, -1);
+    }
+    render();
+  });
+  return el;
+}
+
+function place(row) {
+  if (selected.size === 0) return;
+  const room = SIZES[row] - cardsIn(row).length;
+  if (selected.size > room) {
+    setStatus(`That row has room for ${room} more card${room === 1 ? "" : "s"}.`, false);
+    return;
+  }
+  for (const c of selected) rowOf.set(c, row);
+  selected.clear();
+  render();
+}
+
+function setStatus(text, ok) {
+  const el = document.getElementById("status");
+  el.textContent = text;
+  el.className = "status" + (ok === true ? " ok" : ok === false ? " bad" : "");
+}
+
+function evaluation() {
+  const rows = [0, 1, 2].map(cardsIn);
+  if (rows.some((r, i) => r.length !== SIZES[i])) return null;
+  return E.evaluateArrangement(rows[0], rows[1], rows[2]);
+}
+
+function render() {
+  const handEl = document.getElementById("hand");
+  handEl.replaceChildren(...sorted(cardsIn(-1)).map(cardElement));
+  document.querySelectorAll(".row").forEach((rowEl) => {
+    const r = Number(rowEl.dataset.row);
+    const cards = cardsIn(r);
+    rowEl.querySelector(".cards").replaceChildren(...sorted(cards).map(cardElement));
+    let cat = `${cards.length} / ${SIZES[r]}`;
+    if (cards.length === SIZES[r]) {
+      const key = r === 0 ? E.eval3(cards) : E.eval5(cards);
+      cat = E.CATEGORY_NAMES[E.categoryOf(key)];
+    }
+    rowEl.querySelector(".cat").textContent = cat;
+  });
+  const ev = evaluation();
+  if (!ev) setStatus("", null);
+  else if (!ev.valid) setStatus(ev.keys[0] > ev.keys[1] ? "Foul: front beats middle" : "Foul: middle beats back", false);
+  else setStatus("Valid", true);
+  document.getElementById("submitBtn").disabled = !(ev && ev.valid);
+  document.getElementById("sortBtn").textContent = sortBySuit ? "Sort by rank" : "Sort by suit";
+  document.getElementById("count").textContent = `${records.length} hand${records.length === 1 ? "" : "s"} recorded`;
+}
+
+function uuid() {
+  const b = new Uint8Array(16);
+  crypto.getRandomValues(b);
+  return [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+function submit() {
+  const ev = evaluation();
+  if (!ev || !ev.valid) return;
+  const cost = Math.min(1, Math.max(0, Number(document.getElementById("cost").value) || 0));
+  records.push({
+    version: 1,
+    id: uuid(),
+    hand: cardStr(hand),
+    front: cardStr(cardsIn(0)),
+    middle: cardStr(cardsIn(1)),
+    back: cardStr(cardsIn(2)),
+    c: cost,
+    time_ms: Date.now() - dealtAt,
+    timestamp: new Date().toISOString(),
+    label: document.getElementById("label").value.trim(),
+  });
+  saveRecords();
+  deal();
+}
+
+function exportRecords() {
+  const text = records.map((r) => JSON.stringify(r)).join("\n") + (records.length ? "\n" : "");
+  const blob = new Blob([text], { type: "application/x-ndjson" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `thirteen-records-${new Date().toISOString().slice(0, 10)}.jsonl`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function importRecords(text) {
+  const ids = new Set(records.map((r) => r.id));
+  let added = 0, bad = 0;
+  for (const line of text.split("\n")) {
+    if (!line.trim()) continue;
+    try {
+      const r = JSON.parse(line);
+      if (!r.hand || !r.front || !r.middle || !r.back) { bad++; continue; }
+      if (r.id && ids.has(r.id)) continue;
+      if (!r.id) r.id = uuid();
+      ids.add(r.id);
+      records.push(r);
+      added++;
+    } catch (e) { bad++; }
+  }
+  saveRecords();
+  render();
+  alert(`Imported ${added} record${added === 1 ? "" : "s"}` + (bad ? `, skipped ${bad} bad line${bad === 1 ? "" : "s"}` : ""));
+}
+
+document.querySelectorAll(".row").forEach((el) => el.addEventListener("click", () => place(Number(el.dataset.row))));
+document.getElementById("submitBtn").addEventListener("click", submit);
+document.getElementById("skipBtn").addEventListener("click", deal);
+document.getElementById("clearBtn").addEventListener("click", () => { hand.forEach((c) => rowOf.set(c, -1)); selected.clear(); render(); });
+document.getElementById("sortBtn").addEventListener("click", () => { sortBySuit = !sortBySuit; render(); });
+document.getElementById("exportBtn").addEventListener("click", exportRecords);
+document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
+document.getElementById("importFile").addEventListener("change", (ev) => {
+  const f = ev.target.files[0];
+  if (f) f.text().then(importRecords);
+  ev.target.value = "";
+});
+document.getElementById("undoBtn").addEventListener("click", () => {
+  if (records.length && confirm("Remove the last recorded hand?")) { records.pop(); saveRecords(); render(); }
+});
+document.getElementById("wipeBtn").addEventListener("click", () => {
+  if (records.length && confirm(`Delete all ${records.length} recorded hands from this browser? Export first if you need them.`)) {
+    records = []; saveRecords(); render();
+  }
+});
+for (const id of ["cost", "label"]) {
+  document.getElementById(id).addEventListener("change", () => storageSet(SETTINGS, {
+    cost: document.getElementById("cost").value, label: document.getElementById("label").value,
+  }));
+}
+document.addEventListener("keydown", (ev) => {
+  if (ev.target.tagName === "INPUT") return;
+  if (ev.key === "1" || ev.key === "2" || ev.key === "3") place(Number(ev.key) - 1);
+  else if (ev.key === "Enter") submit();
+  else if (ev.key === "Escape") { selected.clear(); render(); }
+  else if (ev.key === "r" || ev.key === "R") document.getElementById("clearBtn").click();
+});
+
+const settings = storageGet(SETTINGS, {});
+if (settings.cost !== undefined) document.getElementById("cost").value = settings.cost;
+if (settings.label !== undefined) document.getElementById("label").value = settings.label;
+deal();
+</script>
+</body>
+</html>

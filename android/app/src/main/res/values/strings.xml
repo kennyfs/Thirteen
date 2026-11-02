@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">Thirteen</string>
+  <string name="nav_play">Play</string>
+  <string name="nav_analyze">Analyze</string>
+  <string name="nav_records">Records</string>
+  <string name="nav_settings">Settings</string>
+  <string name="ok">OK</string>
+  <string name="cancel">Cancel</string>
+  <string name="info">Explanation</string>
+  <string name="hand_n">Hand %1$d</string>
+  <string name="you">You</string>
+  <string name="cards_to_place">%1$d cards to place</string>
+  <string name="ready">Ready</string>
+  <string name="fouled">Fouled: front ≤ middle ≤ back</string>
+  <string name="sort_by_suit">Sort by suit</string>
+  <string name="sort_by_rank">Sort by rank</string>
+  <string name="clear_rows">Clear rows</string>
+  <string name="confirm">Confirm</string>
+  <string name="next_hand">Next hand</string>
+  <string name="analyze_my_hand">Analyze my hand</string>
+  <string name="fouled_short">Fouled</string>
+  <string name="home_run">Home run</string>
+  <string name="seat_n">Seat %1$d</string>
+  <string name="row_room">%1$s has room for %2$d more</string>
+  <string name="fill_rows_first">Fill all three rows first</string>
+  <string name="n_cards">%1$d/13 cards</string>
+  <string name="random">Random</string>
+  <string name="last_hand">Last hand</string>
+  <string name="clear">Clear</string>
+  <string name="network">Network</string>
+  <string name="analyze_info">Q is the expected result of the hand, in points, against three players like the network. The list holds the arrangements no other arrangement beats in every row, best Q first; tap one for its cards and the network\'s probabilities. Your arrangement, when the hand comes from a game, is pinned on top; its numbers that differ notably from the best arrangement\'s are green where it does better and red where it does worse. The rules are shown above the list; under rules where special rows pay only when they win, the chances that an opponent\'s special row beats yours are listed too. Above the list are short remarks: what yours could do better, only when it is clearly worse (the network is not exact, so a small gap means as good); what kind of choice the best one is against the best of other row types (attacking: more scoops and more scooped; defensive: fewer of both; under row scoring, rows or scoops first); and the names of common arrangements, such as five pairs.</string>
+  <string name="dragon">The hand is a dragon.</string>
+  <string name="show_all">Show all %1$d</string>
+  <string name="yours">Yours</string>
+  <string name="pick_13">Pick 13 cards</string>
+  <string name="n_recorded">%1$d hands recorded</string>
+  <string name="total">total %1$s</string>
+  <string name="export">Export JSONL</string>
+  <string name="clear_records">Clear records</string>
+  <string name="reset_scores">Reset scores</string>
+  <string name="delete">Delete</string>
+  <string name="reset">Reset</string>
+  <string name="clear_records_confirm">Delete all %1$d recorded hands? Export first if you need them.</string>
+  <string name="reset_confirm">Reset the running scores and the hand count? Records are kept.</string>
+  <string name="opponents">Opponents (from the next hand)</string>
+  <string name="mc_samples">Monte Carlo samples (opponents: indep)</string>
+  <string name="networks">Networks</string>
+  <string name="load_weights">Load .onnx weights</string>
+  <string name="built_in">%1$s (built-in)</string>
+  <string name="not_usable">Not a usable network: %1$s</string>
+  <string name="best">Best</string>
+  <string name="pick_n">Pick %1$d more</string>
+  <string name="tab_result">Result</string>
+  <string name="back_to_hand">← Hand</string>
+  <string name="to_analyze">Analyze this hand</string>
+  <string name="seat_pos">#%1$d</string>
+  <string name="this_hand">This hand %1$s</string>
+  <string name="analyze_go">Analyze →</string>
+  <string name="to_candidates">Candidates →</string>
+  <string-array name="row_names">
+    <item>Front</item>
+    <item>Middle</item>
+    <item>Back</item>
+  </string-array>
+  <string-array name="row_labels">
+    <item></item>
+    <item>High</item>
+    <item>Pair</item>
+    <item>Two pair</item>
+    <item>Trips</item>
+    <item>Straight to</item>
+    <item>Flush</item>
+    <item>Full house</item>
+    <item>Quads</item>
+    <item>Str. flush to</item>
+  </string-array>
+  <string-array name="kinds">
+    <item>Network</item>
+    <item>Monte Carlo</item>
+    <item>Independent rows</item>
+  </string-array>
+  <string-array name="prob_names">
+    <item>Scoop</item>
+    <item>Scooped</item>
+    <item>Home run</item>
+    <item>Opp. home run</item>
+    <item>Dealer</item>
+    <item>Win front</item>
+    <item>Win middle</item>
+    <item>Win back</item>
+    <item>Lose front</item>
+    <item>Lose middle</item>
+    <item>Lose back</item>
+    <item>Beaten by trips</item>
+    <item>Beaten by a full house</item>
+    <item>Beaten by quads</item>
+    <item>Beaten by a straight flush</item>
+    <item>Beaten by quads (back)</item>
+    <item>Beaten by a straight flush (back)</item>
+  </string-array>
+  <string name="ready_royalty">Ready · special rows +%1$s</string>
+  <string name="fouled_strict">Fouled: rows may not be equal (strict rows)</string>
+  <string name="nav_rules">Rules</string>
+  <string name="custom">Custom</string>
+  <string name="custom_from">Custom (from %1$s)</string>
+  <string name="restore_preset">Restore preset</string>
+  <string name="rules_next_hand">Changes apply from the next hand; the running scores then start over.</string>
+  <string name="rules_play">Changes the play</string>
+  <string name="rules_play_note">These two change which arrangements foul and how hands rank.</string>
+  <string name="rules_scoring">Scoring: points from each opponent</string>
+  <string name="rules_royalties">Special rows</string>
+  <string name="strict_rows">Strict rows: front &lt; middle &lt; back (equal rows foul)</string>
+  <string name="wheel">A-2-3-4-5</string>
+  <string name="on_win">Special rows pay only when they beat the opponent\'s row</string>
+  <string name="legacy_warning">%1$s predates the rules input: it plays as under family whatever the rules.</string>
+  <string name="rules_label">Rules: %1$s</string>
+  <string name="this_game_rules"> (that hand)</string>
+  <string name="use_current_rules">Use current rules</string>
+  <string name="total_so_far">total %1$s</string>
+  <string name="vs_you">you %1$s</string>
+  <string-array name="preset_notes">
+    <item>House rules: scoops, home runs and special rows, 1 point each.</item>
+    <item>As family, but quads or a straight flush in the middle earn 2.</item>
+    <item>Taiwanese row scoring: 1 per row, scoop 3, home run 6 more; front trips 3, middle quads 8 / straight flush 10, back quads 4 / straight flush 5, dragon 36.</item>
+    <item>Chinese poker as on pagat.com: 1 per row, scoop 3, special rows pay only when they win, strict rows.</item>
+  </string-array>
+  <string-array name="wheel_options">
+    <item>Lowest straight</item>
+    <item>Second highest straight</item>
+    <item>Not a straight</item>
+  </string-array>
+  <string-array name="point_labels">
+    <item>Each row</item>
+    <item>Scoop</item>
+    <item>Home run (more, from each)</item>
+    <item>Dragon</item>
+  </string-array>
+  <string-array name="royalty_labels">
+    <item>Front trips</item>
+    <item>Middle full house</item>
+    <item>Middle quads</item>
+    <item>Middle straight flush</item>
+    <item>Back quads</item>
+    <item>Back straight flush</item>
+  </string-array>
+  <string-array name="category_names">
+    <item></item>
+    <item>high card</item>
+    <item>pair</item>
+    <item>two pair</item>
+    <item>trips</item>
+    <item>straight</item>
+    <item>flush</item>
+    <item>full house</item>
+    <item>quads</item>
+    <item>straight flush</item>
+  </string-array>
+  <!-- Commentary.Shape order. -->
+  <string-array name="shape_names">
+    <item>Three pairs</item>
+    <item>Four pairs</item>
+    <item>Five pairs</item>
+    <item>Two flushes</item>
+    <item>Three flushes</item>
+    <item>Two straights</item>
+    <item>Three straights</item>
+    <item>Straight and flush</item>
+    <item>Two full houses</item>
+    <item>Two trips</item>
+  </string-array>
+  <string name="remark_same_best">Yours is the best arrangement.</string>
+  <string name="remark_same_close">Yours is within the network\'s error of the best: as good.</string>
+  <string name="remark_mistake">Yours: %1$s</string>
+  <string name="remark_sep">" "</string>
+  <string name="remark_missed">you missed the %1$s.</string>
+  <string name="remark_swapped">the %1$s does better than your %2$s.</string>
+  <string name="remark_times_two">%1$s ×2</string>
+  <string name="remark_broke">breaking your %1$s does better here.</string>
+  <string name="remark_pair_to_front">put a pair in front.</string>
+  <string name="remark_pair_out_of_front">keep the pairs back and a high front.</string>
+  <string name="remark_stronger_front">the same rows, with a stronger front.</string>
+  <string name="remark_detail">the same rows, other cards.</string>
+  <string name="remark_other">another kind of arrangement does better.</string>
+  <string name="remark_vs_mine_both">" The best one scoops more and is scooped less."</string>
+  <string name="remark_vs_mine_attack">" The best one scoops more, but is scooped more too."</string>
+  <string name="remark_vs_mine_defense">" The best one is scooped less, but scoops less too."</string>
+  <string name="remark_only">The hand has only one kind of arrangement.</string>
+  <string name="remark_close">Another kind of arrangement is nearly as good.</string>
+  <string name="remark_both">The best one beats the other kinds on both scoops and scooped.</string>
+  <string name="remark_attack">The best one attacks: a stronger %1$s, more scoops and more scooped.</string>
+  <string name="remark_defense">The best one defends: a stronger %1$s, fewer scooped and fewer scoops.</string>
+  <string name="remark_rows_both">The best one beats the other kinds on both rows and scoops.</string>
+  <string name="remark_rows">The best one plays for rows rather than scoops.</string>
+  <string name="remark_scoops_first">The best one plays for scoops rather than rows.</string>
+  <string name="remark_clear">Every other kind is well behind.</string>
+  <string name="remark_strong">A strong hand.</string>
+  <string name="remark_weak">A weak hand: avoid being scooped.</string>
+  <string name="remark_home_run">A home run is in reach.</string>
+</resources>

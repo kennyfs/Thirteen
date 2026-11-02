@@ -1,0 +1,172 @@
+package io.github.kennyfs.thirteen
+
+import android.app.LocaleManager
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.os.Build
+import android.os.LocaleList
+import android.os.ParcelFileDescriptor
+import android.util.Log
+import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
+import androidx.lifecycle.ViewModelProvider
+import androidx.test.core.app.ActivityScenario
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import io.github.kennyfs.thirteen.ui.CARD_TAG
+import org.junit.After
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+/**
+ * Every screen under a range of screen sizes, display sizes (density) and font sizes: a screenshot of each in
+ * /data/local/tmp/shots for a person to look over (CI pulls them), and a check that no card is cut off at the side.
+ * A card cut off at the bottom is only logged: a page that scrolls has those. It changes the device's display and font
+ * settings and puts them back after; CI runs it apart from the other tests.
+ */
+@RunWith(AndroidJUnit4::class)
+class ScreenshotTest {
+  @get:Rule val compose = createEmptyComposeRule()
+  private val instrumentation = InstrumentationRegistry.getInstrumentation()
+  private val cutOff = mutableListOf<String>()
+
+  private data class Config(val name: String, val size: String, val density: Int, val fontScale: Float, val locale: String, val cutout: Boolean)
+
+  private fun shell(cmd: String): String =
+    ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand(cmd)).use { String(it.readBytes()) }
+
+  @After
+  fun restore() {
+    shell("wm size reset")
+    shell("wm density reset")
+    shell("settings put system font_scale 1.0")
+    shell("cmd overlay disable $CUTOUT")
+  }
+
+  @Test
+  fun everyScreenFits() {
+    shell("mkdir -p $DIR")
+    shell("cmd overlay enable com.android.internal.systemui.navbar.gestural")
+    for (config in CONFIGS) shoot(config)
+    assertTrue("Cards cut off at the side:\n" + cutOff.joinToString("\n"), cutOff.isEmpty())
+  }
+
+  private fun shoot(c: Config) {
+    shell("wm size ${c.size}")
+    shell("wm density ${c.density}")
+    shell("settings put system font_scale ${c.fontScale}")
+    shell("cmd overlay ${if (c.cutout) "enable" else "disable"} $CUTOUT")
+    if (Build.VERSION.SDK_INT >= 33)
+      instrumentation.targetContext.getSystemService(LocaleManager::class.java).applicationLocales = LocaleList.forLanguageTags(c.locale)
+    ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+      lateinit var vm: AppViewModel
+      scenario.onActivity { vm = ViewModelProvider(it)[AppViewModel::class.java] }
+      compose.waitUntil(TIMEOUT) { vm.hand.isNotEmpty() && vm.seats.isNotEmpty() }
+      instrumentation.runOnMainSync { vm.deal(HANDS) }
+      compose.waitUntil(TIMEOUT) { vm.hand == HANDS[0] }
+      // The front row placed and two cards picked.
+      instrumentation.runOnMainSync {
+        MINE[0].forEach(vm::toggle)
+        vm.placeInto(0)
+        MINE[1].take(2).forEach(vm::toggle)
+      }
+      compose.waitUntil(TIMEOUT) { vm.rowsEval != null }
+      shot(c, "1-arrange")
+      instrumentation.runOnMainSync {
+        MINE[1].drop(2).forEach(vm::toggle)
+        vm.placeInto(1)
+      }
+      compose.waitUntil(TIMEOUT) { vm.rowsEval?.valid == true }
+      instrumentation.runOnMainSync { vm.confirm() }
+      compose.waitUntil(TIMEOUT) { vm.result != null }
+      shot(c, "2-result")
+      instrumentation.runOnMainSync { vm.showGameAnalysis() }
+      compose.waitUntil(TIMEOUT) { vm.gameAnalysis != null }
+      shot(c, "3-result-analysis")
+      compose.onNodeWithTag("nav_ANALYZE").performClick()
+      instrumentation.runOnMainSync { vm.setAnalyzeHand(HANDS[1].take(9).toSet()) }
+      shot(c, "4-analyze-pick")
+      instrumentation.runOnMainSync {
+        vm.analyzeLastHand()
+        vm.analyze()
+      }
+      compose.waitUntil(TIMEOUT) { vm.analysis != null && vm.anaPage == 1 }
+      shot(c, "5-candidates")
+      for ((tag, name) in listOf("nav_RECORDS" to "6-records", "nav_RULES" to "7-rules", "nav_SETTINGS" to "8-settings")) {
+        compose.onNodeWithTag(tag).performClick()
+        shot(c, name)
+      }
+    }
+  }
+
+  private fun shot(c: Config, name: String) {
+    compose.waitForIdle()
+    // The app is landscape only; after a change of size the display can take a moment to turn (the app first).
+    compose.waitUntil(TIMEOUT) { compose.onRoot().fetchSemanticsNode().size.let { it.width > it.height } }
+    // The system bars settle after a change of size or rotation.
+    Thread.sleep(600)
+    // The screenshot is taken here and only kept once the display has turned, the app's light background shows at both
+    // sides (the turn shows a dark still of the old layout) and two in a row agree.
+    var screen: Bitmap? = null
+    compose.waitUntil(TIMEOUT) {
+      val last = screen
+      screen = instrumentation.uiAutomation.takeScreenshot()
+      screen.let {
+        it != null && it.width > it.height && light(it.getPixel(1, it.height / 2)) && light(it.getPixel(it.width - 2, it.height / 2)) &&
+          last != null && it.sameAs(last)
+      }
+    }
+    val what = "${c.name} $name"
+    val width = compose.onRoot().fetchSemanticsNode().size.width
+    for (node in compose.onAllNodesWithTag(CARD_TAG, useUnmergedTree = true).fetchSemanticsNodes()) {
+      // boundsInRoot is clipped by the ancestors and the screen; size is the card's own.
+      val shown = node.boundsInRoot
+      if (shown.height <= 0f) continue
+      if (shown.width < node.size.width - 1) cutOff += "$what: a card shows ${shown.width} of ${node.size.width} px (screen $width)"
+      else if (shown.height < node.size.height - 1) Log.i(TAG, "$what: a card shows ${shown.height} of ${node.size.height} px in height")
+    }
+    // The shell, not the app, can write to DIR: the PNG goes through dd.
+    val (out, into) = instrumentation.uiAutomation.executeShellCommandRw("dd of=$DIR/${c.name}-$name.png")
+    ParcelFileDescriptor.AutoCloseOutputStream(into).use { screen!!.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    ParcelFileDescriptor.AutoCloseInputStream(out).use { it.readBytes() }
+    Log.i(TAG, "$what: done")
+  }
+
+  private fun light(color: Int) = Color.red(color) + Color.green(color) + Color.blue(color) > 3 * 160
+
+  companion object {
+    private const val TAG = "ScreenshotTest"
+    private const val DIR = "/data/local/tmp/shots"
+    private const val CUTOUT = "com.android.internal.display.cutout.emulation.hole"
+    private const val TIMEOUT = 90_000L
+
+    // The phone the app is tried on (2424 x 1080, display and font sizes up a step), then smaller and larger.
+    private val CONFIGS = listOf(
+      Config("phone-user", "1080x2424", 480, 1.3f, "zh-TW", cutout = true),
+      Config("phone", "1080x2424", 420, 1.0f, "zh-TW", cutout = true),
+      Config("phone-font2", "1080x2424", 420, 2.0f, "zh-TW", cutout = false),
+      Config("phone-largest", "1080x2424", 560, 1.3f, "zh-TW", cutout = true),
+      Config("phone-en", "1080x2424", 480, 1.3f, "en", cutout = false),
+      Config("phone-font085", "1080x2424", 420, 0.85f, "en", cutout = false),
+      Config("small", "720x1600", 320, 1.0f, "zh-TW", cutout = false),
+      Config("small-large", "720x1600", 360, 1.5f, "en", cutout = false),
+      Config("tablet", "1600x2560", 320, 1.0f, "zh-TW", cutout = false),
+      Config("tablet-font", "1600x2560", 320, 1.5f, "en", cutout = false),
+    )
+
+    // Seed "11" of the engine's deal, with the greedy player's rows for the player: under family, the networks'
+    // rows give three scoops, two of them at seat 1 and two by seat 3.
+    private val HANDS = listOf(
+      listOf(9, 12, 13, 16, 22, 24, 27, 28, 34, 35, 37, 44, 47),
+      listOf(3, 4, 7, 10, 11, 14, 18, 19, 25, 32, 38, 40, 46),
+      listOf(0, 1, 8, 15, 17, 26, 29, 30, 39, 43, 48, 49, 50),
+      listOf(2, 5, 6, 20, 21, 23, 31, 33, 36, 41, 42, 45, 51),
+    )
+    private val MINE = listOf(listOf(9, 13, 22), listOf(27, 34, 35, 37, 47), listOf(12, 16, 24, 28, 44))
+  }
+}
