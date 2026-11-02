@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -45,6 +46,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -333,7 +335,11 @@ private fun Finished(vm: AppViewModel, arrangements: List<Rows>, score: Score) {
     }
     Button(onClick = { vm.deal() }, contentPadding = COMPACT) { Text(stringResource(R.string.next_hand)) }
   }
-  if (!analysisShown) SeatResults(vm, arrangements, score)
+  if (!analysisShown) {
+    val names = List(4) { if (it == 0) stringResource(R.string.you) else seatName(it) }
+    val notes = List(4) { if (it == 0) null else vm.settings.seatName(vm.seats[it - 1]) }
+    SeatResults(arrangements, score, vm.gameValues["wheel"]?.toInt() ?: 0, names, notes, vm.session.second)
+  }
   else {
     val a = vm.gameAnalysis
     if (a == null) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 8.dp))
@@ -347,12 +353,17 @@ private val COLUMN_GAP = 8.dp
 private val LABEL_STYLE = TextStyle(fontSize = 11.sp, lineHeight = 14.sp)
 
 /**
- * One line per player: who, the points, then the three rows side by side, and the scoops as arcs on the right. The
- * cards take the most room the width and height allow; each column is as wide as its cards or its widest label.
+ * One line per player, the player ("you") first: who, the points, then the three rows side by side, and the scoops as
+ * arcs on the right. The cards take the most room the width and height allow; each column is as wide as its cards or
+ * its widest label. A seat's name is `names`, with `notes` after it in smaller type; `totals` are the totals so far;
+ * with `onSeat`, a line can be tapped.
  */
 @Composable
-private fun SeatResults(vm: AppViewModel, arrangements: List<Rows>, score: Score) {
-  val wheel = vm.gameValues["wheel"]?.toInt() ?: 0
+fun SeatResults(
+  arrangements: List<Rows>, score: Score, wheel: Int, names: List<String>, notes: List<String?>, totals: List<Double>,
+  onSeat: ((Int) -> Unit)? = null,
+) {
+  val seats = arrangements.size
   val labels = rowLabels()
   val colors = MaterialTheme.colorScheme
   val good = GOOD
@@ -360,7 +371,7 @@ private fun SeatResults(vm: AppViewModel, arrangements: List<Rows>, score: Score
   val fouled = stringResource(R.string.fouled_short)
   val mine = score.info[0]
   // Each player's row labels, with the mark against the player's row: ✓ the player wins it, ✗ loses it.
-  val rowTexts = List(4) { s ->
+  val rowTexts = List(seats) { s ->
     val info = score.info[s]
     List(3) { r ->
       val d = if (s != 0 && info.valid && mine.valid) mine.keys[r].compareTo(info.keys[r]) else null
@@ -380,7 +391,7 @@ private fun SeatResults(vm: AppViewModel, arrangements: List<Rows>, score: Score
   var textHeight by remember { mutableStateOf(0.dp) }
   BoxWithConstraints(Modifier.fillMaxSize().padding(top = 4.dp)) {
     val labelWidths = List(3) { r ->
-      with(density) { (0 until 4).maxOf { s -> measurer.measure(rowTexts[s][r].let { it.first + mark(it.second) }, LABEL_STYLE).size.width }.toDp() }
+      with(density) { (0 until seats).maxOf { s -> measurer.measure(rowTexts[s][r].let { it.first + mark(it.second) }, LABEL_STYLE).size.width }.toDp() }
     }
     val nameWidth = textRoom(84)
     fun columnWidth(r: Int, card: Dp) = maxOf(rowWidth(Cards.ROW_SIZES[r], card) + 2.dp, labelWidths[r])
@@ -390,16 +401,16 @@ private fun SeatResults(vm: AppViewModel, arrangements: List<Rows>, score: Score
     val textBlock = textRoom(48) + if (score.homeRun.any { it }) textRoom(14) else 0.dp
     var card = 72.dp
     while (card > 12.dp && tableWidth(card) + ARROWS_WIDTH > maxWidth) card -= 0.5.dp
-    card = minOf(card, ((maxHeight - SEAT_GAP * 3) / 4 - 6.dp - labelLine - 2.dp) / 1.4f).coerceAtLeast(12.dp)
+    card = minOf(card, ((maxHeight - SEAT_GAP * (seats - 1)) / seats - 6.dp - labelLine - 2.dp) / 1.4f).coerceAtLeast(12.dp)
     val seatHeight = maxOf(textBlock, textHeight, labelLine + cardHeight(card) + 2.dp) + 6.dp
-    val totals = vm.session.second
     Row(Modifier.verticalScroll(rememberScrollState())) {
       Column(verticalArrangement = Arrangement.spacedBy(SEAT_GAP)) {
-        for (s in 0 until 4) {
+        for (s in 0 until seats) {
           val info = score.info[s]
           Row(
             Modifier.width(tableWidth(card)).height(seatHeight)
               .background(if (s == 0) colors.secondaryContainer else Color.Transparent, RoundedCornerShape(6.dp))
+              .let { m -> if (onSeat != null) m.clip(RoundedCornerShape(6.dp)).clickable { onSeat(s) } else m }
               .padding(horizontal = 4.dp, vertical = 3.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(COLUMN_GAP),
           ) {
@@ -408,12 +419,13 @@ private fun SeatResults(vm: AppViewModel, arrangements: List<Rows>, score: Score
                 .onSizeChanged { with(density) { it.height.toDp() }.let { h -> if (h > textHeight) textHeight = h } },
             ) {
               Row(verticalAlignment = Alignment.Bottom) {
-                Text(if (s == 0) stringResource(R.string.you) else seatName(s), fontSize = 11.sp, lineHeight = 14.sp, maxLines = 1)
-                if (s > 0)
+                Text(names[s], Modifier.weight(1f, fill = false), fontSize = 11.sp, lineHeight = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                notes[s]?.let { note ->
                   Text(
-                    " " + vm.settings.seatName(vm.seats[s - 1]), Modifier.weight(1f, fill = false), fontSize = 10.sp, lineHeight = 14.sp,
+                    " " + note, Modifier.weight(1f, fill = false), fontSize = 10.sp, lineHeight = 14.sp,
                     maxLines = 1, overflow = TextOverflow.Ellipsis, color = colors.onSurfaceVariant,
                   )
+                }
               }
               Row {
                 Text(
@@ -459,7 +471,7 @@ private fun SeatResults(vm: AppViewModel, arrangements: List<Rows>, score: Score
       }
       ScoopArcs(
         score.scoops, seatHeight, good, bad, colors.onSurfaceVariant,
-        Modifier.width(ARROWS_WIDTH).height(seatHeight * 4 + SEAT_GAP * 3),
+        Modifier.width(ARROWS_WIDTH).height(seatHeight * seats + SEAT_GAP * (seats - 1)),
       )
     }
   }
@@ -477,7 +489,7 @@ private fun ScoopArcs(scoops: List<List<Boolean>>, seatHeight: Dp, good: Color, 
     val line = seatHeight.toPx() + SEAT_GAP.toPx()
     val x0 = 3.dp.toPx()
     val spacing = minOf(seatHeight.toPx() * 0.2f, 9.dp.toPx())
-    val arcs = (0 until 4).flatMap { i -> (0 until 4).filter { j -> i != j && scoops[i][j] }.map { j -> i to j } }
+    val arcs = scoops.indices.flatMap { i -> scoops.indices.filter { j -> i != j && scoops[i][j] }.map { j -> i to j } }
     fun partners(i: Int): List<Int> {
       val all = arcs.mapNotNull { (a, b) -> if (a == i) b else if (b == i) a else null }
       return all.filter { it < i }.sortedDescending() + all.filter { it > i }.sortedDescending()

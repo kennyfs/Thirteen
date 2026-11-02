@@ -12,6 +12,7 @@ import io.github.kennyfs.thirteen.Arranger
 import io.github.kennyfs.thirteen.Engine
 import io.github.kennyfs.thirteen.R
 import io.github.kennyfs.thirteen.RecordStore
+import io.github.kennyfs.thirteen.Score
 import io.github.kennyfs.thirteen.Settings
 import io.github.kennyfs.thirteen.protocol.ChangeSettings
 import io.github.kennyfs.thirteen.protocol.ClientMsg
@@ -81,6 +82,11 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   var outcomes by mutableStateOf<List<HandOutcome>>(emptyList()); private set
   /** Each row's category of the plays shown (by their rows, sorted within each row), for laying them out. */
   var categories by mutableStateOf<Map<List<List<Int>>, List<Int>>>(emptyMap()); private set
+  /**
+   * A table game's hands as the practice table shows them, by hand index: the plays' indices with the player's own
+   * first, then the others in seat order, and the full score in that order (the room's, with each row's hand).
+   */
+  var tables by mutableStateOf<Map<Int, Pair<List<Int>, Score>>>(emptyMap()); private set
   var submitting by mutableStateOf(false); private set
   /** The room is gone but its results stay to look at. */
   var finished by mutableStateOf(false); private set
@@ -263,6 +269,7 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     deal = null
     outcomes = emptyList()
     categories = emptyMap()
+    tables = emptyMap()
     lastSeen = false
     submitting = false
     finished = false
@@ -381,6 +388,12 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     outcomes = known.values.sortedBy { it.index }
     val rules = room?.rules ?: return
     viewModelScope.launch {
+      for (o in list) {
+        if (o.score == null || o.index in tables) continue
+        val mine = o.plays.indexOfFirst { it.player == me }
+        val order = if (mine < 0) o.plays.indices.toList() else listOf(mine) + o.plays.indices.filter { it != mine }
+        runCatching { Engine.score(order.map { o.plays[it].rows }, rules) }.onSuccess { tables = tables + (o.index to (order to it)) }
+      }
       for (o in list) for (rows in o.plays.map { it.rows } + listOfNotNull(o.best)) {
         val key = rows.map { it.sorted() }
         if (key in categories) continue

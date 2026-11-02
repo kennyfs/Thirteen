@@ -1,6 +1,6 @@
 # Battles
 
-Two modes, played in the app's Battle tab against people on a server or on phones nearby:
+Two modes, played in the app's Multiplayer tab against people on a server or on phones nearby:
 
 - **Puzzle contest** (1 or more players; alone, a challenge): everyone sets the same hands, in the same order. Each hand costs what the
   player's arrangement loses against the network's best (its best Q minus the player's Q, under the room's rules);

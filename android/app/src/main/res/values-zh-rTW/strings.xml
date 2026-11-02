@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="app_name">十三支</string>
-  <string name="nav_play">對局</string>
+  <string name="nav_play">練習</string>
   <string name="nav_analyze">分析</string>
   <string name="nav_records">紀錄</string>
   <string name="nav_settings">設定</string>
@@ -197,7 +197,7 @@
   <string name="remark_strong">這手牌很強。</string>
   <string name="remark_weak">這手牌偏弱，重點是少被打槍。</string>
   <string name="remark_home_run">有機會全壘打。</string>
-  <string name="nav_battle">對戰</string>
+  <string name="nav_battle">連線對戰</string>
   <string name="battle_name">你的名稱</string>
   <string name="battle_online">線上</string>
   <string name="battle_nearby">附近</string>
@@ -205,7 +205,7 @@
   <string name="battle_server_hint">例如 thirteen.example.com</string>
   <string name="battle_puzzle">解題比賽</string>
   <string name="battle_puzzle_info">所有人擺同樣的牌，每手扣掉你的擺法比 AI 首選少的分數，總扣分最少者勝，沒有運氣成分。一個人也可以開始，當作挑戰。</string>
-  <string name="battle_game">一般對局</string>
+  <string name="battle_game">同桌對局</string>
   <string name="battle_game_info">最多四人，空位由 AI 補上，總分最高者勝。</string>
   <string name="battle_create">建立</string>
   <string name="battle_join">加入</string>
@@ -213,7 +213,7 @@
   <string name="battle_pin_bad">PIN 是 6 位數字。</string>
   <string name="battle_server_bad">請輸入伺服器位址（網域名稱或 wss://…）。</string>
   <string name="battle_create_room">建立房間</string>
-  <string name="battle_create_room_info">解題比賽或一般對局，其他人用房間的 PIN 加入。</string>
+  <string name="battle_create_room_info">解題比賽或同桌對局，其他人用房間的 PIN 加入。</string>
   <string name="battle_join_room">加入房間</string>
   <string name="battle_join_room_info">輸入別人建立的房間的 PIN。</string>
   <string name="battle_search_again">重新搜尋</string>
@@ -266,6 +266,7 @@
   <string name="battle_back">返回</string>
   <string name="battle_done">完成</string>
   <string name="battle_nearby_host_note">房間由這支手機主持：其他人透過附近連線加入，AI 座位也在這支手機上計算。</string>
+  <string name="battle_this_hand">本手 %1$s</string>
   <string name="battle_col_hand">本手</string>
   <string name="battle_col_total">累計</string>
   <string name="battle_col_hand_loss">本手扣分</string>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="app_name">Thirteen</string>
-  <string name="nav_play">Play</string>
+  <string name="nav_play">Practice</string>
   <string name="nav_analyze">Analyze</string>
   <string name="nav_records">Records</string>
   <string name="nav_settings">Settings</string>
@@ -198,7 +198,7 @@
   <string name="remark_strong">A strong hand.</string>
   <string name="remark_weak">A weak hand: avoid being scooped.</string>
   <string name="remark_home_run">A home run is in reach.</string>
-  <string name="nav_battle">Battle</string>
+  <string name="nav_battle">Multiplayer</string>
   <string name="battle_name">Your name</string>
   <string name="battle_online">Online</string>
   <string name="battle_nearby">Nearby</string>
@@ -267,6 +267,7 @@
   <string name="battle_back">Back</string>
   <string name="battle_done">Done</string>
   <string name="battle_nearby_host_note">This phone hosts the room: the others join it nearby, and it computes the networks\' seats.</string>
+  <string name="battle_this_hand">This hand %1$s</string>
   <string name="battle_col_hand">This hand</string>
   <string name="battle_col_total">Total</string>
   <string name="battle_col_hand_loss">Lost</string>

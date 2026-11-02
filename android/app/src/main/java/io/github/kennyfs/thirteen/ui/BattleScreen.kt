@@ -404,6 +404,16 @@ private fun handColor(room: RoomView, o: HandOutcome, i: Int): Color {
   }
 }
 
+/** What a table game's hand gave the player, as the practice screen shows it; nothing in a puzzle. */
+@Composable
+private fun MyHandResult(vm: BattleViewModel, o: HandOutcome?) {
+  val score = o?.score ?: return
+  val i = o.plays.indexOfFirst { it.player == vm.me }
+  if (i < 0) return
+  val x = score.result[i]
+  Text(stringResource(R.string.battle_this_hand, signed(x)), color = if (x > 0) GOOD else if (x < 0) BAD else MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
+}
+
 /** Rank by standing, equal totals sharing a rank. */
 private fun rankOf(room: RoomView, p: PlayerView): Int {
   val puzzle = room.settings.mode == Mode.PUZZLE
@@ -466,9 +476,31 @@ private fun ResultTable(vm: BattleViewModel, room: RoomView, o: HandOutcome, max
   }
 }
 
-/** A hand's table as large as both the width and the height allow, so that a table of four fits without scrolling. */
+/**
+ * A hand's table as large as both the width and the height allow, so that a table of four fits without scrolling. A
+ * table game's hand is shown as on the practice screen, from the player's seat, once its full score is in.
+ */
 @Composable
 private fun HandTable(vm: BattleViewModel, room: RoomView, o: HandOutcome?, onPlayer: ((Int) -> Unit)? = null) {
+  val table = o?.let { vm.tables[it.index] }
+  if (o != null && table != null) {
+    val (order, score) = table
+    val plays = order.map { o.plays[it] }
+    val byId = room.players.associateBy { it.id }
+    // Each player's total up to this hand.
+    val totals = plays.map { p ->
+      vm.outcomes.filter { it.index <= o.index }.sumOf { h -> h.plays.indexOfFirst { it.player == p.player }.let { i -> if (i < 0) 0.0 else h.score?.result?.get(i) ?: 0.0 } }
+    }
+    val you = stringResource(R.string.you)
+    val timedOut = stringResource(R.string.battle_timed_out).trim()
+    SeatResults(
+      plays.map { it.rows }, score, Rules.values(room.rules)["wheel"]?.toInt() ?: 0,
+      plays.map { if (it.player == vm.me) you else byId[it.player]?.name ?: "?" },
+      plays.map { if (it.timedOut) timedOut else null }, totals,
+      onPlayer?.let { f -> { s: Int -> f(plays[s].player) } },
+    )
+    return
+  }
   BoxWithConstraints(Modifier.fillMaxSize().padding(top = 4.dp)) {
     val lines = room.players.size + (if (o?.best != null) 1 else 0)
     val maxCard = (((maxHeight - textRoom(24)) / lines - 6.dp) / 1.4f).coerceIn(20.dp, 48.dp)
@@ -481,8 +513,9 @@ private fun HandTable(vm: BattleViewModel, room: RoomView, o: HandOutcome?, onPl
 @Composable
 private fun ReviewPage(vm: BattleViewModel, room: RoomView) {
   val me = room.players.firstOrNull { it.id == vm.me }
-  Row(verticalAlignment = Alignment.CenterVertically) {
+  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
     Text(handHeader(vm, room), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
+    MyHandResult(vm, vm.outcomes.lastOrNull { it.index == room.hand })
     Button(onClick = vm::ready, enabled = me?.ready != true) { Text(stringResource(R.string.battle_next)) }
   }
   HandTable(vm, room, vm.outcomes.lastOrNull { it.index == room.hand })
@@ -492,11 +525,12 @@ private fun ReviewPage(vm: BattleViewModel, room: RoomView) {
 @Composable
 private fun LastHandPage(vm: BattleViewModel, room: RoomView) {
   val o = vm.outcomes.last()
-  Row(verticalAlignment = Alignment.CenterVertically) {
+  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
     Text(
       stringResource(R.string.battle_hand_of, o.index + 1, room.settings.hands), Modifier.weight(1f), maxLines = 1,
       style = MaterialTheme.typography.labelLarge,
     )
+    MyHandResult(vm, o)
     Button(onClick = vm::toSummary) { Text(stringResource(R.string.battle_to_summary)) }
   }
   HandTable(vm, room, o)
@@ -573,7 +607,11 @@ private fun DetailPage(vm: BattleViewModel, room: RoomView) {
   Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
     TextButton(onClick = vm::closeDetail) { Text(stringResource(R.string.battle_back)) }
     Text(stringResource(R.string.battle_hand_of, o.index + 1, room.settings.hands), style = MaterialTheme.typography.labelLarge)
-    Text(stringResource(R.string.battle_tap_player), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text(
+      stringResource(R.string.battle_tap_player), Modifier.weight(1f), style = MaterialTheme.typography.bodySmall,
+      color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
+    )
+    MyHandResult(vm, o)
   }
   HandTable(vm, room, o) { vm.openAnalysis(it) }
 }
