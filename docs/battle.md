@@ -104,7 +104,7 @@ The image builds from the repository root. Put the network (`run2_net10.onnx` fr
 DOMAIN=thirteen.example.com docker compose -f server/compose.yml up -d --build
 ```
 
-In the app, the server's address is that name (`thirteen.example.com`; the app adds `wss://` and `/ws`). A server
+The app starts with the project's server, `thirteen.1li.tw`. In the app, the server's address is that name (`thirteen.example.com`; the app adds `wss://` and `/ws`). A server
 on the same machine as an emulator, without TLS, is `ws://10.0.2.2:PORT` (only localhost, 127.0.0.1 and 10.0.2.2 may
 go without TLS).
 

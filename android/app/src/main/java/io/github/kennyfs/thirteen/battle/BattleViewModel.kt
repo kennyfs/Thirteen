@@ -50,6 +50,9 @@ import kotlinx.coroutines.launch
 
 enum class Via { ONLINE, NEARBY }
 
+/** The project's public server (see docs/battle.md). */
+const val DEFAULT_SERVER = "thirteen.1li.tw"
+
 /** The entry page's two ways into a room. */
 enum class Entry { CREATE, JOIN }
 
@@ -65,7 +68,8 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   private fun str(id: Int, vararg args: Any) = getApplication<Application>().getString(id, *args)
 
   var name by mutableStateOf(prefs.getString("name", "") ?: "")
-  var server by mutableStateOf(prefs.getString("server", "") ?: "")
+  // An empty address (as saved before there was a default) means the default.
+  var server by mutableStateOf(prefs.getString("server", null)?.ifBlank { null } ?: DEFAULT_SERVER)
   var via by mutableStateOf(Via.ONLINE); private set
   /** Which way into a room the entry page shows; null for the choice between them. */
   var entry by mutableStateOf<Entry?>(null); private set
