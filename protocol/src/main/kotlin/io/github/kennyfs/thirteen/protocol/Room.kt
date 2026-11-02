@@ -200,8 +200,7 @@ class Room(
         broadcastState()
       }
       Start -> {
-        val enough = if (settings.mode == Mode.PUZZLE) humans().size >= 2 else humans().isNotEmpty()
-        if (p.id != host || phase != Phase.LOBBY || !enough) return peer.send(Error(ErrorCode.NOT_ALLOWED))
+        if (p.id != host || phase != Phase.LOBBY || humans().isEmpty()) return peer.send(Error(ErrorCode.NOT_ALLOWED))
         if (settings.mode == Mode.GAME)
           for (i in 1..Limits.TABLE - players.size) players += Player(nextId++, "AI $i", "", bot = true)
         startHand(0)

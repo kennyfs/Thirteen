@@ -175,12 +175,12 @@ class RoomTest {
   }
 
   @Test
-  fun aPuzzleNeedsTwo() = runTest {
+  fun aPuzzleAloneIsAChallenge() = runTest {
     val hub = hub()
     val (a) = room(hub, RoomSettings(Mode.PUZZLE), "A")
     a.send(Start)
     runCurrent()
-    assertEquals(ErrorCode.NOT_ALLOWED, a.errors().last())
+    assertEquals(13, a.last<Deal>()!!.cards.size)
   }
 
   @Test

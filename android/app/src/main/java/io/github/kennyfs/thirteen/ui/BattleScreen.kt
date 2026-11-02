@@ -248,8 +248,7 @@ private fun LobbyPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) {
       Spacer(Modifier.weight(1f))
       OutlinedButton(onClick = vm::leave) { Text(stringResource(R.string.battle_leave)) }
       if (isHost) {
-        val enough = if (s.mode == Mode.PUZZLE) room.players.count { !it.bot } >= 2 else true
-        Button(onClick = { vm.startGame() }, enabled = enough) { Text(stringResource(R.string.battle_start)) }
+        Button(onClick = { vm.startGame() }) { Text(stringResource(R.string.battle_start)) }
       }
     }
     if (vm.hosting) Text(stringResource(R.string.battle_nearby_host_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -205,7 +205,7 @@
   <string name="battle_server">Server</string>
   <string name="battle_server_hint">e.g. thirteen.example.com</string>
   <string name="battle_puzzle">Puzzle contest</string>
-  <string name="battle_puzzle_info">Everyone sets the same hands. Each hand costs what your choice loses against the network\'s best; the least in total wins. No luck involved.</string>
+  <string name="battle_puzzle_info">Everyone sets the same hands. Each hand costs what your choice loses against the network\'s best; the least in total wins. No luck involved. Alone, it is a challenge.</string>
   <string name="battle_game">Table game</string>
   <string name="battle_game_info">Up to four players, networks in the empty seats; the most points wins.</string>
   <string name="battle_create">Create</string>

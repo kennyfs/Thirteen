@@ -2,7 +2,7 @@
 
 Two modes, played in the app's Battle tab against people on a server or on phones nearby:
 
-- **Puzzle contest** (2 or more players): everyone sets the same hands, in the same order. Each hand costs what the
+- **Puzzle contest** (1 or more players; alone, a challenge): everyone sets the same hands, in the same order. Each hand costs what the
   player's arrangement loses against the network's best (its best Q minus the player's Q, under the room's rules);
   the least in total wins. No luck: only the choices count. Standings are shown live, after each hand closes.
 - **Table game** (1 to 4 players): one table, networks in the empty seats, scored as usual; the most points wins.
