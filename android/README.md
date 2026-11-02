@@ -35,8 +35,8 @@ with platform 35, build-tools 35, NDK 27.0.12077973 and CMake 3.22.1. Their path
 script for the variables. The built-in network is not in the repository: put it at
 `android/app/src/main/assets/run2_net10.onnx` (any network exported by `python/train.py`, see docs/training.md)
 before building; the app and its device tests expect it. The version code is the minutes from 2026-01-01 to the last commit, so a newer
-build always installs over an older one. The version name is the latest `vX.Y.Z` tag (`1.0.0` on the tag itself,
-`1.0.0-3` three commits after it).
+build always installs over an older one. The version name is the release's `vX.Y.Z` tag on the tagged commit (`1.0.0`);
+any other build is a beta, named after the latest tag (`1.0.0+beta.3` three commits after it).
 
 `android/device-tests.sh` runs `ScreenshotTest` on a local headless Android 14 emulator (made on the first run): every
 screen under several screen, display and font sizes, saved in `android/build/screenshots`, failing when a card is cut

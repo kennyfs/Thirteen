@@ -29,12 +29,13 @@ android {
     minSdk = 26
     targetSdk = 35
     // Minutes from 2026-01-01 to the last commit: rises with every commit on any branch or machine, so a newer
-    // build always installs over an older one. The name is the latest vX.Y.Z tag, plus the commits since it.
+    // build always installs over an older one. The name is the vX.Y.Z tag of a release, or a beta
+    // after the latest tag for any other build.
     versionCode = (((git("log", "-1", "--format=%ct")?.toLongOrNull() ?: (System.currentTimeMillis() / 1000)) - 1767225600L) / 60).toInt()
     versionName = System.getenv("THIRTEEN_VERSION")
       ?: git("describe", "--tags", "--match", "v[0-9]*", "--abbrev=0")?.let { tag ->
         val since = git("rev-list", "--count", "$tag..HEAD") ?: "0"
-        tag.removePrefix("v") + if (since == "0") "" else "-$since"
+        tag.removePrefix("v") + if (since == "0") "" else "+beta.$since"
       } ?: "0.0.${git("rev-list", "--count", "HEAD") ?: "0"}"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     externalNativeBuild {
