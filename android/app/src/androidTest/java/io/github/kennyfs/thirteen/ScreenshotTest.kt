@@ -27,7 +27,9 @@ import org.junit.runner.RunWith
  * Every screen under a range of screen sizes, display sizes (density) and font sizes: a screenshot of each in
  * /data/local/tmp/shots for a person to look over (device-tests.sh pulls them), and a check that no card is cut off at the side.
  * A card cut off at the bottom is only logged: a page that scrolls has those. It changes the device's display and font
- * settings and puts them back after; device-tests.sh runs it apart from the other tests.
+ * settings and puts them back after; device-tests.sh runs it apart from the other tests. With the argument store=1
+ * (STORE=1 device-tests.sh) it takes the Google Play screenshots instead: 16:9, in Chinese and English, with the
+ * system's demo status bar.
  */
 @RunWith(AndroidJUnit4::class)
 class ScreenshotTest {
@@ -42,6 +44,7 @@ class ScreenshotTest {
 
   @After
   fun restore() {
+    if (STORE) shell("am broadcast -a com.android.systemui.demo -e command exit")
     shell("wm size reset")
     shell("wm density reset")
     shell("settings put system font_scale 1.0")
@@ -52,8 +55,19 @@ class ScreenshotTest {
   fun everyScreenFits() {
     shell("mkdir -p $DIR")
     shell("cmd overlay enable com.android.internal.systemui.navbar.gestural")
-    for (config in CONFIGS) shoot(config)
+    for (config in if (STORE) STORE_CONFIGS else CONFIGS) shoot(config)
     assertTrue("Cards cut off at the side:\n" + cutOff.joinToString("\n"), cutOff.isEmpty())
+  }
+
+  private fun demoStatusBar() {
+    shell("settings put global sysui_demo_allowed 1")
+    for (extras in listOf(
+      "-e command enter",
+      "-e command clock -e hhmm 1200",
+      "-e command battery -e level 100 -e plugged false",
+      "-e command network -e wifi show -e level 4 -e fully true",
+      "-e command notifications -e visible false",
+    )) shell("am broadcast -a com.android.systemui.demo $extras")
   }
 
   private fun shoot(c: Config) {
@@ -61,6 +75,8 @@ class ScreenshotTest {
     shell("wm density ${c.density}")
     shell("settings put system font_scale ${c.fontScale}")
     shell("cmd overlay ${if (c.cutout) "enable" else "disable"} $CUTOUT")
+    // After the change of density, which resets the status bar.
+    if (STORE) demoStatusBar()
     if (Build.VERSION.SDK_INT >= 33)
       instrumentation.targetContext.getSystemService(LocaleManager::class.java).applicationLocales = LocaleList.forLanguageTags(c.locale)
     ActivityScenario.launch(MainActivity::class.java).use { scenario ->
@@ -97,7 +113,7 @@ class ScreenshotTest {
       }
       compose.waitUntil(TIMEOUT) { vm.analysis != null && vm.anaPage == 1 }
       shot(c, "5-candidates")
-      for ((tag, name) in listOf("nav_RECORDS" to "6-records", "nav_RULES" to "7-rules", "nav_SETTINGS" to "8-settings")) {
+      for ((tag, name) in listOf("nav_RECORDS" to "6-records", "nav_RULES" to "7-rules", "nav_SETTINGS" to "8-settings", "nav_BATTLE" to "9-battle")) {
         compose.onNodeWithTag(tag).performClick()
         shot(c, name)
       }
@@ -157,6 +173,13 @@ class ScreenshotTest {
       Config("small-large", "720x1600", 360, 1.5f, "en", cutout = false),
       Config("tablet", "1600x2560", 320, 1.0f, "zh-TW", cutout = false),
       Config("tablet-font", "1600x2560", 320, 1.5f, "en", cutout = false),
+    )
+
+    private val STORE = InstrumentationRegistry.getArguments().getString("store") == "1"
+    // Google Play wants 16:9 with a side of at least 1080 px.
+    private val STORE_CONFIGS = listOf(
+      Config("store-zh", "1080x1920", 400, 1.0f, "zh-TW", cutout = false),
+      Config("store-en", "1080x1920", 400, 1.0f, "en", cutout = false),
     )
 
     // Seed "11" of the engine's deal, with the greedy player's rows for the player: under family, the networks'

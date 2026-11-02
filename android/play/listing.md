@@ -3,6 +3,9 @@
 The text of the store page, kept here so it changes with the app. Limits: title 30 characters, short description
 80, full description 4000. Privacy policy: <https://github.com/kennyfs/Thirteen/blob/main/docs/privacy.md>.
 
+Images: `icon-512.png` and `feature-zh.png` / `feature-en.png` (1024 x 500) come from `images.py`. The phone
+screenshots (1920 x 1080) come from `STORE=1 ../device-tests.sh`, in `../build/screenshots`.
+
 ## zh-TW
 
 **Title:** 十三支：AI 擺牌與連線對戰
