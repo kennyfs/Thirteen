@@ -182,6 +182,9 @@ class NearbyHost(context: Context, private val hub: Hub, private val scope: Coro
     main.post { client.sendPayload(endpointId, Payload.fromBytes(bytes)) }
   }
 
+  /** Stops advertising the room, keeping its connections. */
+  fun stopAdvertising() = client.stopAdvertising()
+
   fun stop() {
     client.stopAdvertising()
     client.stopAllEndpoints()

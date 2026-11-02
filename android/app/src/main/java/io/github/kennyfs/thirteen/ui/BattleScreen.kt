@@ -3,6 +3,7 @@ package io.github.kennyfs.thirteen.ui
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -37,6 +39,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -61,6 +64,7 @@ import io.github.kennyfs.thirteen.AppViewModel
 import io.github.kennyfs.thirteen.R
 import io.github.kennyfs.thirteen.Rules
 import io.github.kennyfs.thirteen.battle.BattleViewModel
+import io.github.kennyfs.thirteen.battle.Entry
 import io.github.kennyfs.thirteen.battle.Via
 import io.github.kennyfs.thirteen.protocol.HandOutcome
 import io.github.kennyfs.thirteen.protocol.Limits
@@ -74,6 +78,18 @@ import kotlinx.coroutines.delay
 @Composable
 fun BattleScreen(vm: BattleViewModel, app: AppViewModel) {
   val room = vm.room
+  // Back: one page up within the battle (see MainActivity), where there is one.
+  val over = room != null && (vm.finished || room.phase == Phase.OVER)
+  val back: (() -> Unit)? = when {
+    vm.detail != null && room != null -> if (vm.analyzed != null) vm::closeAnalysis else vm::closeDetail
+    room == null -> if (vm.entry != null) ({ vm.chooseEntry(null) }) else null
+    over && !vm.lastSeen && vm.outcomes.isNotEmpty() -> vm::toSummary
+    over -> vm::dismiss
+    room.phase == Phase.LOBBY -> vm::leave
+    // A hand in play: Back does not leave the room.
+    else -> null
+  }
+  BackHandler(back != null) { back?.invoke() }
   Column(Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 4.dp)) {
     when {
       vm.detail != null && room != null -> if (vm.analyzed != null) PlayerAnalysisPage(vm, room) else DetailPage(vm, room)
@@ -120,11 +136,11 @@ private fun EntryPage(vm: BattleViewModel) {
       permissions.launch(missing.toTypedArray())
     }
   }
-  Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+  Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
       OutlinedTextField(vm.name, { vm.name = it.take(Limits.NAME_LENGTH) }, Modifier.widthIn(max = 220.dp), label = { Text(stringResource(R.string.battle_name)) }, singleLine = true)
-      FilterChip(vm.via == Via.ONLINE, { vm.via = Via.ONLINE; vm.stopSearch() }, { Text(stringResource(R.string.battle_online)) }, Modifier.align(Alignment.CenterVertically))
-      FilterChip(vm.via == Via.NEARBY, { vm.via = Via.NEARBY }, { Text(stringResource(R.string.battle_nearby)) }, Modifier.align(Alignment.CenterVertically))
+      FilterChip(vm.via == Via.ONLINE, { vm.chooseVia(Via.ONLINE) }, { Text(stringResource(R.string.battle_online)) }, Modifier.align(Alignment.CenterVertically))
+      FilterChip(vm.via == Via.NEARBY, { vm.chooseVia(Via.NEARBY) }, { Text(stringResource(R.string.battle_nearby)) }, Modifier.align(Alignment.CenterVertically))
       if (vm.via == Via.ONLINE)
         OutlinedTextField(
           vm.server, { vm.server = it.trim() }, Modifier.widthIn(max = 320.dp), label = { Text(stringResource(R.string.battle_server)) },
@@ -132,43 +148,87 @@ private fun EntryPage(vm: BattleViewModel) {
         )
     }
     if (vm.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-    for (mode in listOf(Mode.PUZZLE, Mode.GAME)) {
-      Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Column(Modifier.weight(1f)) {
-          Text(modeName(mode), style = MaterialTheme.typography.titleSmall)
-          Text(
-            stringResource(if (mode == Mode.PUZZLE) R.string.battle_puzzle_info else R.string.battle_game_info),
-            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+    when (vm.entry) {
+      null -> Row(Modifier.fillMaxWidth().weight(1f).padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        EntryChoice(R.string.battle_create_room, R.string.battle_create_room_info, Modifier.weight(1f)) { vm.chooseEntry(Entry.CREATE) }
+        EntryChoice(R.string.battle_join_room, R.string.battle_join_room_info, Modifier.weight(1f)) {
+          vm.chooseEntry(Entry.JOIN)
+          if (vm.via == Via.NEARBY) nearby { vm.search() }
+        }
+      }
+      Entry.CREATE -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        EntryTitle(vm, R.string.battle_create_room)
+        for (mode in listOf(Mode.PUZZLE, Mode.GAME)) {
+          Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.weight(1f)) {
+              Text(modeName(mode), style = MaterialTheme.typography.titleSmall)
+              Text(
+                stringResource(if (mode == Mode.PUZZLE) R.string.battle_puzzle_info else R.string.battle_game_info),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+              )
+            }
+            Button(onClick = { if (vm.via == Via.NEARBY) nearby { vm.create(mode) } else vm.create(mode) }, enabled = !vm.busy) {
+              Text(stringResource(R.string.battle_create))
+            }
+          }
+        }
+      }
+      Entry.JOIN -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        EntryTitle(vm, R.string.battle_join_room)
+        if (vm.via == Via.NEARBY) {
+          val found = vm.found
+          Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+              stringResource(if (found.isNullOrEmpty()) R.string.battle_no_rooms else R.string.battle_searching),
+              Modifier.weight(1f), style = MaterialTheme.typography.bodySmall,
+            )
+            OutlinedButton(onClick = { nearby { vm.search() } }, contentPadding = COMPACT) {
+              Text(stringResource(if (found == null) R.string.battle_search else R.string.battle_search_again))
+            }
+          }
+          for ((id, name) in found.orEmpty())
+            Row(
+              Modifier.fillMaxWidth().background(if (vm.picked == id) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface)
+                .clickable { vm.pick(id) }.padding(6.dp),
+            ) { Text(name) }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          OutlinedTextField(
+            vm.pin, { vm.pin = it.filter(Char::isDigit).take(6) }, Modifier.width(140.dp), label = { Text(stringResource(R.string.battle_pin)) },
+            singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
           )
-        }
-        Button(onClick = { if (vm.via == Via.NEARBY) nearby { vm.create(mode) } else vm.create(mode) }, enabled = !vm.busy) {
-          Text(stringResource(R.string.battle_create))
+          Button(
+            onClick = { vm.join() },
+            enabled = !vm.busy && vm.pin.length == 6 && (vm.via == Via.ONLINE || vm.picked != null),
+          ) { Text(stringResource(R.string.battle_join)) }
         }
       }
     }
-    HorizontalDivider()
-    if (vm.via == Via.NEARBY) {
-      val found = vm.found
-      if (found == null) OutlinedButton(onClick = { nearby { vm.search() } }) { Text(stringResource(R.string.battle_search)) }
-      else {
-        Text(stringResource(R.string.battle_searching), style = MaterialTheme.typography.bodySmall)
-        for ((id, name) in found)
-          Row(
-            Modifier.fillMaxWidth().background(if (vm.picked == id) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface)
-              .clickable { vm.pick(id) }.padding(6.dp),
-          ) { Text(name) }
-      }
-    }
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      OutlinedTextField(
-        vm.pin, { vm.pin = it.filter(Char::isDigit).take(6) }, Modifier.width(140.dp), label = { Text(stringResource(R.string.battle_pin)) },
-        singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+  }
+}
+
+/** One of the entry page's two large choices. */
+@Composable
+private fun EntryChoice(title: Int, info: Int, modifier: Modifier, onClick: () -> Unit) {
+  OutlinedCard(onClick = onClick, modifier.fillMaxHeight()) {
+    Column(
+      Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+      horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+      Text(stringResource(title), style = MaterialTheme.typography.headlineSmall)
+      Text(
+        stringResource(info), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
       )
-      Button(
-        onClick = { vm.join() },
-        enabled = !vm.busy && vm.pin.length == 6 && (vm.via == Via.ONLINE || vm.picked != null),
-      ) { Text(stringResource(R.string.battle_join)) }
     }
+  }
+}
+
+@Composable
+private fun EntryTitle(vm: BattleViewModel, title: Int) {
+  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    OutlinedButton(onClick = { vm.chooseEntry(null) }, contentPadding = COMPACT) { Text(stringResource(R.string.battle_back)) }
+    Text(stringResource(title), style = MaterialTheme.typography.titleMedium)
   }
 }
 

@@ -49,6 +49,9 @@ import kotlinx.coroutines.launch
 
 enum class Via { ONLINE, NEARBY }
 
+/** The entry page's two ways into a room. */
+enum class Entry { CREATE, JOIN }
+
 /**
  * Battles: a room on a server or hosted on a phone nearby (this one or another), its hands and their results. The
  * room (Hub and Room in protocol/) decides everything; this keeps what it has said and sends the player's choices.
@@ -62,7 +65,9 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
 
   var name by mutableStateOf(prefs.getString("name", "") ?: "")
   var server by mutableStateOf(prefs.getString("server", "") ?: "")
-  var via by mutableStateOf(Via.ONLINE)
+  var via by mutableStateOf(Via.ONLINE); private set
+  /** Which way into a room the entry page shows; null for the choice between them. */
+  var entry by mutableStateOf<Entry?>(null); private set
   var pin by mutableStateOf("")
   var error by mutableStateOf<String?>(null)
   /** Connecting or waiting for the room's answer. */
@@ -150,7 +155,8 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
         host = NearbyHost(getApplication(), h, viewModelScope, advertisedName(msg.settings.mode)) { error = str(R.string.battle_nearby_failed, it) }
         open(LocalLink(h, viewModelScope, this))
       } else {
-        val e = endpoint ?: return
+        val e = picked ?: return
+        endpoint = e
         open(NearbyLink(getApplication(), e, name.ifBlank { "Player" }, this))
       }
     }
@@ -165,7 +171,21 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     l.send(Hello(PROTOCOL_VERSION, name.ifBlank { "Player" }))
   }
 
-  /** Looks for rooms hosted nearby. */
+  fun chooseVia(v: Via) {
+    via = v
+    stopSearch()
+  }
+
+  /** Into a way of the entry page, or back to the choice (null). Joining nearby looks for rooms anew each time. */
+  fun chooseEntry(e: Entry?) {
+    entry = e
+    stopSearch()
+  }
+
+  /**
+   * Looks for rooms hosted nearby, from an empty list: what an earlier search found may be long gone, and Nearby
+   * does not always say when a room stops advertising.
+   */
   fun search() {
     finder?.stop()
     found = emptyMap()
@@ -176,13 +196,15 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     finder?.stop()
     finder = null
     found = null
+    picked = null
   }
 
   fun pick(endpointId: String) {
-    endpoint = endpointId
+    picked = endpointId
   }
 
-  val picked get() = endpoint
+  /** The room picked among those found nearby, to join. */
+  var picked by mutableStateOf<String?>(null); private set
 
   // ---- In the room ----
 
@@ -217,10 +239,14 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   fun leave() {
     link?.send(Leave)
     clear()
+    chooseEntry(null)
   }
 
   /** Back from the results of a finished room. */
-  fun dismiss() = clear()
+  fun dismiss() {
+    clear()
+    chooseEntry(null)
+  }
 
   private fun clear() {
     reconnect?.cancel()
@@ -259,6 +285,8 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
         joined = msg
         me = msg.you
         busy = false
+        // In a room: no more looking for others (the endpoint to reconnect to is kept).
+        stopSearch()
         // A resume tells everything again.
         pending = Resume(msg.room, msg.token)
       }
@@ -266,6 +294,8 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
         val previous = room
         room = msg.room
         roomAt = System.currentTimeMillis()
+        // An ended room takes no one in, nor back: no longer shown to phones looking for rooms.
+        if (msg.room.phase == Phase.OVER) host?.stopAdvertising()
         if (msg.room.players.firstOrNull { it.id == me }?.submitted == true) submitting = false
         if (previous?.hand != msg.room.hand && msg.room.phase == Phase.PLAYING) submitting = false
       }

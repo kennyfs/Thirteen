@@ -212,6 +212,12 @@
   <string name="battle_pin">PIN</string>
   <string name="battle_pin_bad">PIN 是 6 位數字。</string>
   <string name="battle_server_bad">請輸入伺服器位址（網域名稱或 wss://…）。</string>
+  <string name="battle_create_room">建立房間</string>
+  <string name="battle_create_room_info">解題比賽或一般對局，其他人用房間的 PIN 加入。</string>
+  <string name="battle_join_room">加入房間</string>
+  <string name="battle_join_room_info">輸入別人建立的房間的 PIN。</string>
+  <string name="battle_search_again">重新搜尋</string>
+  <string name="battle_no_rooms">附近還沒有找到房間。</string>
   <string name="battle_search">搜尋附近的房間</string>
   <string name="battle_searching">附近的房間（點選後輸入 PIN）：</string>
   <string name="battle_nearby_failed">附近連線失敗：%1$s</string>

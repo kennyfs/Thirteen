@@ -40,7 +40,16 @@ import androidx.compose.ui.unit.sp
 import io.github.kennyfs.thirteen.AppViewModel
 import io.github.kennyfs.thirteen.R
 import io.github.kennyfs.thirteen.Rules
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
+private val STAMP = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+
+/** A record's time (stored in UTC, ISO 8601) in this phone's time zone; as stored if it does not parse. */
+private fun localTime(stamp: String): String =
+  runCatching { STAMP.format(Instant.parse(stamp).atZone(ZoneId.systemDefault())) }.getOrElse { stamp.take(16).replace('T', ' ') }
 
 /**
  * The records through the system's share sheet (Quick Share, a drive, a chat app...): a copy in the cache, which
@@ -104,7 +113,7 @@ fun RecordsScreen(vm: AppViewModel, onAnalyze: () -> Unit) {
           val rules = r.optString("rules").takeIf { it.isNotEmpty() }?.let { vm.rulesName(Rules.values(it)) }?.takeIf { it != "family" }
           if (rules != null) Text("$rules ", fontSize = 13.sp, color = MaterialTheme.colorScheme.tertiary)
           Text(
-            "${r.optString("timestamp").take(16).replace('T', ' ')}   ${r.getString("front")} | ${r.getString("middle")} | ${r.getString("back")}" +
+            "${localTime(r.optString("timestamp"))}   ${r.getString("front")} | ${r.getString("middle")} | ${r.getString("back")}" +
               "   (${r.optLong("time_ms") / 1000} s)",
             fontSize = 13.sp,
           )

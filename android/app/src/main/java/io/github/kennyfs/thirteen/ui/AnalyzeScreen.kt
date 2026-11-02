@@ -1,5 +1,6 @@
 package io.github.kennyfs.thirteen.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.PaddingValues
@@ -81,6 +82,7 @@ fun qColor(q: Double) = if (q >= 0) GOOD else BAD
 @Composable
 fun AnalyzeScreen(vm: AppViewModel) {
   val a = vm.analysis
+  BackHandler(vm.anaPage == 1) { vm.anaPage = 0 }
   if (vm.anaPage == 1 && a != null) AnalysisPage(vm, a) else HandPage(vm)
 }
 

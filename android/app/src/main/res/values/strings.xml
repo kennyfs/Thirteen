@@ -213,6 +213,12 @@
   <string name="battle_pin">PIN</string>
   <string name="battle_pin_bad">A PIN has 6 digits.</string>
   <string name="battle_server_bad">Enter the server\'s address (a name, or wss://…).</string>
+  <string name="battle_create_room">Create a room</string>
+  <string name="battle_create_room_info">A puzzle contest or a table game; the others join with its PIN.</string>
+  <string name="battle_join_room">Join a room</string>
+  <string name="battle_join_room_info">With the PIN of a room someone created.</string>
+  <string name="battle_search_again">Search again</string>
+  <string name="battle_no_rooms">No rooms found nearby yet.</string>
   <string name="battle_search">Find rooms nearby</string>
   <string name="battle_searching">Rooms nearby (tap one, then enter its PIN):</string>
   <string name="battle_nearby_failed">Nearby connection failed: %1$s</string>

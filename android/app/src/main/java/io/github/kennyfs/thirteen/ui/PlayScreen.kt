@@ -1,5 +1,6 @@
 package io.github.kennyfs.thirteen.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -92,6 +93,7 @@ val COMPACT = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
 @Composable
 fun PlayScreen(vm: AppViewModel) {
   val result = vm.result
+  BackHandler(result != null && vm.resultTab == 1) { vm.resultTab = 0 }
   Column(Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 4.dp)) {
     if (result == null) {
       val (hands, totals) = vm.session
@@ -137,12 +139,13 @@ fun Arranging(vm: Arranger, wheel: Int, waiting: Boolean, onConfirm: () -> Unit)
     // The rows' labels, their padding, and the gaps between rows.
     val rowsNeeded = (textRoom(if (oneLine) 17 else 34) + 10.dp) * 3 + 8.dp
     val topNeeded = maxOf(controlsHeight, rowsNeeded)
-    val handGaps = HAND_GAP * 12 + if (vm.sortBySuit) SUIT_GAP * 3 else 0.dp
-    // handHeight below is about 1.61 cards and 6 dp.
-    val handCard = minOf((maxWidth - handGaps) / 13, maxHeight * 0.34f / 1.6f, (maxHeight - topNeeded - 6.dp) / 1.61f, 96.dp)
+    // The same size sorted either way (sorted by suit, the gaps between suits come out of the others), so the rows
+    // above keep their height. handHeight below is about 1.61 cards and 6 dp.
+    val handCard = minOf((maxWidth - HAND_GAP * 12) / 13, maxHeight * 0.34f / 1.6f, (maxHeight - topNeeded - 6.dp) / 1.61f, 96.dp)
       .coerceAtLeast(12.dp)
     // Room for a selected card to rise.
     val handHeight = cardHeight(handCard) * 1.15f + 6.dp
+    val width = maxWidth
     val rowsHeight = (maxHeight - handHeight).coerceAtLeast(0.dp)
     val slotCard = minOf(
       (maxWidth - controlsWidth - 8.dp - labelWidth - 8.dp - CARD_GAP * 4) / 5,
@@ -162,14 +165,22 @@ fun Arranging(vm: Arranger, wheel: Int, waiting: Boolean, onConfirm: () -> Unit)
       val hand = vm.unplaced
       // Each card's left and right edges in the hand row, for swipes.
       val edges = remember(hand) { mutableMapOf<Int, Pair<Float, Float>>() }
+      // Sorted by suit, a suit's first card follows a wider gap; when the width is short of the usual gaps, all
+      // shrink, the suits' staying four times the others.
+      val breaks = if (vm.sortBySuit) hand.indices.count { it > 0 && Cards.suit(hand[it - 1]) != Cards.suit(hand[it]) } else 0
+      val gaps = (hand.size - 1 - breaks).coerceAtLeast(0)
+      val room = width - handCard * hand.size
+      val (gap, suitGap) =
+        if (HAND_GAP * gaps + SUIT_GAP * breaks <= room) HAND_GAP to SUIT_GAP
+        else (room / (gaps + 4 * breaks).coerceAtLeast(1)).coerceAtLeast(0.dp).let { it to it * 4 }
       Row(
         Modifier.fillMaxWidth().height(handHeight).padding(top = 6.dp).swipeSelect(vm, hand, edges),
-        horizontalArrangement = Arrangement.spacedBy(HAND_GAP, Alignment.CenterHorizontally), verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.Bottom,
       ) {
         // Sorted by rank, pairs, trips and quads are tinted (light) as their category; sorted by suit, suits are spaced.
         val count = hand.groupingBy(Cards::rank).eachCount()
         for ((i, c) in hand.withIndex()) {
-          if (vm.sortBySuit && i > 0 && Cards.suit(hand[i - 1]) != Cards.suit(c)) Spacer(Modifier.width(SUIT_GAP - HAND_GAP))
+          if (i > 0) Spacer(Modifier.width(if (vm.sortBySuit && Cards.suit(hand[i - 1]) != Cards.suit(c)) suitGap else gap))
           val n = if (!vm.sortBySuit) count.getValue(Cards.rank(c)) else 1
           CardFace(
             c, handCard, Modifier.onGloballyPositioned { edges[c] = it.positionInParent().x.let { x -> x to x + it.size.width } },

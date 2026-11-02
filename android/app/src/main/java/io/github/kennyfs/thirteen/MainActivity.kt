@@ -3,6 +3,7 @@ package io.github.kennyfs.thirteen
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -89,8 +90,21 @@ class MainActivity : ComponentActivity() {
           val vm: AppViewModel = viewModel()
           val battle: BattleViewModel = viewModel()
           var screen by rememberSaveable { mutableStateOf(Screen.PLAY) }
+          // Back: a screen's own pages first, each screen with a BackHandler of its own while it is past its first
+          // page (composed after this one, so it comes first); then the screens visited before, newest first; then
+          // out of the app.
+          var visited by rememberSaveable { mutableStateOf(listOf<Screen>()) }
+          fun go(to: Screen) {
+            if (to == screen) return
+            visited = (visited - to + screen).takeLast(Screen.entries.size)
+            screen = to
+          }
+          BackHandler(visited.isNotEmpty()) {
+            screen = visited.last()
+            visited = visited.dropLast(1)
+          }
           Row(Modifier.safeDrawingPadding()) {
-            NavRail(screen) { screen = it }
+            NavRail(screen, ::go)
             Box(Modifier.fillMaxSize()) {
               when (screen) {
                 Screen.PLAY -> PlayScreen(vm)
@@ -98,7 +112,7 @@ class MainActivity : ComponentActivity() {
                 Screen.ANALYZE -> AnalyzeScreen(vm)
                 Screen.RECORDS -> {
                   LaunchedEffect(Unit) { vm.refreshRecords() }
-                  RecordsScreen(vm, onAnalyze = { screen = Screen.ANALYZE })
+                  RecordsScreen(vm, onAnalyze = { go(Screen.ANALYZE) })
                 }
                 Screen.RULES -> RulesScreen(vm)
                 Screen.SETTINGS -> SettingsScreen(vm)
