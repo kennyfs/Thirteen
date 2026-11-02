@@ -30,7 +30,7 @@ services:
     security_opt: ["no-new-privileges:true"]
     # Two engine processes (one core each) and the JVM.
     cpus: 2.5
-    mem_limit: 1g
+    mem_limit: 384m
     pids_limit: 256
     healthcheck:
       test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q ok <&3"]

@@ -39,7 +39,7 @@ COPY --from=engine /src/cpp/build/thirteen /opt/thirteen/thirteen
 COPY --from=server /src/server/build/install/thirteen-server /opt/thirteen/server
 ENV THIRTEEN_BINARY=/opt/thirteen/thirteen \
     THIRTEEN_MODEL=/models/run2_net10.onnx \
-    JAVA_OPTS="-Xmx256m -XX:+UseSerialGC -XX:+ExitOnOutOfMemoryError"
+    JAVA_OPTS="-Xmx128m -Xss512k -XX:+UseSerialGC -XX:ReservedCodeCacheSize=32m -XX:MaxMetaspaceSize=64m -XX:TieredStopAtLevel=1 -XX:+ExitOnOutOfMemoryError"
 USER thirteen
 EXPOSE 8080
 ENTRYPOINT ["/opt/thirteen/server/bin/thirteen-server"]

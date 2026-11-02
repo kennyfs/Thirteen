@@ -75,6 +75,10 @@ is no request a client can make that runs the network on its own; analyses after
 puzzle hand's analysis is one request for all its players. For a sense of scale: one hand's analysis takes about
 1 to 10 ms on one core, the hard-hand search about 3.5 ms per try.
 
+**Memory.** About 70 MiB idle and about 160 MiB with 30 rooms playing at once (half table games, half hard
+puzzles): the JVM (heap at most 128 MiB) about 110 MiB, and each engine process about 47 MiB. More load than the
+engine queue takes is refused, not queued, so it does not grow much further; the compose file limits it to 384 MiB.
+
 **Deployment.** Caddy gets the TLS certificate and is the only thing exposed (ports 80 and 443); it passes `/ws` and
 `/health` and answers 404 to everything else. The game server is on an internal network with no way out, runs as
 an unprivileged user on a read-only file system with all capabilities dropped and `no-new-privileges`, with limits
