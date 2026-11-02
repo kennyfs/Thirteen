@@ -1,0 +1,13 @@
+# The server image needs cpp/, scripts/, protocol/ and server/ only.
+*
+!cpp
+!scripts
+!protocol
+!server
+cpp/build*
+cpp/external/onnxruntime
+server/build
+server/.gradle
+server/models
+protocol/build
+**/.gradle

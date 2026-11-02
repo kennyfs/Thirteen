@@ -166,10 +166,13 @@ fun legacyNote(vm: AppViewModel, a: Analysis): String? =
 
 /**
  * The candidates, best Q first, with the player's arrangement (when known) pinned on top. The best one is labelled
- * as such; a candidate added only because it is the player's (dominated) has no rank.
+ * as such; a candidate added only because it is the player's (dominated) has no rank. `tags` names others who
+ * played a candidate, by its index (a battle's other players).
  */
 @Composable
-fun CandidateList(a: Analysis, mine: Rows?, expandBest: Boolean, legacyNote: String?, modifier: Modifier = Modifier) {
+fun CandidateList(
+  a: Analysis, mine: Rows?, expandBest: Boolean, legacyNote: String?, modifier: Modifier = Modifier, tags: Map<Int, String> = emptyMap(),
+) {
   val mineAt = mine?.let { m -> a.cands.indexOfFirst { Cards.sameArrangement(it.arrangement, m) } }?.takeIf { it >= 0 }
   val ranks = a.cands.runningFold(0) { n, cd -> if (cd.extra) n else n + 1 }.drop(1)
   val best = stringResource(R.string.best)
@@ -219,14 +222,14 @@ fun CandidateList(a: Analysis, mine: Rows?, expandBest: Boolean, legacyNote: Str
                 stringResource(R.string.yours), Modifier.padding(start = 4.dp, top = 2.dp),
                 style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSecondaryContainer,
               )
-              CandidateRow(rank(mineAt), rankWidth, texts[mineAt], labelWidth, a.cands[mineAt], PINNED in open, if (mineAt == 0) null else a.cands[0], wheel, lostShown, qGap) { toggle(PINNED) }
+              CandidateRow(rank(mineAt), rankWidth, texts[mineAt], labelWidth, a.cands[mineAt], PINNED in open, if (mineAt == 0) null else a.cands[0], wheel, lostShown, qGap, tags[mineAt]) { toggle(PINNED) }
             }
             HorizontalDivider()
           }
         }
         itemsIndexed(shown) { i, cd ->
           Box(if (i == mineAt) Modifier.background(MaterialTheme.colorScheme.secondaryContainer) else Modifier) {
-            CandidateRow(rank(i), rankWidth, texts[i], labelWidth, cd, i in open, null, wheel, lostShown, qGap) { toggle(i) }
+            CandidateRow(rank(i), rankWidth, texts[i], labelWidth, cd, i in open, null, wheel, lostShown, qGap, tags[i]) { toggle(i) }
           }
           HorizontalDivider()
         }
@@ -249,7 +252,7 @@ private const val PINNED = -1
 @Composable
 private fun CandidateRow(
   rank: String, rankWidth: Dp, text: String, labelWidth: Dp, cd: Candidate, open: Boolean, best: Candidate?, wheel: Int, lostShown: List<Int>, qGap: Double,
-  onClick: () -> Unit,
+  tag: String?, onClick: () -> Unit,
 ) {
   Column(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 4.dp)) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -259,6 +262,7 @@ private fun CandidateRow(
         Commentary.shapeOf(cd.arrangement, cd.info.categories, wheel)?.let { shapeName(it) } ?: "", Modifier.weight(1f),
         style = LABEL_STYLE, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.primary,
       )
+      if (tag != null) Text("$tag  ", style = LABEL_STYLE, color = MaterialTheme.colorScheme.tertiary, maxLines = 1)
       cd.q?.let { q ->
         if (best?.q != null && best.q - q >= qGap)
           Text("(${fmtQ(q - best.q)})  ", fontSize = 12.sp, color = BAD)

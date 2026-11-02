@@ -93,13 +93,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
   // ---- Play ----
 
-  var hand by mutableStateOf<List<Int>>(emptyList()); private set
-  var rows by mutableStateOf<Arrangement>(listOf(emptyList(), emptyList(), emptyList())); private set
-  var selected by mutableStateOf<Set<Int>>(emptySet()); private set
-  /** The row picked first: cards tapped then go to it once they fill it. */
-  var armed by mutableStateOf<Int?>(null); private set
-  var rowsEval by mutableStateOf<RowsEval?>(null); private set
-  var sortBySuit by mutableStateOf(false)
+  /** The hand being set. */
+  val play = Arranger(viewModelScope, { error = it }) { row, free ->
+    str(R.string.row_room, getApplication<Application>().resources.getStringArray(R.array.row_names)[row], free)
+  }
+  val hand get() = play.hand
+  val rows get() = play.rows
+  val selected get() = play.selected
+  val rowsEval get() = play.rowsEval
+  val unplaced get() = play.unplaced
   var seats by mutableStateOf<List<Seat>>(emptyList()); private set
   var waiting by mutableStateOf(false); private set
   /** The finished hand: everyone's arrangement (0 is the player) and the score. */
@@ -117,8 +119,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   private var opponents: Deferred<List<Arrangement>>? = null
   private var dealtAt = 0L
 
-  val unplaced: List<Int> get() = Cards.sortHand(hand.filter { c -> rows.none { c in it } }, sortBySuit)
-
   init {
     launchCatching {
       loadRules()
@@ -132,16 +132,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     result = null
     resultTab = 0
     gameAnalysis = null
-    armed = null
     val hands = fixed ?: Engine.deal()
-    hand = hands[0]
     others = hands.drop(1)
-    rows = listOf(emptyList(), emptyList(), emptyList())
-    selected = emptySet()
-    rowsEval = null
     if (ruleValues.isEmpty()) loadRules()
     gameRules = Engine.rulesFull(ruleSpec.spec())
     gameValues = Rules.values(gameRules)
+    play.reset(hands[0], gameRules)
     // Totals under other rules are on another scale: they start over.
     if (settings.sessionRules != gameRules) {
       if (settings.sessionRules.isNotEmpty()) settings.resetSession()
@@ -155,68 +151,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     dealtAt = System.currentTimeMillis()
   }
 
-  fun toggle(card: Int) {
-    selected = if (card in selected) selected - card else selected + card
-    selectionDone()
-  }
+  fun toggle(card: Int) = play.toggle(card)
 
-  /** Selects or unselects cards during a swipe over the hand; selectionDone() when it ends. */
-  fun select(cards: Collection<Int>, on: Boolean) {
-    selected = if (on) selected + cards else selected - cards
-  }
-
-  /** With a row picked first, places the selected cards once they fill it. */
-  fun selectionDone() {
-    val row = armed ?: return
-    if (selected.size == Cards.ROW_SIZES[row] - rows[row].size) placeInto(row)
-  }
-
-  /** A tap on a row: places the selected cards, or with none selected, picks the row for the next cards. */
-  fun tapRow(row: Int) {
-    if (selected.isNotEmpty()) placeInto(row)
-    else armed = if (armed == row || rows[row].size == Cards.ROW_SIZES[row]) null else row
-  }
-
-  /** Puts the selected cards into a row, then fills the last open row if the cards left fit it exactly. */
-  fun placeInto(row: Int) {
-    val free = Cards.ROW_SIZES[row] - rows[row].size
-    if (selected.isEmpty()) return
-    if (selected.size > free) {
-      error = str(R.string.row_room, getApplication<Application>().resources.getStringArray(R.array.row_names)[row], free)
-      return
-    }
-    var next = rows.mapIndexed { r, cards -> if (r == row) cards + selected.sortedDescending() else cards }
-    selected = emptySet()
-    armed = null
-    val left = hand.filter { c -> next.none { c in it } }
-    val open = (0 until 3).filter { next[it].size < Cards.ROW_SIZES[it] }
-    if (open.size == 1 && left.size == Cards.ROW_SIZES[open[0]] - next[open[0]].size)
-      next = next.mapIndexed { r, cards -> if (r == open[0]) cards + left else cards }
-    updateRows(next)
-  }
-
-  fun unplace(card: Int) = updateRows(rows.map { it - card })
-
-  /** Returns a row's cards to the hand. */
-  fun clearRow(row: Int) = updateRows(rows.mapIndexed { r, cards -> if (r == row) emptyList() else cards })
-
-  fun clearRows() {
-    selected = emptySet()
-    armed = null
-    updateRows(listOf(emptyList(), emptyList(), emptyList()))
-  }
-
-  private fun updateRows(next: Arrangement) {
-    rows = next
-    rowsEval = null
-    launchCatching {
-      val eval = Engine.rows(next, gameRules)
-      if (rows == next) rowsEval = eval
-    }
-  }
+  fun placeInto(row: Int) = play.placeInto(row)
 
   fun confirm() = launchCatching {
-    val eval = rowsEval ?: Engine.rows(rows, gameRules)
+    val eval = play.eval()
     if (eval.valid != true) {
       error = str(if (eval.valid == null) R.string.fill_rows_first else R.string.fouled)
       return@launchCatching
@@ -252,6 +192,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   fun resetSession() {
     settings.resetSession()
     session = settings.session()
+  }
+
+  /** Re-reads the count: battles add records too. */
+  fun refreshRecords() {
+    recordCount = records.count()
   }
 
   fun clearRecords() {

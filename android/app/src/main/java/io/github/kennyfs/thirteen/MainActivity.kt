@@ -45,6 +45,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -58,9 +59,13 @@ import io.github.kennyfs.thirteen.ui.PlayScreen
 import io.github.kennyfs.thirteen.ui.RecordsScreen
 import io.github.kennyfs.thirteen.ui.RulesScreen
 import io.github.kennyfs.thirteen.ui.SettingsScreen
+import io.github.kennyfs.thirteen.ui.BattleScreen
+import io.github.kennyfs.thirteen.battle.BattleViewModel
+import androidx.compose.material.icons.filled.Face
 
 enum class Screen(val label: Int, val icon: ImageVector) {
   PLAY(R.string.nav_play, Icons.Filled.PlayArrow),
+  BATTLE(R.string.nav_battle, Icons.Filled.Face),
   ANALYZE(R.string.nav_analyze, Icons.Filled.Search),
   RECORDS(R.string.nav_records, Icons.AutoMirrored.Filled.List),
   RULES(R.string.nav_rules, Icons.Filled.Info),
@@ -82,14 +87,19 @@ class MainActivity : ComponentActivity() {
       MaterialTheme(colorScheme = colors) {
         Surface(Modifier.fillMaxSize()) {
           val vm: AppViewModel = viewModel()
+          val battle: BattleViewModel = viewModel()
           var screen by rememberSaveable { mutableStateOf(Screen.PLAY) }
           Row(Modifier.safeDrawingPadding()) {
             NavRail(screen) { screen = it }
             Box(Modifier.fillMaxSize()) {
               when (screen) {
                 Screen.PLAY -> PlayScreen(vm)
+                Screen.BATTLE -> BattleScreen(battle, vm)
                 Screen.ANALYZE -> AnalyzeScreen(vm)
-                Screen.RECORDS -> RecordsScreen(vm, onAnalyze = { screen = Screen.ANALYZE })
+                Screen.RECORDS -> {
+                  LaunchedEffect(Unit) { vm.refreshRecords() }
+                  RecordsScreen(vm, onAnalyze = { screen = Screen.ANALYZE })
+                }
                 Screen.RULES -> RulesScreen(vm)
                 Screen.SETTINGS -> SettingsScreen(vm)
               }
@@ -99,6 +109,13 @@ class MainActivity : ComponentActivity() {
             AlertDialog(
               onDismissRequest = { vm.error = null },
               confirmButton = { TextButton(onClick = { vm.error = null }) { Text(stringResource(R.string.ok)) } },
+              text = { Text(message) },
+            )
+          }
+          battle.error?.let { message ->
+            AlertDialog(
+              onDismissRequest = { battle.error = null },
+              confirmButton = { TextButton(onClick = { battle.error = null }) { Text(stringResource(R.string.ok)) } },
               text = { Text(message) },
             )
           }

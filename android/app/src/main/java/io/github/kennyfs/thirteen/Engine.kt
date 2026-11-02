@@ -26,6 +26,9 @@ object Engine {
     answer
   }
 
+  /** One request line to one answer line, errors as {"error": ...}: for the battle rooms' EngineClient. */
+  suspend fun raw(line: String): String = withContext(dispatcher) { nativeHandle(handle, line) }
+
   suspend fun deal(): List<List<Int>> =
     request(JSONObject().put("cmd", "deal")).getJSONArray("hands").let { hands -> List(4) { intList(hands.getJSONArray(it)) } }
 

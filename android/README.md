@@ -14,10 +14,15 @@ C++ (`cpp/`, through `cpp/command/guiengine.h` and JNI) with ONNX Runtime for An
   (the network is not exact); what kind of choice the best one is against the best of other row categories (better
   on both scoops and scooped, attacking or defensive, or under row scoring, rows or scoops first); and how strong the
   hand is. Common arrangements are named in the list (三輪車, 五輪車, 雙同花, ...), as a classification only.
+- **Battle** (docs/battle.md): a puzzle contest (everyone sets the same hands; the least total loss against the
+  network's best wins) or a table game (up to four players, networks in the empty seats), on a server or with phones
+  nearby (Nearby Connections, no network needed; the host's phone runs the room). Afterwards every hand opens its
+  analysis, with the others' choices marked.
 - **Records**: every confirmed hand is saved in the JSONL format of `gui/collect.html` (`label` is `android`), with
   `rules`, the full rules spec as `thirteen record` writes it, and `result`, the player's score of the hand, which
   the fitting ignores. A record can be
-  sent to Analyze. Export writes the file where you choose; `thirteen humanfeatures -i FILE` reads it.
+  sent to Analyze. Export writes the file where you choose, Share hands it to the system's share sheet (Quick Share, a
+  drive, a chat); `thirteen humanfeatures -i FILE` reads it.
 - **Rules**: a preset of `docs/rules.md` section 11 (family, family_mid2, taiwan, pagat), then any value changed.
   Strict rows and the ranking of A-2-3-4-5 change the play (which arrangements foul, how hands rank) and are kept
   apart from the points. A game takes the rules when it is dealt; the running scores start over when they change.

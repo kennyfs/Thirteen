@@ -1,0 +1,69 @@
+# The battle server behind Caddy, which gets the TLS certificate and is the only thing reachable from outside.
+# Put the network in server/models/ (the release's run2_net10.onnx), set DOMAIN, then from the repository root:
+#   DOMAIN=thirteen.example.com docker compose -f server/compose.yml up -d --build
+name: thirteen
+
+services:
+  thirteen:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    environment:
+      THIRTEEN_MODEL_SHA256: "56b56733ae86e3038c1ebb2ee274e3b1c19cf49b66e494e334e15580a052b7e8"
+      ENGINE_WORKERS: "2"
+      ENGINE_QUEUE: "64"
+      ENGINE_TIMEOUT_MS: "10000"
+      MAX_ROOMS: "200"
+      MAX_CONNECTIONS: "2000"
+      CONNECTIONS_PER_ADDRESS: "16"
+      # Caddy writes X-Forwarded-For; the server is reachable only through it (no ports below).
+      TRUST_PROXY: "1"
+    volumes:
+      - ./models:/models:ro
+    networks: [internal]
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    # Two engine processes (one core each) and the JVM.
+    cpus: 2.5
+    mem_limit: 1g
+    pids_limit: 256
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q ok <&3"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  caddy:
+    image: caddy:2.8
+    restart: unless-stopped
+    depends_on: [thirteen]
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN to the server's name}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [internal, public]
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 256m
+    pids_limit: 128
+
+networks:
+  # No way out for the game server: it needs nothing from the internet.
+  internal:
+    internal: true
+  public: {}
+
+volumes:
+  caddy_data: {}
+  caddy_config: {}

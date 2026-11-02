@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kennyfs.thirteen.AppViewModel
+import io.github.kennyfs.thirteen.Arranger
 import io.github.kennyfs.thirteen.Arrangement as Rows
 import io.github.kennyfs.thirteen.Cards
 import io.github.kennyfs.thirteen.R
@@ -103,7 +104,7 @@ fun PlayScreen(vm: AppViewModel) {
         },
         maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge,
       )
-      Arranging(vm)
+      Arranging(vm.play, vm.gameValues["wheel"]?.toInt() ?: 0, vm.waiting) { vm.confirm() }
     } else Finished(vm, result.first, result.second)
   }
 }
@@ -121,7 +122,7 @@ private val SUIT_GAP = 8.dp
  * large fonts on a short screen.
  */
 @Composable
-private fun Arranging(vm: AppViewModel) {
+fun Arranging(vm: Arranger, wheel: Int, waiting: Boolean, onConfirm: () -> Unit) {
   BoxWithConstraints(Modifier.fillMaxSize().padding(top = 4.dp)) {
     val density = LocalDensity.current
     // A row's label on two lines (its name over its state) or, when three such rows would take over half the height,
@@ -151,11 +152,11 @@ private fun Arranging(vm: AppViewModel) {
     Column {
       Row(Modifier.fillMaxWidth().height(rowsHeight), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-          for (r in 0 until 3) RowSlot(vm, r, slotCard, labelWidth, oneLine)
+          for (r in 0 until 3) RowSlot(vm, r, slotCard, labelWidth, oneLine, wheel)
         }
         // Scrolls only if even the smallest hand leaves too little room.
         Box(Modifier.width(controlsWidth).fillMaxHeight().verticalScroll(rememberScrollState())) {
-          Controls(vm, columns, Modifier.fillMaxWidth().onSizeChanged { controlsHeight = with(density) { it.height.toDp() } })
+          Controls(vm, columns, waiting, onConfirm, Modifier.fillMaxWidth().onSizeChanged { controlsHeight = with(density) { it.height.toDp() } })
         }
       }
       val hand = vm.unplaced
@@ -184,7 +185,7 @@ private fun Arranging(vm: AppViewModel) {
  * A swipe over the hand selects every card it passes when the card it starts on is not selected, and unselects them
  * when it is, so runs of cards (a straight, a flush sorted by suit) take one stroke. A tap still toggles one card.
  */
-private fun Modifier.swipeSelect(vm: AppViewModel, hand: List<Int>, edges: Map<Int, Pair<Float, Float>>): Modifier =
+private fun Modifier.swipeSelect(vm: Arranger, hand: List<Int>, edges: Map<Int, Pair<Float, Float>>): Modifier =
   pointerInput(hand) {
     // The card under x, or the nearest one.
     fun at(x: Float): Int? = hand.indices.filter { edges[hand[it]] != null }.minByOrNull { i ->
@@ -219,7 +220,7 @@ private val CONTROLS_HEIGHT = 156.dp
 /** Whether the rows can be played, and the buttons: one above another, or two side by side. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Controls(vm: AppViewModel, columns: Int, modifier: Modifier) {
+private fun Controls(vm: Arranger, columns: Int, waiting: Boolean, onConfirm: () -> Unit, modifier: Modifier) {
   FlowRow(
     modifier, horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp),
     maxItemsInEachRow = columns,
@@ -247,8 +248,8 @@ private fun Controls(vm: AppViewModel, columns: Int, modifier: Modifier) {
       Text(stringResource(if (vm.sortBySuit) R.string.sort_by_rank else R.string.sort_by_suit))
     }
     OutlinedButton(onClick = vm::clearRows, Modifier.weight(1f), contentPadding = COMPACT) { Text(stringResource(R.string.clear_rows)) }
-    Button(onClick = { vm.confirm() }, Modifier.weight(1f), enabled = !vm.waiting, contentPadding = COMPACT) {
-      if (vm.waiting) CircularProgressIndicator(Modifier.height(18.dp).width(18.dp), strokeWidth = 2.dp)
+    Button(onClick = onConfirm, Modifier.weight(1f), enabled = !waiting, contentPadding = COMPACT) {
+      if (waiting) CircularProgressIndicator(Modifier.height(18.dp).width(18.dp), strokeWidth = 2.dp)
       else Text(stringResource(R.string.confirm))
     }
   }
@@ -256,7 +257,7 @@ private fun Controls(vm: AppViewModel, columns: Int, modifier: Modifier) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun RowSlot(vm: AppViewModel, r: Int, card: Dp, labelWidth: Dp, oneLine: Boolean) {
+private fun RowSlot(vm: Arranger, r: Int, card: Dp, labelWidth: Dp, oneLine: Boolean, wheel: Int) {
   val cards = vm.rows[r]
   val full = cards.size == Cards.ROW_SIZES[r]
   val eval = vm.rowsEval
@@ -280,7 +281,7 @@ private fun RowSlot(vm: AppViewModel, r: Int, card: Dp, labelWidth: Dp, oneLine:
       Text(
         when {
           armed -> stringResource(R.string.pick_n, Cards.ROW_SIZES[r] - cards.size - vm.selected.size)
-          category > 0 -> Cards.rowLabel(eval!!.keys[r], rowLabels(), vm.gameValues["wheel"]?.toInt() ?: 0)
+          category > 0 -> Cards.rowLabel(eval!!.keys[r], rowLabels(), wheel)
           else -> "${cards.size}/${Cards.ROW_SIZES[r]}"
         },
         modifier, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis,

@@ -1,5 +1,9 @@
 package io.github.kennyfs.thirteen.ui
 
+import android.content.Context
+import android.content.Intent
+import androidx.core.content.FileProvider
+import java.io.File
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -38,10 +42,23 @@ import io.github.kennyfs.thirteen.R
 import io.github.kennyfs.thirteen.Rules
 import java.time.LocalDate
 
+/**
+ * The records through the system's share sheet (Quick Share, a drive, a chat app...): a copy in the cache, which
+ * res/xml/file_paths.xml makes the FileProvider's.
+ */
+private fun shareRecords(context: Context, vm: AppViewModel) {
+  val file = vm.records.copyTo(File(context.cacheDir, "shared"), "thirteen-records-${LocalDate.now()}.jsonl")
+  val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", file)
+  val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_STREAM, uri)
+    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+  context.startActivity(Intent.createChooser(send, null))
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RecordsScreen(vm: AppViewModel, onAnalyze: () -> Unit) {
-  val resolver = LocalContext.current.contentResolver
+  val context = LocalContext.current
+  val resolver = context.contentResolver
   val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/x-ndjson")) { uri ->
     if (uri != null) vm.exportRecords(resolver, uri)
   }
@@ -64,6 +81,7 @@ fun RecordsScreen(vm: AppViewModel, onAnalyze: () -> Unit) {
       val rec = recs.firstOrNull { it.optString("id") == picked }
       Button(onClick = { vm.analyzeRecord(rec!!); onAnalyze() }, enabled = rec != null) { Text(stringResource(R.string.to_analyze)) }
       OutlinedButton(onClick = { export.launch("thirteen-records-${LocalDate.now()}.jsonl") }) { Text(stringResource(R.string.export)) }
+      OutlinedButton(onClick = { shareRecords(context, vm) }) { Text(stringResource(R.string.share)) }
       OutlinedButton(onClick = { confirmClear = true }) { Text(stringResource(R.string.clear_records)) }
       OutlinedButton(onClick = { confirmReset = true }) { Text(stringResource(R.string.reset_scores)) }
     }

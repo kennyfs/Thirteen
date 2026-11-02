@@ -8,6 +8,7 @@ row pays a dealer cost `c`.
   programs and the network take as input: section 11 and `--rules` below.
 - Plan: [docs/plan.md](docs/plan.md).
 - Training the network and the human model: [docs/training.md](docs/training.md).
+- Battles (puzzle contests and table games between people, online or nearby), the server and its security: [docs/battle.md](docs/battle.md).
 
 The players and tools follow the real rule that fouls are not allowed. The scoring code also implements the
 "fouls allowed" variant of the rules, for experiments.
@@ -27,6 +28,9 @@ The players and tools follow the real rule that fouls are not allowed. The scori
 | `python/` | The network (`thirteen/model.py`), data window, training, the fictitious-play loop, the human model fit. |
 | `gui/` | `play.html`: play and analysis (with `python/play_gui.py`); `collect.html`: records how you set hands, for the human model. |
 | `scripts/fetch_onnxruntime.sh` | Downloads ONNX Runtime for net players. |
+| `protocol/` | Battle rooms and their messages (Kotlin), shared by the server and the app. |
+| `server/` | The battle server (Kotlin, Ktor) and its Docker deployment. |
+| `android/` | The Android app: [android/README.md](android/README.md). |
 
 ## Building
 

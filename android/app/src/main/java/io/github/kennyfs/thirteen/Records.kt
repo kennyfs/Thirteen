@@ -16,7 +16,7 @@ class RecordStore(dir: File) {
   private val file = File(dir, "records.jsonl")
 
   @Synchronized
-  fun add(hand: List<Int>, rows: Arrangement, c: Double, rules: String, timeMs: Long, result: Double) {
+  fun add(hand: List<Int>, rows: Arrangement, c: Double, rules: String, timeMs: Long, result: Double, label: String = "android") {
     val rec = JSONObject()
       .put("version", 1)
       .put("id", UUID.randomUUID().toString())
@@ -28,7 +28,7 @@ class RecordStore(dir: File) {
       .put("rules", rules)
       .put("time_ms", timeMs)
       .put("timestamp", Instant.now().toString())
-      .put("label", "android")
+      .put("label", label)
       .put("result", result)
     file.appendText(rec.toString() + "\n")
   }
@@ -43,6 +43,15 @@ class RecordStore(dir: File) {
   @Synchronized
   fun clear() {
     file.delete()
+  }
+
+  /** A copy of the records under `dir` for sharing (a FileProvider path), named by `name`. */
+  @Synchronized
+  fun copyTo(dir: File, name: String): File {
+    dir.mkdirs()
+    val out = File(dir, name)
+    if (file.exists()) file.copyTo(out, overwrite = true) else out.writeText("")
+    return out
   }
 
   @Synchronized

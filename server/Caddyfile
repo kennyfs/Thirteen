@@ -1,0 +1,18 @@
+{$DOMAIN} {
+	# Only the WebSocket endpoint and a health check; everything else is a 404.
+	@ws path /ws
+	handle @ws {
+		reverse_proxy thirteen:8080
+	}
+	handle /health {
+		reverse_proxy thirteen:8080
+	}
+	handle {
+		respond 404
+	}
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+	}
+}
