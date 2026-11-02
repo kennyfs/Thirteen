@@ -86,6 +86,10 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
 
   /** The hand of the results opened for a closer look, and its analysis. */
   var detail by mutableStateOf<Int?>(null); private set
+  /** The player whose hand of `detail` is analyzed. */
+  var analyzed by mutableStateOf<Int?>(null); private set
+  /** The table of the last hand has been shown (it comes before the final standings, whatever the room says). */
+  var lastSeen by mutableStateOf(false); private set
   var detailAnalysis by mutableStateOf<Analysis?>(null); private set
   /** Candidates by index to the names of the other players who chose them (a puzzle). */
   var detailTags by mutableStateOf<Map<Int, String>>(emptyMap()); private set
@@ -233,6 +237,7 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     deal = null
     outcomes = emptyList()
     categories = emptyMap()
+    lastSeen = false
     submitting = false
     finished = false
     busy = false
@@ -380,29 +385,40 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
 
   // ---- Results ----
 
-  /** Analyzes the player's hand of a closed hand with the built-in network, everyone's plays among the candidates. */
+  /** A closed hand opened from the results: its table first. */
   fun openDetail(index: Int) {
+    if (outcomes.none { it.index == index }) return
+    detail = index
+    closeAnalysis()
+  }
+
+  /**
+   * Analyzes one player's hand of the opened hand with the built-in network, their play pinned and, in a puzzle,
+   * the others' plays of the same cards marked.
+   */
+  fun openAnalysis(player: Int) {
+    val index = detail ?: return
     val o = outcomes.firstOrNull { it.index == index } ?: return
     val r = room ?: return
-    val mine = o.plays.firstOrNull { it.player == me } ?: return
-    detail = index
+    val play = o.plays.firstOrNull { it.player == player } ?: return
+    analyzed = player
     detailAnalysis = null
     detailTags = emptyMap()
     viewModelScope.launch {
       try {
-        val hand = mine.rows.flatten().sorted()
+        val hand = play.rows.flatten().sorted()
         // In a puzzle everyone set these cards; at a table the others had other hands.
         val same = o.plays.filter { it.rows.flatten().toSet() == hand.toSet() }
         val a = Engine.analyze(hand, r.rules, settings.models().first().path, same.map { it.rows })
         val names = r.players.associate { it.id to it.name }
         val tags = HashMap<Int, MutableList<String>>()
         for (p in same) {
-          if (p.player == me) continue
+          if (p.player == player) continue
           val keys = Engine.rows(p.rows, r.rules).keys
           val i = a.cands.indexOfFirst { it.info.keys == keys }
           if (i >= 0) tags.getOrPut(i) { mutableListOf() } += names[p.player] ?: "?"
         }
-        if (detail == index) {
+        if (detail == index && analyzed == player) {
           detailAnalysis = a
           detailTags = tags.mapValues { it.value.joinToString(", ") }
         }
@@ -412,9 +428,19 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     }
   }
 
-  fun closeDetail() {
-    detail = null
+  fun closeAnalysis() {
+    analyzed = null
     detailAnalysis = null
     detailTags = emptyMap()
+  }
+
+  fun closeDetail() {
+    detail = null
+    closeAnalysis()
+  }
+
+  /** The last hand's table was seen; the final standings come next. */
+  fun toSummary() {
+    lastSeen = true
   }
 }

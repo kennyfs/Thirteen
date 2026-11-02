@@ -167,11 +167,13 @@ fun legacyNote(vm: AppViewModel, a: Analysis): String? =
 /**
  * The candidates, best Q first, with the player's arrangement (when known) pinned on top. The best one is labelled
  * as such; a candidate added only because it is the player's (dominated) has no rank. `tags` names others who
- * played a candidate, by its index (a battle's other players).
+ * played a candidate, by its index (a battle's other players). `mineLabel` pins `mine` as someone else's play (their
+ * name), without the remark on it, which speaks to the player.
  */
 @Composable
 fun CandidateList(
   a: Analysis, mine: Rows?, expandBest: Boolean, legacyNote: String?, modifier: Modifier = Modifier, tags: Map<Int, String> = emptyMap(),
+  mineLabel: String? = null,
 ) {
   val mineAt = mine?.let { m -> a.cands.indexOfFirst { Cards.sameArrangement(it.arrangement, m) } }?.takeIf { it >= 0 }
   val ranks = a.cands.runningFold(0) { n, cd -> if (cd.extra) n else n + 1 }.drop(1)
@@ -211,7 +213,9 @@ fun CandidateList(
     Column(Modifier.fillMaxSize()) {
       if (a.dragon) Text(stringResource(R.string.dragon), style = MaterialTheme.typography.bodySmall, color = GOOD)
       legacyNote?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = BAD) }
-      val remarks = remember(a, mine) { Commentary.remarks(a, mine) }
+      val remarks = remember(a, mine, mineLabel) {
+        Commentary.remarks(a, mine).filter { mineLabel == null || (it !is Commentary.Same && it !is Commentary.Mistake) }
+      }
       val shown = if (showAll) a.cands else a.cands.take(30)
       LazyColumn(Modifier.weight(1f)) {
         if (remarks.isNotEmpty()) item { Remarks(remarks); HorizontalDivider() }
@@ -219,7 +223,7 @@ fun CandidateList(
           item {
             Column(Modifier.background(MaterialTheme.colorScheme.secondaryContainer)) {
               Text(
-                stringResource(R.string.yours), Modifier.padding(start = 4.dp, top = 2.dp),
+                mineLabel ?: stringResource(R.string.yours), Modifier.padding(start = 4.dp, top = 2.dp),
                 style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSecondaryContainer,
               )
               CandidateRow(rank(mineAt), rankWidth, texts[mineAt], labelWidth, a.cands[mineAt], PINNED in open, if (mineAt == 0) null else a.cands[0], wheel, lostShown, qGap, tags[mineAt]) { toggle(PINNED) }

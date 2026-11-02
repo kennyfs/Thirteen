@@ -267,4 +267,6 @@
   <string name="battle_col_total_loss">Total lost</string>
   <string name="battle_col_hand_rank">Place</string>
   <string name="battle_hand_rank">%1$d of %2$d</string>
+  <string name="battle_to_summary">Final standings</string>
+  <string name="battle_tap_player">Tap a player for the analysis of their hand</string>
 </resources>
