@@ -25,9 +25,9 @@ import org.junit.runner.RunWith
 
 /**
  * Every screen under a range of screen sizes, display sizes (density) and font sizes: a screenshot of each in
- * /data/local/tmp/shots for a person to look over (CI pulls them), and a check that no card is cut off at the side.
+ * /data/local/tmp/shots for a person to look over (device-tests.sh pulls them), and a check that no card is cut off at the side.
  * A card cut off at the bottom is only logged: a page that scrolls has those. It changes the device's display and font
- * settings and puts them back after; CI runs it apart from the other tests.
+ * settings and puts them back after; device-tests.sh runs it apart from the other tests.
  */
 @RunWith(AndroidJUnit4::class)
 class ScreenshotTest {

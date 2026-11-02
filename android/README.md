@@ -35,7 +35,8 @@ with platform 35, build-tools 35, NDK 27.0.12077973 and CMake 3.22.1. Their path
 script for the variables. The built-in network is not in the repository: put it at
 `android/app/src/main/assets/run2_net10.onnx` (any network exported by `python/train.py`, see docs/training.md)
 before building; the app and its device tests expect it. The version code is the minutes from 2026-01-01 to the last commit, so a newer
-build always installs over an older one; the version name counts the commits.
+build always installs over an older one. The version name is the latest `vX.Y.Z` tag (`1.0.0` on the tag itself,
+`1.0.0-3` three commits after it).
 
 `android/device-tests.sh` runs `ScreenshotTest` on a local headless Android 14 emulator (made on the first run): every
 screen under several screen, display and font sizes, saved in `android/build/screenshots`, failing when a card is cut
@@ -44,9 +45,6 @@ off at the side. `ALL=1` runs every device test instead. It needs the SDK's emul
 resume the 1.5 GB image; download `x86_64-34_r14.zip` from `https://dl.google.com/android/repository/sys-img/google_apis/`
 with `curl -C -`, check its SHA-1 against `sys-img2-3.xml` there, unzip it into
 `$ANDROID_HOME/system-images/android-34/google_apis/` and add a `package.xml` (sdkmanager writes one for every package it installs).
-
-GitHub Actions (`.github/workflows/android.yml`) runs the same checks (the engine's tests, the app's unit tests and
-release build, the device tests and the screenshots, as the `screenshots` artifact) when started by hand.
 
 The layout follows the room it has rather than fixed sizes: cards are sized from the width and height left (their
 rank and suit scale with the card, not with the font size), room for text is in `sp` (`textRoom`) so it grows with
