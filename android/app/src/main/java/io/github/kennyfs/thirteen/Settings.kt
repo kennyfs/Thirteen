@@ -14,6 +14,14 @@ enum class Kind { NET, MC, INDEP }
 
 data class Seat(val kind: Kind, val model: String)
 
+/** The look of the table: the brand's green felt, plain surfaces with the system's colors, or felt in the wallpaper's colors. */
+enum class ColorStyle { TABLE, MINIMAL, WALLPAPER }
+
+enum class DarkMode { SYSTEM, LIGHT, DARK }
+
+/** The app's own text size, on top of the system's font size. */
+enum class TextSize(val scale: Float) { NORMAL(1f), LARGE(1.15f), LARGER(1.3f) }
+
 /** Settings and model files, in shared preferences and the app's files directory. */
 class Settings(private val context: Context) {
   private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -81,6 +89,21 @@ class Settings(private val context: Context) {
     Kind.MC -> "mc $mcSamples"
     Kind.INDEP -> "indep"
   }
+
+  var colorStyle: ColorStyle
+    get() = enumPref("look.colors", ColorStyle.TABLE)
+    set(v) = prefs.edit().putString("look.colors", v.name).apply()
+
+  var darkMode: DarkMode
+    get() = enumPref("look.dark", DarkMode.SYSTEM)
+    set(v) = prefs.edit().putString("look.dark", v.name).apply()
+
+  var textSize: TextSize
+    get() = enumPref("look.text", TextSize.NORMAL)
+    set(v) = prefs.edit().putString("look.text", v.name).apply()
+
+  private inline fun <reified E : Enum<E>> enumPref(key: String, default: E): E =
+    runCatching { enumValueOf<E>(prefs.getString(key, null) ?: default.name) }.getOrDefault(default)
 
   /** The rules chosen on the rules page; a game takes them when it is dealt. */
   var rules: RuleSpec

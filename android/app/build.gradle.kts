@@ -39,6 +39,8 @@ android {
         val since = git("rev-list", "--count", "$tag..HEAD") ?: "0"
         tag.removePrefix("v") + if (since == "0") "" else "+beta.$since"
       } ?: "0.0.${git("rev-list", "--count", "HEAD") ?: "0"}"
+    // A build for testing beside the store's (signed with another key) takes another id, e.g. THIRTEEN_ID_SUFFIX=.test.
+    System.getenv("THIRTEEN_ID_SUFFIX")?.let { applicationIdSuffix = it }
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     externalNativeBuild {
       cmake {
@@ -134,5 +136,7 @@ dependencies {
   debugImplementation("androidx.compose.ui:ui-test-manifest")
   androidTestImplementation("androidx.test.ext:junit:1.3.0")
   androidTestImplementation("androidx.test:runner:1.7.0")
+  androidTestImplementation("androidx.test:core:1.7.0")
+  androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
   androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
 }

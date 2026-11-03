@@ -10,6 +10,8 @@ import android.util.Log
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.lifecycle.ViewModelProvider
@@ -37,7 +39,10 @@ class ScreenshotTest {
   private val instrumentation = InstrumentationRegistry.getInstrumentation()
   private val cutOff = mutableListOf<String>()
 
-  private data class Config(val name: String, val size: String, val density: Int, val fontScale: Float, val locale: String, val cutout: Boolean)
+  private data class Config(
+    val name: String, val size: String, val density: Int, val fontScale: Float, val locale: String, val cutout: Boolean,
+    val landscape: Boolean = false, val dark: Boolean = false,
+  )
 
   private fun shell(cmd: String): String =
     ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand(cmd)).use { String(it.readBytes()) }
@@ -49,13 +54,17 @@ class ScreenshotTest {
     shell("wm density reset")
     shell("settings put system font_scale 1.0")
     shell("cmd overlay disable $CUTOUT")
+    shell("settings put system user_rotation 0")
+    shell("cmd uimode night no")
   }
 
   @Test
   fun everyScreenFits() {
     shell("mkdir -p $DIR")
+    // The rotation is set for each config, not followed from the sensor.
+    shell("settings put system accelerometer_rotation 0")
     shell("cmd overlay enable com.android.internal.systemui.navbar.gestural")
-    for (config in if (STORE) STORE_CONFIGS else CONFIGS) shoot(config)
+    for (config in if (STORE) STORE_CONFIGS else CONFIGS) if (ONLY.isEmpty() || config.name in ONLY) shoot(config)
     assertTrue("Cards cut off at the side:\n" + cutOff.joinToString("\n"), cutOff.isEmpty())
   }
 
@@ -75,6 +84,8 @@ class ScreenshotTest {
     shell("wm density ${c.density}")
     shell("settings put system font_scale ${c.fontScale}")
     shell("cmd overlay ${if (c.cutout) "enable" else "disable"} $CUTOUT")
+    shell("settings put system user_rotation ${if (c.landscape) 1 else 0}")
+    shell("cmd uimode night ${if (c.dark) "yes" else "no"}")
     // After the change of density, which resets the status bar.
     if (STORE) demoStatusBar()
     if (Build.VERSION.SDK_INT >= 33)
@@ -113,27 +124,40 @@ class ScreenshotTest {
       }
       compose.waitUntil(TIMEOUT) { vm.analysis != null && vm.anaPage == 1 }
       shot(c, "5-candidates")
-      for ((tag, name) in listOf("nav_RECORDS" to "6-records", "nav_RULES" to "7-rules", "nav_SETTINGS" to "8-settings", "nav_BATTLE" to "9-battle")) {
-        compose.onNodeWithTag(tag).performClick()
+      compose.onNodeWithTag("nav_BATTLE").performClick()
+      shot(c, "6-battle")
+      compose.onNodeWithTag("nav_SETTINGS").performClick()
+      shot(c, "7-settings")
+      val context = instrumentation.targetContext
+      for ((label, name) in listOf(R.string.nav_rules to "8-rules", R.string.records_title to "9-records")) {
+        compose.onNodeWithText(context.getString(label)).performScrollTo().performClick()
         shot(c, name)
+        scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
       }
     }
   }
 
   private fun shot(c: Config, name: String) {
     compose.waitForIdle()
-    // The app is landscape only; after a change of size the display can take a moment to turn (the app first).
-    compose.waitUntil(TIMEOUT) { compose.onRoot().fetchSemanticsNode().size.let { it.width > it.height } }
+    // After a change of size or rotation the display can take a moment to turn (the app first).
+    // Now and then the emulator misses the rotation: it is asked again.
+    var tries = 0
+    compose.waitUntil(TIMEOUT) {
+      compose.onRoot().fetchSemanticsNode().size.let { (it.width > it.height) == c.landscape }.also {
+        if (!it && ++tries % 200 == 0) shell("settings put system user_rotation ${if (c.landscape) 1 else 0}")
+      }
+    }
     // The system bars settle after a change of size or rotation.
     Thread.sleep(600)
-    // The screenshot is taken here and only kept once the display has turned, the app's light background shows at both
-    // sides (the turn shows a dark still of the old layout) and two in a row agree.
+    // The screenshot is taken here and only kept once the display has turned, the app's background shows at both sides
+    // (the turn shows a still of the old layout, dark in a light theme) and two in a row agree.
     var screen: Bitmap? = null
     compose.waitUntil(TIMEOUT) {
       val last = screen
       screen = instrumentation.uiAutomation.takeScreenshot()
       screen.let {
-        it != null && it.width > it.height && light(it.getPixel(1, it.height / 2)) && light(it.getPixel(it.width - 2, it.height / 2)) &&
+        it != null && (it.width > it.height) == c.landscape && light(it.getPixel(1, it.height / 2)) != c.dark &&
+          light(it.getPixel(it.width - 2, it.height / 2)) != c.dark &&
           last != null && it.sameAs(last)
       }
     }
@@ -164,22 +188,29 @@ class ScreenshotTest {
     // The phone the app is tried on (2424 x 1080, display and font sizes up a step), then smaller and larger.
     private val CONFIGS = listOf(
       Config("phone-user", "1080x2424", 480, 1.3f, "zh-TW", cutout = true),
+      Config("phone-user-land", "1080x2424", 480, 1.3f, "zh-TW", cutout = true, landscape = true),
       Config("phone", "1080x2424", 420, 1.0f, "zh-TW", cutout = true),
+      Config("phone-land", "1080x2424", 420, 1.0f, "zh-TW", cutout = true, landscape = true),
       Config("phone-font2", "1080x2424", 420, 2.0f, "zh-TW", cutout = false),
+      Config("phone-font2-land", "1080x2424", 420, 2.0f, "zh-TW", cutout = false, landscape = true),
       Config("phone-largest", "1080x2424", 560, 1.3f, "zh-TW", cutout = true),
       Config("phone-en", "1080x2424", 480, 1.3f, "en", cutout = false),
-      Config("phone-font085", "1080x2424", 420, 0.85f, "en", cutout = false),
+      Config("phone-en-land", "1080x2424", 480, 1.3f, "en", cutout = false, landscape = true),
+      Config("phone-dark", "1080x2424", 480, 1.3f, "zh-TW", cutout = false, dark = true),
       Config("small", "720x1600", 320, 1.0f, "zh-TW", cutout = false),
-      Config("small-large", "720x1600", 360, 1.5f, "en", cutout = false),
+      Config("small-large-land", "720x1600", 360, 1.5f, "en", cutout = false, landscape = true),
       Config("tablet", "1600x2560", 320, 1.0f, "zh-TW", cutout = false),
-      Config("tablet-font", "1600x2560", 320, 1.5f, "en", cutout = false),
+      Config("tablet-land", "1600x2560", 320, 1.0f, "zh-TW", cutout = false, landscape = true),
+      Config("tablet-font", "1600x2560", 320, 1.5f, "en", cutout = false, landscape = true),
     )
 
+    // ONLY=name,name device-tests.sh: only those configs.
+    private val ONLY = InstrumentationRegistry.getArguments().getString("only").orEmpty().split(",").filter { it.isNotBlank() }
     private val STORE = InstrumentationRegistry.getArguments().getString("store") == "1"
     // Google Play wants 16:9 with a side of at least 1080 px.
     private val STORE_CONFIGS = listOf(
-      Config("store-zh", "1080x1920", 400, 1.0f, "zh-TW", cutout = false),
-      Config("store-en", "1080x1920", 400, 1.0f, "en", cutout = false),
+      Config("store-zh", "1080x1920", 400, 1.0f, "zh-TW", cutout = false, landscape = true),
+      Config("store-en", "1080x1920", 400, 1.0f, "en", cutout = false, landscape = true),
     )
 
     // Seed "11" of the engine's deal, with the greedy player's rows for the player: under family, the networks'

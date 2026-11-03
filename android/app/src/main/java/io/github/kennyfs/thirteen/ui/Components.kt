@@ -1,0 +1,246 @@
+package io.github.kennyfs.thirteen.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import io.github.kennyfs.thirteen.R
+
+/** The height of the primary actions (Confirm, Next hand, Analyze). */
+val BIG_BUTTON = 56.dp
+
+/** A page's title row: an optional back button, the title, and actions at the end. */
+@Composable
+fun TitleBar(title: String, onBack: (() -> Unit)? = null, modifier: Modifier = Modifier, actions: @Composable RowScope.() -> Unit = {}) {
+  Row(
+    modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = if (onBack == null) 16.dp else 4.dp, end = 12.dp),
+    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+  ) {
+    if (onBack != null)
+      IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) }
+    Text(
+      title, Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+    )
+    actions()
+  }
+}
+
+/** A group's heading in a list of settings. */
+@Composable
+fun SectionHeader(text: String, modifier: Modifier = Modifier) {
+  Text(
+    text, modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp),
+    style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary,
+  )
+}
+
+/** A row of a settings list: a title, its current value under it, and an arrow when it opens a page. */
+@Composable
+fun SettingRow(
+  title: String, value: String? = null, modifier: Modifier = Modifier, arrow: Boolean = true, enabled: Boolean = true,
+  trailing: @Composable (() -> Unit)? = null, onClick: (() -> Unit)? = null,
+) {
+  Row(
+    modifier.fillMaxWidth().heightIn(min = 64.dp)
+      .let { if (onClick != null) it.clickable(enabled = enabled, onClick = onClick) else it }
+      .padding(horizontal = 16.dp, vertical = 8.dp),
+    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+  ) {
+    Column(Modifier.weight(1f)) {
+      Text(title, style = MaterialTheme.typography.bodyLarge, color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline)
+      if (value != null) Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    trailing?.invoke()
+    if (onClick != null && arrow) Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+  }
+}
+
+/**
+ * Two to four choices side by side, one of them on: a connected group of 48 dp buttons. `onFelt` draws it for the
+ * table (light on the felt) instead of the page.
+ */
+@Composable
+fun <T> ToggleGroup(
+  options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit, modifier: Modifier = Modifier,
+  colors: ToggleColors = ToggleColors.page(),
+) {
+  Row(modifier.height(IntrinsicSize.Min).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+    for ((i, o) in options.withIndex()) {
+      val on = o.first == selected
+      val shape = RoundedCornerShape(
+        topStart = if (i == 0) 24.dp else 6.dp, bottomStart = if (i == 0) 24.dp else 6.dp,
+        topEnd = if (i == options.lastIndex) 24.dp else 6.dp, bottomEnd = if (i == options.lastIndex) 24.dp else 6.dp,
+      )
+      Box(
+        Modifier.weight(1f).heightIn(min = 48.dp).clip(shape).background(if (on) colors.onContainer else colors.offContainer)
+          .selectable(on, role = Role.RadioButton) { onSelect(o.first) }.padding(horizontal = 10.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center,
+      ) {
+        Text(
+          o.second, color = if (on) colors.onContent else colors.offContent, style = MaterialTheme.typography.labelLarge,
+          textAlign = TextAlign.Center,
+        )
+      }
+    }
+  }
+}
+
+data class ToggleColors(val onContainer: Color, val onContent: Color, val offContainer: Color, val offContent: Color) {
+  companion object {
+    @Composable
+    fun page() = MaterialTheme.colorScheme.let { ToggleColors(it.primary, it.onPrimary, it.surfaceContainerHighest, it.onSurface) }
+  }
+}
+
+/** A labelled value picked from a menu: the whole row is the touch target. */
+@Composable
+fun <T> SelectRow(title: String, options: List<Pair<T, String>>, value: T, onPick: (T) -> Unit, modifier: Modifier = Modifier) {
+  var open by remember { mutableStateOf(false) }
+  Box(modifier) {
+    SettingRow(
+      title, options.firstOrNull { it.first == value }?.second ?: options.firstOrNull()?.second, arrow = false, onClick = { open = true },
+      trailing = { Icon(Icons.Filled.ArrowDropDown, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+    )
+    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+      for ((v, text) in options)
+        DropdownMenuItem(
+          text = { Text(text, style = MaterialTheme.typography.bodyLarge) }, onClick = { onPick(v); open = false },
+          modifier = Modifier.heightIn(min = 52.dp),
+        )
+    }
+  }
+}
+
+/** A compact button that opens a menu of choices, for title bars: the current choice and a triangle. */
+@Composable
+fun <T> MenuChip(label: String, options: List<Pair<T, String>>, onPick: (T) -> Unit, modifier: Modifier = Modifier) {
+  var open by remember { mutableStateOf(false) }
+  Box(modifier) {
+    Chip(label, onClick = { open = true }, trailingMenu = true)
+    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+      for ((v, text) in options)
+        DropdownMenuItem(text = { Text(text, style = MaterialTheme.typography.bodyLarge) }, onClick = { onPick(v); open = false }, modifier = Modifier.heightIn(min = 52.dp))
+    }
+  }
+}
+
+/** An outlined chip, 40 dp tall within a 48 dp touch target. */
+@Composable
+fun Chip(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, trailingMenu: Boolean = false) {
+  Surface(
+    onClick = onClick, modifier = modifier.heightIn(min = 48.dp).padding(vertical = 4.dp), shape = RoundedCornerShape(12.dp),
+    color = MaterialTheme.colorScheme.surface, border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+  ) {
+    Row(Modifier.padding(start = 12.dp, end = if (trailingMenu) 6.dp else 12.dp), verticalAlignment = Alignment.CenterVertically) {
+      Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 220.dp))
+      if (trailingMenu) Icon(Icons.Filled.ArrowDropDown, null)
+    }
+  }
+}
+
+/** A number with − and + buttons, for the rules. */
+@Composable
+fun NumberStepper(value: Double, onChange: (Double) -> Unit, step: Double = 1.0, min: Double = 0.0, max: Double = 100.0, text: String) {
+  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    val minus = stringResource(R.string.decrease)
+    val plus = stringResource(R.string.increase)
+    FilledTonalIconButton(onClick = { onChange((value - step).coerceAtLeast(min)) }, enabled = value > min, modifier = Modifier.size(48.dp)) {
+      Icon(Icons.Filled.Remove, minus)
+    }
+    Text(text, Modifier.widthIn(min = 44.dp), style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+    FilledTonalIconButton(onClick = { onChange((value + step).coerceAtMost(max)) }, enabled = value < max, modifier = Modifier.size(48.dp)) {
+      Icon(Icons.Filled.Add, plus)
+    }
+  }
+}
+
+/** An (i) button that shows `text` in a dialog. */
+@Composable
+fun InfoButton(text: String, title: String? = null, tint: Color = MaterialTheme.colorScheme.primary) {
+  var open by remember { mutableStateOf(false) }
+  val description = stringResource(R.string.info)
+  IconButton(onClick = { open = true }, Modifier.semantics { contentDescription = description }) {
+    Icon(Icons.Outlined.Info, null, tint = tint)
+  }
+  if (open)
+    AlertDialog(
+      onDismissRequest = { open = false },
+      confirmButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.ok)) } },
+      title = title?.let { { Text(it) } },
+      text = { Text(text, style = MaterialTheme.typography.bodyLarge) },
+    )
+}
+
+/** A small rounded label: a rank ("Best"), a row's result against the player (+1, −1). */
+@Composable
+fun Badge(text: String, container: Color, content: Color, modifier: Modifier = Modifier) {
+  Text(
+    text, modifier.background(container, RoundedCornerShape(8.dp)).padding(horizontal = 7.dp, vertical = 1.dp),
+    color = content, style = MaterialTheme.typography.labelMedium, maxLines = 1,
+  )
+}
+
+/** A circle with a person's initial, for lists of players. */
+@Composable
+fun Avatar(name: String, size: Dp = 40.dp) {
+  Box(Modifier.size(size).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer), contentAlignment = Alignment.Center) {
+    Text(name.trim().take(1).ifEmpty { "?" }, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+  }
+}
+
+/** Width of a two-pane split, or null when the window is too narrow for two. */
+fun twoPane(width: Dp, min: Dp = 720.dp): Boolean = width >= min
+
+/** Keeps a column of text and controls to a readable width on large screens. */
+fun Modifier.readable(max: Dp = 720.dp) = this.widthIn(max = max)

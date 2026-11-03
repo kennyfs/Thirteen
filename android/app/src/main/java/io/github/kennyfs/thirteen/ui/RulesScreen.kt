@@ -1,41 +1,29 @@
 package io.github.kennyfs.thirteen.ui
 
-import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.FilterChip
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.github.kennyfs.thirteen.AppViewModel
 import io.github.kennyfs.thirteen.Kind
 import io.github.kennyfs.thirteen.R
@@ -45,99 +33,97 @@ import io.github.kennyfs.thirteen.Rules
  * The scoring rules: a preset, then each value. The two that change the play (strict rows and the wheel) are kept
  * apart from the ones that only change the points.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun RulesScreen(vm: AppViewModel) {
+fun RulesPage(vm: AppViewModel, onBack: () -> Unit) {
   val spec = vm.ruleSpec
   val values = vm.ruleValues
   val colors = MaterialTheme.colorScheme
-  Column(Modifier.fillMaxSize().padding(8.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-      for (p in Rules.PRESETS)
-        FilterChip(selected = spec.preset == p && spec.overrides.isEmpty(), onClick = { vm.choosePreset(p) }, label = { Text(p) })
-      if (spec.overrides.isNotEmpty()) {
-        Text(
-          stringResource(R.string.custom_from, spec.preset), Modifier.align(Alignment.CenterVertically),
-          color = colors.tertiary, style = MaterialTheme.typography.labelLarge,
-        )
-        TextButton(onClick = { vm.choosePreset(spec.preset) }) { Text(stringResource(R.string.restore_preset)) }
-      }
-    }
+  val names = stringArrayResource(R.array.preset_names)
+  val notes = stringArrayResource(R.array.preset_notes)
+  SettingsSubpage(stringResource(R.string.nav_rules), onBack) {
     Text(
-      stringArrayResource(R.array.preset_notes)[Rules.PRESETS.indexOf(spec.preset)],
-      style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant,
+      stringResource(R.string.rules_next_hand), Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+      style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant,
     )
-    Text(stringResource(R.string.rules_next_hand), style = MaterialTheme.typography.bodySmall)
-    // Networks in a seat or the analysis that would play these rules as family.
-    val legacy = (List(3) { vm.settings.seat(it) }.filter { it.kind == Kind.NET }.map { it.model } + vm.anaModel)
-      .map { vm.settings.model(it) }.distinct().filter { it.path in vm.legacyModels }
-    if (vm.legacyMismatch(values))
-      for (m in legacy) Text(stringResource(R.string.legacy_warning, modelLabel(m)), color = BAD, style = MaterialTheme.typography.bodySmall)
-    vm.rulesError?.let { Text(it, color = BAD, style = MaterialTheme.typography.bodySmall) }
-    if (values.isEmpty()) return@Column
-
-    // Side by side when the width allows, else one under another.
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-      Column(
-        Modifier.width(textRoom(260)).border(2.dp, colors.tertiary, RoundedCornerShape(8.dp)).padding(8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-      ) {
-        Text(stringResource(R.string.rules_play), style = MaterialTheme.typography.titleSmall, color = colors.tertiary)
-        Text(stringResource(R.string.rules_play_note), style = MaterialTheme.typography.bodySmall)
-        SwitchLine(stringResource(R.string.strict_rows), values["strict"] == 1.0) { vm.setRule("strict", if (it) 1.0 else 0.0) }
-        Text(stringResource(R.string.wheel), style = MaterialTheme.typography.bodyMedium)
-        val wheel = values["wheel"]?.toInt() ?: 0
-        for ((i, label) in stringArrayResource(R.array.wheel_options).withIndex())
-          Row(verticalAlignment = Alignment.CenterVertically) {
-            RadioButton(selected = wheel == i, onClick = { vm.setRule("wheel", i.toDouble()) })
-            Text(label, style = MaterialTheme.typography.bodyMedium)
+    Column(Modifier.padding(horizontal = 12.dp).selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      for (p in Rules.OFFERED + listOfNotNull(spec.preset.takeIf { it !in Rules.OFFERED })) {
+        val i = Rules.PRESETS.indexOf(p)
+        val on = spec.preset == p
+        Card(
+          Modifier.fillMaxWidth().selectable(on, role = Role.RadioButton) { vm.choosePreset(p) },
+          colors = CardDefaults.cardColors(containerColor = if (on) colors.secondaryContainer else colors.surfaceContainerLow),
+          border = if (on) BorderStroke(2.dp, colors.primary) else null,
+        ) {
+          Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            RadioButton(selected = on, onClick = null, Modifier.padding(end = 12.dp))
+            Column(Modifier.weight(1f)) {
+              Text(
+                names[i] + if (on && spec.overrides.isNotEmpty()) stringResource(R.string.rules_changed) else "",
+                style = MaterialTheme.typography.titleMedium,
+              )
+              Text(notes[i], style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+            }
           }
-      }
-      Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(stringResource(R.string.rules_scoring), style = MaterialTheme.typography.titleSmall)
-        for ((i, label) in stringArrayResource(R.array.point_labels).withIndex())
-          NumberLine(label, Rules.POINTS[i], values, vm::setRule)
-      }
-      Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(stringResource(R.string.rules_royalties), style = MaterialTheme.typography.titleSmall)
-        for ((i, label) in stringArrayResource(R.array.royalty_labels).withIndex())
-          NumberLine(label, Rules.ROYALTIES[i], values, vm::setRule)
-        Box(Modifier.width(textRoom(130) + 56.dp)) {
-          SwitchLine(stringResource(R.string.on_win), values["on_win"] == 1.0) { vm.setRule("on_win", if (it) 1.0 else 0.0) }
         }
       }
     }
+    if (spec.overrides.isNotEmpty())
+      OutlinedButton(onClick = { vm.choosePreset(spec.preset) }, Modifier.padding(horizontal = 16.dp, vertical = 8.dp).heightIn(min = 48.dp)) {
+        Text(stringResource(R.string.restore_preset))
+      }
+    // Networks in a seat or the analysis that would play these rules as family.
+    val legacy = (vm.seatChoices.filter { it.kind == Kind.NET }.map { it.model } + vm.anaModel)
+      .map { vm.settings.model(it) }.distinct().filter { it.path in vm.legacyModels }
+    if (vm.legacyMismatch(values))
+      for (m in legacy) Text(stringResource(R.string.legacy_warning, modelLabel(m)), Modifier.padding(horizontal = 16.dp), color = BAD, style = MaterialTheme.typography.bodyMedium)
+    vm.rulesError?.let { Text(it, Modifier.padding(horizontal = 16.dp), color = BAD, style = MaterialTheme.typography.bodyMedium) }
+    if (values.isEmpty()) return@SettingsSubpage
+
+    SectionHeader(stringResource(R.string.rules_play))
+    Text(stringResource(R.string.rules_play_note), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+    SwitchRow(stringResource(R.string.strict_rows), values["strict"] == 1.0) { vm.setRule("strict", if (it) 1.0 else 0.0) }
+    Text(stringResource(R.string.wheel), Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.bodyLarge)
+    val wheel = values["wheel"]?.toInt() ?: 0
+    Column(Modifier.selectableGroup()) {
+      for ((i, label) in stringArrayResource(R.array.wheel_options).withIndex())
+        Row(
+          Modifier.fillMaxWidth().heightIn(min = 52.dp).selectable(wheel == i, role = Role.RadioButton) { vm.setRule("wheel", i.toDouble()) }
+            .padding(horizontal = 16.dp),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          RadioButton(selected = wheel == i, onClick = null, Modifier.padding(end = 12.dp))
+          Text(label, style = MaterialTheme.typography.bodyLarge)
+        }
+    }
+
+    SectionHeader(stringResource(R.string.rules_scoring))
+    for ((i, label) in stringArrayResource(R.array.point_labels).withIndex()) NumberRow(label, Rules.POINTS[i], values, vm::setRule)
+    SectionHeader(stringResource(R.string.rules_royalties))
+    for ((i, label) in stringArrayResource(R.array.royalty_labels).withIndex()) NumberRow(label, Rules.ROYALTIES[i], values, vm::setRule)
+    SwitchRow(stringResource(R.string.on_win), values["on_win"] == 1.0) { vm.setRule("on_win", if (it) 1.0 else 0.0) }
   }
 }
 
 @Composable
-private fun SwitchLine(label: String, on: Boolean, onChange: (Boolean) -> Unit) {
-  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    Switch(checked = on, onCheckedChange = onChange)
-    Text(label, Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodyMedium)
+private fun SwitchRow(label: String, on: Boolean, onChange: (Boolean) -> Unit) {
+  Row(
+    Modifier.fillMaxWidth().heightIn(min = 56.dp).toggleable(on, role = Role.Switch, onValueChange = onChange).padding(horizontal = 16.dp, vertical = 6.dp),
+    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+  ) {
+    Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+    Switch(checked = on, onCheckedChange = null)
   }
 }
 
-/** A label and a small number field; a value is set once the text is a number >= 0. */
+/** A label and its value with − and + buttons. */
 @Composable
-private fun NumberLine(label: String, name: String, values: Map<String, Double>, onSet: (String, Double) -> Unit) {
+private fun NumberRow(label: String, name: String, values: Map<String, Double>, onSet: (String, Double) -> Unit) {
   val value = values[name] ?: 0.0
-  var text by remember(value) { mutableStateOf(Rules.fmt(value)) }
-  val colors = MaterialTheme.colorScheme
-  Row(verticalAlignment = Alignment.CenterVertically) {
-    Text(label, Modifier.width(textRoom(130)), style = MaterialTheme.typography.bodyMedium)
-    BasicTextField(
-      text,
-      onValueChange = { t ->
-        text = t
-        t.toDoubleOrNull()?.takeIf { it >= 0 && it != value }?.let { onSet(name, it) }
-      },
-      Modifier.width(56.dp).border(1.dp, if (text.toDoubleOrNull() == null) BAD else colors.outline, RoundedCornerShape(4.dp))
-        .padding(horizontal = 6.dp, vertical = 4.dp),
-      singleLine = true,
-      textStyle = TextStyle(fontSize = 15.sp, color = colors.onSurface, textAlign = TextAlign.End),
-      cursorBrush = SolidColor(colors.primary),
-      keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-    )
+  Row(
+    Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 16.dp, end = 12.dp),
+    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+  ) {
+    Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+    NumberStepper(value, { onSet(name, it) }, text = Rules.fmt(value))
   }
 }

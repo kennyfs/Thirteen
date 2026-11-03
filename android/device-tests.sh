@@ -1,6 +1,6 @@
 #!/bin/bash
 # Runs the instrumented tests on a local emulator: by default ScreenshotTest, whose screenshots and log land in
-# build/screenshots (with STORE=1 the Google Play screenshots instead); with ALL=1 every device test. Starts a headless
+# build/screenshots (with STORE=1 the Google Play screenshots instead); with ALL=1 every device test; ONLY=name,... only those screenshot configs. Starts a headless
 # emulator (AVD "thirteen-$API", made on the first run, with a display as large as the largest size ScreenshotTest
 # tries) and stops it after, unless KEEP=1. Needs the emulator and system-images;android-$API;google_apis;x86_64 in the
 # SDK (API defaults to 37.0), and /dev/kvm. Paths as in build-apk.sh, plus ANDROID_AVD_HOME (default ~/.android/avd);
@@ -46,7 +46,8 @@ else
   "$ADB" shell rm -rf /data/local/tmp/shots
   "$GRADLE" --no-daemon connectedDebugAndroidTest \
     -Pandroid.testInstrumentationRunnerArguments.class=io.github.kennyfs.thirteen.ScreenshotTest \
-    -Pandroid.testInstrumentationRunnerArguments.store="${STORE:-0}" || status=$?
+    -Pandroid.testInstrumentationRunnerArguments.store="${STORE:-0}" \
+    -Pandroid.testInstrumentationRunnerArguments.only="${ONLY:-}" || status=$?
   rm -rf build/screenshots
   mkdir -p build
   "$ADB" pull /data/local/tmp/shots build/screenshots

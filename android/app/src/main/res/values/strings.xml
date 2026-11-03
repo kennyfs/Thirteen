@@ -3,28 +3,21 @@
   <string name="app_name">Thirteen</string>
   <string name="nav_play">Practice</string>
   <string name="nav_analyze">Analyze</string>
-  <string name="nav_records">Records</string>
   <string name="nav_settings">Settings</string>
   <string name="ok">OK</string>
   <string name="cancel">Cancel</string>
   <string name="info">Explanation</string>
   <string name="hand_n">Hand %1$d</string>
   <string name="you">You</string>
-  <string name="cards_to_place">%1$d cards to place</string>
   <string name="ready">Ready</string>
   <string name="fouled">Fouled: front ≤ middle ≤ back</string>
-  <string name="sort_by_suit">Sort by suit</string>
-  <string name="sort_by_rank">Sort by rank</string>
-  <string name="clear_rows">Clear rows</string>
-  <string name="confirm">Confirm</string>
+  <string name="confirm">Play these rows</string>
   <string name="next_hand">Next hand</string>
   <string name="analyze_my_hand">Analyze my hand</string>
   <string name="fouled_short">Fouled</string>
   <string name="home_run">Home run</string>
-  <string name="seat_n">Seat %1$d</string>
   <string name="row_room">%1$s has room for %2$d more</string>
   <string name="fill_rows_first">Fill all three rows first</string>
-  <string name="n_cards">%1$d/13 cards</string>
   <string name="random">Random</string>
   <string name="last_hand">Last hand</string>
   <string name="clear">Clear</string>
@@ -35,16 +28,14 @@
   <string name="yours">Yours</string>
   <string name="pick_13">Pick 13 cards</string>
   <string name="n_recorded">%1$d hands recorded</string>
-  <string name="total">total %1$s</string>
-  <string name="export">Export JSONL</string>
+  <string name="export">Save as file</string>
   <string name="share">Share</string>
   <string name="clear_records">Clear records</string>
-  <string name="reset_scores">Reset scores</string>
+  <string name="reset_scores">Reset running scores</string>
   <string name="delete">Delete</string>
   <string name="reset">Reset</string>
   <string name="clear_records_confirm">Delete all %1$d recorded hands? Export first if you need them.</string>
   <string name="reset_confirm">Reset the running scores and the hand count? Records are kept.</string>
-  <string name="opponents">Opponents (from the next hand)</string>
   <string name="mc_samples">Monte Carlo samples (opponents: indep)</string>
   <string name="networks">Networks</string>
   <string name="load_weights">Load .onnx weights</string>
@@ -52,13 +43,10 @@
   <string name="not_usable">Not a usable network: %1$s</string>
   <string name="best">Best</string>
   <string name="pick_n">Pick %1$d more</string>
-  <string name="tab_result">Result</string>
-  <string name="back_to_hand">← Hand</string>
-  <string name="to_analyze">Analyze this hand</string>
-  <string name="seat_pos">#%1$d</string>
+  <string name="seat_pos">CPU %1$d</string>
   <string name="this_hand">This hand %1$s</string>
-  <string name="analyze_go">Analyze →</string>
-  <string name="to_candidates">Candidates →</string>
+  <string name="analyze_go">Analyze</string>
+  <string name="to_candidates">Back to the candidates</string>
   <string-array name="row_names">
     <item>Front</item>
     <item>Middle</item>
@@ -104,7 +92,6 @@
   <string name="fouled_strict">Fouled: rows may not be equal (strict rows)</string>
   <string name="nav_rules">Rules</string>
   <string name="custom">Custom</string>
-  <string name="custom_from">Custom (from %1$s)</string>
   <string name="restore_preset">Restore preset</string>
   <string name="rules_next_hand">Changes apply from the next hand; the running scores then start over.</string>
   <string name="rules_play">Changes the play</string>
@@ -114,16 +101,12 @@
   <string name="strict_rows">Strict rows: front &lt; middle &lt; back (equal rows foul)</string>
   <string name="wheel">A-2-3-4-5</string>
   <string name="on_win">Special rows pay only when they beat the opponent\'s row</string>
-  <string name="legacy_warning">%1$s predates the rules input: it plays as under family whatever the rules.</string>
-  <string name="rules_label">Rules: %1$s</string>
-  <string name="this_game_rules"> (that hand)</string>
-  <string name="use_current_rules">Use current rules</string>
+  <string name="legacy_warning">%1$s predates the rules input: it plays under the simple rules whatever the rules are.</string>
   <string name="total_so_far">total %1$s</string>
-  <string name="vs_you">you %1$s</string>
   <string-array name="preset_notes">
-    <item>House rules: scoops, home runs and special rows, 1 point each.</item>
-    <item>As family, but quads or a straight flush in the middle earn 2.</item>
-    <item>Taiwanese row scoring: 1 per row, scoop 3, home run 6 more; front trips 3, middle quads 8 / straight flush 10, back quads 4 / straight flush 5, dragon 36.</item>
+    <item>Only scoops, home runs and special rows count, 1 point each.</item>
+    <item>As the simple rules, but quads or a straight flush in the middle earn 2.</item>
+    <item>1 per row, scoop 3, home run 6 more; front trips 3, middle quads 8 / straight flush 10, back quads 4 / straight flush 5, dragon 36.</item>
     <item>Chinese poker as on pagat.com: 1 per row, scoop 3, special rows pay only when they win, strict rows.</item>
   </string-array>
   <string-array name="wheel_options">
@@ -198,25 +181,22 @@
   <string name="remark_strong">A strong hand.</string>
   <string name="remark_weak">A weak hand: avoid being scooped.</string>
   <string name="remark_home_run">A home run is in reach.</string>
-  <string name="nav_battle">Multiplayer</string>
+  <string name="nav_battle">Battle</string>
   <string name="battle_name">Your name</string>
   <string name="battle_online">Online</string>
-  <string name="battle_nearby">Nearby</string>
+  <string name="battle_nearby">Phones nearby</string>
   <string name="battle_server">Server</string>
   <string name="battle_server_hint">e.g. thirteen.example.com</string>
   <string name="battle_puzzle">Puzzle contest</string>
   <string name="battle_puzzle_info">Everyone sets the same hands. Each hand costs what your choice loses against the network\'s best; the least in total wins. No luck involved. Alone, it is a challenge.</string>
   <string name="battle_game">Table game</string>
   <string name="battle_game_info">Up to four players, networks in the empty seats; the most points wins.</string>
-  <string name="battle_create">Create</string>
   <string name="battle_join">Join</string>
-  <string name="battle_pin">PIN</string>
+  <string name="battle_pin">Room number</string>
   <string name="battle_pin_bad">A PIN has 6 digits.</string>
   <string name="battle_server_bad">Enter the server\'s address (a name, or wss://…).</string>
-  <string name="battle_create_room">Create a room</string>
-  <string name="battle_create_room_info">A puzzle contest or a table game; the others join with its PIN.</string>
   <string name="battle_join_room">Join a room</string>
-  <string name="battle_join_room_info">With the PIN of a room someone created.</string>
+  <string name="battle_join_room_info">Enter the 6-digit room number someone gave you.</string>
   <string name="battle_search_again">Search again</string>
   <string name="battle_no_rooms">No rooms found nearby yet.</string>
   <string name="battle_search">Find rooms nearby</string>
@@ -235,7 +215,6 @@
   <string name="battle_err_settings">These settings are not allowed.</string>
   <string name="battle_err_rows">Those rows do not use your 13 cards.</string>
   <string name="battle_err_not_allowed">Not possible now.</string>
-  <string name="battle_room_pin">PIN %1$s</string>
   <string name="battle_hands">Hands</string>
   <string name="battle_hands_n">Hands: %1$d</string>
   <string name="battle_time">Time per hand</string>
@@ -243,16 +222,11 @@
   <string name="battle_seconds">%1$d s</string>
   <string name="battle_hard">Hard hands only</string>
   <string name="battle_hard_info">Hands that two simple strategies (the strongest back first, and rows judged one by one) both set at least a red mark\'s worth worse than the network\'s best.</string>
-  <string name="battle_rules_page">Use the Rules page\'s rules</string>
-  <string name="battle_start">Start</string>
   <string name="battle_leave">Leave</string>
   <string name="battle_host">host</string>
   <string name="battle_away">away</string>
-  <string name="battle_bot">AI</string>
-  <string name="battle_you_mark">\u0020(you)</string>
   <string name="battle_players">Players (%1$d)</string>
   <string name="battle_hand_of">Hand %1$d of %2$d</string>
-  <string name="battle_left_time">%1$s left</string>
   <string name="battle_set_count">%1$d of %2$d set</string>
   <string name="battle_ready_count">%1$d of %2$d ready</string>
   <string name="battle_your_rank">you are #%1$d</string>
@@ -264,7 +238,6 @@
   <string name="battle_over">Final standings</string>
   <string name="battle_total_loss">lost %1$s</string>
   <string name="battle_hand_list">Hands (tap one for its analysis)</string>
-  <string name="battle_back">Back</string>
   <string name="battle_done">Done</string>
   <string name="battle_nearby_host_note">This phone hosts the room: the others join it nearby, and it computes the networks\' seats.</string>
   <string name="battle_this_hand">This hand %1$s</string>
@@ -276,4 +249,132 @@
   <string name="battle_hand_rank">%1$d of %2$d</string>
   <string name="battle_to_summary">Final standings</string>
   <string name="battle_tap_player">Tap a player for the analysis of their hand</string>
+
+  <!-- The redesigned screens. -->
+  <string name="back">Back</string>
+  <string name="increase">Increase</string>
+  <string name="decrease">Decrease</string>
+  <string name="on">On</string>
+  <string name="off">Off</string>
+  <string name="change">Change</string>
+  <string name="show_more">Show more</string>
+  <string name="analyzing">The network is thinking…</string>
+  <string name="hint_start">Pick cards, then tap a row to put them in.</string>
+  <string name="hint_selected">%1$d picked: tap a row to put them in.</string>
+  <string name="hint_armed">Tap cards for the %1$s: %2$d more.</string>
+  <string name="hint_left">%1$d left. Tap a placed card to take it back.</string>
+  <string name="put_here">Tap to put %1$d here</string>
+  <string name="room_for">Room for %1$d only</string>
+  <string name="take_back_row">Take back the %1$s</string>
+  <string name="undo">Undo</string>
+  <string name="take_all">Take all back</string>
+  <string name="sort_rank">By rank</string>
+  <string name="sort_suit">By suit</string>
+  <string name="sort_by_rank_on">Sorted by rank; tap to sort by suit</string>
+  <string name="sort_by_suit_on">Sorted by suit; tap to sort by rank</string>
+  <string name="row_win">You win</string>
+  <string name="row_lose">You lose</string>
+  <string name="row_tie">Tie</string>
+  <string name="vs_you_win">You won %1$s from them</string>
+  <string name="vs_you_lose">You lost %1$s to them</string>
+  <string name="vs_you_even">Even with you</string>
+  <string name="scooped_by">Scooped by %1$s</string>
+  <string name="remarks_title">Remarks</string>
+  <string name="candidates">Candidates</string>
+  <string name="expected">Expected points</string>
+  <string name="less_than_best">%1$s less than the best</string>
+  <string name="more_than_yours">%1$s more than yours</string>
+  <string name="yours_rank">%1$s · #%2$d</string>
+  <string name="pick_13_hint">Pick 13 cards</string>
+  <string name="source">From…</string>
+  <string name="from_records">A recorded hand</string>
+  <string name="this_game_rules_named">%1$s (that hand\'s)</string>
+  <string name="use_current_rules_named">Use the current rules: %1$s</string>
+  <string name="settings_look">Display</string>
+  <string name="settings_game">Game</string>
+  <string name="settings_data">Data</string>
+  <string name="settings_about">About</string>
+  <string name="text_size">Text size</string>
+  <string-array name="text_sizes">
+    <item>Normal</item>
+    <item>Large</item>
+    <item>Larger</item>
+  </string-array>
+  <string name="color_style">Colors</string>
+  <string-array name="color_styles">
+    <item>Green table</item>
+    <item>Plain</item>
+    <item>Wallpaper colors</item>
+  </string-array>
+  <string name="dark_mode">Dark theme</string>
+  <string-array name="dark_modes">
+    <item>As the system</item>
+    <item>Off</item>
+    <item>On</item>
+  </string-array>
+  <string name="opponents_title">Computer players</string>
+  <string name="opponents_all">All three: %1$s</string>
+  <string name="opponents_info">A network plays as it learned. Monte Carlo tries each arrangement against random hands for the others, each set by independent rows. Independent rows judges each row on its own.</string>
+  <string name="next_hand_note">Changes take effect from the next hand.</string>
+  <string-array name="kinds_short">
+    <item>Network</item>
+    <item>Monte Carlo</item>
+    <item>indep</item>
+  </string-array>
+  <string name="networks_summary">%1$d available</string>
+  <string name="networks_info">A network exported by python/train.py (an .onnx file) can be loaded and then chosen for the computer players and the analysis.</string>
+  <string name="built_in_note">Built in</string>
+  <string name="legacy_note">An older network: plays every rules as the simple rules</string>
+  <string name="delete_network_confirm">Delete the network %1$s?</string>
+  <string name="records_title">Records and saved hands</string>
+  <string name="records_summary">%1$d hands recorded · %2$d saved · score chart</string>
+  <string name="records_info">Every hand you play is recorded on this phone: the cards, your rows, the rules and the time you took. Nothing else, and nothing is sent unless you share it. Sharing the file (JSONL) with the developer helps train better computer players.</string>
+  <string name="records_list">All records, newest first</string>
+  <string name="reset_scores_info">Start the running totals and the hand count over</string>
+  <string name="about_source">Open source (GPLv3), on GitHub</string>
+  <string name="privacy_policy">Privacy policy</string>
+  <string name="rules_changed"> (changed)</string>
+  <string-array name="preset_names">
+    <item>Simple</item>
+    <item>Simple, middle ×2</item>
+    <item>Taiwan rows</item>
+    <item>Pagat</item>
+  </string-array>
+  <string-array name="suit_names">
+    <item>Club</item>
+    <item>Diamond</item>
+    <item>Heart</item>
+    <item>Spade</item>
+  </string-array>
+  <string name="battle_how">How to connect</string>
+  <string name="battle_server_is">Server: %1$s</string>
+  <string name="battle_nearby_info">Phones in the same room, over Bluetooth and Wi-Fi; no internet needed. The phone that opens the room runs it.</string>
+  <string name="battle_new_puzzle">Start a puzzle contest</string>
+  <string name="battle_new_game">Start a table game</string>
+  <string name="battle_room_number">Room number</string>
+  <string name="battle_room_number_info">Others enter this number under “Join a room”.</string>
+  <string name="battle_settings">Settings</string>
+  <string name="battle_rules_page_named">The rules page\'s: %1$s</string>
+  <string name="battle_start_mode">Start the %1$s</string>
+  <string name="battle_wait_host">Waiting for the host to start…</string>
+  <string name="battle_submit">Hand in these rows</string>
+  <string name="battle_standings">Standings</string>
+  <string name="battle_done_mark">Done</string>
+  <string name="battle_thinking">Thinking</string>
+  <string name="battle_place">#%1$d</string>
+  <string name="replay_hand">Rearrange this hand</string>
+  <string name="favorite_add">Save this hand</string>
+  <string name="favorite_remove">Remove from saved hands</string>
+  <string name="favorites_title">Saved hands</string>
+  <string name="favorites_empty">Tap the star on a result or on a record to keep a hand: a great deal, or a terrible one.</string>
+  <string name="chart_title">Total score over time</string>
+  <string name="chart_summary">%1$d hands · total %2$s · average %3$s a hand</string>
+  <string name="chart_rules">Rules</string>
+  <string name="chart_empty">Play a few hands and your total score is drawn here.</string>
+  <string name="chart_desc">A chart of your total score after each of %1$d hands, ending at %2$s</string>
+  <string name="analyze_this">Analyze this hand</string>
+  <string name="records_share_title">For the developer</string>
+  <string name="favorite_short">Save</string>
+  <string name="favorite_saved">Saved</string>
+  <string name="replay_short">Rearrange</string>
 </resources>

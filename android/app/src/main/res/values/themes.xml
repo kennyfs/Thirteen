@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- The window behind the first frame, in the colors of the app's surface. -->
+  <style name="Theme.Thirteen" parent="@android:style/Theme.Material.Light.NoActionBar">
+    <item name="android:windowBackground">@color/surface</item>
+  </style>
+  <color name="surface">#F5FBF6</color>
+</resources>

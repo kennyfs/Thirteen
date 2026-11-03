@@ -18,10 +18,32 @@ import kotlin.random.Random
 class AppViewModel(app: Application) : AndroidViewModel(app) {
   val settings = Settings(app)
   val records = RecordStore(app.filesDir)
+  val favorites = FavoriteStore(app.filesDir)
 
   private fun str(id: Int, vararg args: Any) = getApplication<Application>().getString(id, *args)
 
   var error by mutableStateOf<String?>(null)
+
+  // ---- Look ----
+
+  var colorStyle by mutableStateOf(settings.colorStyle); private set
+  var darkMode by mutableStateOf(settings.darkMode); private set
+  var textSize by mutableStateOf(settings.textSize); private set
+
+  fun chooseColorStyle(v: ColorStyle) {
+    colorStyle = v
+    settings.colorStyle = v
+  }
+
+  fun chooseDarkMode(v: DarkMode) {
+    darkMode = v
+    settings.darkMode = v
+  }
+
+  fun chooseTextSize(v: TextSize) {
+    textSize = v
+    settings.textSize = v
+  }
 
   private fun launchCatching(block: suspend () -> Unit) = viewModelScope.launch {
     try {
@@ -67,7 +89,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   }
 
   /** The name of the rules with these values: a preset's, or custom. */
-  fun rulesName(values: Map<String, Double>): String = Rules.presetOf(values, presetValues) ?: str(R.string.custom)
+  fun rulesName(values: Map<String, Double>): String =
+    Rules.presetOf(values, presetValues)?.let { getApplication<Application>().resources.getStringArray(R.array.preset_names)[Rules.PRESETS.indexOf(it)] }
+      ?: str(R.string.custom)
 
   /** Whether a legacy network would play these rules as if they were family. */
   fun legacyMismatch(values: Map<String, Double>): Boolean {
@@ -114,6 +138,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   var gameRules by mutableStateOf(""); private set
   var gameValues by mutableStateOf<Map<String, Double>>(emptyMap()); private set
   var recordCount by mutableStateOf(records.count()); private set
+  /** Ids of the saved hands, and the finished hand's record (what the star on the result saves). */
+  var favoriteIds by mutableStateOf(favorites.ids()); private set
+  var lastRecord by mutableStateOf<JSONObject?>(null); private set
+  /** A screen asks for another: the number of requests so far and the screen's name ("PLAY" to rearrange a hand...). */
+  var tabRequest by mutableStateOf(0 to ""); private set
+  private var replaying = false
 
   private var others: List<List<Int>> = emptyList()
   private var opponents: Deferred<List<Arrangement>>? = null
@@ -128,7 +158,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   }
 
   /** Deals a new hand; tests pass `fixed` hands (the player's first). */
-  fun deal(fixed: List<List<Int>>? = null) = launchCatching {
+  fun deal(fixed: List<List<Int>>? = null, again: Boolean = false) = launchCatching {
+    replaying = again
+    lastRecord = null
     result = null
     resultTab = 0
     gameAnalysis = null
@@ -165,10 +197,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     try {
       val all = listOf(rows) + opponents!!.await()
       val score = Engine.score(all, gameRules)
-      records.add(hand, rows, 0.0, gameRules, System.currentTimeMillis() - dealtAt, score.result[0])
+      lastRecord = records.add(
+        hand, rows, 0.0, gameRules, System.currentTimeMillis() - dealtAt, score.result[0], label = if (replaying) "replay" else "android",
+      )
       recordCount = records.count()
-      settings.addToSession(score.result)
-      session = settings.session()
+      // A hand played again is practice: it is neither in the totals nor in the score chart.
+      if (!replaying) {
+        settings.addToSession(score.result)
+        session = settings.session()
+      }
       result = all to score
     } finally {
       waiting = false
@@ -192,6 +229,34 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   fun resetSession() {
     settings.resetSession()
     session = settings.session()
+  }
+
+  /** Analyzes a record's hand on the Analyze screen. */
+  fun analyzeRecordOnScreen(rec: JSONObject) {
+    analyzeRecord(rec)
+    tabRequest = tabRequest.first + 1 to "ANALYZE"
+  }
+
+  /** The name of a record's rules (the rules field is a full spec; none or a preset's name for older records). */
+  fun rulesLabel(full: String): String {
+    val values = if ("=" in full) Rules.values(full) else presetValues[full.ifEmpty { "family" }] ?: emptyMap()
+    return rulesName(values)
+  }
+
+  fun toggleFavorite(rec: JSONObject) {
+    favorites.toggle(rec)
+    favoriteIds = favorites.ids()
+  }
+
+  /**
+   * The same 13 cards again, to arrange another way: the finished hand with the same opponents' cards, or (a record's
+   * or a saved hand) with the other 39 cards dealt anew. Not counted in the totals.
+   */
+  fun replay(cards: List<Int>? = null) {
+    val mine = cards ?: hand
+    val rest = if (cards == null) others else (0 until 52).filter { it !in mine }.shuffled().chunked(13)
+    deal(listOf(mine) + rest, again = true)
+    tabRequest = tabRequest.first + 1 to "PLAY"
   }
 
   /** Re-reads the count: battles add records too. */
@@ -295,9 +360,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   fun deleteModel(model: Model) {
     settings.deleteModel(model)
     models = settings.models()
+    seatChoices = List(3) { settings.seat(it) }
+    anaModel = settings.analyzeModel
   }
+
+  /** The opponents chosen in the settings; a game takes them when it is dealt. */
+  var seatChoices by mutableStateOf(List(3) { settings.seat(it) }); private set
+  var mcSamples by mutableStateOf(settings.mcSamples); private set
 
   fun setSeat(i: Int, seat: Seat) {
     settings.setSeat(i, seat)
+    seatChoices = List(3) { settings.seat(it) }
+  }
+
+  fun chooseMcSamples(n: Int) {
+    settings.mcSamples = n
+    mcSamples = n
   }
 }

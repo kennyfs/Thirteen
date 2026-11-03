@@ -22,6 +22,8 @@ data class RuleSpec(val preset: String = "family", val overrides: Map<String, Do
 
 object Rules {
   val PRESETS = listOf("family", "family_mid2", "taiwan", "pagat")
+  /** The presets offered to choose from; the others are still named when a game or record has them. */
+  val OFFERED = listOf("family", "taiwan", "pagat")
   /** The numbers on the rules page, in R.array.rule_labels order. */
   val POINTS = listOf("row", "scoop", "home_run", "dragon")
   val ROYALTIES = listOf(

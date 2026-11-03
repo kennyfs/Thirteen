@@ -27,8 +27,9 @@ class SwipeSelectTest {
       scenario.onActivity { vm = ViewModelProvider(it)[AppViewModel::class.java] }
       compose.waitUntil(20_000) { vm.unplaced.size == 13 }
       compose.waitForIdle()
-      // With the rows empty, the 13 cards on screen are the hand, left to right.
-      val centers = compose.onAllNodesWithTag(CARD_TAG).fetchSemanticsNodes().map { it.boundsInRoot.center }.sortedBy { it.x }
+      // With the rows empty, the 13 cards on screen are the hand, line by line (one or two), left to right.
+      val centers = compose.onAllNodesWithTag(CARD_TAG).fetchSemanticsNodes().map { it.boundsInRoot.center }
+        .sortedWith(compareBy({ Math.round(it.y / 20f) }, { it.x }))
       assertEquals(13, centers.size)
       val hand = vm.unplaced
       fun drag(from: Int, to: Int) {

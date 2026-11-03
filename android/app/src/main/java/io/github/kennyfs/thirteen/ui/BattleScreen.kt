@@ -7,16 +7,11 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -25,22 +20,30 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -50,15 +53,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import io.github.kennyfs.thirteen.AppViewModel
 import io.github.kennyfs.thirteen.R
@@ -72,13 +85,15 @@ import io.github.kennyfs.thirteen.protocol.Mode
 import io.github.kennyfs.thirteen.protocol.Phase
 import io.github.kennyfs.thirteen.protocol.PlayerView
 import io.github.kennyfs.thirteen.protocol.RoomView
+import io.github.kennyfs.thirteen.protocol.RuleChoice
+import io.github.kennyfs.thirteen.ui.theme.LocalTable
 import kotlinx.coroutines.delay
 
 /** Battles: the puzzle contest first, then the table game; online or with phones nearby. */
 @Composable
 fun BattleScreen(vm: BattleViewModel, app: AppViewModel) {
   val room = vm.room
-  // Back: one page up within the battle (see MainActivity), where there is one.
+  // Back: one page up within the battle, where there is one.
   val over = room != null && (vm.finished || room.phase == Phase.OVER)
   val back: (() -> Unit)? = when {
     vm.detail != null && room != null -> if (vm.analyzed != null) vm::closeAnalysis else vm::closeDetail
@@ -90,7 +105,7 @@ fun BattleScreen(vm: BattleViewModel, app: AppViewModel) {
     else -> null
   }
   BackHandler(back != null) { back?.invoke() }
-  Column(Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 4.dp)) {
+  Column(Modifier.fillMaxSize()) {
     when {
       vm.detail != null && room != null -> if (vm.analyzed != null) PlayerAnalysisPage(vm, room) else DetailPage(vm, room)
       room == null -> EntryPage(vm)
@@ -119,12 +134,13 @@ private fun nearbyPermissions(): Array<String> = when {
 @Composable
 private fun modeName(mode: Mode) = stringResource(if (mode == Mode.PUZZLE) R.string.battle_puzzle else R.string.battle_game)
 
-@OptIn(ExperimentalLayoutApi::class)
+/** Entering a battle: the name, how to connect, and three large choices: a puzzle contest, a table game, or a room to join. */
 @Composable
 private fun EntryPage(vm: BattleViewModel) {
   val context = LocalContext.current
   // What to do once the nearby permissions are granted.
   var then by remember { mutableStateOf<(() -> Unit)?>(null) }
+  var editServer by rememberSaveable { mutableStateOf(false) }
   val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
     if (granted.values.all { it }) then?.invoke() else vm.error = context.getString(R.string.battle_permissions)
     then = null
@@ -136,99 +152,114 @@ private fun EntryPage(vm: BattleViewModel) {
       permissions.launch(missing.toTypedArray())
     }
   }
-  Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-      OutlinedTextField(vm.name, { vm.name = it.take(Limits.NAME_LENGTH) }, Modifier.widthIn(max = 220.dp), label = { Text(stringResource(R.string.battle_name)) }, singleLine = true)
-      FilterChip(vm.via == Via.ONLINE, { vm.chooseVia(Via.ONLINE) }, { Text(stringResource(R.string.battle_online)) }, Modifier.align(Alignment.CenterVertically))
-      FilterChip(vm.via == Via.NEARBY, { vm.chooseVia(Via.NEARBY) }, { Text(stringResource(R.string.battle_nearby)) }, Modifier.align(Alignment.CenterVertically))
-      if (vm.via == Via.ONLINE)
-        OutlinedTextField(
-          vm.server, { vm.server = it.trim() }, Modifier.widthIn(max = 320.dp), label = { Text(stringResource(R.string.battle_server)) },
-          placeholder = { Text(stringResource(R.string.battle_server_hint)) }, singleLine = true,
-        )
-    }
+  fun create(mode: Mode) = if (vm.via == Via.NEARBY) nearby { vm.create(mode) } else vm.create(mode)
+  Column(Modifier.fillMaxSize()) {
+    TitleBar(stringResource(R.string.nav_battle))
     if (vm.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-    when (vm.entry) {
-      null -> Row(Modifier.fillMaxWidth().weight(1f).padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        EntryChoice(R.string.battle_create_room, R.string.battle_create_room_info, Modifier.weight(1f)) { vm.chooseEntry(Entry.CREATE) }
-        EntryChoice(R.string.battle_join_room, R.string.battle_join_room_info, Modifier.weight(1f)) {
-          vm.chooseEntry(Entry.JOIN)
-          if (vm.via == Via.NEARBY) nearby { vm.search() }
-        }
-      }
-      Entry.CREATE -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        EntryTitle(vm, R.string.battle_create_room)
-        for (mode in listOf(Mode.PUZZLE, Mode.GAME)) {
-          Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Column(Modifier.weight(1f)) {
-              Text(modeName(mode), style = MaterialTheme.typography.titleSmall)
-              Text(
-                stringResource(if (mode == Mode.PUZZLE) R.string.battle_puzzle_info else R.string.battle_game_info),
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-              )
-            }
-            Button(onClick = { if (vm.via == Via.NEARBY) nearby { vm.create(mode) } else vm.create(mode) }, enabled = !vm.busy) {
-              Text(stringResource(R.string.battle_create))
-            }
-          }
-        }
-      }
-      Entry.JOIN -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        EntryTitle(vm, R.string.battle_join_room)
-        if (vm.via == Via.NEARBY) {
-          val found = vm.found
-          Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-              stringResource(if (found.isNullOrEmpty()) R.string.battle_no_rooms else R.string.battle_searching),
-              Modifier.weight(1f), style = MaterialTheme.typography.bodySmall,
-            )
-            OutlinedButton(onClick = { nearby { vm.search() } }, contentPadding = COMPACT) {
-              Text(stringResource(if (found == null) R.string.battle_search else R.string.battle_search_again))
-            }
-          }
-          for ((id, name) in found.orEmpty())
-            Row(
-              Modifier.fillMaxWidth().background(if (vm.picked == id) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface)
-                .clickable { vm.pick(id) }.padding(6.dp),
-            ) { Text(name) }
-        }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+      val wide = maxWidth >= 720.dp
+      val scroll = Modifier.verticalScroll(rememberScrollState()).imePadding().padding(horizontal = 16.dp).padding(bottom = 24.dp)
+      val connection = @Composable {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
           OutlinedTextField(
-            vm.pin, { vm.pin = it.filter(Char::isDigit).take(6) }, Modifier.width(140.dp), label = { Text(stringResource(R.string.battle_pin)) },
-            singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            vm.name, { vm.name = it.take(Limits.NAME_LENGTH) }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.battle_name)) },
+            singleLine = true, textStyle = MaterialTheme.typography.bodyLarge,
           )
-          Button(
-            onClick = { vm.join() },
-            enabled = !vm.busy && vm.pin.length == 6 && (vm.via == Via.ONLINE || vm.picked != null),
-          ) { Text(stringResource(R.string.battle_join)) }
+          Text(stringResource(R.string.battle_how), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+          ToggleGroup(
+            listOf(Via.ONLINE to stringResource(R.string.battle_online), Via.NEARBY to stringResource(R.string.battle_nearby)), vm.via, vm::chooseVia,
+            Modifier.fillMaxWidth(),
+          )
+          if (vm.via == Via.ONLINE) {
+            if (editServer) OutlinedTextField(
+              vm.server, { vm.server = it.trim() }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.battle_server)) },
+              placeholder = { Text(stringResource(R.string.battle_server_hint)) }, singleLine = true,
+            )
+            else Row(verticalAlignment = Alignment.CenterVertically) {
+              Text(stringResource(R.string.battle_server_is, vm.server), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+              TextButton(onClick = { editServer = true }) { Text(stringResource(R.string.change)) }
+            }
+          } else Text(stringResource(R.string.battle_nearby_info), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+      }
+      val choices = @Composable {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+          val t = LocalTable.current
+          ChoiceTile(stringResource(R.string.battle_new_puzzle), stringResource(R.string.battle_puzzle_info), t.felt, t.onFelt, enabled = !vm.busy) { create(Mode.PUZZLE) }
+          ChoiceTile(
+            stringResource(R.string.battle_new_game), stringResource(R.string.battle_game_info), MaterialTheme.colorScheme.secondaryContainer,
+            MaterialTheme.colorScheme.onSecondaryContainer, enabled = !vm.busy,
+          ) { create(Mode.GAME) }
+          JoinTile(vm) { nearby(it) }
+        }
+      }
+      if (wide) Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+        Column(Modifier.weight(1f).then(scroll)) { connection() }
+        Column(Modifier.weight(1.2f).then(scroll)) { choices() }
+      }
+      else Column(Modifier.fillMaxSize().then(scroll).readable(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        connection()
+        choices()
       }
     }
   }
 }
 
-/** One of the entry page's two large choices. */
+/** A large choice: a title in large type and a line about it. */
 @Composable
-private fun EntryChoice(title: Int, info: Int, modifier: Modifier, onClick: () -> Unit) {
-  OutlinedCard(onClick = onClick, modifier.fillMaxHeight()) {
-    Column(
-      Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
-      horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-      Text(stringResource(title), style = MaterialTheme.typography.headlineSmall)
-      Text(
-        stringResource(info), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
-      )
+private fun ChoiceTile(title: String, info: String, container: Color, content: Color, enabled: Boolean = true, onClick: () -> Unit) {
+  Surface(onClick = onClick, enabled = enabled, shape = RoundedCornerShape(20.dp), color = container, contentColor = content, modifier = Modifier.fillMaxWidth()) {
+    Column(Modifier.padding(horizontal = 18.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+      Text(title, style = MaterialTheme.typography.headlineSmall)
+      Text(info, style = MaterialTheme.typography.bodyLarge, color = content.copy(alpha = 0.85f))
     }
   }
 }
 
+/** Joining a room by its number; nearby, the rooms found around first. */
 @Composable
-private fun EntryTitle(vm: BattleViewModel, title: Int) {
-  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    OutlinedButton(onClick = { vm.chooseEntry(null) }, contentPadding = COMPACT) { Text(stringResource(R.string.battle_back)) }
-    Text(stringResource(title), style = MaterialTheme.typography.titleMedium)
+private fun JoinTile(vm: BattleViewModel, nearby: (() -> Unit) -> Unit) {
+  val colors = MaterialTheme.colorScheme
+  Column(
+    Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).border(2.dp, colors.outlineVariant, RoundedCornerShape(20.dp)).padding(horizontal = 18.dp, vertical = 16.dp),
+    verticalArrangement = Arrangement.spacedBy(10.dp),
+  ) {
+    Text(stringResource(R.string.battle_join_room), style = MaterialTheme.typography.headlineSmall)
+    Text(stringResource(R.string.battle_join_room_info), style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
+    if (vm.via == Via.NEARBY) {
+      val found = vm.found
+      if (vm.entry != Entry.JOIN || found == null)
+        OutlinedButton(onClick = { vm.chooseEntry(Entry.JOIN); nearby { vm.search() } }, Modifier.heightIn(min = 52.dp)) { Text(stringResource(R.string.battle_search)) }
+      else {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+          if (found.isEmpty()) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 3.dp)
+          Text(
+            stringResource(if (found.isEmpty()) R.string.battle_no_rooms else R.string.battle_searching), Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium,
+          )
+          TextButton(onClick = { nearby { vm.search() } }) { Text(stringResource(R.string.battle_search_again)) }
+        }
+        for ((id, name) in found)
+          Row(
+            Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(RoundedCornerShape(12.dp))
+              .background(if (vm.picked == id) colors.secondaryContainer else colors.surfaceContainer).clickable { vm.pick(id) }.padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+          ) { Text(name, style = MaterialTheme.typography.bodyLarge) }
+      }
+    }
+    if (vm.via == Via.ONLINE || vm.picked != null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+      OutlinedTextField(
+        vm.pin, { vm.pin = it.filter(Char::isDigit).take(6) }, Modifier.widthIn(max = 220.dp).weight(1f),
+        label = { Text(stringResource(R.string.battle_pin)) }, singleLine = true,
+        textStyle = MaterialTheme.typography.headlineSmall.copy(letterSpacing = 6.sp),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Go),
+        keyboardActions = KeyboardActions(onGo = { if (vm.pin.length == 6) vm.join() }),
+      )
+      Button(
+        onClick = { vm.join() }, Modifier.heightIn(min = BIG_BUTTON),
+        enabled = !vm.busy && vm.pin.length == 6 && (vm.via == Via.ONLINE || vm.picked != null),
+      ) { Text(stringResource(R.string.battle_join), style = MaterialTheme.typography.titleMedium) }
+    }
   }
 }
 
@@ -258,133 +289,213 @@ private fun standings(room: RoomView): List<PlayerView> =
 private fun totalText(room: RoomView, p: PlayerView) =
   if (room.settings.mode == Mode.PUZZLE) stringResource(R.string.battle_total_loss, fmtLoss(p.total)) else signed(p.total)
 
+/** What else to say about a player: you, the host, away. */
 @Composable
-private fun playerName(vm: BattleViewModel, room: RoomView, p: PlayerView): String = buildString {
-  append(p.name)
-  if (p.id == vm.me) append(stringResource(R.string.battle_you_mark))
-  if (p.id == room.host) append(" · " + stringResource(R.string.battle_host))
+private fun playerNotes(vm: BattleViewModel, room: RoomView, p: PlayerView): String = buildList {
+  if (p.id == vm.me) add(stringResource(R.string.you))
+  if (p.id == room.host) add(stringResource(R.string.battle_host))
   // A network's seat is already named "AI n".
-  if (!p.bot && !p.connected) append(" · " + stringResource(R.string.battle_away))
-}
+  if (!p.bot && !p.connected) add(stringResource(R.string.battle_away))
+}.joinToString("、")
 
 @Composable
 private fun Standings(vm: BattleViewModel, room: RoomView, modifier: Modifier = Modifier, marks: Boolean = false) {
-  Column(modifier) {
+  Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Text(stringResource(R.string.battle_standings), style = MaterialTheme.typography.titleMedium)
     for ((i, p) in standings(room).withIndex())
       Row(
-        Modifier.fillMaxWidth().background(if (p.id == vm.me) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface).padding(2.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp))
+          .background(if (p.id == vm.me) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent).padding(horizontal = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically,
       ) {
-        Text(stringResource(R.string.battle_rank, i + 1), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
-        Text(playerName(vm, room, p), Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        if (marks) Text(if (p.submitted || (room.phase == Phase.REVIEW && p.ready)) "✓" else "…", style = MaterialTheme.typography.bodySmall)
-        Text(totalText(room, p), style = MaterialTheme.typography.bodySmall)
+        Text("${i + 1}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Column(Modifier.weight(1f)) {
+          Text(p.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+          playerNotes(vm, room, p).takeIf { it.isNotEmpty() }?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        }
+        if (marks) {
+          val done = p.submitted || (room.phase == Phase.REVIEW && p.ready)
+          Text(stringResource(if (done) R.string.battle_done_mark else R.string.battle_thinking), style = MaterialTheme.typography.bodyMedium, color = if (done) GOOD else MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Text(totalText(room, p), style = MaterialTheme.typography.bodyLarge)
       }
   }
 }
 
-@Composable
-private fun settingsLine(room: RoomView, app: AppViewModel): String {
-  val s = room.settings
-  val parts = mutableListOf(
-    stringResource(R.string.battle_hands_n, s.hands),
-    stringResource(R.string.rules_label, app.rulesName(Rules.values(room.rules))),
-    stringResource(R.string.battle_time) + " " + if (s.timeLimit == 0) stringResource(R.string.battle_no_limit) else stringResource(R.string.battle_seconds, s.timeLimit),
-  )
-  if (s.hard) parts += stringResource(R.string.battle_hard)
-  return parts.joinToString(" · ")
-}
-
-@OptIn(ExperimentalLayoutApi::class)
+/** The room: its number in large type, the players, and the settings (which the host changes). */
 @Composable
 private fun LobbyPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) {
   val isHost = room.host == vm.me
   val context = LocalContext.current
   val s = room.settings
-  Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-      Text(modeName(s.mode), style = MaterialTheme.typography.titleMedium)
-      Text(stringResource(R.string.battle_room_pin, room.pin), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-      Spacer(Modifier.weight(1f))
-      OutlinedButton(onClick = vm::leave) { Text(stringResource(R.string.battle_leave)) }
-      if (isHost) {
-        Button(onClick = { vm.startGame() }) { Text(stringResource(R.string.battle_start)) }
+  Column(Modifier.fillMaxSize()) {
+    TitleBar(modeName(s.mode), onBack = vm::leave) {
+      OutlinedButton(onClick = vm::leave, Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.battle_leave)) }
+    }
+    BoxWithConstraints(Modifier.weight(1f)) {
+      val wide = maxWidth >= 720.dp
+      val code = @Composable {
+        val t = LocalTable.current
+        Column(
+          Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(t.felt).padding(horizontal = 18.dp, vertical = 14.dp),
+          horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+          Text(stringResource(R.string.battle_room_number), style = MaterialTheme.typography.bodyLarge, color = t.onFeltDim)
+          Text(
+            room.pin.chunked(3).joinToString(" "), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold,
+            color = t.onFelt, letterSpacing = 4.sp,
+          )
+          Text(stringResource(R.string.battle_room_number_info), style = MaterialTheme.typography.bodyMedium, color = t.onFeltDim, textAlign = TextAlign.Center)
+          if (vm.hosting) Text(stringResource(R.string.battle_nearby_host_note), style = MaterialTheme.typography.bodySmall, color = t.onFeltDim, textAlign = TextAlign.Center)
+        }
+      }
+      val players = @Composable {
+        Column {
+          SectionHeader(stringResource(R.string.battle_players, room.players.size))
+          for (p in room.players)
+            Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+              Avatar(p.name)
+              Text(p.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+              Text(playerNotes(vm, room, p), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+      }
+      val settings = @Composable {
+        Column {
+          SectionHeader(stringResource(R.string.battle_settings))
+          val ruleName = app.rulesName(Rules.values(room.rules))
+          if (isHost) {
+            SelectRow(
+              stringResource(R.string.battle_hands), (listOf(1, 3, 5, 10, 15, 20, 30) + s.hands).distinct().sorted().map { it to context.getString(R.string.battle_hands_n, it) },
+              s.hands, { vm.changeSettings(s.copy(hands = it)) },
+            )
+            SelectRow(
+              stringResource(R.string.battle_time),
+              Limits.TIME_LIMITS.map { it to if (it == 0) context.getString(R.string.battle_no_limit) else context.getString(R.string.battle_seconds, it) },
+              s.timeLimit, { vm.changeSettings(s.copy(timeLimit = it)) },
+            )
+            val names = stringArrayResource(R.array.preset_names)
+            val current = if (s.rules.overrides.isEmpty()) Rules.PRESETS.indexOf(s.rules.preset) else -2
+            val options = Rules.OFFERED.map { Rules.PRESETS.indexOf(it) }.let { if (current >= 0 && current !in it) it + current else it }.map { it to names[it] } + listOf(-1 to stringResource(R.string.battle_rules_page_named, app.rulesName(app.ruleValues))) +
+              (if (current == -2) listOf(-2 to ruleName) else emptyList())
+            SelectRow(stringResource(R.string.nav_rules), options, current, { i ->
+              when {
+                i >= 0 -> vm.changeSettings(s.copy(rules = RuleChoice(Rules.PRESETS[i])))
+                i == -1 -> vm.changeSettings(s.copy(rules = vm.rulesFromPage()))
+              }
+            })
+            if (s.mode == Mode.PUZZLE)
+              SettingRow(stringResource(R.string.battle_hard), stringResource(R.string.battle_hard_info), arrow = false, trailing = {
+                Switch(s.hard, { vm.changeSettings(s.copy(hard = it)) })
+              }) { vm.changeSettings(s.copy(hard = !s.hard)) }
+          } else {
+            SettingRow(stringResource(R.string.battle_hands), stringResource(R.string.battle_hands_n, s.hands))
+            SettingRow(stringResource(R.string.battle_time), if (s.timeLimit == 0) stringResource(R.string.battle_no_limit) else stringResource(R.string.battle_seconds, s.timeLimit))
+            SettingRow(stringResource(R.string.nav_rules), ruleName)
+            if (s.mode == Mode.PUZZLE) SettingRow(stringResource(R.string.battle_hard), stringResource(if (s.hard) R.string.on else R.string.off))
+          }
+        }
+      }
+      if (wide) Row(Modifier.fillMaxSize().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) { code(); players() }
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) { settings() }
+      } else Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).readable()) {
+        code()
+        players()
+        settings()
       }
     }
-    if (vm.hosting) Text(stringResource(R.string.battle_nearby_host_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    Text(settingsLine(room, app), style = MaterialTheme.typography.bodyMedium)
-    if (isHost) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-      Picker(
-        stringResource(R.string.battle_hands), (listOf(1, 3, 5, 10, 15, 20, 30) + s.hands).distinct().sorted().map { it.toString() to it.toString() },
-        s.hands.toString(),
-      ) { vm.changeSettings(s.copy(hands = it.toInt())) }
-      Picker(
-        stringResource(R.string.battle_time),
-        Limits.TIME_LIMITS.map { it.toString() to if (it == 0) context.getString(R.string.battle_no_limit) else context.getString(R.string.battle_seconds, it) },
-        s.timeLimit.toString(),
-      ) { vm.changeSettings(s.copy(timeLimit = it.toInt())) }
-      if (s.mode == Mode.PUZZLE) Row(Modifier.align(Alignment.CenterVertically), verticalAlignment = Alignment.CenterVertically) {
-        Text(stringResource(R.string.battle_hard), style = MaterialTheme.typography.bodyMedium)
-        Switch(s.hard, { vm.changeSettings(s.copy(hard = it)) }, Modifier.padding(horizontal = 4.dp))
-        InfoButton(stringResource(R.string.battle_hard_info))
+    Box(Modifier.fillMaxWidth().padding(16.dp)) {
+      if (isHost) Button(onClick = { vm.startGame() }, Modifier.fillMaxWidth().heightIn(min = BIG_BUTTON).readable(), shape = RoundedCornerShape(18.dp)) {
+        Text(stringResource(R.string.battle_start_mode, modeName(s.mode)), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
       }
-      TextButton(onClick = { vm.changeSettings(s.copy(rules = vm.rulesFromPage())) }, Modifier.align(Alignment.CenterVertically)) {
-        Text(stringResource(R.string.battle_rules_page))
+      else Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        CircularProgressIndicator(Modifier.size(28.dp), strokeWidth = 3.dp)
+        Text(stringResource(R.string.battle_wait_host), style = MaterialTheme.typography.bodyLarge)
       }
     }
-    HorizontalDivider()
-    Text(stringResource(R.string.battle_players, room.players.size), style = MaterialTheme.typography.titleSmall)
-    for (p in room.players) Text(playerName(vm, room, p), style = MaterialTheme.typography.bodyMedium)
   }
 }
 
+/** The hand's place in the game, the time left, who has set it, and the player's standing: chips under the title. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun handHeader(vm: BattleViewModel, room: RoomView): String {
-  val parts = mutableListOf(stringResource(R.string.battle_hand_of, room.hand + 1, room.settings.hands))
-  remaining(room, vm.roomAt)?.let { parts += stringResource(R.string.battle_left_time, clock(it)) }
-  val humans = room.players.filter { !it.bot }
-  if (room.phase == Phase.PLAYING) parts += stringResource(R.string.battle_set_count, humans.count { it.submitted }, humans.size)
-  else parts += stringResource(R.string.battle_ready_count, humans.count { it.ready }, humans.size)
-  if (room.settings.mode == Mode.PUZZLE) {
-    val rank = standings(room).indexOfFirst { it.id == vm.me } + 1
-    if (rank > 0 && room.hand > 0) parts += stringResource(R.string.battle_your_rank, rank)
+private fun HandHeader(vm: BattleViewModel, room: RoomView, trailing: @Composable () -> Unit = {}) {
+  FlowRow(
+    Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, top = 4.dp, bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp),
+    itemVerticalAlignment = Alignment.CenterVertically,
+  ) {
+    Text(stringResource(R.string.battle_hand_of, room.hand + 1, room.settings.hands), style = MaterialTheme.typography.titleLarge)
+    remaining(room, vm.roomAt)?.let { left ->
+      Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Icon(Icons.Outlined.Timer, null, tint = if (left < 15_000) BAD else MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(clock(left), style = MaterialTheme.typography.titleMedium, color = if (left < 15_000) BAD else MaterialTheme.colorScheme.onSurface)
+      }
+    }
+    val humans = room.players.filter { !it.bot }
+    Text(
+      if (room.phase == Phase.PLAYING) stringResource(R.string.battle_set_count, humans.count { it.submitted }, humans.size)
+      else stringResource(R.string.battle_ready_count, humans.count { it.ready }, humans.size),
+      style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    if (room.settings.mode == Mode.PUZZLE) {
+      val rank = standings(room).indexOfFirst { it.id == vm.me } + 1
+      if (rank > 0 && room.hand > 0) Text(stringResource(R.string.battle_your_rank, rank), style = MaterialTheme.typography.bodyLarge)
+    }
+    Spacer(Modifier.weight(1f))
+    trailing()
   }
-  return parts.joinToString(" · ")
 }
 
 @Composable
 private fun PlayingPage(vm: BattleViewModel, room: RoomView) {
-  Text(handHeader(vm, room), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
-  Arranging(vm.arranger, Rules.values(room.rules)["wheel"]?.toInt() ?: 0, vm.submitting) { vm.submit() }
+  HandHeader(vm, room)
+  Arranging(vm.arranger, Rules.values(room.rules)["wheel"]?.toInt() ?: 0, vm.submitting, stringResource(R.string.battle_submit)) { vm.submit() }
 }
 
 @Composable
 private fun WaitingPage(vm: BattleViewModel, room: RoomView) {
-  Text(handHeader(vm, room), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
-  Row(Modifier.fillMaxSize().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-    BoxWithConstraints(Modifier.weight(1.3f)) {
-      val card = ((maxWidth - CARD_GAP * 4) / 5).coerceAtMost(56.dp)
-      Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(stringResource(R.string.battle_waiting), style = MaterialTheme.typography.titleSmall)
-        val eval = vm.arranger.rowsEval
-        for (r in 0 until 3) RowCards(vm.arranger.rows[r], eval?.categories?.get(r) ?: 0, width = card)
+  HandHeader(vm, room)
+  BoxWithConstraints(Modifier.fillMaxSize()) {
+    val wide = maxWidth > maxHeight
+    val mine = @Composable { m: Modifier ->
+      val t = LocalTable.current
+      Surface(m, shape = MaterialTheme.shapes.large, color = t.felt, contentColor = t.onFelt) {
+        BoxWithConstraints(Modifier.padding(14.dp)) {
+          val card = ((maxWidth - CARD_GAP * 4) / 5).coerceAtMost(56.dp)
+          Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+              CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 3.dp, color = t.onFelt)
+              Text(stringResource(R.string.battle_waiting), style = MaterialTheme.typography.titleMedium)
+            }
+            val eval = vm.arranger.rowsEval
+            for (r in 0 until 3) RowCards(vm.arranger.rows[r], eval?.categories?.get(r) ?: 0, width = card)
+          }
+        }
       }
     }
-    Standings(vm, room, Modifier.weight(1f).verticalScroll(rememberScrollState()), marks = true)
+    if (wide) Row(Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+      mine(Modifier.weight(1f))
+      Standings(vm, room, Modifier.weight(1f).verticalScroll(rememberScrollState()), marks = true)
+    } else Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+      mine(Modifier.fillMaxWidth())
+      Standings(vm, room, marks = true)
+    }
   }
 }
 
 private val ROW_GAP = 8.dp
+private val PLAY_GAP = 2.dp
 
 /** The card width at which 13 cards in three rows fill `width`, up to `max`. */
-private fun cardFor(width: Dp, max: Dp = 48.dp): Dp = ((width - CARD_GAP * 10 - ROW_GAP * 2) / 13).coerceIn(14.dp, max)
+private fun cardFor(width: Dp, max: Dp = 48.dp): Dp = ((width - PLAY_GAP * 10 - ROW_GAP * 2) / 13).coerceIn(12.dp, max)
 
 /** One play's three rows as the analysis shows them: the cards that make each hand first, tinted by its category. */
 @Composable
 private fun PlayRows(vm: BattleViewModel, rows: List<List<Int>>, card: Dp) {
   val cats = vm.categoriesOf(rows)
   Row(horizontalArrangement = Arrangement.spacedBy(ROW_GAP)) {
-    for (r in 0 until 3) RowCards(rows[r], cats?.get(r) ?: 0, width = card)
+    for (r in 0 until 3) RowCards(rows[r], cats?.get(r) ?: 0, width = card, gap = PLAY_GAP)
   }
 }
 
@@ -411,7 +522,10 @@ private fun MyHandResult(vm: BattleViewModel, o: HandOutcome?) {
   val i = o.plays.indexOfFirst { it.player == vm.me }
   if (i < 0) return
   val x = score.result[i]
-  Text(stringResource(R.string.battle_this_hand, signed(x)), color = if (x > 0) GOOD else if (x < 0) BAD else MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
+  Text(
+    stringResource(R.string.battle_this_hand, signed(x)), style = MaterialTheme.typography.headlineSmall,
+    color = if (x > 0) GOOD else if (x < 0) BAD else MaterialTheme.colorScheme.onSurface,
+  )
 }
 
 /** Rank by standing, equal totals sharing a rank. */
@@ -422,13 +536,14 @@ private fun rankOf(room: RoomView, p: PlayerView): Int {
 
 /**
  * A closed hand for everyone: the network's best (a puzzle), then each player by standing with their rows, what this
- * hand gave them and their total. The cards take the width the names and numbers leave.
+ * hand gave them and their total. The cards take the width the names and numbers leave; on a narrow screen each
+ * player's cards go under their line.
  */
 @Composable
 private fun ResultTable(vm: BattleViewModel, room: RoomView, o: HandOutcome, maxCard: Dp = 48.dp, onPlayer: ((Int) -> Unit)? = null) {
   val puzzle = room.settings.mode == Mode.PUZZLE
-  val nameStyle = MaterialTheme.typography.bodyMedium
-  val numStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+  val nameStyle = MaterialTheme.typography.bodyLarge
+  val numStyle = MaterialTheme.typography.titleMedium
   val measurer = rememberTextMeasurer()
   val density = LocalDensity.current
   val best = stringResource(R.string.battle_best_rows)
@@ -437,25 +552,32 @@ private fun ResultTable(vm: BattleViewModel, room: RoomView, o: HandOutcome, max
   val handHead = stringResource(if (puzzle) R.string.battle_col_hand_loss else R.string.battle_col_hand)
   val totalHead = stringResource(if (puzzle) R.string.battle_col_total_loss else R.string.battle_col_total)
   val numWidth = with(density) { listOf(handHead, totalHead, "00.000").maxOf { measurer.measure(it, numStyle).size.width }.toDp() } + 8.dp
-  val rankWidth = textRoom(22)
+  val rankWidth = textRoom(24)
   BoxWithConstraints(Modifier.fillMaxWidth()) {
-    val nameWidth = minOf(nameNeeded, maxWidth * 0.2f)
-    val card = cardFor(maxWidth - rankWidth - nameWidth - numWidth * 2 - 8.dp * 4, maxCard)
+    val nameWidth = minOf(nameNeeded, maxWidth * 0.22f)
+    val inline = cardFor(maxWidth - rankWidth - nameWidth - numWidth * 2 - 8.dp * 4, maxCard)
+    val stacked = inline < 20.dp
+    val card = if (stacked) cardFor(maxWidth - rankWidth - 8.dp, maxCard) else inline
     @Composable
     fun Line(rank: String, name: String, note: String?, rows: List<List<Int>>?, hand: String, handColor: Color, total: String, me: Boolean, onClick: (() -> Unit)? = null) {
-      Row(
-        Modifier.fillMaxWidth().background(if (me) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
-          .let { if (onClick != null) it.clickable(onClick = onClick) else it }.padding(vertical = 3.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+      Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(if (me) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
+          .let { if (onClick != null) it.clickable(onClick = onClick) else it }.padding(vertical = 6.dp, horizontal = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
       ) {
-        Text(rank, Modifier.width(rankWidth), style = numStyle, textAlign = TextAlign.End)
-        Column(Modifier.width(nameWidth)) {
-          Text(name, style = nameStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
-          if (note != null) Text(note, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          Text(rank, Modifier.width(rankWidth), style = numStyle, textAlign = TextAlign.End)
+          Column(if (stacked) Modifier.weight(1f) else Modifier.width(nameWidth)) {
+            Text(name, style = nameStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (note != null) Text(note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+          }
+          if (!stacked) {
+            if (rows != null) Box(Modifier.weight(1f)) { PlayRows(vm, rows, card) } else Spacer(Modifier.weight(1f))
+          }
+          Text(hand, Modifier.width(numWidth), style = numStyle, color = handColor, textAlign = TextAlign.End, maxLines = 1)
+          Text(total, Modifier.width(numWidth), style = numStyle, textAlign = TextAlign.End, maxLines = 1)
         }
-        if (rows != null) PlayRows(vm, rows, card) else Spacer(Modifier.width(card * 13 + CARD_GAP * 10 + ROW_GAP * 2))
-        Text(hand, Modifier.width(numWidth), style = numStyle, color = handColor, textAlign = TextAlign.End, maxLines = 1)
-        Text(total, Modifier.width(numWidth), style = numStyle, textAlign = TextAlign.End, maxLines = 1)
+        if (stacked && rows != null) Box(Modifier.padding(start = rankWidth + 8.dp)) { PlayRows(vm, rows, card) }
       }
     }
     Column {
@@ -481,7 +603,7 @@ private fun ResultTable(vm: BattleViewModel, room: RoomView, o: HandOutcome, max
  * table game's hand is shown as on the practice screen, from the player's seat, once its full score is in.
  */
 @Composable
-private fun HandTable(vm: BattleViewModel, room: RoomView, o: HandOutcome?, onPlayer: ((Int) -> Unit)? = null) {
+private fun HandTable(vm: BattleViewModel, room: RoomView, o: HandOutcome?, modifier: Modifier = Modifier, onPlayer: ((Int) -> Unit)? = null) {
   val table = o?.let { vm.tables[it.index] }
   if (o != null && table != null) {
     val (order, score) = table
@@ -493,17 +615,20 @@ private fun HandTable(vm: BattleViewModel, room: RoomView, o: HandOutcome?, onPl
     }
     val you = stringResource(R.string.you)
     val timedOut = stringResource(R.string.battle_timed_out).trim()
-    SeatResults(
-      plays.map { it.rows }, score, Rules.values(room.rules)["wheel"]?.toInt() ?: 0,
-      plays.map { if (it.player == vm.me) you else byId[it.player]?.name ?: "?" },
-      plays.map { if (it.timedOut) timedOut else null }, totals,
-      onPlayer?.let { f -> { s: Int -> f(plays[s].player) } },
-    )
+    val t = LocalTable.current
+    Surface(modifier.fillMaxSize().padding(start = 8.dp, end = 12.dp, bottom = 10.dp), shape = MaterialTheme.shapes.large, color = t.felt, contentColor = t.onFelt) {
+      SeatResults(
+        plays.map { it.rows }, score, Rules.values(room.rules)["wheel"]?.toInt() ?: 0,
+        plays.map { if (it.player == vm.me) you else byId[it.player]?.name ?: "?" },
+        plays.map { if (it.timedOut) timedOut else null }, totals, Modifier.padding(8.dp),
+        onPlayer?.let { f -> { s: Int -> f(plays[s].player) } },
+      )
+    }
     return
   }
-  BoxWithConstraints(Modifier.fillMaxSize().padding(top = 4.dp)) {
-    val lines = room.players.size + (if (o?.best != null) 1 else 0)
-    val maxCard = (((maxHeight - textRoom(24)) / lines - 6.dp) / 1.4f).coerceIn(20.dp, 48.dp)
+  BoxWithConstraints(modifier.fillMaxSize().padding(horizontal = 12.dp)) {
+    val lines = room.players.size + (if (o?.best != null) 1 else 0) + 1
+    val maxCard = (((maxHeight - textRoom(24)) / lines - 12.dp) / 1.4f).coerceIn(20.dp, 48.dp)
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
       if (o != null) ResultTable(vm, room, o, maxCard, onPlayer)
     }
@@ -513,85 +638,96 @@ private fun HandTable(vm: BattleViewModel, room: RoomView, o: HandOutcome?, onPl
 @Composable
 private fun ReviewPage(vm: BattleViewModel, room: RoomView) {
   val me = room.players.firstOrNull { it.id == vm.me }
-  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    Text(handHeader(vm, room), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
-    MyHandResult(vm, vm.outcomes.lastOrNull { it.index == room.hand })
-    Button(onClick = vm::ready, enabled = me?.ready != true) { Text(stringResource(R.string.battle_next)) }
+  val o = vm.outcomes.lastOrNull { it.index == room.hand }
+  HandHeader(vm, room) {
+    MyHandResult(vm, o)
+    Button(onClick = vm::ready, Modifier.heightIn(min = BIG_BUTTON), enabled = me?.ready != true, shape = RoundedCornerShape(18.dp)) {
+      Text(stringResource(R.string.battle_next), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+    }
   }
-  HandTable(vm, room, vm.outcomes.lastOrNull { it.index == room.hand })
+  HandTable(vm, room, o)
 }
 
 /** The last hand's table, which the room skips (the game is over): shown before the final standings. */
 @Composable
 private fun LastHandPage(vm: BattleViewModel, room: RoomView) {
   val o = vm.outcomes.last()
-  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    Text(
-      stringResource(R.string.battle_hand_of, o.index + 1, room.settings.hands), Modifier.weight(1f), maxLines = 1,
-      style = MaterialTheme.typography.labelLarge,
-    )
+  Row(
+    Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(12.dp),
+  ) {
+    Text(stringResource(R.string.battle_hand_of, o.index + 1, room.settings.hands), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, maxLines = 1)
     MyHandResult(vm, o)
-    Button(onClick = vm::toSummary) { Text(stringResource(R.string.battle_to_summary)) }
+    Button(onClick = vm::toSummary, Modifier.heightIn(min = BIG_BUTTON), shape = RoundedCornerShape(18.dp)) {
+      Text(stringResource(R.string.battle_to_summary), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+    }
   }
   HandTable(vm, room, o)
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+/** The final standings, then every hand with the player's rows, what it gave them and their place in it. */
 @Composable
 private fun SummaryPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) {
   val puzzle = room.settings.mode == Mode.PUZZLE
-  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    Text(stringResource(R.string.battle_over) + " · " + modeName(room.settings.mode), style = MaterialTheme.typography.titleSmall)
-    Text(settingsLine(room, app), Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    Button(onClick = vm::dismiss) { Text(stringResource(R.string.battle_done)) }
-  }
-  // The standings, one entry per player, across the width.
-  FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-    for (p in standings(room)) {
-      val mine = p.id == vm.me
-      Text(
-        "${stringResource(R.string.battle_rank, rankOf(room, p))} ${p.name}  " + (if (puzzle) stringResource(R.string.battle_total_loss, fmtLoss(p.total)) else signed(p.total)),
-        Modifier.background(if (mine) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(6.dp))
-          .padding(horizontal = 8.dp, vertical = 4.dp),
-        style = MaterialTheme.typography.bodyMedium, fontWeight = if (mine) FontWeight.Bold else FontWeight.Normal,
-      )
+  Column(Modifier.fillMaxSize()) {
+    TitleBar(stringResource(R.string.battle_over) + " · " + modeName(room.settings.mode)) {
+      Button(onClick = vm::dismiss, Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.battle_done)) }
     }
-  }
-  val numStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-  val handHead = stringResource(if (puzzle) R.string.battle_col_hand_loss else R.string.battle_col_hand)
-  val rankHead = stringResource(R.string.battle_col_hand_rank)
-  val measurer = rememberTextMeasurer()
-  val numWidth = with(LocalDensity.current) { listOf(handHead, rankHead, "00.000").maxOf { measurer.measure(it, numStyle).size.width }.toDp() } + 8.dp
-  BoxWithConstraints(Modifier.fillMaxSize()) {
-    val indexWidth = textRoom(24)
-    // A little smaller than a hand's result, so that more hands show at once.
-    val card = cardFor(maxWidth - indexWidth - numWidth * 2 - 8.dp * 3, 40.dp)
-    Column {
-      Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.battle_hand_list), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
-        Text(handHead, Modifier.width(numWidth), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.End)
-        Text(rankHead, Modifier.width(numWidth), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.End)
-      }
+    val numStyle = MaterialTheme.typography.titleMedium
+    val handHead = stringResource(if (puzzle) R.string.battle_col_hand_loss else R.string.battle_col_hand)
+    val rankHead = stringResource(R.string.battle_col_hand_rank)
+    val measurer = rememberTextMeasurer()
+    val numWidth = with(LocalDensity.current) { listOf(handHead, rankHead, "00.000").maxOf { measurer.measure(it, numStyle).size.width }.toDp() } + 8.dp
+    BoxWithConstraints(Modifier.fillMaxSize().padding(horizontal = 12.dp)) {
+      val indexWidth = textRoom(26)
+      val inline = cardFor(maxWidth - indexWidth - numWidth * 2 - 8.dp * 3, 40.dp)
+      val stacked = inline < 20.dp
+      val card = if (stacked) cardFor(maxWidth - indexWidth - 8.dp, 40.dp) else inline
       LazyColumn {
+        item {
+          Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            for (p in standings(room)) {
+              val mine = p.id == vm.me
+              val place = rankOf(room, p)
+              Row(
+                Modifier.fillMaxWidth().heightIn(min = 52.dp).clip(RoundedCornerShape(14.dp))
+                  .background(if (mine) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer).padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+              ) {
+                Text(stringResource(R.string.battle_place, place), style = if (place == 1) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium)
+                Text(p.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, fontWeight = if (mine) FontWeight.Bold else FontWeight.Normal)
+                Text(if (puzzle) stringResource(R.string.battle_total_loss, fmtLoss(p.total)) else signed(p.total), style = MaterialTheme.typography.titleMedium)
+              }
+            }
+            Text(settingsLine(room, app), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+          }
+        }
+        item {
+          Row(Modifier.padding(top = 8.dp, bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.battle_hand_list), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+            Text(handHead, Modifier.width(numWidth), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.End)
+            Text(rankHead, Modifier.width(numWidth), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.End)
+          }
+        }
         items(vm.outcomes) { o ->
           val i = o.plays.indexOfFirst { it.player == vm.me }
-          Row(
-            Modifier.fillMaxWidth().clickable(enabled = i >= 0) { vm.openDetail(o.index) }.padding(vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
-          ) {
-            Text("${o.index + 1}", Modifier.width(indexWidth), style = numStyle, textAlign = TextAlign.End)
-            if (i >= 0) {
-              Box(Modifier.weight(1f)) { PlayRows(vm, o.plays[i].rows, card) }
-              Column(Modifier.width(numWidth), horizontalAlignment = Alignment.End) {
-                Text(handValue(o, i), style = numStyle, color = handColor(room, o, i))
-                if (o.plays[i].timedOut)
-                  Text(stringResource(R.string.battle_timed_out).trim(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+          Column(Modifier.fillMaxWidth().clickable(enabled = i >= 0) { vm.openDetail(o.index) }.padding(vertical = 8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+              Text("${o.index + 1}", Modifier.width(indexWidth), style = numStyle, textAlign = TextAlign.End)
+              if (i >= 0) {
+                if (!stacked) Box(Modifier.weight(1f)) { PlayRows(vm, o.plays[i].rows, card) } else Spacer(Modifier.weight(1f))
+                Column(Modifier.width(numWidth), horizontalAlignment = Alignment.End) {
+                  Text(handValue(o, i), style = numStyle, color = handColor(room, o, i))
+                  if (o.plays[i].timedOut)
+                    Text(stringResource(R.string.battle_timed_out).trim(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                // The player's place in this hand alone, equal results sharing it.
+                val mine = o.losses?.get(i) ?: -(o.score?.result?.get(i) ?: 0.0)
+                val place = 1 + o.plays.indices.count { j -> (o.losses?.get(j) ?: -(o.score?.result?.get(j) ?: 0.0)) < mine - 1e-9 }
+                Text(stringResource(R.string.battle_hand_rank, place, o.plays.size), Modifier.width(numWidth), style = numStyle, textAlign = TextAlign.End)
               }
-              // The player's place in this hand alone, equal results sharing it.
-              val mine = o.losses?.get(i) ?: -(o.score?.result?.get(i) ?: 0.0)
-              val place = 1 + o.plays.indices.count { j -> (o.losses?.get(j) ?: -(o.score?.result?.get(j) ?: 0.0)) < mine - 1e-9 }
-              Text(stringResource(R.string.battle_hand_rank, place, o.plays.size), Modifier.width(numWidth), style = numStyle, textAlign = TextAlign.End)
             }
+            if (stacked && i >= 0) Box(Modifier.padding(start = indexWidth + 8.dp, top = 4.dp)) { PlayRows(vm, o.plays[i].rows, card) }
           }
           HorizontalDivider()
         }
@@ -600,19 +736,27 @@ private fun SummaryPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) 
   }
 }
 
+@Composable
+private fun settingsLine(room: RoomView, app: AppViewModel): String {
+  val s = room.settings
+  val parts = mutableListOf(
+    stringResource(R.string.battle_hands_n, s.hands),
+    app.rulesName(Rules.values(room.rules)),
+    stringResource(R.string.battle_time) + " " + if (s.timeLimit == 0) stringResource(R.string.battle_no_limit) else stringResource(R.string.battle_seconds, s.timeLimit),
+  )
+  if (s.hard) parts += stringResource(R.string.battle_hard)
+  return parts.joinToString("，")
+}
+
 /** A hand from the results: its table; a player's line opens the analysis of their hand. */
 @Composable
 private fun DetailPage(vm: BattleViewModel, room: RoomView) {
   val o = vm.outcomes.firstOrNull { it.index == vm.detail } ?: return
-  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    TextButton(onClick = vm::closeDetail) { Text(stringResource(R.string.battle_back)) }
-    Text(stringResource(R.string.battle_hand_of, o.index + 1, room.settings.hands), style = MaterialTheme.typography.labelLarge)
-    Text(
-      stringResource(R.string.battle_tap_player), Modifier.weight(1f), style = MaterialTheme.typography.bodySmall,
-      color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
-    )
-    MyHandResult(vm, o)
-  }
+  TitleBar(stringResource(R.string.battle_hand_of, o.index + 1, room.settings.hands), onBack = vm::closeDetail) { MyHandResult(vm, o) }
+  Text(
+    stringResource(R.string.battle_tap_player), Modifier.padding(horizontal = 16.dp, vertical = 2.dp), style = MaterialTheme.typography.bodyMedium,
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
+  )
   HandTable(vm, room, o) { vm.openAnalysis(it) }
 }
 
@@ -622,15 +766,8 @@ private fun PlayerAnalysisPage(vm: BattleViewModel, room: RoomView) {
   val o = vm.outcomes.firstOrNull { it.index == vm.detail } ?: return
   val play = o.plays.firstOrNull { it.player == vm.analyzed } ?: return
   val name = room.players.firstOrNull { it.id == play.player }?.name ?: "?"
-  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-    TextButton(onClick = vm::closeAnalysis) { Text(stringResource(R.string.battle_back)) }
-    Text("${stringResource(R.string.battle_hand_of, o.index + 1, room.settings.hands)} · $name  ", style = MaterialTheme.typography.labelLarge)
-    for (c in play.rows.flatten().sortedDescending()) CardFace(c, SMALL_CARD)
-  }
+  TitleBar("${stringResource(R.string.battle_hand_of, o.index + 1, room.settings.hands)} · $name", onBack = vm::closeAnalysis)
   val a = vm.detailAnalysis
-  if (a == null) LinearProgressIndicator(Modifier.fillMaxWidth())
-  else CandidateList(
-    a, play.rows, expandBest = true, legacyNote = null, tags = vm.detailTags,
-    mineLabel = if (play.player == vm.me) null else name,
-  )
+  if (a == null) Loading(stringResource(R.string.analyzing))
+  else CandidateList(a, play.rows, legacyNote = null, tags = vm.detailTags, mineLabel = if (play.player == vm.me) null else name)
 }

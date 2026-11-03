@@ -24,6 +24,9 @@ class Arranger(
   var rowsEval by mutableStateOf<RowsEval?>(null); private set
   var sortBySuit by mutableStateOf(false)
   var rules = "family"; private set
+  /** Earlier rows of this hand, for undo; the latest last. */
+  private var history by mutableStateOf<List<Arrangement>>(emptyList())
+  val canUndo: Boolean get() = history.isNotEmpty()
 
   val unplaced: List<Int> get() = Cards.sortHand(hand.filter { c -> rows.none { c in it } }, sortBySuit)
 
@@ -33,6 +36,7 @@ class Arranger(
     this.rules = rules
     selected = emptySet()
     armed = null
+    history = emptyList()
     updateRows(placed)
   }
 
@@ -66,6 +70,7 @@ class Arranger(
     var next = rows.mapIndexed { r, cards -> if (r == row) cards + selected.sortedDescending() else cards }
     selected = emptySet()
     armed = null
+    saveForUndo()
     val left = hand.filter { c -> next.none { c in it } }
     val open = (0 until 3).filter { next[it].size < Cards.ROW_SIZES[it] }
     if (open.size == 1 && left.size == Cards.ROW_SIZES[open[0]] - next[open[0]].size)
@@ -73,15 +78,36 @@ class Arranger(
     updateRows(next)
   }
 
-  fun unplace(card: Int) = updateRows(rows.map { it - card })
+  fun unplace(card: Int) {
+    saveForUndo()
+    updateRows(rows.map { it - card })
+  }
 
   /** Returns a row's cards to the hand. */
-  fun clearRow(row: Int) = updateRows(rows.mapIndexed { r, cards -> if (r == row) emptyList() else cards })
+  fun clearRow(row: Int) {
+    if (rows[row].isEmpty()) return
+    saveForUndo()
+    updateRows(rows.mapIndexed { r, cards -> if (r == row) emptyList() else cards })
+  }
 
   fun clearRows() {
     selected = emptySet()
     armed = null
+    if (rows.any { it.isNotEmpty() }) saveForUndo()
     updateRows(EMPTY)
+  }
+
+  /** Puts the rows back as they were before the last change. */
+  fun undo() {
+    val last = history.lastOrNull() ?: return
+    history = history.dropLast(1)
+    selected = emptySet()
+    armed = null
+    updateRows(last)
+  }
+
+  private fun saveForUndo() {
+    history = (history + listOf(rows)).takeLast(50)
   }
 
   private fun updateRows(next: Arrangement) {

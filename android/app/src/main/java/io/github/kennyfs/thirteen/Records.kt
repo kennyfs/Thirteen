@@ -16,7 +16,7 @@ class RecordStore(dir: File) {
   private val file = File(dir, "records.jsonl")
 
   @Synchronized
-  fun add(hand: List<Int>, rows: Arrangement, c: Double, rules: String, timeMs: Long, result: Double, label: String = "android") {
+  fun add(hand: List<Int>, rows: Arrangement, c: Double, rules: String, timeMs: Long, result: Double, label: String = "android"): JSONObject {
     val rec = JSONObject()
       .put("version", 1)
       .put("id", UUID.randomUUID().toString())
@@ -31,6 +31,7 @@ class RecordStore(dir: File) {
       .put("label", label)
       .put("result", result)
     file.appendText(rec.toString() + "\n")
+    return rec
   }
 
   @Synchronized
@@ -57,5 +58,31 @@ class RecordStore(dir: File) {
   @Synchronized
   fun exportTo(resolver: ContentResolver, uri: Uri) {
     resolver.openOutputStream(uri, "wt")!!.use { out -> if (file.exists()) file.inputStream().use { it.copyTo(out) } }
+  }
+}
+
+/**
+ * The hands the player has saved (a really good deal, a really bad one): a copy of each record in the same format, in
+ * its own file, so clearing the records for the developer keeps them. Keyed by the record's id.
+ */
+class FavoriteStore(dir: File) {
+  private val file = File(dir, "favorites.jsonl")
+
+  @Synchronized
+  fun all(): List<JSONObject> =
+    if (!file.exists()) emptyList() else file.readLines().filter { it.isNotBlank() }.mapNotNull { runCatching { JSONObject(it) }.getOrNull() }
+
+  @Synchronized
+  fun ids(): Set<String> = all().map { it.optString("id") }.toSet()
+
+  /** Saves the record, or drops it if it is saved; returns whether it is saved now. */
+  @Synchronized
+  fun toggle(rec: JSONObject): Boolean {
+    val id = rec.optString("id")
+    val all = all()
+    val saved = all.none { it.optString("id") == id }
+    val next = if (saved) all + rec else all.filter { it.optString("id") != id }
+    file.writeText(next.joinToString("") { it.toString() + "\n" })
+    return saved
   }
 }

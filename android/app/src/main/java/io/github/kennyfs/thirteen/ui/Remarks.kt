@@ -1,6 +1,12 @@
 package io.github.kennyfs.thirteen.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -15,16 +21,27 @@ import io.github.kennyfs.thirteen.Commentary.RowsKind
 import io.github.kennyfs.thirteen.Commentary.StyleKind
 import io.github.kennyfs.thirteen.R
 
-/** The remarks of Commentary.remarks: the player's in its own paragraph (red for a mistake), then the best one's. */
+/**
+ * The remarks of Commentary.remarks in a panel headed "Remarks": the player's first (a mistake marked in red, the best
+ * play in green), then the best one's.
+ */
 @Composable
 fun Remarks(remarks: List<Commentary.Remark>, modifier: Modifier = Modifier) {
   if (remarks.isEmpty()) return
   val mine = remarks.firstOrNull { it is Commentary.Same || it is Commentary.Mistake }
-  val style = MaterialTheme.typography.bodySmall
-  Column(modifier.padding(vertical = 2.dp)) {
+  val colors = MaterialTheme.colorScheme
+  Column(
+    modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(colors.tertiaryContainer).padding(horizontal = 14.dp, vertical = 10.dp),
+    verticalArrangement = Arrangement.spacedBy(4.dp),
+  ) {
+    Text(stringResource(R.string.remarks_title), style = MaterialTheme.typography.titleSmall, color = colors.onTertiaryContainer)
     if (mine != null)
-      Text(remarkText(mine), style = style, color = if (mine is Commentary.Mistake) BAD else GOOD)
-    Text((remarks - setOfNotNull(mine)).map { remarkText(it) }.joinToString(stringResource(R.string.remark_sep)), style = style)
+      Text(
+        remarkText(mine), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold,
+        color = if (mine is Commentary.Mistake) colors.error else colors.onTertiaryContainer,
+      )
+    val rest = (remarks - setOfNotNull(mine)).map { remarkText(it) }.joinToString(stringResource(R.string.remark_sep))
+    if (rest.isNotEmpty()) Text(rest, style = MaterialTheme.typography.bodyLarge, color = colors.onTertiaryContainer)
   }
 }
 
