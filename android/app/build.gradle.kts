@@ -67,7 +67,8 @@ android {
       ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
     }
     release {
-      ndk { abiFilters += "arm64-v8a" }
+      // arm64 only; THIRTEEN_ABIS=x86_64 makes a release build the emulator runs natively (to try R8 on).
+      ndk { abiFilters += (System.getenv("THIRTEEN_ABIS")?.split(",") ?: listOf("arm64-v8a")) }
       isMinifyEnabled = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName(if (keystorePath != null) "release" else "debug")

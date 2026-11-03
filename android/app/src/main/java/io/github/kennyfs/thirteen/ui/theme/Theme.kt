@@ -132,7 +132,7 @@ private val AppShapes = Shapes(
   extraLarge = RoundedCornerShape(28.dp),
 )
 
-/** Whether the app is drawn dark: the cards are dark then too. */
+/** Whether the cards are dark: only in a dark theme of the minimal colors; on the felt or the wallpaper's colors they stay white. */
 val LocalDark = staticCompositionLocalOf { false }
 
 fun isDark(mode: DarkMode, system: Boolean) = when (mode) {
@@ -156,7 +156,7 @@ fun ThirteenTheme(style: ColorStyle, darkMode: DarkMode, textSize: TextSize, con
   CompositionLocalProvider(
     LocalTable provides tableFor(style, scheme, dark),
     LocalOutcome provides outcome,
-    LocalDark provides dark,
+    LocalDark provides (dark && style == ColorStyle.MINIMAL),
     LocalDensity provides Density(density.density, density.fontScale * textSize.scale),
   ) {
     MaterialTheme(colorScheme = scheme, typography = AppTypography, shapes = AppShapes, content = content)
