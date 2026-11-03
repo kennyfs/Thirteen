@@ -299,7 +299,15 @@ fun CandidateList(
   }
   BoxWithConstraints(modifier.fillMaxSize()) {
     // Two panes on a wide window, a landscape phone too: there the opened one's rows would not fit under it.
-    val wide = maxWidth >= 760.dp || (maxWidth > maxHeight && maxWidth >= 600.dp)
+    // Two panes on a wide window, a landscape phone too (there an opened one's rows would not fit under it), when the
+    // side pane's height takes its details: the expected points and the chances 2 + 2 + 3, each with its difference
+    // beside its figure or, when the tiles are narrow, under it.
+    val paneWidth = maxWidth * 0.34f - 20.dp
+    val tileLines = listOf(2, 2, 3).sumOf { n -> if ((paneWidth - 4.dp * (n - 1)) / n >= textRoom(78)) 0 else 1 }
+    val lost = if (a.rules["on_win"] == 1.0) Rules.ROYALTIES.count { (a.rules[it] ?: 0.0) > 0 } else 0
+    val paneHeight = 16.dp + textRoom(24) + 4.dp + (textRoom(18) + textRoom(24) + 6.dp + 4.dp) * 3 + textRoom(16) * tileLines +
+      (textRoom(18) + textRoom(24) + 10.dp) * ((lost + 1) / 2)
+    val wide = (maxWidth >= 760.dp || (maxWidth > maxHeight && maxWidth >= 600.dp)) && paneHeight <= maxHeight
     val listWidth = if (wide) maxWidth * 0.66f else maxWidth
     var openSet by rememberSaveable(a) { mutableStateOf(if (pinned) listOf(PINNED, 0) else listOf(0)) }
     var current by rememberSaveable(a) { mutableStateOf(if (pinned) PINNED else 0) }
@@ -391,8 +399,8 @@ private fun CandidateItem(
 }
 
 /**
- * A candidate's details: the expected points with the gap to the best (or the player's, on the best), and the chances,
- * colored where they differ notably from the best one's, with the difference except in the side `pane` of a wide window.
+ * A candidate's details: the expected points with the gap to the best, and the chances, colored where they differ
+ * notably from the best one's, with the difference; in the side `pane` of a wide window, 2 + 2 + 3 of them.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -409,9 +417,7 @@ private fun CandidateDetail(
         Text(stringResource(R.string.expected), style = MaterialTheme.typography.bodyMedium, maxLines = 1)
         Text(fmtQ(q), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = qColor(q), maxLines = 1, softWrap = false)
         val bq = best?.q
-        val mq = mineAt?.takeIf { it != i }?.let { a.cands[it].q }
         if (bq != null && bq > q) Text("(${fmtQ(q - bq)})", style = MaterialTheme.typography.bodyMedium, color = BAD, maxLines = 1, softWrap = false)
-        else if (best == null && mq != null && q > mq) Text("(${fmtQ(q - mq)})", style = MaterialTheme.typography.bodyMedium, color = GOOD, maxLines = 1, softWrap = false)
       }
     }
     cd.probs?.let { p -> ProbGrid(a, p, best?.probs, pane) }
@@ -434,25 +440,11 @@ private fun ProbGrid(a: Analysis, p: List<Double>, best: List<Double>?, pane: Bo
     val width = maxWidth
     val tile = textRoom(62)
     val fit = ((maxWidth + gap) / (tile + gap)).toInt()
-    // The side pane of a wide window, short of room for four a line: 2 + 2 + 3, without the differences, which would
-    // not fit; the colors still tell them.
-    if (pane && fit < 4) {
-      Column(verticalArrangement = Arrangement.spacedBy(gap)) {
-        for (line in listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6, 7)) + lostShown.map { listOf(ROYALTY_LOST + it) }.chunked(2).map { it.flatten() })
-          Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap)) {
-            for (k in line) {
-              val d = gaps[k] ?: 0.0
-              val tone = if (k !in notable) 0 else if ((d > 0) == GOOD_WHEN_HIGH[k]) 1 else -1
-              ProbTile(names[k], p[k], tone, d, Modifier.weight(1f), inline = true, showDiff = false)
-            }
-            if (line.size == 1) Spacer(Modifier.weight(1f))
-          }
-      }
-      return@BoxWithConstraints
-    }
     val lines: List<List<Int>> = when {
       fit >= 7 -> listOf(SHOWN_PROBS)
       fit >= 4 -> listOf(listOf(0, 1, 2, 3), listOf(5, 6, 7))
+      // The side pane of a wide window is only there when its height takes these.
+      pane -> listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6, 7))
       (maxWidth - gap * 2) / 3 >= tile * 0.85f -> listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6, 7))
       else -> listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6), listOf(7))
     }
@@ -476,7 +468,7 @@ private fun ProbGrid(a: Analysis, p: List<Double>, best: List<Double>?, pane: Bo
 
 /** A chance: its name over its figure, and the difference from the best one's when it is notable (`tone` ≠ 0). */
 @Composable
-private fun ProbTile(name: String, p: Double, tone: Int, diff: Double, modifier: Modifier, inline: Boolean, showDiff: Boolean = true) {
+private fun ProbTile(name: String, p: Double, tone: Int, diff: Double, modifier: Modifier, inline: Boolean) {
   val colors = MaterialTheme.colorScheme
   val color = when (tone) { 1 -> GOOD; -1 -> BAD; else -> colors.onSurface }
   val change = @Composable { m: Modifier ->
@@ -492,9 +484,9 @@ private fun ProbTile(name: String, p: Double, tone: Int, diff: Double, modifier:
         "%.1f%%".format(100 * p), style = MaterialTheme.typography.bodyLarge, color = color, maxLines = 1, softWrap = false,
         fontWeight = if (tone != 0) FontWeight.Bold else FontWeight.Normal,
       )
-      if (tone != 0 && showDiff && inline) change(Modifier.padding(bottom = 2.dp))
+      if (tone != 0 && inline) change(Modifier.padding(bottom = 2.dp))
     }
-    if (tone != 0 && showDiff && !inline) change(Modifier)
+    if (tone != 0 && !inline) change(Modifier)
   }
 }
 
