@@ -34,8 +34,8 @@ C++ (`cpp/`, through `cpp/command/guiengine.h` and JNI) with ONNX Runtime for An
 ## Building
 
 `android/build-apk.sh` builds the release APK and the bundle for Google Play locally (after the unit tests) and
-copies them to `android/build/apk/thirteen-<version>.apk` and `.aab` (or `$THIRTEEN_APK_DIR`). It needs JDK 17, Gradle,
-and the Android SDK with platform 36, build-tools 35, NDK 27.0.12077973 and CMake 3.22.1. Their paths come from the environment or from
+copies them to `android/build/apk/thirteen-<version>.apk` and `.aab` (or `$THIRTEEN_APK_DIR`). It needs JDK 17 or later, Gradle 9.1 or later,
+and the Android SDK with platform 37, build-tools 37, NDK 30.0.16248370 and CMake 4.1.2. Their paths come from the environment or from
 `android/local.env` (shell assignments such as `ANDROID_HOME=...`, `GRADLE=...`, kept out of the repository); see the
 script for the variables. The built-in network is not in the repository: put it at
 `android/app/src/main/assets/run2_net10.onnx` (any network exported by `python/train.py`, see docs/training.md)
@@ -43,13 +43,14 @@ before building; the app and its device tests expect it. The version code is the
 build always installs over an older one. The version name is the release's `vX.Y.Z` tag on the tagged commit (`1.0.0`);
 any other build is a beta, named after the latest tag (`1.0.0+beta.3` three commits after it).
 
-`android/device-tests.sh` runs `ScreenshotTest` on a local headless Android 14 emulator (made on the first run): every
-screen under several screen, display and font sizes, saved in `android/build/screenshots`, failing when a card is cut
-off at the side. `ALL=1` runs every device test instead. It needs the SDK's emulator and
-`system-images;android-34;google_apis;x86_64`, and access to `/dev/kvm`. On a slow or flaky connection sdkmanager can't
-resume the 1.5 GB image; download `x86_64-34_r14.zip` from `https://dl.google.com/android/repository/sys-img/google_apis/`
-with `curl -C -`, check its SHA-1 against `sys-img2-3.xml` there, unzip it into
-`$ANDROID_HOME/system-images/android-34/google_apis/` and add a `package.xml` (sdkmanager writes one for every package it installs).
+`android/device-tests.sh` runs `ScreenshotTest` on a local headless emulator of API 37 (Android 17; `API=36` for
+another, each with its own AVD made on the first run): every screen under several screen, display and font sizes, saved
+in `android/build/screenshots`, failing when a card is cut off at the side. `ALL=1` runs every device test instead. It
+needs the SDK's emulator and `system-images;android-37.0;google_apis;x86_64`, and access to `/dev/kvm`. On a slow or
+flaky connection sdkmanager can't resume the 1.5 GB image; download it (`x86_64-37.0_r*.zip`, from
+`https://dl.google.com/android/repository/sys-img/google_apis/`) with `curl -C -`, check its SHA-1 against
+`sys-img2-3.xml` there, unzip it into `$ANDROID_HOME/system-images/android-37.0/google_apis/` and add a `package.xml`
+(sdkmanager writes one for every package it installs).
 
 The layout follows the room it has rather than fixed sizes: cards are sized from the width and height left (their
 rank and suit scale with the card, not with the font size), room for text is in `sp` (`textRoom`) so it grows with
