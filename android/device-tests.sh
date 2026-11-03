@@ -2,8 +2,8 @@
 # Runs the instrumented tests on a local emulator: by default ScreenshotTest, whose screenshots and log land in
 # build/screenshots (with STORE=1 the Google Play screenshots instead, with COMPARE=1 the screens to set beside version
 # 1.1.1's); with ALL=1 every device test; ONLY=name,... only those screenshot configs. Starts a headless
-# emulator (AVD "thirteen-$API", made on the first run, with a display as large as the largest size ScreenshotTest
-# tries) and stops it after, unless KEEP=1. Needs the emulator and system-images;android-$API;google_apis;x86_64 in the
+# emulator (AVD "thirteen-$API-pixel9", made on the first run: a Pixel 9, the phone the screenshots are judged at; the
+# other sizes are set over its display) and stops it after, unless KEEP=1. Needs the emulator and system-images;android-$API;google_apis;x86_64 in the
 # SDK (API defaults to 37.0), and /dev/kvm. Paths as in build-apk.sh, plus ANDROID_AVD_HOME (default ~/.android/avd);
 # the log is device-tests.log.
 set -euo pipefail
@@ -17,17 +17,17 @@ ADB=$ANDROID_HOME/platform-tools/adb
 export ANDROID_SERIAL=emulator-5554
 API=${API:-37.0}
 IMAGE="system-images;android-$API;google_apis;x86_64"
-AVD=thirteen-$API
+AVD=thirteen-$API-pixel9
 exec > >(tee device-tests.log) 2>&1
 
 if [ ! -d "$ANDROID_AVD_HOME/$AVD.avd" ]; then
   mkdir -p "$ANDROID_AVD_HOME"
-  echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n "$AVD" -k "$IMAGE" -d pixel_6
+  echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n "$AVD" -k "$IMAGE" -d pixel_9
 fi
 started=0
 if ! "$ADB" get-state > /dev/null 2>&1; then
   "$ANDROID_HOME/emulator/emulator" -avd "$AVD" -port 5554 -no-window -no-audio -no-boot-anim -no-snapshot \
-    -gpu swiftshader_indirect -skin 1600x2600 > emulator.log 2>&1 &
+    -gpu swiftshader_indirect > emulator.log 2>&1 &
   started=1
 fi
 stop() {

@@ -192,18 +192,18 @@ class ScreenshotTest {
     private const val CUTOUT = "com.android.internal.display.cutout.emulation.hole"
     private const val TIMEOUT = 90_000L
 
-    // The phone the app is tried on (2424 x 1080, display and font sizes up a step), then smaller and larger.
+    // The phone the app is tried on: a Pixel 9 (2424 x 1080 at 420 dpi) with the font a step up (1.15), the size the
+    // screenshots are judged at; then smaller and larger fonts, a small phone and a tablet.
     private val CONFIGS = listOf(
-      Config("phone-user", "1080x2424", 480, 1.3f, "zh-TW", cutout = true),
-      Config("phone-user-land", "1080x2424", 480, 1.3f, "zh-TW", cutout = true, landscape = true),
-      Config("phone", "1080x2424", 420, 1.0f, "zh-TW", cutout = true),
-      Config("phone-land", "1080x2424", 420, 1.0f, "zh-TW", cutout = true, landscape = true),
-      Config("phone-font2", "1080x2424", 420, 2.0f, "zh-TW", cutout = false),
-      Config("phone-font2-land", "1080x2424", 420, 2.0f, "zh-TW", cutout = false, landscape = true),
-      Config("phone-largest", "1080x2424", 560, 1.3f, "zh-TW", cutout = true),
-      Config("phone-en", "1080x2424", 480, 1.3f, "en", cutout = false),
-      Config("phone-en-land", "1080x2424", 480, 1.3f, "en", cutout = false, landscape = true),
-      Config("phone-dark", "1080x2424", 480, 1.3f, "zh-TW", cutout = false, dark = true),
+      Config("phone", "1080x2424", 420, 1.15f, "zh-TW", cutout = true),
+      Config("phone-land", "1080x2424", 420, 1.15f, "zh-TW", cutout = true, landscape = true),
+      Config("phone-font1.0", "1080x2424", 420, 1.0f, "zh-TW", cutout = true),
+      Config("phone-font1.0-land", "1080x2424", 420, 1.0f, "zh-TW", cutout = true, landscape = true),
+      Config("phone-font2.0", "1080x2424", 420, 2.0f, "zh-TW", cutout = true),
+      Config("phone-font2.0-land", "1080x2424", 420, 2.0f, "zh-TW", cutout = true, landscape = true),
+      Config("phone-en", "1080x2424", 420, 1.15f, "en", cutout = true),
+      Config("phone-en-land", "1080x2424", 420, 1.15f, "en", cutout = true, landscape = true),
+      Config("phone-dark", "1080x2424", 420, 1.15f, "zh-TW", cutout = true, dark = true),
       Config("small", "720x1600", 320, 1.0f, "zh-TW", cutout = false),
       Config("small-large-land", "720x1600", 360, 1.5f, "en", cutout = false, landscape = true),
       Config("tablet", "1600x2560", 320, 1.0f, "zh-TW", cutout = false),
@@ -215,11 +215,9 @@ class ScreenshotTest {
     // 1.1.1, landscape only and with one look, has the device part.
     private val COMPARE = InstrumentationRegistry.getArguments().getString("compare") == "1"
     private val COMPARE_CONFIGS = buildList {
-      val devices = listOf(
-        Triple("phone-user", 480, 1.3f), Triple("phone", 420, 1.0f), Triple("phone-smallfont", 420, 0.85f), Triple("phone-font2", 420, 2.0f),
-      )
-      for ((name, density, font) in devices) for (land in listOf(true, false))
-        add(Config("${name}__${if (land) "land" else "port"}__table-light", "1080x2424", density, font, "zh-TW", cutout = name == "phone-user", landscape = land))
+      val devices = listOf("phone" to 1.15f, "phone-font1.0" to 1.0f, "phone-font1.3" to 1.3f, "phone-font2.0" to 2.0f)
+      for ((name, font) in devices) for (land in listOf(true, false))
+        add(Config("${name}__${if (land) "land" else "port"}__table-light", "1080x2424", 420, font, "zh-TW", cutout = true, landscape = land))
       for (land in listOf(true, false))
         add(Config("tablet__${if (land) "land" else "port"}__table-light", "1600x2560", 320, 1.0f, "zh-TW", cutout = false, landscape = land))
       for ((style, dark, land) in listOf(
@@ -229,7 +227,7 @@ class ScreenshotTest {
       )) {
         val look = mapOf(ColorStyle.TABLE to "table", ColorStyle.MINIMAL to "minimal", ColorStyle.WALLPAPER to "wallpaper").getValue(style) +
           if (dark) "-dark" else "-light"
-        add(Config("phone__${if (land) "land" else "port"}__$look", "1080x2424", 420, 1.0f, "zh-TW", cutout = false, landscape = land, dark = dark, style = style))
+        add(Config("phone__${if (land) "land" else "port"}__$look", "1080x2424", 420, 1.15f, "zh-TW", cutout = true, landscape = land, dark = dark, style = style))
       }
     }
 
