@@ -408,14 +408,14 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
 
   fun categoriesOf(rows: List<List<Int>>): List<Int>? = categories[rows.map { it.sorted() }]
 
-  /** The player's play of a closed hand goes to the records, labelled "battle". */
+  /** The player's play of a closed hand goes to the records, labelled "battle" (a table game) or "puzzle". */
   private fun record(o: HandOutcome) {
     val r = room ?: return
     val i = o.plays.indexOfFirst { it.player == me }
     if (i < 0) return
     val play = o.plays[i]
     val result = o.score?.result?.get(i) ?: -(o.losses?.get(i) ?: 0.0)
-    records.add(play.rows.flatten(), play.rows, 0.0, r.rules, 0, result, label = "battle")
+    records.add(play.rows.flatten(), play.rows, 0.0, r.rules, 0, result, label = if (r.settings.mode == Mode.PUZZLE) "puzzle" else "battle")
   }
 
   private fun errorText(e: Error) = when (e.code) {

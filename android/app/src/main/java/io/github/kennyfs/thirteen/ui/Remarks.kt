@@ -35,11 +35,14 @@ fun Remarks(remarks: List<Commentary.Remark>, modifier: Modifier = Modifier) {
     verticalArrangement = Arrangement.spacedBy(4.dp),
   ) {
     Text(stringResource(R.string.remarks_title), style = MaterialTheme.typography.titleSmall, color = colors.onTertiaryContainer)
-    if (mine != null)
+    // A mistake on the error colors' own pair: the theme's error color on the tertiary container can be light on light.
+    if (mine is Commentary.Mistake)
       Text(
-        remarkText(mine), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold,
-        color = if (mine is Commentary.Mistake) colors.error else colors.onTertiaryContainer,
+        remarkText(mine), Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(colors.errorContainer).padding(horizontal = 8.dp, vertical = 4.dp),
+        style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = colors.onErrorContainer,
       )
+    else if (mine != null)
+      Text(remarkText(mine), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = colors.onTertiaryContainer)
     val rest = (remarks - setOfNotNull(mine)).map { remarkText(it) }.joinToString(stringResource(R.string.remark_sep))
     if (rest.isNotEmpty()) Text(rest, style = MaterialTheme.typography.bodyLarge, color = colors.onTertiaryContainer)
   }

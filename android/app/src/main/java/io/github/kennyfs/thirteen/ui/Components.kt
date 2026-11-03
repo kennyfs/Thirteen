@@ -38,6 +38,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.vector.ImageVector
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -189,20 +197,45 @@ fun Chip(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, trai
   }
 }
 
-/** A number with − and + buttons, for the rules. */
+/** A number with − and + buttons, for the rules. Held down, a button repeats, faster and faster. */
 @Composable
 fun NumberStepper(value: Double, onChange: (Double) -> Unit, step: Double = 1.0, min: Double = 0.0, max: Double = 100.0, text: String) {
   Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-    val minus = stringResource(R.string.decrease)
-    val plus = stringResource(R.string.increase)
-    FilledTonalIconButton(onClick = { onChange((value - step).coerceAtLeast(min)) }, enabled = value > min, modifier = Modifier.size(48.dp)) {
-      Icon(Icons.Filled.Remove, minus)
-    }
+    val current by rememberUpdatedState(value)
+    RepeatingButton(stringResource(R.string.decrease), Icons.Filled.Remove, value > min) { onChange((current - step).coerceAtLeast(min)) }
     Text(text, Modifier.widthIn(min = 44.dp), style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-    FilledTonalIconButton(onClick = { onChange((value + step).coerceAtMost(max)) }, enabled = value < max, modifier = Modifier.size(48.dp)) {
-      Icon(Icons.Filled.Add, plus)
+    RepeatingButton(stringResource(R.string.increase), Icons.Filled.Add, value < max) { onChange((current + step).coerceAtMost(max)) }
+  }
+}
+
+/**
+ * A button that acts once on a tap and, held down, again and again: after 400 ms, then at shorter and shorter
+ * intervals, each shortened by more than the last.
+ */
+@Composable
+private fun RepeatingButton(description: String, icon: ImageVector, enabled: Boolean, onStep: () -> Unit) {
+  val source = remember { MutableInteractionSource() }
+  val pressed by source.collectIsPressedAsState()
+  val step by rememberUpdatedState(onStep)
+  val on by rememberUpdatedState(enabled)
+  var repeated by remember { mutableStateOf(false) }
+  LaunchedEffect(pressed) {
+    if (!pressed) return@LaunchedEffect
+    repeated = false
+    delay(400)
+    var interval = 260.0
+    var shrink = 0.92
+    while (on) {
+      step()
+      repeated = true
+      delay(interval.toLong())
+      interval = (interval * shrink).coerceAtLeast(20.0)
+      shrink = (shrink - 0.01).coerceAtLeast(0.6)
     }
   }
+  FilledTonalIconButton(
+    onClick = { if (!repeated) step(); repeated = false }, enabled = enabled, modifier = Modifier.size(48.dp), interactionSource = source,
+  ) { Icon(icon, description) }
 }
 
 /** An (i) button that shows `text` in a dialog. */
@@ -218,7 +251,7 @@ fun InfoButton(text: String, title: String? = null, tint: Color = MaterialTheme.
       onDismissRequest = { open = false },
       confirmButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.ok)) } },
       title = title?.let { { Text(it) } },
-      text = { Text(text, style = MaterialTheme.typography.bodyLarge) },
+      text = { Text(text, Modifier.verticalScroll(rememberScrollState()), style = MaterialTheme.typography.bodyLarge) },
     )
 }
 

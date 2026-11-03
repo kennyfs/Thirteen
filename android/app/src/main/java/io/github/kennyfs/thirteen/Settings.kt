@@ -20,7 +20,7 @@ enum class ColorStyle { TABLE, MINIMAL, WALLPAPER }
 enum class DarkMode { SYSTEM, LIGHT, DARK }
 
 /** The app's own text size, on top of the system's font size. */
-enum class TextSize(val scale: Float) { NORMAL(1f), LARGE(1.15f), LARGER(1.3f) }
+enum class TextSize(val scale: Float) { SMALL(0.88f), NORMAL(1f), LARGE(1.15f) }
 
 /** Settings and model files, in shared preferences and the app's files directory. */
 class Settings(private val context: Context) {
@@ -99,7 +99,8 @@ class Settings(private val context: Context) {
     set(v) = prefs.edit().putString("look.dark", v.name).apply()
 
   var textSize: TextSize
-    get() = enumPref("look.text", TextSize.NORMAL)
+    // "LARGER", the largest of older versions, is the largest now.
+    get() = if (prefs.getString("look.text", null) == "LARGER") TextSize.LARGE else enumPref("look.text", TextSize.NORMAL)
     set(v) = prefs.edit().putString("look.text", v.name).apply()
 
   private inline fun <reified E : Enum<E>> enumPref(key: String, default: E): E =

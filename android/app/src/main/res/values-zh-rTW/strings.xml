@@ -22,7 +22,7 @@
   <string name="last_hand">上一局</string>
   <string name="clear">清除</string>
   <string name="network">神經網路</string>
-  <string name="analyze_info">Q 是這手牌的期望得分：對手是三個像這個神經網路的玩家。列表只列出沒有被其他擺法在每一墩都壓過的擺法，依 Q 由高到低排列；點一下可看牌與神經網路估計的各項機率。手牌來自對局時，你的擺法會固定在最上方；與首選差距明顯的數字，比首選好的標綠色、差的標紅色。列表上方會顯示分析用的規則；在特殊墩只在贏時才算分的規則下，也會列出被對手特殊墩贏走的機率。列表上方是簡短評語：你的擺法明顯較差時才說怎麼擺更好（網路並非完全精確，差一點可算一樣好）；首選和其他牌型組合中最好的擺法相比是哪種選擇（攻擊型：打槍多、被打槍也多；防守型：兩者都少；算墩數的規則下則是搶墩或打槍為主）；以及常見擺法的名稱，例如五輪車。</string>
+  <string name="analyze_info">Q 是這手牌的期望得分，對手假設是三個像這個神經網路的玩家。列表只列出不會每一墩都被別的擺法壓過的擺法，依 Q 由高到低排列。機率與首選差距明顯時，較好的標綠色、較差的標紅色。上方的評語會說你的擺法哪裡可以更好、首選偏攻擊還是防守，以及常見擺法的名稱。</string>
   <string name="dragon">這手牌是一條龍。</string>
   <string name="show_all">顯示全部 %1$d 個</string>
   <string name="yours">你的擺法</string>
@@ -73,7 +73,7 @@
     <item>打槍</item>
     <item>被打槍</item>
     <item>全壘打</item>
-    <item>對手全壘打</item>
+    <item>被全壘打</item>
     <item>當洗牌者</item>
     <item>贏頭墩</item>
     <item>贏中墩</item>
@@ -295,9 +295,9 @@
   <string name="settings_about">關於</string>
   <string name="text_size">文字大小</string>
   <string-array name="text_sizes">
+    <item>小</item>
     <item>標準</item>
     <item>大</item>
-    <item>特大</item>
   </string-array>
   <string name="color_style">配色</string>
   <string-array name="color_styles">
@@ -325,7 +325,7 @@
   <string name="built_in_note">內建</string>
   <string name="legacy_note">舊格式的網路：不論規則都照簡單規則下</string>
   <string name="delete_network_confirm">刪除神經網路 %1$s？</string>
-  <string name="records_title">紀錄與收藏</string>
+  <string name="records_title">紀錄</string>
   <string name="records_summary">已記錄 %1$d 局 · 收藏 %2$d 手 · 得分走勢</string>
   <string name="records_info">你打的每一局都記錄在這支手機上：手牌、你的擺法、規則和花的時間，沒有其他資料，也不會自動傳出去。把這個檔案（JSONL）分享給開發者，可以用來訓練更好的電腦對手。</string>
   <string name="records_list">全部紀錄（新的在前）</string>
@@ -376,4 +376,16 @@
   <string name="favorite_short">收藏</string>
   <string name="favorite_saved">已收藏</string>
   <string name="replay_short">重排這手</string>
+  <string name="replay_title">重排這手牌</string>
+  <string name="replay_note">不計分、不記錄</string>
+  <string name="arrange_help_title">如何出牌</string>
+  <string name="arrange_help">• 點手牌選牌（手指滑過多張可一次選取），再點要放進的那一墩。\n• 也可以先點一墩，再點牌放進去。\n• 點墩上的牌可收回；長按一墩或按「全部取下」收回整墩。\n• 三墩放滿、而且頭墩 ≤ 中墩 ≤ 尾墩（沒有倒水），就可以按「確定出牌」。\n• 「依點數／依花色」切換手牌的排列方式，方便找對子、順子或同花。</string>
+  <string name="help">說明</string>
+  <string name="nav_records">紀錄</string>
+  <string name="records_practice">練習</string>
+  <string name="records_game">同桌對局</string>
+  <string name="records_puzzle">解題比賽</string>
+  <string name="chart_puzzle_note">解題比賽的分數是你的擺法比首選少的期望分，越接近 0 越好。</string>
+  <string name="records_none">這一類還沒有紀錄。</string>
+  <string name="ready_hint">可以出牌了</string>
 </resources>

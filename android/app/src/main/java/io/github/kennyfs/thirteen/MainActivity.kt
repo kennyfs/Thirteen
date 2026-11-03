@@ -63,6 +63,16 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import io.github.kennyfs.thirteen.battle.BattleViewModel
 import io.github.kennyfs.thirteen.ui.AnalyzeScreen
+import io.github.kennyfs.thirteen.ui.CandidatesPage
+import io.github.kennyfs.thirteen.ui.MyHandAnalysis
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.runtime.key
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.outlined.History
 import io.github.kennyfs.thirteen.ui.BattleScreen
 import io.github.kennyfs.thirteen.ui.NetworksPage
 import io.github.kennyfs.thirteen.ui.OpponentsPage
@@ -79,13 +89,16 @@ enum class Screen(val label: Int, val icon: ImageVector, val selectedIcon: Image
   PLAY(R.string.nav_play, Icons.Outlined.Style, Icons.Filled.Style),
   BATTLE(R.string.nav_battle, Icons.Outlined.Groups, Icons.Filled.Groups),
   ANALYZE(R.string.nav_analyze, Icons.Outlined.Insights, Icons.Filled.Insights),
+  RECORDS(R.string.nav_records, Icons.Outlined.History, Icons.Filled.History),
   SETTINGS(R.string.nav_settings, Icons.Outlined.Settings, Icons.Filled.Settings),
 }
 
 /** A destination: a top-level screen or a page opened from one. */
-enum class Dest { PLAY, BATTLE, ANALYZE, SETTINGS, RULES, OPPONENTS, NETWORKS, RECORDS }
+enum class Dest { PLAY, BATTLE, ANALYZE, RECORDS, SETTINGS, RULES, OPPONENTS, NETWORKS, MY_ANALYSIS, CANDIDATES }
 
 private fun root(s: Screen) = Dest.valueOf(s.name)
+
+private const val SLIDE_MS = 160
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -131,12 +144,24 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
   var tab by rememberSaveable { mutableStateOf(Screen.PLAY) }
   // Each screen's pages, saved as names.
   var stacks by rememberSaveable { mutableStateOf(Screen.entries.associate { it.name to listOf(root(it).name) }) }
-  val stack = stacks.getValue(tab.name).map { Dest.valueOf(it) }
+  val pushed = stacks.getValue(tab.name).map { Dest.valueOf(it) }
+  // The pages the view models open: the analysis of the finished hand, the candidates of the analyzed one. They sit
+  // in the stack too, so that back (and its preview) leaves them as any other page.
+  val opened = when (tab) {
+    Screen.PLAY -> listOfNotNull(Dest.MY_ANALYSIS.takeIf { vm.result != null && vm.resultTab == 1 })
+    Screen.ANALYZE -> listOfNotNull(Dest.CANDIDATES.takeIf { vm.analysis != null && vm.anaPage == 1 })
+    else -> emptyList()
+  }
+  val stack = pushed.take(1) + opened + pushed.drop(1)
   fun push(d: Dest) {
     stacks = stacks + (tab.name to (stacks.getValue(tab.name) + d.name))
   }
   fun pop() {
-    stacks = stacks + (tab.name to stacks.getValue(tab.name).dropLast(1))
+    when {
+      pushed.size > 1 -> stacks = stacks + (tab.name to stacks.getValue(tab.name).dropLast(1))
+      Dest.MY_ANALYSIS in opened -> vm.resultTab = 0
+      Dest.CANDIDATES in opened -> vm.anaPage = 0
+    }
   }
   fun open(page: SettingsPage) = push(Dest.valueOf(page.name))
   // A hand to rearrange or to analyze (from a record or the result): to that screen's first page.
@@ -176,7 +201,8 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
             // Again on the current screen: back to its first page.
             if (selected) stacks = stacks + (s.name to listOf(root(s).name)) else tab = s
           },
-          icon = { Icon(if (selected) s.selectedIcon else s.icon, null) },
+          // Practice's cards are held at the bottom, fanned out from there.
+          icon = { Icon(if (selected) s.selectedIcon else s.icon, null, if (s == Screen.PLAY) Modifier.graphicsLayer(scaleY = -1f) else Modifier) },
           label = { Text(stringResource(s.label), maxLines = 1) },
           modifier = Modifier.testTag("nav_${s.name}"),
           alwaysShowLabel = true,
@@ -193,24 +219,35 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
       val sizes = cardSizes(maxWidth, maxHeight, textRoom(14))
       LaunchedEffect(sizes.play, sizes.other) { Log.i("CardSizes", "$maxWidth x $maxHeight: play ${sizes.play}, other ${sizes.other}") }
       CompositionLocalProvider(LocalCardSizes provides sizes) {
-      NavDisplay(
-        backStack = stack,
-        onBack = { pop() },
-        entryProvider = { d ->
-          NavEntry(d, contentKey = "${tab.name}/${d.name}") {
-            when (d) {
-              Dest.PLAY -> PlayScreen(vm) { push(Dest.RULES) }
-              Dest.BATTLE -> BattleScreen(battle, vm)
-              Dest.ANALYZE -> AnalyzeScreen(vm) { push(Dest.RULES) }
-              Dest.SETTINGS -> SettingsScreen(vm, ::open)
-              Dest.RULES -> RulesPage(vm, ::pop)
-              Dest.OPPONENTS -> OpponentsPage(vm, ::pop)
-              Dest.NETWORKS -> NetworksPage(vm, ::pop)
-              Dest.RECORDS -> RecordsPage(vm, ::pop)
+      // A new screen from the bar or rail shows at once; a page opened in a screen slides in, briefly.
+      key(tab) {
+        NavDisplay(
+          backStack = stack,
+          onBack = { pop() },
+          transitionSpec = { slideInHorizontally(tween(SLIDE_MS)) { it } togetherWith slideOutHorizontally(tween(SLIDE_MS)) { -it / 4 } },
+          popTransitionSpec = { slideInHorizontally(tween(SLIDE_MS)) { -it / 4 } togetherWith slideOutHorizontally(tween(SLIDE_MS)) { it } },
+          predictivePopTransitionSpec = { slideInHorizontally(tween(SLIDE_MS)) { -it / 4 } togetherWith slideOutHorizontally(tween(SLIDE_MS)) { it } },
+          entryProvider = { d ->
+            NavEntry(d, contentKey = "${tab.name}/${d.name}") {
+              // Each page on the background: the one under it shows while back is dragged.
+              Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                when (d) {
+                  Dest.PLAY -> PlayScreen(vm) { push(Dest.RULES) }
+                  Dest.BATTLE -> BattleScreen(battle, vm)
+                  Dest.ANALYZE -> AnalyzeScreen(vm) { push(Dest.RULES) }
+                  Dest.RECORDS -> RecordsPage(vm)
+                  Dest.SETTINGS -> SettingsScreen(vm, ::open)
+                  Dest.RULES -> RulesPage(vm, ::pop)
+                  Dest.OPPONENTS -> OpponentsPage(vm, ::pop)
+                  Dest.NETWORKS -> NetworksPage(vm, ::pop)
+                  Dest.MY_ANALYSIS -> MyHandAnalysis(vm)
+                  Dest.CANDIDATES -> CandidatesPage(vm)
+                }
+              }
             }
-          }
-        },
-      )
+          },
+        )
+      }
       }
     }
   }

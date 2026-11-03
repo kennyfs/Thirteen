@@ -1,6 +1,5 @@
 package io.github.kennyfs.thirteen.ui
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -94,9 +94,7 @@ fun qColor(q: Double) = if (q >= 0) GOOD else BAD
 /** Analyze: pick 13 cards (or take them from somewhere), then the candidates. */
 @Composable
 fun AnalyzeScreen(vm: AppViewModel, onRules: () -> Unit) {
-  val a = vm.analysis
-  BackHandler(vm.anaPage == 1) { vm.anaPage = 0 }
-  if (vm.anaPage == 1 && a != null) AnalysisPage(vm, a) else HandPage(vm, onRules)
+  HandPage(vm, onRules)
 }
 
 /** The rules and network of the analysis, as chips for a title bar. */
@@ -132,10 +130,14 @@ private fun HandPage(vm: AppViewModel, onRules: () -> Unit) {
       BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 12.dp)) {
         val perLine = if (wide) 13 else 7
         val lines = if (wide) 4 else 8
-        val gap = 4.dp
-        val cellWidth = minOf((maxWidth - gap * (perLine - 1)) / perLine, 72.dp)
-        val cellHeight = minOf((maxHeight - gap * (lines - 1) - (if (wide) 0.dp else 8.dp * 3)) / lines, cellWidth * 1.3f).coerceAtLeast(40.dp)
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(if (wide) gap else 8.dp)) {
+        val cellWidth = minOf((maxWidth - 4.dp * (perLine - 1)) / perLine, 72.dp)
+        // The 52 cards fit the height, short cards and narrower gaps if need be (the rank and suit shrink with them);
+        // only below 26 dp do they scroll.
+        val suitGap = if (wide) 4.dp else 8.dp
+        val roomy = (maxHeight - 4.dp * (lines - 4) - suitGap * 3) / lines
+        val gap = if (roomy >= cellWidth * 1.3f) 4.dp else 2.dp
+        val cellHeight = minOf((maxHeight - 1.dp - gap * (lines - 4) - (if (wide) gap else suitGap) * 3) / lines, cellWidth * 1.3f).coerceAtLeast(26.dp)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(if (wide) gap else suitGap)) {
           for (suit in 3 downTo 0) {
             val ranks = (12 downTo 0).toList()
             Column(verticalArrangement = Arrangement.spacedBy(gap)) {
@@ -184,8 +186,6 @@ private fun HandPage(vm: AppViewModel, onRules: () -> Unit) {
         if (wide) go(Modifier)
       }
       if (!wide) go(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 8.dp))
-      if (vm.analysis != null && !vm.analyzing)
-        TextButton(onClick = { vm.anaPage = 1 }, Modifier.padding(start = 8.dp, bottom = 4.dp)) { Text(stringResource(R.string.to_candidates)) }
     }
   }
   if (pickRecord) RecordPicker(vm, onDismiss = { pickRecord = false })
@@ -245,29 +245,10 @@ private fun RecordPicker(vm: AppViewModel, onDismiss: () -> Unit) {
   )
 }
 
-/** A record in a list: its result, when, and the three rows as cards. */
-@Composable
-fun RecordLine(r: JSONObject, modifier: Modifier = Modifier, trailing: @Composable (() -> Unit)? = null) {
-  val result = if (r.has("result")) r.getDouble("result") else null
-  Column(modifier.fillMaxWidth().padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-      Text(
-        result?.let(::signed) ?: "", style = MaterialTheme.typography.titleMedium,
-        color = if (result == null) MaterialTheme.colorScheme.onSurface else if (result > 0) GOOD else if (result < 0) BAD else MaterialTheme.colorScheme.onSurface,
-      )
-      Text(localTime(r.optString("timestamp")), Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-      if (trailing != null) {
-        Spacer(Modifier.weight(1f))
-        trailing()
-      }
-    }
-    ThreeRows(listOf("front", "middle", "back").map { Cards.parse(r.getString(it)) }, null)
-  }
-}
-
 /** The second page: the candidates of the hand. */
 @Composable
-private fun AnalysisPage(vm: AppViewModel, a: Analysis) {
+fun CandidatesPage(vm: AppViewModel) {
+  val a = vm.analysis ?: return
   Column(Modifier.fillMaxSize()) {
     TitleBar(stringResource(R.string.candidates), onBack = { vm.anaPage = 0 }) {
       InfoButton(stringResource(R.string.analyze_info))
@@ -317,7 +298,8 @@ fun CandidateList(
     else -> ranks[i].toString() to false
   }
   BoxWithConstraints(modifier.fillMaxSize()) {
-    val wide = maxWidth >= 760.dp
+    // Two panes on a wide window, a landscape phone too: there the opened one's rows would not fit under it.
+    val wide = maxWidth >= 760.dp || (maxWidth > maxHeight && maxWidth >= 600.dp)
     val listWidth = if (wide) maxWidth * 0.66f else maxWidth
     var openSet by rememberSaveable(a) { mutableStateOf(if (pinned) listOf(PINNED, 0) else listOf(0)) }
     var current by rememberSaveable(a) { mutableStateOf(if (pinned) PINNED else 0) }
@@ -354,16 +336,19 @@ fun CandidateList(
       list(Modifier.width(listWidth).fillMaxHeight())
       val i = index(current)
       Column(
-        Modifier.weight(1f).fillMaxHeight().background(MaterialTheme.colorScheme.surfaceContainerLow).verticalScroll(rememberScrollState()).padding(12.dp),
+        Modifier.weight(1f).fillMaxHeight().background(MaterialTheme.colorScheme.surfaceContainerLow).verticalScroll(rememberScrollState()).padding(horizontal = 10.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
-        CandidateDetail(a, i, texts[i], wheel, if (i == 0) null else a.cands[0], mineAt, big = true)
+        CandidateDetail(a, i, texts[i], wheel, if (i == 0) null else a.cands[0], mineAt, pane = true)
       }
     } else list(Modifier.fillMaxSize())
   }
 }
 
-/** One candidate in the list: its label, shape name, Q and cards; opened (on a narrow screen) its details below. */
+/**
+ * One candidate in the list: its label, shape name, Q and cards in a line. Opened on a narrow screen, its rows one under
+ * another on the left, each with its hand below it, and the expected points and the chances on the right.
+ */
 @Composable
 private fun CandidateItem(
   label: String, strong: Boolean, texts: List<String>, cd: Candidate, best: Candidate?, wheel: Int, tag: String?, open: Boolean,
@@ -389,87 +374,127 @@ private fun CandidateItem(
         Text(fmtQ(q), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = qColor(q), maxLines = 1, softWrap = false)
       }
     }
-    ThreeRows(cd.arrangement, cd.info.categories)
-    if (open && detail) CandidateDetail(a, a.cands.indexOf(cd), texts, wheel, best, null, big = false)
+    if (open && detail) BoxWithConstraints(Modifier.fillMaxWidth()) {
+      val left = maxWidth * 0.45f
+      val card = ((left - LINE_GAP * 4) / 5).coerceAtMost(LocalCardSizes.current.play)
+      Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.width(left), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+          for (r in 0 until 3) {
+            RowCards(cd.arrangement[r], cd.info.categories[r], card, LINE_GAP)
+            Text(texts[r], style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+          }
+        }
+        CandidateDetail(a, a.cands.indexOf(cd), texts, wheel, best, null, pane = false, modifier = Modifier.weight(1f))
+      }
+    } else ThreeRows(cd.arrangement, cd.info.categories)
   }
 }
 
 /**
- * A candidate's details: each row with its hand, the expected points and the gap to the best (or to the player's), and
- * the probabilities, colored where they differ notably from the best one's.
+ * A candidate's details: the expected points with the gap to the best (or the player's, on the best), and the chances,
+ * colored where they differ notably from the best one's, with the difference except in the side `pane` of a wide window.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun CandidateDetail(a: Analysis, i: Int, texts: List<String>, wheel: Int, best: Candidate?, mineAt: Int?, big: Boolean) {
+private fun CandidateDetail(
+  a: Analysis, i: Int, texts: List<String>, wheel: Int, best: Candidate?, mineAt: Int?, pane: Boolean, modifier: Modifier = Modifier,
+) {
   val cd = a.cands[i]
-  val rowNames = stringArrayResource(R.array.row_names)
   val colors = MaterialTheme.colorScheme
-  Column(verticalArrangement = Arrangement.spacedBy(if (big) 6.dp else 8.dp)) {
-    if (big) {
-      // The list beside it shows the cards: here what each row is.
-      Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        for (r in 0 until 3) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          Text(rowNames[r], style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, modifier = Modifier.width(textRoom(40)))
-          Text(texts[r], style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
-        }
-      }
-    } else Text(texts.joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+  Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    // The rows' hands, front to back, in as few lines as they take.
     cd.q?.let { q ->
-      FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp), itemVerticalAlignment = Alignment.CenterVertically) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-          Text(stringResource(R.string.expected), style = MaterialTheme.typography.bodyLarge)
-          Text(fmtQ(q), style = MaterialTheme.typography.titleLarge, color = qColor(q))
-        }
+      // "Expected −0.55 (−0.12)": the gap to the best; on the best, how much more than the player's it is.
+      FlowRow(itemVerticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(stringResource(R.string.expected), style = MaterialTheme.typography.bodyMedium, maxLines = 1)
+        Text(fmtQ(q), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = qColor(q), maxLines = 1, softWrap = false)
         val bq = best?.q
-        if (bq != null && bq > q) Text(stringResource(R.string.less_than_best, "%.2f".format(bq - q)), style = MaterialTheme.typography.bodyLarge, color = BAD)
         val mq = mineAt?.takeIf { it != i }?.let { a.cands[it].q }
-        if (best == null && mq != null && q > mq) Text(stringResource(R.string.more_than_yours, "%.2f".format(q - mq)), style = MaterialTheme.typography.bodyLarge, color = GOOD)
+        if (bq != null && bq > q) Text("(${fmtQ(q - bq)})", style = MaterialTheme.typography.bodyMedium, color = BAD, maxLines = 1, softWrap = false)
+        else if (best == null && mq != null && q > mq) Text("(${fmtQ(q - mq)})", style = MaterialTheme.typography.bodyMedium, color = GOOD, maxLines = 1, softWrap = false)
       }
     }
-    cd.probs?.let { p ->
-      val names = stringArrayResource(R.array.prob_names)
-      val lostShown = if (a.rules["on_win"] == 1.0) Rules.ROYALTIES.indices.filter { (a.rules[Rules.ROYALTIES[it]] ?: 0.0) > 0 } else emptyList()
-      FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        for (k in SHOWN_PROBS) {
-          val gap = if (best?.probs != null) p[k] - best.probs[k] else 0.0
-          val tone = when {
-            kotlin.math.abs(gap) < NOTABLE_GAP[k] -> 0
-            (gap > 0) == GOOD_WHEN_HIGH[k] -> 1
-            else -> -1
+    cd.probs?.let { p -> ProbGrid(a, p, best?.probs, pane) }
+  }
+}
+
+/**
+ * The seven chances as tiles of one size per line: all in a line when the width takes them; else the two scoops and
+ * the two home runs, then the three rows; else two by two, the three rows squeezed into the last line if they fit, or
+ * a line of their own for the last. The chances of losing royalties, when shown, follow.
+ */
+@Composable
+private fun ProbGrid(a: Analysis, p: List<Double>, best: List<Double>?, pane: Boolean = false) {
+  val names = stringArrayResource(R.array.prob_names)
+  val lostShown = if (a.rules["on_win"] == 1.0) Rules.ROYALTIES.indices.filter { (a.rules[Rules.ROYALTIES[it]] ?: 0.0) > 0 } else emptyList()
+  val gaps = SHOWN_PROBS.associateWith { k -> if (best != null) p[k] - best[k] else 0.0 }
+  val notable = SHOWN_PROBS.filter { kotlin.math.abs(gaps.getValue(it)) >= NOTABLE_GAP[it] }.toSet()
+  val gap = 4.dp
+  BoxWithConstraints(Modifier.fillMaxWidth()) {
+    val width = maxWidth
+    val tile = textRoom(62)
+    val fit = ((maxWidth + gap) / (tile + gap)).toInt()
+    // The side pane of a wide window, short of room for four a line: 2 + 2 + 3, without the differences, which would
+    // not fit; the colors still tell them.
+    if (pane && fit < 4) {
+      Column(verticalArrangement = Arrangement.spacedBy(gap)) {
+        for (line in listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6, 7)) + lostShown.map { listOf(ROYALTY_LOST + it) }.chunked(2).map { it.flatten() })
+          Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap)) {
+            for (k in line) {
+              val d = gaps[k] ?: 0.0
+              val tone = if (k !in notable) 0 else if ((d > 0) == GOOD_WHEN_HIGH[k]) 1 else -1
+              ProbTile(names[k], p[k], tone, d, Modifier.weight(1f), inline = true, showDiff = false)
+            }
+            if (line.size == 1) Spacer(Modifier.weight(1f))
           }
-          ProbTile(names[k], p[k], tone, if (gap > 0) "▲" else "▼", compact = big)
+      }
+      return@BoxWithConstraints
+    }
+    val lines: List<List<Int>> = when {
+      fit >= 7 -> listOf(SHOWN_PROBS)
+      fit >= 4 -> listOf(listOf(0, 1, 2, 3), listOf(5, 6, 7))
+      (maxWidth - gap * 2) / 3 >= tile * 0.85f -> listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6, 7))
+      else -> listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6), listOf(7))
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(gap)) {
+      for (line in lines) Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(gap)) {
+        // The difference beside the figure when the line's tiles have room for both, else under it.
+        val inline = (width - gap * (line.size - 1)) / line.size >= textRoom(78)
+        for (k in line) {
+          val d = gaps.getValue(k)
+          val tone = if (k !in notable) 0 else if ((d > 0) == GOOD_WHEN_HIGH[k]) 1 else -1
+          ProbTile(names[k], p[k], tone, d, Modifier.weight(1f).fillMaxHeight(), inline)
         }
-        for (t in lostShown) ProbTile(names[ROYALTY_LOST + t], p[ROYALTY_LOST + t], 0, "")
+      }
+      for (line in lostShown.chunked(maxOf(2, minOf(fit, 4)))) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap)) {
+        for (t in line) ProbTile(names[ROYALTY_LOST + t], p[ROYALTY_LOST + t], 0, 0.0, Modifier.weight(1f), true)
+        repeat(maxOf(2, minOf(fit, 4)) - line.size) { Spacer(Modifier.weight(1f)) }
       }
     }
   }
 }
 
+/** A chance: its name over its figure, and the difference from the best one's when it is notable (`tone` ≠ 0). */
 @Composable
-private fun ProbTile(name: String, p: Double, tone: Int, arrow: String, compact: Boolean = false) {
+private fun ProbTile(name: String, p: Double, tone: Int, diff: Double, modifier: Modifier, inline: Boolean, showDiff: Boolean = true) {
   val colors = MaterialTheme.colorScheme
-  if (compact) {
-    // Name and figure on one line, for the narrow pane that has to show it all without scrolling.
-    Row(
-      Modifier.clip(RoundedCornerShape(8.dp)).background(colors.surfaceContainerHighest).padding(horizontal = 8.dp, vertical = 3.dp),
-      horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically,
-    ) {
-      Text(name, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1)
-      Text(
-        "%.1f%%".format(100 * p) + if (tone != 0) " $arrow" else "", style = MaterialTheme.typography.bodyMedium, maxLines = 1,
-        color = when (tone) { 1 -> GOOD; -1 -> BAD; else -> colors.onSurface }, fontWeight = if (tone != 0) FontWeight.Bold else FontWeight.Normal,
-      )
-    }
-    return
-  }
-  Column(
-    Modifier.widthIn(min = textRoom(88)).clip(RoundedCornerShape(10.dp)).background(colors.surfaceContainerHighest).padding(horizontal = 10.dp, vertical = 5.dp),
-  ) {
-    Text(name, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1)
+  val color = when (tone) { 1 -> GOOD; -1 -> BAD; else -> colors.onSurface }
+  val change = @Composable { m: Modifier ->
     Text(
-      "%.1f%%".format(100 * p) + if (tone != 0) " $arrow" else "", style = MaterialTheme.typography.titleMedium,
-      color = when (tone) { 1 -> GOOD; -1 -> BAD; else -> colors.onSurface }, fontWeight = if (tone != 0) FontWeight.Bold else FontWeight.Normal,
+      (if (diff >= 0) "+" else "−") + "%.1f".format(100 * kotlin.math.abs(diff)), m, style = MaterialTheme.typography.labelSmall,
+      color = color, maxLines = 1, softWrap = false,
     )
+  }
+  Column(modifier.clip(RoundedCornerShape(8.dp)).background(colors.surfaceContainerHighest).padding(horizontal = 6.dp, vertical = 3.dp)) {
+    Text(name, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+      Text(
+        "%.1f%%".format(100 * p), style = MaterialTheme.typography.bodyLarge, color = color, maxLines = 1, softWrap = false,
+        fontWeight = if (tone != 0) FontWeight.Bold else FontWeight.Normal,
+      )
+      if (tone != 0 && showDiff && inline) change(Modifier.padding(bottom = 2.dp))
+    }
+    if (tone != 0 && showDiff && !inline) change(Modifier)
   }
 }
 

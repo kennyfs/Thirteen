@@ -143,7 +143,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   var lastRecord by mutableStateOf<JSONObject?>(null); private set
   /** A screen asks for another: the number of requests so far and the screen's name ("PLAY" to rearrange a hand...). */
   var tabRequest by mutableStateOf(0 to ""); private set
-  private var replaying = false
+  /** The hand is one played again: neither in the totals nor in the records. */
+  var replaying by mutableStateOf(false); private set
 
   private var others: List<List<Int>> = emptyList()
   private var opponents: Deferred<List<Arrangement>>? = null
@@ -197,12 +198,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     try {
       val all = listOf(rows) + opponents!!.await()
       val score = Engine.score(all, gameRules)
-      lastRecord = records.add(
-        hand, rows, 0.0, gameRules, System.currentTimeMillis() - dealtAt, score.result[0], label = if (replaying) "replay" else "android",
-      )
-      recordCount = records.count()
-      // A hand played again is practice: it is neither in the totals nor in the score chart.
+      // A hand played again is practice: it is neither in the records nor in the totals.
       if (!replaying) {
+        lastRecord = records.add(hand, rows, 0.0, gameRules, System.currentTimeMillis() - dealtAt, score.result[0])
+        recordCount = records.count()
         settings.addToSession(score.result)
         session = settings.session()
       }

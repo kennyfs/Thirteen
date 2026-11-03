@@ -22,7 +22,7 @@
   <string name="last_hand">Last hand</string>
   <string name="clear">Clear</string>
   <string name="network">Network</string>
-  <string name="analyze_info">Q is the expected result of the hand, in points, against three players like the network. The list holds the arrangements no other arrangement beats in every row, best Q first; tap one for its cards and the network\'s probabilities. Your arrangement, when the hand comes from a game, is pinned on top; its numbers that differ notably from the best arrangement\'s are green where it does better and red where it does worse. The rules are shown above the list; under rules where special rows pay only when they win, the chances that an opponent\'s special row beats yours are listed too. Above the list are short remarks: what yours could do better, only when it is clearly worse (the network is not exact, so a small gap means as good); what kind of choice the best one is against the best of other row types (attacking: more scoops and more scooped; defensive: fewer of both; under row scoring, rows or scoops first); and the names of common arrangements, such as five pairs.</string>
+  <string name="analyze_info">Q is the expected result of the hand, in points, against three players like the network. The list holds the arrangements that no other one beats in every row, best Q first. Chances that differ notably from the best one\'s are green when better and red when worse. The remarks above say how your arrangement could be better, whether the best one attacks or defends, and the names of common shapes.</string>
   <string name="dragon">The hand is a dragon.</string>
   <string name="show_all">Show all %1$d</string>
   <string name="yours">Yours</string>
@@ -73,7 +73,7 @@
     <item>Scoop</item>
     <item>Scooped</item>
     <item>Home run</item>
-    <item>Opp. home run</item>
+    <item>Home-run against</item>
     <item>Dealer</item>
     <item>Win front</item>
     <item>Win middle</item>
@@ -296,9 +296,9 @@
   <string name="settings_about">About</string>
   <string name="text_size">Text size</string>
   <string-array name="text_sizes">
+    <item>Small</item>
     <item>Normal</item>
     <item>Large</item>
-    <item>Larger</item>
   </string-array>
   <string name="color_style">Colors</string>
   <string-array name="color_styles">
@@ -326,7 +326,7 @@
   <string name="built_in_note">Built in</string>
   <string name="legacy_note">An older network: plays every rules as the simple rules</string>
   <string name="delete_network_confirm">Delete the network %1$s?</string>
-  <string name="records_title">Records and saved hands</string>
+  <string name="records_title">Records</string>
   <string name="records_summary">%1$d hands recorded · %2$d saved · score chart</string>
   <string name="records_info">Every hand you play is recorded on this phone: the cards, your rows, the rules and the time you took. Nothing else, and nothing is sent unless you share it. Sharing the file (JSONL) with the developer helps train better computer players.</string>
   <string name="records_list">All records, newest first</string>
@@ -377,4 +377,16 @@
   <string name="favorite_short">Save</string>
   <string name="favorite_saved">Saved</string>
   <string name="replay_short">Rearrange</string>
+  <string name="replay_title">Replaying a hand</string>
+  <string name="replay_note">Not scored or recorded</string>
+  <string name="arrange_help_title">How to set a hand</string>
+  <string name="arrange_help">• Tap cards to pick them (or swipe across several), then tap the row to put them in.\n• Or tap a row first, then the cards for it.\n• Tap a card in a row to take it back; long-press a row or use Take all back for whole rows.\n• With all rows full and front ≤ middle ≤ back (no foul), tap the confirm button.\n• By rank / By suit sorts your hand, to spot pairs, straights or flushes.</string>
+  <string name="help">Help</string>
+  <string name="nav_records">Records</string>
+  <string name="records_practice">Practice</string>
+  <string name="records_game">Table games</string>
+  <string name="records_puzzle">Puzzle contests</string>
+  <string name="chart_puzzle_note">A puzzle contest scores how many expected points your arrangement is short of the best; closer to 0 is better.</string>
+  <string name="records_none">No records of this kind yet.</string>
+  <string name="ready_hint">Ready to play</string>
 </resources>

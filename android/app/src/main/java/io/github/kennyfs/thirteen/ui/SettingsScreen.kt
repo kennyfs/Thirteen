@@ -47,7 +47,7 @@ import io.github.kennyfs.thirteen.R
 import io.github.kennyfs.thirteen.TextSize
 
 /** The settings pages that open from the list. */
-enum class SettingsPage { RULES, OPPONENTS, NETWORKS, RECORDS }
+enum class SettingsPage { RULES, OPPONENTS, NETWORKS }
 
 /** A page of the settings: a title bar with Back and a column that scrolls, kept to a readable width. */
 @Composable
@@ -90,7 +90,6 @@ fun SettingsScreen(vm: AppViewModel, open: (SettingsPage) -> Unit) {
         SettingRow(stringResource(R.string.networks), stringResource(R.string.networks_summary, vm.models.size)) { open(SettingsPage.NETWORKS) }
 
         SectionHeader(stringResource(R.string.settings_data))
-        SettingRow(stringResource(R.string.records_title), stringResource(R.string.records_summary, vm.recordCount, vm.favoriteIds.size)) { open(SettingsPage.RECORDS) }
         SettingRow(stringResource(R.string.reset_scores), stringResource(R.string.reset_scores_info), arrow = false) { confirmReset = true }
 
         SectionHeader(stringResource(R.string.settings_about))

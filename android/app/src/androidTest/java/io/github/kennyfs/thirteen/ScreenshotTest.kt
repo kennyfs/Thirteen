@@ -41,7 +41,7 @@ class ScreenshotTest {
 
   private data class Config(
     val name: String, val size: String, val density: Int, val fontScale: Float, val locale: String, val cutout: Boolean,
-    val landscape: Boolean = false, val dark: Boolean = false,
+    val landscape: Boolean = false, val dark: Boolean = false, val style: ColorStyle = ColorStyle.TABLE,
   )
 
   private fun shell(cmd: String): String =
@@ -56,6 +56,7 @@ class ScreenshotTest {
     shell("cmd overlay disable $CUTOUT")
     shell("settings put system user_rotation 0")
     shell("cmd uimode night no")
+    instrumentation.targetContext.getSharedPreferences("settings", 0).edit().remove("look.colors").remove("look.text").commit()
   }
 
   @Test
@@ -64,7 +65,7 @@ class ScreenshotTest {
     // The rotation is set for each config, not followed from the sensor.
     shell("settings put system accelerometer_rotation 0")
     shell("cmd overlay enable com.android.internal.systemui.navbar.gestural")
-    for (config in if (STORE) STORE_CONFIGS else CONFIGS) if (ONLY.isEmpty() || config.name in ONLY) shoot(config)
+    for (config in if (STORE) STORE_CONFIGS else if (COMPARE) COMPARE_CONFIGS else CONFIGS) if (ONLY.isEmpty() || config.name in ONLY) shoot(config)
     assertTrue("Cards cut off at the side:\n" + cutOff.joinToString("\n"), cutOff.isEmpty())
   }
 
@@ -94,8 +95,14 @@ class ScreenshotTest {
       lateinit var vm: AppViewModel
       scenario.onActivity { vm = ViewModelProvider(it)[AppViewModel::class.java] }
       compose.waitUntil(TIMEOUT) { vm.hand.isNotEmpty() && vm.seats.isNotEmpty() }
-      instrumentation.runOnMainSync { vm.deal(HANDS) }
+      instrumentation.runOnMainSync {
+        vm.chooseColorStyle(c.style)
+        vm.chooseDarkMode(DarkMode.SYSTEM)
+        vm.chooseTextSize(TextSize.NORMAL)
+        vm.deal(HANDS)
+      }
       compose.waitUntil(TIMEOUT) { vm.hand == HANDS[0] }
+      shot(c, "0-arrange-start")
       // The front row placed and two cards picked.
       instrumentation.runOnMainSync {
         MINE[0].forEach(vm::toggle)
@@ -109,6 +116,7 @@ class ScreenshotTest {
         vm.placeInto(1)
       }
       compose.waitUntil(TIMEOUT) { vm.rowsEval?.valid == true }
+      shot(c, "1b-arrange-full")
       instrumentation.runOnMainSync { vm.confirm() }
       compose.waitUntil(TIMEOUT) { vm.result != null }
       shot(c, "2-result")
@@ -128,12 +136,11 @@ class ScreenshotTest {
       shot(c, "6-battle")
       compose.onNodeWithTag("nav_SETTINGS").performClick()
       shot(c, "7-settings")
-      val context = instrumentation.targetContext
-      for ((label, name) in listOf(R.string.nav_rules to "8-rules", R.string.records_title to "9-records")) {
-        compose.onNodeWithText(context.getString(label)).performScrollTo().performClick()
-        shot(c, name)
-        scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
-      }
+      compose.onNodeWithText(instrumentation.targetContext.getString(R.string.nav_rules)).performScrollTo().performClick()
+      shot(c, "8-rules")
+      scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+      compose.onNodeWithTag("nav_RECORDS").performClick()
+      shot(c, "9-records")
     }
   }
 
@@ -203,6 +210,28 @@ class ScreenshotTest {
       Config("tablet-land", "1600x2560", 320, 1.0f, "zh-TW", cutout = false, landscape = true),
       Config("tablet-font", "1600x2560", 320, 1.5f, "en", cutout = false, landscape = true),
     )
+
+    // COMPARE=1 device-tests.sh: the screens to set beside version 1.1.1's. Named device__orientation__colors;
+    // 1.1.1, landscape only and with one look, has the device part.
+    private val COMPARE = InstrumentationRegistry.getArguments().getString("compare") == "1"
+    private val COMPARE_CONFIGS = buildList {
+      val devices = listOf(
+        Triple("phone-user", 480, 1.3f), Triple("phone", 420, 1.0f), Triple("phone-smallfont", 420, 0.85f), Triple("phone-font2", 420, 2.0f),
+      )
+      for ((name, density, font) in devices) for (land in listOf(true, false))
+        add(Config("${name}__${if (land) "land" else "port"}__table-light", "1080x2424", density, font, "zh-TW", cutout = name == "phone-user", landscape = land))
+      for (land in listOf(true, false))
+        add(Config("tablet__${if (land) "land" else "port"}__table-light", "1600x2560", 320, 1.0f, "zh-TW", cutout = false, landscape = land))
+      for ((style, dark, land) in listOf(
+        Triple(ColorStyle.MINIMAL, false, true), Triple(ColorStyle.WALLPAPER, false, true), Triple(ColorStyle.TABLE, true, true),
+        Triple(ColorStyle.MINIMAL, true, true), Triple(ColorStyle.WALLPAPER, true, true),
+        Triple(ColorStyle.MINIMAL, true, false), Triple(ColorStyle.TABLE, true, false), Triple(ColorStyle.WALLPAPER, false, false),
+      )) {
+        val look = mapOf(ColorStyle.TABLE to "table", ColorStyle.MINIMAL to "minimal", ColorStyle.WALLPAPER to "wallpaper").getValue(style) +
+          if (dark) "-dark" else "-light"
+        add(Config("phone__${if (land) "land" else "port"}__$look", "1080x2424", 420, 1.0f, "zh-TW", cutout = false, landscape = land, dark = dark, style = style))
+      }
+    }
 
     // ONLY=name,name device-tests.sh: only those configs.
     private val ONLY = InstrumentationRegistry.getArguments().getString("only").orEmpty().split(",").filter { it.isNotBlank() }
