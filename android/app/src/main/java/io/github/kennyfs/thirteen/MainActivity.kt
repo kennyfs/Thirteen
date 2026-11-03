@@ -6,6 +6,18 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import android.app.Activity
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import io.github.kennyfs.thirteen.ui.textRoom
+import io.github.kennyfs.thirteen.ui.cardSizes
+import io.github.kennyfs.thirteen.ui.LocalCardSizes
+import android.util.Log
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -144,6 +156,15 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
   val window = LocalWindowInfo.current.containerSize
   val type = if (window.width > window.height) NavigationSuiteType.NavigationRail
   else NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo())
+  // Landscape is full screen: the status and navigation bars come back with a swipe from the edge.
+  val view = LocalView.current
+  val landscape = window.width > window.height
+  SideEffect {
+    val activityWindow = (view.context as? Activity)?.window ?: return@SideEffect
+    val controller = WindowCompat.getInsetsController(activityWindow, view)
+    controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    if (landscape) controller.hide(WindowInsetsCompat.Type.systemBars()) else controller.show(WindowInsetsCompat.Type.systemBars())
+  }
   BackHandler(tab != Screen.PLAY && stack.size == 1) { tab = Screen.PLAY }
   NavigationSuiteScaffold(
     navigationSuiteItems = {
@@ -167,7 +188,11 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
     // The bar or rail looks after its own side; the content keeps clear of the rest.
     val sides = if (type == NavigationSuiteType.NavigationBar) WindowInsetsSides.Top + WindowInsetsSides.Horizontal
     else WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom
-    Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(sides))) {
+    BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(sides))) {
+      // The two sizes of card, for the room the pages have.
+      val sizes = cardSizes(maxWidth, maxHeight, textRoom(14))
+      LaunchedEffect(sizes.play, sizes.other) { Log.i("CardSizes", "$maxWidth x $maxHeight: play ${sizes.play}, other ${sizes.other}") }
+      CompositionLocalProvider(LocalCardSizes provides sizes) {
       NavDisplay(
         backStack = stack,
         onBack = { pop() },
@@ -186,6 +211,7 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
           }
         },
       )
+      }
     }
   }
 }

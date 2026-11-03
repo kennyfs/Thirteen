@@ -35,6 +35,7 @@ import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.outlined.Analytics
+import androidx.compose.material.icons.outlined.ClearAll
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.Replay
 import androidx.compose.material.icons.outlined.StarBorder
@@ -156,8 +157,6 @@ fun ScoreChip(name: String, value: Double, me: Boolean) {
   }
 }
 
-private val HAND_GAP = 4.dp
-private val SUIT_GAP = 12.dp
 
 /** What to do next, for the line under the rows, and whether it is a problem (a foul). */
 @Composable
@@ -181,111 +180,69 @@ private fun hint(vm: Arranger): Pair<String, Boolean> {
 /**
  * Setting a hand into three rows on the table, for practice and battles. Side by side when the room is wide (the rows
  * on the left, the actions on the right, the hand along the bottom), one above another when it is tall (the hand in
- * two lines, the actions in a bar under the table). The cards are as large as the room allows.
+ * lines, the actions in a bar under the table). The rows' cards and the hand's are one size, the largest the room allows
+ * up to `LocalCardSizes.play`, which is what the window gives the page with the most above the table (practice's), so a
+ * battle's cards are the same.
  */
 @Composable
 fun Arranging(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, modifier: Modifier = Modifier, onConfirm: () -> Unit) {
   BoxWithConstraints(modifier.fillMaxSize()) {
-    if (maxWidth > maxHeight * 1.15f) ArrangeWide(vm, wheel, busy, confirmLabel, onConfirm)
-    else ArrangeTall(vm, wheel, busy, confirmLabel, onConfirm)
+    val wide = maxWidth > maxHeight * 1.15f
+    val fit = arrangeFit(maxWidth, maxHeight, wide, textRoom(14), LocalCardSizes.current.play)
+    if (wide) ArrangeWide(vm, wheel, busy, confirmLabel, fit.card, onConfirm)
+    else ArrangeTall(vm, wheel, busy, confirmLabel, fit, onConfirm)
   }
 }
 
 @Composable
 private fun Felt(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
   val t = LocalTable.current
-  Surface(modifier, shape = MaterialTheme.shapes.large, color = t.felt, contentColor = t.onFelt, content = content)
+  Surface(modifier, shape = MaterialTheme.shapes.medium, color = t.felt, contentColor = t.onFelt, content = content)
 }
 
 @Composable
-private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, onConfirm: () -> Unit) {
-  Felt(Modifier.fillMaxSize().padding(start = 8.dp, end = 12.dp, bottom = 10.dp)) {
-    BoxWithConstraints(Modifier.fillMaxSize().padding(10.dp)) {
-      val w = maxWidth
-      val h = maxHeight
-      val handCard = minOf((w - HAND_GAP * 12) / 13, h * 0.27f / 1.4f, 92.dp).coerceAtLeast(20.dp)
-      val handHeight = cardHeight(handCard) * 1.2f + 6.dp
-      val controlsWidth = textRoom(150).coerceIn(150.dp, w * 0.36f)
-      val rowsWidth = w - controlsWidth - 12.dp
-      val rowsHeight = (h - handHeight - 8.dp).coerceAtLeast(0.dp)
+private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, card: Dp, onConfirm: () -> Unit) {
+  Felt(Modifier.fillMaxSize().padding(start = 8.dp, end = 12.dp, bottom = 6.dp)) {
+    BoxWithConstraints(Modifier.fillMaxSize().padding(6.dp)) {
+      val controlsWidth = textRoom(120).coerceIn(120.dp, maxWidth * 0.3f)
       val tagWidth = textRoom(46)
-      val labelWidth = textRoom(80)
-      val slotCard = minOf(
-        (rowsWidth - tagWidth - labelWidth - 48.dp - 12.dp - 8.dp * 3 - CARD_GAP * 4) / 5,
-        ((rowsHeight - 12.dp) / 3 - 12.dp) / 1.4f,
-        100.dp,
-      ).coerceAtLeast(16.dp)
-      Column {
-        Row(Modifier.fillMaxWidth().height(rowsHeight), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-          Column(Modifier.width(rowsWidth).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            for (r in 0 until 3) RowSlotWide(vm, r, slotCard, tagWidth, wheel)
+      Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(WIDE_GAP)) {
+        Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
+          Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            for (r in 0 until 3) RowSlotWide(vm, r, card, tagWidth, wheel)
           }
-          BoxWithConstraints(Modifier.fillMaxSize()) {
-            val height = maxHeight
-            Column(
-              Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = height),
-              verticalArrangement = Arrangement.SpaceBetween,
-            ) {
-              HintBox(vm)
-              Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
-                SortToggle(vm)
-                FeltButton(stringResource(R.string.undo), Icons.AutoMirrored.Filled.Undo, vm.canUndo, Modifier.fillMaxWidth()) { vm.undo() }
-                FeltButton(stringResource(R.string.take_all), null, vm.rows.any { it.isNotEmpty() }, Modifier.fillMaxWidth()) { vm.clearRows() }
-                ConfirmButton(vm, busy, confirmLabel, Modifier.fillMaxWidth(), onConfirm)
-              }
+          HandTray(vm, card, 13)
+        }
+        // The hint at the top, the buttons at the bottom, down the whole height.
+        Column(Modifier.width(controlsWidth).fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
+          HintBox(vm)
+          Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            SortToggle(vm)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+              FeltIconButton(stringResource(R.string.undo), Icons.AutoMirrored.Filled.Undo, vm.canUndo, Modifier.weight(1f)) { vm.undo() }
+              FeltIconButton(stringResource(R.string.take_all), Icons.Outlined.ClearAll, vm.rows.any { it.isNotEmpty() }, Modifier.weight(1f)) { vm.clearRows() }
             }
+            ConfirmButton(vm, busy, confirmLabel, Modifier.fillMaxWidth(), onConfirm)
           }
         }
-        HandTray(vm, handCard, 13, Modifier.padding(top = 8.dp))
       }
     }
   }
 }
 
 @Composable
-private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, onConfirm: () -> Unit) {
+private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, fit: ArrangeFit, onConfirm: () -> Unit) {
   Column(Modifier.fillMaxSize()) {
     Felt(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 10.dp)) {
       BoxWithConstraints(Modifier.fillMaxSize().padding(10.dp)) {
-        val w = maxWidth
-        val h = maxHeight
-        // Each row's label above its cards or beside them, and the hand in lines of 13, 7 or 5: whichever gives the
-        // larger cards, the rows' or the hand's whichever is smaller. The cards are as wide as the width allows, the
-        // rows' and the hand's made smaller alike when the height does not allow that.
         val density = LocalDensity.current
-        val hintHeight = textRoom(20)
-        class Layout(val above: Boolean, val perLine: Int, val slotCard: Dp, val handCard: Dp) {
-          val least get() = minOf(slotCard, handCard)
-        }
-        fun layout(above: Boolean, perLine: Int): Layout {
-          val lines = (13 + perLine - 1) / perLine
-          val handWidth = minOf((w - HAND_GAP * (perLine - 1)) / perLine, 84.dp)
-          val labels = if (above) 0.dp else labelWidth(density) + 8.dp
-          val slotWidth = minOf((w - labels - ROW_PADDING * 2 - CARD_GAP * 4) / 5, 100.dp)
-          val fixed = 8.dp * 2 + hintHeight + 8.dp + 6.dp * (lines - 1) + handWidth * 0.22f +
-            (ROW_PADDING * 2 + (if (above) headerHeight(density) else 0.dp)) * 3
-          val k = minOf(1f, (h - fixed) / (cardHeight(slotWidth) * 3 + cardHeight(handWidth) * lines))
-          return Layout(above, perLine, (slotWidth * k).coerceAtLeast(24.dp), (handWidth * k).coerceAtLeast(24.dp))
-        }
-        // Within a dp of the same smaller card, the larger other one; earlier ones win a tie: fewer lines, labels beside.
-        val best = (if ((w - HAND_GAP * 12) / 13 >= 48.dp) listOf(13) else listOf(7, 5))
-          .flatMap { listOf(layout(false, it), layout(true, it)) }
-          .reduce { a, b ->
-            val better = b.least > a.least + 1.dp || (b.least >= a.least - 1.dp && b.slotCard + b.handCard > a.slotCard + a.handCard + 2.dp)
-            if (better) b else a
-          }
-        val above = best.above
-        val perLine = best.perLine
-        val slotCard = best.slotCard
-        val handCard = best.handCard
-        val rowLabelWidth = if (above) null else labelWidth(density)
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
           Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            for (r in 0 until 3) RowSlotTall(vm, r, slotCard, rowLabelWidth, headerHeight(density), wheel)
+            for (r in 0 until 3) RowSlotTall(vm, r, fit.card, if (fit.above) null else labelWidth(density), headerHeight(density), wheel)
           }
           Column {
             HintLine(vm, Modifier.padding(top = 6.dp, bottom = 2.dp), maxLines = 1, small = true)
-            HandTray(vm, handCard, perLine)
+            HandTray(vm, fit.card, fit.perLine)
           }
         }
       }
@@ -310,6 +267,7 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
   }
 }
 
+
 /** What a row says next to its cards: where the picked cards can go, the row's hand, or how full it is. */
 @Composable
 private fun rowState(vm: Arranger, r: Int, wheel: Int): Triple<String, Boolean, Boolean> {
@@ -330,12 +288,12 @@ private fun rowState(vm: Arranger, r: Int, wheel: Int): Triple<String, Boolean, 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun Modifier.rowGround(vm: Arranger, r: Int, target: Boolean, t: TableColors): Modifier {
-  val shape = RoundedCornerShape(14.dp)
+  val shape = RoundedCornerShape(10.dp)
   return this.clip(shape)
     .background(if (target) t.target else t.slot)
     .drawBehind {
       if (target) {
-        val r2 = 14.dp.toPx()
+        val r2 = 10.dp.toPx()
         drawRoundRect(
           t.highlight, cornerRadius = CornerRadius(r2, r2),
           style = Stroke(2.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 5.dp.toPx()))),
@@ -354,7 +312,7 @@ private fun RowSlotWide(vm: Arranger, r: Int, card: Dp, tagWidth: Dp, wheel: Int
   val category = if (cards.size == Cards.ROW_SIZES[r] && eval != null) eval.categories[r] else 0
   val (state, target, dim) = rowState(vm, r, wheel)
   Row(
-    Modifier.fillMaxWidth().heightIn(min = cardHeight(card) + 12.dp).rowGround(vm, r, target, t).padding(horizontal = 6.dp, vertical = 6.dp),
+    Modifier.fillMaxWidth().rowGround(vm, r, target, t).padding(horizontal = 6.dp, vertical = WIDE_PAD),
     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
   ) {
     Text(
@@ -363,7 +321,7 @@ private fun RowSlotWide(vm: Arranger, r: Int, card: Dp, tagWidth: Dp, wheel: Int
     )
     RowWithSlots(cards, category, Cards.ROW_SIZES[r], card, onCardClick = vm::unplace)
     Text(
-      state, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis,
+      state, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis,
       color = if (target) t.highlight else if (dim) t.onFeltDim else t.onFelt, fontWeight = if (target) FontWeight.Bold else FontWeight.Medium,
     )
     if (cards.isNotEmpty()) TakeBack(vm, r) else Spacer(Modifier.width(48.dp))
@@ -389,7 +347,7 @@ private fun RowSlotTall(vm: Arranger, r: Int, card: Dp, labelWidth: Dp?, headerH
       color = if (target) t.highlight else if (dim) t.onFeltDim else t.onFelt, fontWeight = if (target) FontWeight.Bold else FontWeight.Medium,
     )
   }
-  val ground = Modifier.fillMaxWidth().rowGround(vm, r, target, t).padding(ROW_PADDING)
+  val ground = Modifier.fillMaxWidth().rowGround(vm, r, target, t).padding(ROW_PAD)
   if (labelWidth == null) Column(ground) {
     Row(Modifier.fillMaxWidth().height(headerHeight), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       name(Modifier.padding(start = 4.dp))
@@ -412,8 +370,6 @@ private fun RowSlotTall(vm: Arranger, r: Int, card: Dp, labelWidth: Dp?, headerH
 private fun labelWidth(d: androidx.compose.ui.unit.Density): Dp = maxOf(72.dp, with(d) { (14 * 4.6f).sp.toDp() })
 private fun headerHeight(d: androidx.compose.ui.unit.Density): Dp = maxOf(32.dp, with(d) { 26.sp.toDp() })
 
-private val ROW_PADDING = 6.dp
-
 /** Returns a row's cards to the hand (as a long press on the row does). */
 @Composable
 private fun TakeBack(vm: Arranger, r: Int, modifier: Modifier = Modifier) {
@@ -426,14 +382,15 @@ private fun TakeBack(vm: Arranger, r: Int, modifier: Modifier = Modifier) {
   }
 }
 
+/** The hint in a box of its own, in the column of buttons of the wide page. */
 @Composable
 private fun HintBox(vm: Arranger) {
   val t = LocalTable.current
   val (text, bad) = hint(vm)
   Text(
-    text, Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.Black.copy(alpha = 0.16f)).padding(horizontal = 12.dp, vertical = 9.dp)
+    text, Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color.Black.copy(alpha = 0.16f)).padding(horizontal = 10.dp, vertical = 6.dp)
       .semantics { liveRegion = LiveRegionMode.Polite },
-    style = MaterialTheme.typography.bodyLarge, color = if (bad) t.bad else t.onFelt,
+    style = MaterialTheme.typography.bodyMedium, color = if (bad) t.bad else t.onFelt,
   )
 }
 
@@ -471,6 +428,17 @@ private fun FeltButton(label: String, icon: androidx.compose.ui.graphics.vector.
   }
 }
 
+/** A button of an icon only on the table, named for a screen reader. */
+@Composable
+private fun FeltIconButton(description: String, icon: androidx.compose.ui.graphics.vector.ImageVector, enabled: Boolean, modifier: Modifier, onClick: () -> Unit) {
+  val t = LocalTable.current
+  OutlinedIconButton(
+    onClick = onClick, modifier.height(48.dp), enabled = enabled,
+    border = BorderStroke(1.dp, t.onFelt.copy(alpha = if (enabled) 0.5f else 0.2f)),
+    colors = IconButtonDefaults.outlinedIconButtonColors(contentColor = t.onFelt, disabledContentColor = t.onFelt.copy(alpha = 0.38f)),
+  ) { Icon(icon, description) }
+}
+
 /** The main action on the table: light on the felt, enabled once the rows can be played. */
 @Composable
 private fun ConfirmButton(vm: Arranger, busy: Boolean, label: String, modifier: Modifier, onConfirm: () -> Unit) {
@@ -498,7 +466,8 @@ private fun HandTray(vm: Arranger, card: Dp, perLine: Int, modifier: Modifier = 
   val bounds = remember(hand) { mutableMapOf<Int, Rect>() }
   var tray by remember { mutableStateOf<LayoutCoordinates?>(null) }
   val count = hand.groupingBy(Cards::rank).eachCount()
-  val single = perLine >= hand.size
+  // Sorted by suit, a wider gap between the suits, which the page's sizes leave room for in a single line.
+  val single = perLine >= 13
   Column(
     modifier.fillMaxWidth().onGloballyPositioned { tray = it }.swipeSelect(vm, hand, bounds).padding(top = card * 0.22f),
     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -565,7 +534,8 @@ private fun Finished(vm: AppViewModel, arrangements: List<Rows>, score: Score) {
     val mine = score.result[0]
     Column(Modifier.fillMaxSize()) {
       Row(
-        Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, top = 4.dp, bottom = 4.dp).heightIn(min = 56.dp),
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, top = if (wide) 0.dp else 4.dp, bottom = if (wide) 0.dp else 4.dp)
+          .heightIn(min = if (wide) RESULT_HEADER else 56.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
       ) {
         Text(stringResource(R.string.hand_n, vm.session.first), style = MaterialTheme.typography.titleLarge)
@@ -577,11 +547,11 @@ private fun Finished(vm: AppViewModel, arrangements: List<Rows>, score: Score) {
         Spacer(Modifier.weight(1f))
         if (wide) {
           HandKeepers(vm, iconsOnly = true)
-          ResultActions(vm)
+          ResultActions(vm, compact = true)
         }
       }
-      Felt(Modifier.weight(1f).fillMaxWidth().padding(start = 8.dp, end = 12.dp, bottom = if (wide) 10.dp else 0.dp)) {
-        SeatResults(arrangements, score, vm.gameValues["wheel"]?.toInt() ?: 0, names, notes, vm.session.second, Modifier.padding(8.dp))
+      Felt(Modifier.weight(1f).fillMaxWidth().padding(start = 8.dp, end = 12.dp, bottom = if (wide) 6.dp else 0.dp)) {
+        SeatResults(arrangements, score, vm.gameValues["wheel"]?.toInt() ?: 0, names, notes, vm.session.second, Modifier.padding(if (wide) 6.dp else 8.dp))
       }
       if (!wide) Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) { HandKeepers(vm, iconsOnly = false) }
@@ -617,13 +587,14 @@ private fun RowScope.HandKeepers(vm: AppViewModel, iconsOnly: Boolean) {
 }
 
 @Composable
-private fun ResultActions(vm: AppViewModel, modifier: Modifier = Modifier) {
-  FilledTonalButton(onClick = { vm.showGameAnalysis() }, modifier.heightIn(min = BIG_BUTTON)) {
+private fun ResultActions(vm: AppViewModel, modifier: Modifier = Modifier, compact: Boolean = false) {
+  val height = if (compact) 44.dp else BIG_BUTTON
+  FilledTonalButton(onClick = { vm.showGameAnalysis() }, modifier.heightIn(min = height)) {
     Icon(Icons.Outlined.Analytics, null, Modifier.padding(end = 6.dp))
     Text(stringResource(R.string.analyze_my_hand), maxLines = 1)
   }
-  Button(onClick = { vm.deal() }, modifier.heightIn(min = BIG_BUTTON), shape = RoundedCornerShape(18.dp)) {
-    Text(stringResource(R.string.next_hand), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+  Button(onClick = { vm.deal() }, modifier.heightIn(min = height), shape = RoundedCornerShape(18.dp)) {
+    Text(stringResource(R.string.next_hand), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
   }
 }
 
@@ -649,19 +620,19 @@ fun Loading(text: String, modifier: Modifier = Modifier) {
   }
 }
 
-private val ARROWS_WIDTH = 64.dp
-private val SEAT_GAP = 6.dp
-private val COLUMN_GAP = 14.dp
+private val ARROWS_WIDTH = 56.dp
+private val SEAT_GAP = 4.dp
+private val COLUMN_GAP = 10.dp
 private val SMALL_GAP = 3.dp
 
 /** A row's result for the player against another's: "You win", "You lose", "Tie". */
 @Composable
-private fun RowMark(d: Int) {
+private fun RowMark(d: Int, small: Boolean = false) {
   val t = LocalTable.current
   when {
-    d > 0 -> Badge(stringResource(R.string.row_win), Color(0xFFD6EFD8), Color(0xFF1E5E22))
-    d < 0 -> Badge(stringResource(R.string.row_lose), Color(0xFFF8D9D6), Color(0xFF8C1D18))
-    else -> Badge(stringResource(R.string.row_tie), t.onFelt.copy(alpha = 0.18f), t.onFelt)
+    d > 0 -> Badge(stringResource(R.string.row_win), Color(0xFFD6EFD8), Color(0xFF1E5E22), small = small)
+    d < 0 -> Badge(stringResource(R.string.row_lose), Color(0xFFF8D9D6), Color(0xFF8C1D18), small = small)
+    else -> Badge(stringResource(R.string.row_tie), t.onFelt.copy(alpha = 0.18f), t.onFelt, small = small)
   }
 }
 
@@ -679,13 +650,12 @@ fun SeatResults(
   BoxWithConstraints(modifier.fillMaxSize()) {
     val seats = arrangements.size
     val nameWidth = textRoom(92)
-    val labelLine = textRoom(26)
+    // The result's cards are the `other` size, as everywhere else, unless the width has less room.
     val lineCard = minOf(
       (maxWidth - nameWidth - ARROWS_WIDTH - 16.dp - COLUMN_GAP * 3 - SMALL_GAP * 10) / 13,
-      ((maxHeight - SEAT_GAP * (seats - 1)) / seats - labelLine - 12.dp) / 1.4f,
-      56.dp,
+      LocalCardSizes.current.other,
     )
-    if (lineCard >= 24.dp || maxWidth > maxHeight) SeatLines(arrangements, score, wheel, names, notes, totals, lineCard.coerceAtLeast(16.dp), nameWidth, onSeat)
+    if (maxWidth > maxHeight) SeatLines(arrangements, score, wheel, names, notes, totals, lineCard.coerceAtLeast(14.dp), nameWidth, onSeat)
     else SeatGrid(arrangements, score, wheel, names, notes, totals, maxWidth, onSeat)
   }
 }
@@ -738,18 +708,18 @@ private fun SeatLines(
             .let { m -> if (score.homeRun[s]) m.border(2.dp, t.highlight, RoundedCornerShape(12.dp)) else m }
             .onGloballyPositioned { with(density) { it.size.height.toDp() }.let { h -> if (h > seatHeight) seatHeight = h } }
             .let { if (seatHeight > 0.dp) it.heightIn(min = seatHeight) else it }
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 8.dp, vertical = 2.dp),
           verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(COLUMN_GAP),
         ) {
-          SeatName(s, names, notes, score, totals, Modifier.width(nameWidth))
+          SeatName(s, names, notes, score, totals, Modifier.width(nameWidth), compact = true)
           for (r in 0 until 3) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
               Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                  texts[s][r].first, style = MaterialTheme.typography.bodyMedium, maxLines = 1, softWrap = false,
+                  texts[s][r].first, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false,
                   color = if (info.valid) t.onFeltDim else t.bad,
                 )
-                texts[s][r].second?.let { RowMark(it) }
+                texts[s][r].second?.let { RowMark(it, small = true) }
               }
               // A row that earns a royalty under the rules.
               val bonus = info.royalties[r] > 0
@@ -778,13 +748,25 @@ private fun SeatLines(
 }
 
 @Composable
-private fun SeatName(s: Int, names: List<String>, notes: List<String?>, score: Score, totals: List<Double>, modifier: Modifier) {
+private fun SeatName(s: Int, names: List<String>, notes: List<String?>, score: Score, totals: List<Double>, modifier: Modifier, compact: Boolean = false) {
   val t = LocalTable.current
   val x = score.result[s]
+  val color = if (x > 0) t.good else if (x < 0) t.bad else t.onFelt
+  if (compact) {
+    // Short: the name and the points on one line, the total or the result against the player under them.
+    Column(modifier) {
+      Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(names[s], Modifier.weight(1f, fill = false), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(signed(x), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = color, maxLines = 1)
+      }
+      Text(seatSub(s, score, totals), style = MaterialTheme.typography.bodySmall, color = t.onFeltDim, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+    return
+  }
   Column(modifier) {
     Text(names[s], style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
     notes[s]?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = t.onFeltDim, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-    Text(signed(x), style = MaterialTheme.typography.headlineSmall, color = if (x > 0) t.good else if (x < 0) t.bad else t.onFelt)
+    Text(signed(x), style = MaterialTheme.typography.headlineSmall, color = color)
     Text(seatSub(s, score, totals), style = MaterialTheme.typography.bodySmall, color = t.onFeltDim, maxLines = 2)
     if (score.homeRun[s]) Text(stringResource(R.string.home_run), style = MaterialTheme.typography.labelLarge, color = t.highlight)
   }
@@ -802,7 +784,7 @@ private fun SeatGrid(
   val t = LocalTable.current
   val texts = rowTexts(score, wheel)
   val labelWidth = maxOf(72.dp, textRoom(13) * 5.5f)
-  val card = ((width - 20.dp - labelWidth - 8.dp - SMALL_GAP * 4) / 5).coerceIn(16.dp, 52.dp)
+  val card = ((width - 20.dp - labelWidth - 8.dp - SMALL_GAP * 4) / 5).coerceIn(16.dp, LocalCardSizes.current.play)
   val scoop = stringArrayResource(R.array.prob_names)[0]
   Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
     for (s in arrangements.indices) {

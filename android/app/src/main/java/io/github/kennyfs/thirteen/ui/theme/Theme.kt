@@ -125,11 +125,11 @@ private val AppTypography = Typography().let { t ->
 }
 
 private val AppShapes = Shapes(
-  extraSmall = RoundedCornerShape(6.dp),
-  small = RoundedCornerShape(10.dp),
-  medium = RoundedCornerShape(14.dp),
-  large = RoundedCornerShape(20.dp),
-  extraLarge = RoundedCornerShape(28.dp),
+  extraSmall = RoundedCornerShape(4.dp),
+  small = RoundedCornerShape(8.dp),
+  medium = RoundedCornerShape(10.dp),
+  large = RoundedCornerShape(14.dp),
+  extraLarge = RoundedCornerShape(20.dp),
 )
 
 /** Whether the cards are dark: only in a dark theme of the minimal colors; on the felt or the wallpaper's colors they stay white. */

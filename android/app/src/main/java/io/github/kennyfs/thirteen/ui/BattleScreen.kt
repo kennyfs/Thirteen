@@ -462,7 +462,7 @@ private fun WaitingPage(vm: BattleViewModel, room: RoomView) {
       val t = LocalTable.current
       Surface(m, shape = MaterialTheme.shapes.large, color = t.felt, contentColor = t.onFelt) {
         BoxWithConstraints(Modifier.padding(14.dp)) {
-          val card = ((maxWidth - CARD_GAP * 4) / 5).coerceAtMost(56.dp)
+          val card = ((maxWidth - CARD_GAP * 4) / 5).coerceAtMost(LocalCardSizes.current.play)
           Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
               CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 3.dp, color = t.onFelt)
@@ -484,19 +484,10 @@ private fun WaitingPage(vm: BattleViewModel, room: RoomView) {
   }
 }
 
-private val ROW_GAP = 8.dp
-private val PLAY_GAP = 2.dp
-
-/** The card width at which 13 cards in three rows fill `width`, up to `max`. */
-private fun cardFor(width: Dp, max: Dp = 48.dp): Dp = ((width - PLAY_GAP * 10 - ROW_GAP * 2) / 13).coerceIn(12.dp, max)
-
 /** One play's three rows as the analysis shows them: the cards that make each hand first, tinted by its category. */
 @Composable
-private fun PlayRows(vm: BattleViewModel, rows: List<List<Int>>, card: Dp) {
-  val cats = vm.categoriesOf(rows)
-  Row(horizontalArrangement = Arrangement.spacedBy(ROW_GAP)) {
-    for (r in 0 until 3) RowCards(rows[r], cats?.get(r) ?: 0, width = card, gap = PLAY_GAP)
-  }
+private fun PlayRows(vm: BattleViewModel, rows: List<List<Int>>, modifier: Modifier = Modifier) {
+  ThreeRows(rows, vm.categoriesOf(rows), modifier)
 }
 
 /** A hand's value: a puzzle's loss ("0.144", nothing lost "0"), or a table's points ("+3"). */
@@ -540,7 +531,7 @@ private fun rankOf(room: RoomView, p: PlayerView): Int {
  * player's cards go under their line.
  */
 @Composable
-private fun ResultTable(vm: BattleViewModel, room: RoomView, o: HandOutcome, maxCard: Dp = 48.dp, onPlayer: ((Int) -> Unit)? = null) {
+private fun ResultTable(vm: BattleViewModel, room: RoomView, o: HandOutcome, onPlayer: ((Int) -> Unit)? = null) {
   val puzzle = room.settings.mode == Mode.PUZZLE
   val nameStyle = MaterialTheme.typography.bodyLarge
   val numStyle = MaterialTheme.typography.titleMedium
@@ -555,9 +546,8 @@ private fun ResultTable(vm: BattleViewModel, room: RoomView, o: HandOutcome, max
   val rankWidth = textRoom(24)
   BoxWithConstraints(Modifier.fillMaxWidth()) {
     val nameWidth = minOf(nameNeeded, maxWidth * 0.22f)
-    val inline = cardFor(maxWidth - rankWidth - nameWidth - numWidth * 2 - 8.dp * 4, maxCard)
-    val stacked = inline < 20.dp
-    val card = if (stacked) cardFor(maxWidth - rankWidth - 8.dp, maxCard) else inline
+    // The cards on the player's line when they are the usual size there, else under it, across the whole width.
+    val stacked = lineCard(maxWidth - rankWidth - nameWidth - numWidth * 2 - 8.dp * 4) < LocalCardSizes.current.other - 0.5.dp
     @Composable
     fun Line(rank: String, name: String, note: String?, rows: List<List<Int>>?, hand: String, handColor: Color, total: String, me: Boolean, onClick: (() -> Unit)? = null) {
       Column(
@@ -572,12 +562,12 @@ private fun ResultTable(vm: BattleViewModel, room: RoomView, o: HandOutcome, max
             if (note != null) Text(note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
           }
           if (!stacked) {
-            if (rows != null) Box(Modifier.weight(1f)) { PlayRows(vm, rows, card) } else Spacer(Modifier.weight(1f))
+            if (rows != null) PlayRows(vm, rows, Modifier.weight(1f)) else Spacer(Modifier.weight(1f))
           }
           Text(hand, Modifier.width(numWidth), style = numStyle, color = handColor, textAlign = TextAlign.End, maxLines = 1)
           Text(total, Modifier.width(numWidth), style = numStyle, textAlign = TextAlign.End, maxLines = 1)
         }
-        if (stacked && rows != null) Box(Modifier.padding(start = rankWidth + 8.dp)) { PlayRows(vm, rows, card) }
+        if (stacked && rows != null) PlayRows(vm, rows, Modifier.fillMaxWidth())
       }
     }
     Column {
@@ -627,10 +617,8 @@ private fun HandTable(vm: BattleViewModel, room: RoomView, o: HandOutcome?, modi
     return
   }
   BoxWithConstraints(modifier.fillMaxSize().padding(horizontal = 12.dp)) {
-    val lines = room.players.size + (if (o?.best != null) 1 else 0) + 1
-    val maxCard = (((maxHeight - textRoom(24)) / lines - 12.dp) / 1.4f).coerceIn(20.dp, 48.dp)
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-      if (o != null) ResultTable(vm, room, o, maxCard, onPlayer)
+      if (o != null) ResultTable(vm, room, o, onPlayer)
     }
   }
 }
@@ -680,9 +668,7 @@ private fun SummaryPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) 
     val numWidth = with(LocalDensity.current) { listOf(handHead, rankHead, "00.000").maxOf { measurer.measure(it, numStyle).size.width }.toDp() } + 8.dp
     BoxWithConstraints(Modifier.fillMaxSize().padding(horizontal = 12.dp)) {
       val indexWidth = textRoom(26)
-      val inline = cardFor(maxWidth - indexWidth - numWidth * 2 - 8.dp * 3, 40.dp)
-      val stacked = inline < 20.dp
-      val card = if (stacked) cardFor(maxWidth - indexWidth - 8.dp, 40.dp) else inline
+      val stacked = lineCard(maxWidth - indexWidth - numWidth * 2 - 8.dp * 3) < LocalCardSizes.current.other - 0.5.dp
       LazyColumn {
         item {
           Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -715,7 +701,7 @@ private fun SummaryPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) 
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
               Text("${o.index + 1}", Modifier.width(indexWidth), style = numStyle, textAlign = TextAlign.End)
               if (i >= 0) {
-                if (!stacked) Box(Modifier.weight(1f)) { PlayRows(vm, o.plays[i].rows, card) } else Spacer(Modifier.weight(1f))
+                if (!stacked) PlayRows(vm, o.plays[i].rows, Modifier.weight(1f)) else Spacer(Modifier.weight(1f))
                 Column(Modifier.width(numWidth), horizontalAlignment = Alignment.End) {
                   Text(handValue(o, i), style = numStyle, color = handColor(room, o, i))
                   if (o.plays[i].timedOut)
@@ -727,7 +713,7 @@ private fun SummaryPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) 
                 Text(stringResource(R.string.battle_hand_rank, place, o.plays.size), Modifier.width(numWidth), style = numStyle, textAlign = TextAlign.End)
               }
             }
-            if (stacked && i >= 0) Box(Modifier.padding(start = indexWidth + 8.dp, top = 4.dp)) { PlayRows(vm, o.plays[i].rows, card) }
+            if (stacked && i >= 0) PlayRows(vm, o.plays[i].rows, Modifier.fillMaxWidth().padding(top = 4.dp))
           }
           HorizontalDivider()
         }

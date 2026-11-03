@@ -261,9 +261,7 @@ fun RecordLine(r: JSONObject, modifier: Modifier = Modifier, trailing: @Composab
         trailing()
       }
     }
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      for (row in listOf("front", "middle", "back")) RowCards(Cards.parse(r.getString(row)), 0, 18.dp, 2.dp)
-    }
+    ThreeRows(listOf("front", "middle", "back").map { Cards.parse(r.getString(it)) }, null)
   }
 }
 
@@ -320,8 +318,7 @@ fun CandidateList(
   }
   BoxWithConstraints(modifier.fillMaxSize()) {
     val wide = maxWidth >= 760.dp
-    val listWidth = if (wide) minOf(maxWidth * 0.45f, 460.dp) else maxWidth
-    val listCard = ((listWidth - 32.dp - 20.dp - 2.dp * 10) / 13).coerceIn(14.dp, 30.dp)
+    val listWidth = if (wide) maxWidth * 0.66f else maxWidth
     var openSet by rememberSaveable(a) { mutableStateOf(if (pinned) listOf(PINNED, 0) else listOf(0)) }
     var current by rememberSaveable(a) { mutableStateOf(if (pinned) PINNED else 0) }
     fun index(key: Int) = if (key == PINNED) mineAt!! else key
@@ -337,7 +334,7 @@ fun CandidateList(
         if (pinned) item(key = "pinned") {
           val (label, strong) = badgeOf(mineAt!!, true)
           CandidateItem(
-            label, strong, texts[mineAt], a.cands[mineAt], a.cands[0], wheel, listCard, tags[mineAt], open = if (wide) current == PINNED else PINNED in openSet,
+            label, strong, texts[mineAt], a.cands[mineAt], a.cands[0], wheel, tags[mineAt], open = if (wide) current == PINNED else PINNED in openSet,
             mine = true, detail = !wide, a = a,
           ) { if (wide) current = PINNED else openSet = if (PINNED in openSet) openSet - PINNED else openSet + PINNED }
           HorizontalDivider(Modifier.padding(horizontal = 12.dp))
@@ -345,7 +342,7 @@ fun CandidateList(
         items(shown, key = { it }) { i ->
           val (label, strong) = badgeOf(i, false)
           CandidateItem(
-            label, strong, texts[i], a.cands[i], if (i == 0) null else a.cands[0], wheel, listCard, tags[i],
+            label, strong, texts[i], a.cands[i], if (i == 0) null else a.cands[0], wheel, tags[i],
             open = if (wide) current == i else i in openSet, mine = i == mineAt, detail = !wide, a = a,
           ) { if (wide) current = i else openSet = if (i in openSet) openSet - i else openSet + i }
         }
@@ -356,17 +353,10 @@ fun CandidateList(
     if (wide) Row(Modifier.fillMaxSize()) {
       list(Modifier.width(listWidth).fillMaxHeight())
       val i = index(current)
-      val (label, _) = badgeOf(i, current == PINNED)
       Column(
-        Modifier.weight(1f).fillMaxHeight().background(MaterialTheme.colorScheme.surfaceContainerLow).verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        Modifier.weight(1f).fillMaxHeight().background(MaterialTheme.colorScheme.surfaceContainerLow).verticalScroll(rememberScrollState()).padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-          Badge(label, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onPrimary)
-          Commentary.shapeOf(a.cands[i].arrangement, a.cands[i].info.categories, wheel)?.let {
-            Text(shapeName(it), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-          }
-        }
         CandidateDetail(a, i, texts[i], wheel, if (i == 0) null else a.cands[0], mineAt, big = true)
       }
     } else list(Modifier.fillMaxSize())
@@ -376,16 +366,16 @@ fun CandidateList(
 /** One candidate in the list: its label, shape name, Q and cards; opened (on a narrow screen) its details below. */
 @Composable
 private fun CandidateItem(
-  label: String, strong: Boolean, texts: List<String>, cd: Candidate, best: Candidate?, wheel: Int, card: Dp, tag: String?, open: Boolean,
+  label: String, strong: Boolean, texts: List<String>, cd: Candidate, best: Candidate?, wheel: Int, tag: String?, open: Boolean,
   mine: Boolean, detail: Boolean, a: Analysis, onClick: () -> Unit,
 ) {
   val colors = MaterialTheme.colorScheme
   val qGap = Rules.notableQGap(a.rules)
   Column(
-    Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp).clip(RoundedCornerShape(14.dp))
+    Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 2.dp).clip(RoundedCornerShape(12.dp))
       .background(if (open) colors.secondaryContainer else if (mine) colors.surfaceContainerHigh else Color.Transparent)
-      .clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 8.dp),
-    verticalArrangement = Arrangement.spacedBy(6.dp),
+      .clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 6.dp),
+    verticalArrangement = Arrangement.spacedBy(4.dp),
   ) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       if (strong) Badge(label, colors.primary, colors.onPrimary) else Badge(label, colors.surfaceContainerHighest, colors.onSurface)
@@ -399,9 +389,7 @@ private fun CandidateItem(
         Text(fmtQ(q), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = qColor(q), maxLines = 1, softWrap = false)
       }
     }
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-      for (r in 0 until 3) RowCards(cd.arrangement[r], cd.info.categories[r], card, 2.dp)
-    }
+    ThreeRows(cd.arrangement, cd.info.categories)
     if (open && detail) CandidateDetail(a, a.cands.indexOf(cd), texts, wheel, best, null, big = false)
   }
 }
@@ -416,15 +404,13 @@ private fun CandidateDetail(a: Analysis, i: Int, texts: List<String>, wheel: Int
   val cd = a.cands[i]
   val rowNames = stringArrayResource(R.array.row_names)
   val colors = MaterialTheme.colorScheme
-  Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+  Column(verticalArrangement = Arrangement.spacedBy(if (big) 6.dp else 8.dp)) {
     if (big) {
-      BoxWithConstraints {
-        val card = ((maxWidth - 8.dp * 4) / 5).coerceAtMost(48.dp)
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-          for (r in 0 until 3) Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text("${rowNames[r]}　${texts[r]}", style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-            RowCards(cd.arrangement[r], cd.info.categories[r], card)
-          }
+      // The list beside it shows the cards: here what each row is.
+      Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        for (r in 0 until 3) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          Text(rowNames[r], style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, modifier = Modifier.width(textRoom(40)))
+          Text(texts[r], style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
         }
       }
     } else Text(texts.joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
@@ -451,7 +437,7 @@ private fun CandidateDetail(a: Analysis, i: Int, texts: List<String>, wheel: Int
             (gap > 0) == GOOD_WHEN_HIGH[k] -> 1
             else -> -1
           }
-          ProbTile(names[k], p[k], tone, if (gap > 0) "▲" else "▼")
+          ProbTile(names[k], p[k], tone, if (gap > 0) "▲" else "▼", compact = big)
         }
         for (t in lostShown) ProbTile(names[ROYALTY_LOST + t], p[ROYALTY_LOST + t], 0, "")
       }
@@ -460,8 +446,22 @@ private fun CandidateDetail(a: Analysis, i: Int, texts: List<String>, wheel: Int
 }
 
 @Composable
-private fun ProbTile(name: String, p: Double, tone: Int, arrow: String) {
+private fun ProbTile(name: String, p: Double, tone: Int, arrow: String, compact: Boolean = false) {
   val colors = MaterialTheme.colorScheme
+  if (compact) {
+    // Name and figure on one line, for the narrow pane that has to show it all without scrolling.
+    Row(
+      Modifier.clip(RoundedCornerShape(8.dp)).background(colors.surfaceContainerHighest).padding(horizontal = 8.dp, vertical = 3.dp),
+      horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Text(name, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1)
+      Text(
+        "%.1f%%".format(100 * p) + if (tone != 0) " $arrow" else "", style = MaterialTheme.typography.bodyMedium, maxLines = 1,
+        color = when (tone) { 1 -> GOOD; -1 -> BAD; else -> colors.onSurface }, fontWeight = if (tone != 0) FontWeight.Bold else FontWeight.Normal,
+      )
+    }
+    return
+  }
   Column(
     Modifier.widthIn(min = textRoom(88)).clip(RoundedCornerShape(10.dp)).background(colors.surfaceContainerHighest).padding(horizontal = 10.dp, vertical = 5.dp),
   ) {

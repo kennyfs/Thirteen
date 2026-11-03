@@ -5,6 +5,10 @@ import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Surface
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.Dialog
 import org.json.JSONObject
 import io.github.kennyfs.thirteen.Cards
 import androidx.compose.ui.platform.testTag
@@ -80,21 +84,21 @@ private fun RecordEntry(vm: AppViewModel, r: JSONObject, onClick: () -> Unit) {
 /** What to do with a hand of the lists: analyze it, or play it again to arrange it another way. */
 @Composable
 private fun HandActions(vm: AppViewModel, r: JSONObject, onDismiss: () -> Unit) {
-  AlertDialog(
-    onDismissRequest = onDismiss,
-    confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
-    title = { RecordLine(r) },
-    text = {
-      Column {
+  // Nearly as wide as the screen, so that the cards are the size they are elsewhere.
+  Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    Surface(Modifier.padding(horizontal = 8.dp).widthIn(max = 560.dp), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+      Column(Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
+        RecordLine(r, Modifier.padding(horizontal = 8.dp))
         TextButton(onClick = { vm.analyzeRecordOnScreen(r); onDismiss() }, Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
           Text(stringResource(R.string.analyze_this), style = MaterialTheme.typography.titleMedium, modifier = Modifier.fillMaxWidth())
         }
         TextButton(
           onClick = { vm.replay(Cards.parse(r.getString("hand"))); onDismiss() }, Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("hand_replay"),
         ) { Text(stringResource(R.string.replay_hand), style = MaterialTheme.typography.titleMedium, modifier = Modifier.fillMaxWidth()) }
+        TextButton(onClick = onDismiss, Modifier.align(Alignment.End)) { Text(stringResource(R.string.cancel)) }
       }
-    },
-  )
+    }
+  }
 }
 
 /** The score chart: the total over the records of one set of rules, which a menu chooses when there are several. */

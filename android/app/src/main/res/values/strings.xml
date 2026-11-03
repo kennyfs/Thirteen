@@ -357,7 +357,7 @@
   <string name="battle_rules_page_named">The rules page\'s: %1$s</string>
   <string name="battle_start_mode">Start the %1$s</string>
   <string name="battle_wait_host">Waiting for the host to start…</string>
-  <string name="battle_submit">Hand in these rows</string>
+  <string name="battle_submit">Submit rows</string>
   <string name="battle_standings">Standings</string>
   <string name="battle_done_mark">Done</string>
   <string name="battle_thinking">Thinking</string>

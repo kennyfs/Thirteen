@@ -224,10 +224,10 @@ fun InfoButton(text: String, title: String? = null, tint: Color = MaterialTheme.
 
 /** A small rounded label: a rank ("Best"), a row's result against the player (+1, −1). */
 @Composable
-fun Badge(text: String, container: Color, content: Color, modifier: Modifier = Modifier) {
+fun Badge(text: String, container: Color, content: Color, modifier: Modifier = Modifier, small: Boolean = false) {
   Text(
-    text, modifier.background(container, RoundedCornerShape(8.dp)).padding(horizontal = 7.dp, vertical = 1.dp),
-    color = content, style = MaterialTheme.typography.labelMedium, maxLines = 1,
+    text, modifier.background(container, RoundedCornerShape(if (small) 6.dp else 8.dp)).padding(horizontal = if (small) 5.dp else 7.dp, vertical = 1.dp),
+    color = content, style = if (small) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium, maxLines = 1,
   )
 }
 
