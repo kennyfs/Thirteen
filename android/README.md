@@ -43,6 +43,12 @@ before building; the app and its device tests expect it. The version code is the
 build always installs over an older one. The version name is the release's `vX.Y.Z` tag on the tagged commit (`1.0.0`);
 any other build is a beta, named after the latest tag (`1.0.0+beta.3` three commits after it).
 
+ONNX Runtime comes from its AAR (34 MB of the APK's 43) unless `THIRTEEN_ORT_DIR` names a reduced build of it, which
+`android/build-ort.sh` makes (once, about ten minutes; see the script): only the operators in `android/ort-ops.config`,
+which are those `python/thirteen/model.py` exports and the fused ones the optimizer makes of them, without ORT's
+telemetry; about 10 MB. Release builds should use it. A network with other operators (an architecture changed in
+model.py) then fails to load until they are added to the config and the library is built again.
+
 `android/device-tests.sh` runs `ScreenshotTest` on a local headless emulator of API 37 (Android 17; `API=36` for
 another, each with its own AVD made on the first run): every screen under several screen, display and font sizes, saved
 in `android/build/screenshots`, failing when a card is cut off at the side. `ALL=1` runs every device test instead. It

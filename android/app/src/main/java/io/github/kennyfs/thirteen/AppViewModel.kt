@@ -59,7 +59,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
   // ---- Rules ----
 
-  /** The rules page's choice; a game takes it when dealt. */
+  /** The rules page's choice; the practice game takes it when the page is left (rulesClosed). */
   var ruleSpec by mutableStateOf(settings.rules); private set
   /** Its values, once the engine has checked them. */
   var ruleValues by mutableStateOf<Map<String, Double>>(emptyMap()); private set
@@ -89,6 +89,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         error = e.message
       }
     }
+  }
+
+  /**
+   * The rules page was left: under changed rules the practice game deals a new hand at once (the hand in play is
+   * dropped, so no record is set under rules it was not dealt for); deal starts the totals over when the rules differ
+   * from theirs, so changing and changing back keeps them.
+   */
+  fun rulesClosed() = launchCatching {
+    if (gameRules.isNotEmpty() && Engine.rulesFull(ruleSpec.spec()) != gameRules) deal().join()
   }
 
   /** The name of the rules with these values: a preset's, or custom. */

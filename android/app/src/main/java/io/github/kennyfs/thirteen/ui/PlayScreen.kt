@@ -63,6 +63,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -216,14 +221,29 @@ private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ROWS_GAP)) {
         RowsStack(vm, card, labelWidth(density), wheel, Modifier.width(IntrinsicSize.Max).onSizeChanged { rowsHeight = with(density) { it.height.toDp() } })
         Column(Modifier.weight(1f).height(rowsHeight), verticalArrangement = Arrangement.spacedBy(ROW_STACK_GAP)) {
-          SortToggle(vm, Modifier.fillMaxWidth().weight(1f))
-          Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            val tool = Modifier.weight(1f).fillMaxHeight()
-            FeltIconButton(stringResource(R.string.undo), Icons.AutoMirrored.Filled.Undo, vm.canUndo, tool) { vm.undo() }
-            FeltIconButton(stringResource(R.string.take_all), Icons.Outlined.ClearAll, vm.rows.any { it.isNotEmpty() }, tool) { vm.clearRows() }
-            ArrangeHelp(modifier = tool)
+          SortToggle(vm, Modifier.fillMaxWidth().weight(1f), MaterialTheme.typography.titleMedium)
+          // The three tools lay out alike: their names all beside the icons, all under them, or none (icons only).
+          BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
+            val labels = listOf(stringResource(R.string.undo), stringResource(R.string.take_all), stringResource(R.string.help))
+            val style = MaterialTheme.typography.titleMedium
+            val measurer = androidx.compose.ui.text.rememberTextMeasurer()
+            val sizes = labels.map { with(density) { measurer.measure(it, style).size.let { s -> s.width.toDp() to s.height.toDp() } } }
+            // A button's inside: its third of the line less the gaps, its padding and its border.
+            val innerW = (maxWidth - 16.dp) / 3 - 12.dp - 2.dp
+            val innerH = maxHeight - 8.dp - 2.dp
+            val mode = when {
+              sizes.all { 24.dp + 6.dp + it.first <= innerW } -> LabelMode.BESIDE
+              sizes.all { it.first <= innerW && 24.dp + 2.dp + it.second <= innerH } -> LabelMode.UNDER
+              else -> LabelMode.NONE
+            }
+            Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+              val tool = Modifier.weight(1f).fillMaxHeight()
+              FeltToolButton(labels[0], Icons.AutoMirrored.Filled.Undo, vm.canUndo, tool, mode) { vm.undo() }
+              FeltToolButton(labels[1], Icons.Outlined.ClearAll, vm.canClear, tool, mode) { vm.clearRows() }
+              ArrangeHelp(modifier = tool, mode = mode)
+            }
           }
-          ConfirmButton(vm, busy, confirmLabel, confirmShort, Modifier.fillMaxWidth().weight(1f), onConfirm)
+          ConfirmButton(vm, busy, confirmLabel, confirmShort, Modifier.fillMaxWidth().weight(1f), MaterialTheme.typography.titleLarge, onConfirm)
         }
       }
       HandTray(vm, card, 13)
@@ -306,7 +326,7 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
       OutlinedIconButton(onClick = vm::undo, Modifier.size(46.dp), enabled = vm.canUndo) {
         Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.undo))
       }
-      OutlinedIconButton(onClick = vm::clearRows, Modifier.size(46.dp), enabled = vm.rows.any { it.isNotEmpty() }) {
+      OutlinedIconButton(onClick = vm::clearRows, Modifier.size(46.dp), enabled = vm.canClear) {
         Icon(Icons.Outlined.ClearAll, stringResource(R.string.take_all))
       }
       ArrangeHelp(onFelt = false)
@@ -323,11 +343,11 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
 
 /** A (?) button: how to set a hand, in a dialog. */
 @Composable
-private fun ArrangeHelp(onFelt: Boolean = true, modifier: Modifier = Modifier.width(52.dp)) {
+private fun ArrangeHelp(onFelt: Boolean = true, modifier: Modifier = Modifier.width(52.dp), mode: LabelMode = LabelMode.NONE) {
   var open by remember { mutableStateOf(false) }
   val t = LocalTable.current
   val label = stringResource(R.string.help)
-  if (onFelt) FeltIconButton(label, Icons.AutoMirrored.Outlined.HelpOutline, true, modifier) { open = true }
+  if (onFelt) FeltToolButton(label, Icons.AutoMirrored.Outlined.HelpOutline, true, modifier, mode) { open = true }
   else OutlinedIconButton(onClick = { open = true }, Modifier.size(46.dp)) { Icon(Icons.AutoMirrored.Outlined.HelpOutline, label) }
   if (open)
     AlertDialog(
@@ -437,28 +457,61 @@ private fun TakeBack(vm: Arranger, r: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SortToggle(vm: Arranger, modifier: Modifier = Modifier) {
+private fun SortToggle(vm: Arranger, modifier: Modifier = Modifier, style: TextStyle = MaterialTheme.typography.labelLarge) {
   val t = LocalTable.current
   ToggleGroup(
     listOf(false to stringResource(R.string.sort_rank), true to stringResource(R.string.sort_suit)), vm.sortBySuit, { vm.sortBySuit = it },
-    modifier, ToggleColors(t.onFelt, t.felt, t.onFelt.copy(alpha = 0.12f), t.onFelt),
+    modifier, ToggleColors(t.onFelt, t.felt, t.onFelt.copy(alpha = 0.12f), t.onFelt), style,
   )
 }
 
-/** A button of an icon only on the table, named for a screen reader. */
+/** Where a tool's name goes: beside its icon, under it, or nowhere (the icon only). */
+private enum class LabelMode { BESIDE, UNDER, NONE }
+
+/** A tool on the table: its icon, and its name as `mode` says (the icon only where that does not fit after all). */
 @Composable
-private fun FeltIconButton(description: String, icon: androidx.compose.ui.graphics.vector.ImageVector, enabled: Boolean, modifier: Modifier, onClick: () -> Unit) {
+private fun FeltToolButton(label: String, icon: ImageVector, enabled: Boolean, modifier: Modifier, mode: LabelMode, onClick: () -> Unit) {
   val t = LocalTable.current
-  OutlinedIconButton(
-    onClick = onClick, modifier.height(BAR_HEIGHT), enabled = enabled,
+  OutlinedButton(
+    onClick = onClick, modifier.height(BAR_HEIGHT), enabled = enabled, shape = RoundedCornerShape(18.dp),
     border = BorderStroke(1.dp, t.onFelt.copy(alpha = if (enabled) 0.5f else 0.2f)),
-    colors = IconButtonDefaults.outlinedIconButtonColors(contentColor = t.onFelt, disabledContentColor = t.onFelt.copy(alpha = 0.38f)),
-  ) { Icon(icon, description) }
+    colors = ButtonDefaults.outlinedButtonColors(contentColor = t.onFelt, disabledContentColor = t.onFelt.copy(alpha = 0.38f)),
+    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+  ) { IconLabel(icon, label, MaterialTheme.typography.titleMedium, mode) }
+}
+
+/** An icon with its label beside or under it as `mode` says, never cut off: the icon alone when that does not fit. */
+@Composable
+private fun IconLabel(icon: ImageVector, label: String, style: TextStyle, mode: LabelMode) {
+  Layout(
+    { Icon(icon, null); Text(label, style = style, maxLines = 1, softWrap = false) },
+    Modifier.clearAndSetSemantics { contentDescription = label },
+  ) { ms, c ->
+    val i = ms[0].measure(Constraints())
+    val l = ms[1].measure(Constraints())
+    val gap = 6.dp.roundToPx()
+    val besideW = i.width + gap + l.width
+    val underH = i.height + 2.dp.roundToPx() + l.height
+    when {
+      mode == LabelMode.BESIDE && besideW <= c.maxWidth -> {
+        val h = maxOf(i.height, l.height)
+        layout(besideW, h) { i.place(0, (h - i.height) / 2); l.place(i.width + gap, (h - l.height) / 2) }
+      }
+      mode == LabelMode.UNDER && l.width <= c.maxWidth && underH <= c.maxHeight -> {
+        val w = maxOf(i.width, l.width)
+        layout(w, underH) { i.place((w - i.width) / 2, 0); l.place((w - l.width) / 2, underH - l.height) }
+      }
+      else -> layout(i.width, i.height) { i.place(0, 0) }
+    }
+  }
 }
 
 /** The main action on the table: light on the felt, enabled once the rows can be played. */
 @Composable
-private fun ConfirmButton(vm: Arranger, busy: Boolean, label: String, short: String, modifier: Modifier, onConfirm: () -> Unit) {
+private fun ConfirmButton(
+  vm: Arranger, busy: Boolean, label: String, short: String, modifier: Modifier, style: TextStyle = MaterialTheme.typography.titleMedium,
+  onConfirm: () -> Unit,
+) {
   val t = LocalTable.current
   Button(
     onClick = onConfirm, modifier, enabled = !busy && vm.rowsEval?.valid == true, shape = RoundedCornerShape(18.dp),
@@ -468,7 +521,7 @@ private fun ConfirmButton(vm: Arranger, busy: Boolean, label: String, short: Str
     ),
   ) {
     if (busy) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 3.dp, color = t.onAction)
-    else FitText(label, short, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+    else FitText(label, short, style = style, fontWeight = FontWeight.Bold)
   }
 }
 

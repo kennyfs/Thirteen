@@ -93,7 +93,7 @@
   <string name="nav_rules">Rules</string>
   <string name="custom">Custom</string>
   <string name="restore_preset">Restore preset</string>
-  <string name="rules_next_hand">Changes apply from the next hand; the running scores then start over.</string>
+  <string name="rules_next_hand">With the rules changed, practice deals a new hand when you leave this page (the hand in play is dropped), and the running scores start over.</string>
   <string name="rules_play">Changes the play</string>
   <string name="rules_play_note">These two change which arrangements foul and how hands rank.</string>
   <string name="rules_scoring">Scoring: points from each opponent</string>

@@ -8,9 +8,13 @@ plugins {
 val ortVersion = "1.31.1"
 // The ONNX Runtime AAR, unpacked so the native engine can compile against its C++ headers and link its
 // libonnxruntime.so (headers/ and jni/<abi>/ inside the AAR).
+// THIRTEEN_ORT_DIR, the same layout, is a reduced ONNX Runtime built by build-ort.sh instead: only the operators the
+// networks use, about a tenth of the AAR's 34 MB. Without it, the AAR's.
 val ortAar: Configuration by configurations.creating
-val ortDir = layout.buildDirectory.dir("onnxruntime")
+val ownOrt: String? = System.getenv("THIRTEEN_ORT_DIR")?.ifEmpty { null }
+val ortDir = ownOrt?.let { layout.projectDirectory.dir(it) } ?: layout.buildDirectory.dir("onnxruntime").get()
 val extractOrt by tasks.registering(Copy::class) {
+  enabled = ownOrt == null
   from({ zipTree(ortAar.singleFile) })
   into(ortDir)
 }
@@ -47,8 +51,9 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     externalNativeBuild {
       cmake {
-        // 16 KB pages, which Google Play requires.
-        arguments += listOf("-DORT_DIR=${ortDir.get().asFile.absolutePath}", "-DANDROID_STL=c++_shared", "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON")
+        // 16 KB pages, which Google Play requires. The C++ library linked in: libonnxruntime.so has its own, so a shared
+        // one would only be another 1.4 MB.
+        arguments += listOf("-DORT_DIR=${ortDir.asFile.absolutePath}", "-DANDROID_STL=c++_static", "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON")
       }
     }
   }
@@ -73,6 +78,8 @@ android {
       // arm64 only; THIRTEEN_ABIS=x86_64 makes a release build the emulator runs natively (to try R8 on).
       ndk { abiFilters += (System.getenv("THIRTEEN_ABIS")?.split(",") ?: listOf("arm64-v8a")) }
       isMinifyEnabled = true
+      // The resources no code reaches (of the libraries mostly) left out.
+      isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName(if (keystorePath != null) "release" else "debug")
     }
@@ -94,9 +101,13 @@ android {
     buildConfig = true
   }
   androidResources {
+    // The app's own languages: the libraries bring strings in dozens more, which only make the APK larger.
+    localeFilters += listOf("en", "zh-rTW")
     // Settings opens the built-in network with openFd, which needs it stored uncompressed.
     noCompress += "onnx"
   }
+  // The reduced library goes in as it is; the AAR's comes with the AAR.
+  if (ownOrt != null) sourceSets["main"].jniLibs.directories += ortDir.dir("jni").asFile.absolutePath
   packaging {
     // The AAR and the imported library in CMake both bring it.
     jniLibs.pickFirsts += "**/libonnxruntime.so"
@@ -113,7 +124,7 @@ tasks.named("preBuild") { dependsOn(extractOrt) }
 
 dependencies {
   ortAar("com.microsoft.onnxruntime:onnxruntime-android:$ortVersion@aar")
-  implementation("com.microsoft.onnxruntime:onnxruntime-android:$ortVersion")
+  if (ownOrt == null) implementation("com.microsoft.onnxruntime:onnxruntime-android:$ortVersion")
 
   val composeBom = platform("androidx.compose:compose-bom:2026.09.00")
   implementation(composeBom)

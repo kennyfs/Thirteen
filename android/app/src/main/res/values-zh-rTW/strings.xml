@@ -93,7 +93,7 @@
   <string name="nav_rules">規則</string>
   <string name="custom">自訂</string>
   <string name="restore_preset">還原預設</string>
-  <string name="rules_next_hand">修改從下一局起生效，屆時累計分數會歸零。</string>
+  <string name="rules_next_hand">改了規則，離開這頁時練習會重新洗牌（目前這手不保留），累計分數也會歸零。</string>
   <string name="rules_play">影響玩法</string>
   <string name="rules_play_note">這兩項會改變哪些擺法算倒水、牌型大小。</string>
   <string name="rules_scoring">計分：每位對手付的分數</string>

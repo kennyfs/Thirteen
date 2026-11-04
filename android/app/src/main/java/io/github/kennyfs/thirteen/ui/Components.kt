@@ -131,7 +131,7 @@ fun SettingRow(
 @Composable
 fun <T> ToggleGroup(
   options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit, modifier: Modifier = Modifier,
-  colors: ToggleColors = ToggleColors.page(),
+  colors: ToggleColors = ToggleColors.page(), style: TextStyle = MaterialTheme.typography.labelLarge,
 ) {
   Row(modifier.height(IntrinsicSize.Min).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
     for ((i, o) in options.withIndex()) {
@@ -146,7 +146,7 @@ fun <T> ToggleGroup(
         contentAlignment = Alignment.Center,
       ) {
         Text(
-          o.second, color = if (on) colors.onContent else colors.offContent, style = MaterialTheme.typography.labelLarge,
+          o.second, color = if (on) colors.onContent else colors.offContent, style = style,
           textAlign = TextAlign.Center,
         )
       }

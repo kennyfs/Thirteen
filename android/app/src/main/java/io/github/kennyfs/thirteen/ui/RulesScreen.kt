@@ -40,6 +40,9 @@ fun RulesPage(vm: AppViewModel, onBack: () -> Unit) {
   val colors = MaterialTheme.colorScheme
   val names = stringArrayResource(R.array.preset_names)
   val notes = stringArrayResource(R.array.preset_notes)
+  // Leaving the page (not turning the screen) puts the rules into the practice game at once.
+  val activity = androidx.activity.compose.LocalActivity.current
+  androidx.compose.runtime.DisposableEffect(Unit) { onDispose { if (activity?.isChangingConfigurations != true) vm.rulesClosed() } }
   SettingsSubpage(stringResource(R.string.nav_rules), onBack) {
     Text(
       stringResource(R.string.rules_next_hand), Modifier.padding(horizontal = 16.dp, vertical = 8.dp),

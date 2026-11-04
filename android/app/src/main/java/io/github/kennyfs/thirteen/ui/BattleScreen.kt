@@ -223,8 +223,8 @@ private fun EntryPage(vm: BattleViewModel) {
           val t = LocalTable.current
           ChoiceTile(stringResource(R.string.battle_new_puzzle), stringResource(R.string.battle_puzzle_info), t.felt, t.onFelt, compact = compact, enabled = !vm.busy) { create(Mode.PUZZLE) }
           ChoiceTile(
-            stringResource(R.string.battle_new_game), stringResource(R.string.battle_game_info), MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.colorScheme.onSecondaryContainer, compact = compact, enabled = !vm.busy,
+            stringResource(R.string.battle_new_game), stringResource(R.string.battle_game_info), t.felt, t.onFelt, compact = compact,
+            enabled = !vm.busy,
           ) { create(Mode.GAME) }
           JoinTile(vm, compact = compact) { nearby(it) }
         }

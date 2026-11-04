@@ -92,6 +92,9 @@ class Arranger(
     updateRows(rows.mapIndexed { r, cards -> if (r == row) emptyList() else cards })
   }
 
+  /** Whether "take all back" has anything to do: cards in the rows, or picked ones (it unpicks them). */
+  val canClear get() = selected.isNotEmpty() || rows.any { it.isNotEmpty() }
+
   fun clearRows() {
     selected = emptySet()
     armed = null
