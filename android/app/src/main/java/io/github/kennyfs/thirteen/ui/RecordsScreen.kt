@@ -116,6 +116,7 @@ fun RecordLine(r: JSONObject, modifier: Modifier = Modifier, vm: AppViewModel? =
     }
   }
   val rows = listOf("front", "middle", "back").map { Cards.parse(r.getString(it)) }
+  val cats = rows.map { Cards.guessCategory(it) }
   Column(modifier.fillMaxWidth().padding(vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
       score()
@@ -126,11 +127,11 @@ fun RecordLine(r: JSONObject, modifier: Modifier = Modifier, vm: AppViewModel? =
       time(Modifier)
       BoxWithConstraints(Modifier.fillMaxWidth()) {
         val c = minOf(card, (maxWidth - LINE_GAP * 4) / 5)
-        Column(verticalArrangement = Arrangement.spacedBy(LINE_GAP * 2)) { for (row in rows) RowCards(row, 0, c, LINE_GAP) }
+        Column(verticalArrangement = Arrangement.spacedBy(LINE_GAP * 2)) { for (i in 0 until 3) RowCards(rows[i], cats[i], c, LINE_GAP) }
       }
     } else BoxWithConstraints(Modifier.fillMaxWidth()) {
       val c = minOf(card, lineCard(maxWidth))
-      Row(horizontalArrangement = Arrangement.spacedBy(LINE_GROUP_GAP)) { for (row in rows) RowCards(row, 0, c, LINE_GAP) }
+      Row(horizontalArrangement = Arrangement.spacedBy(LINE_GROUP_GAP)) { for (i in 0 until 3) RowCards(rows[i], cats[i], c, LINE_GAP) }
     }
   }
 }
@@ -139,7 +140,7 @@ fun RecordLine(r: JSONObject, modifier: Modifier = Modifier, vm: AppViewModel? =
 @Composable
 fun RecordList(recs: List<JSONObject>, vm: AppViewModel?, onClick: (JSONObject) -> Unit) {
   BoxWithConstraints(Modifier.fillMaxWidth()) {
-    val stacked = maxWidth < 560.dp
+    val stacked = maxWidth < 560.dp && (maxWidth - 12.dp) / 2 >= textRoom(130)
     if (stacked) Column {
       for (pair in recs.chunked(2)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -225,6 +226,7 @@ fun RecordsPage(vm: AppViewModel) {
     if (uri != null) vm.exportRecords(resolver, uri)
   }
   var confirmClear by rememberSaveable { mutableStateOf(false) }
+  var confirmResetScores by rememberSaveable { mutableStateOf(false) }
   var shown by rememberSaveable { mutableStateOf(20) }
   var kind by rememberSaveable { mutableStateOf(RecordKind.PRACTICE) }
   var acting by remember { mutableStateOf<JSONObject?>(null) }
@@ -271,14 +273,31 @@ fun RecordsPage(vm: AppViewModel) {
           }
         }
       }
-      if (recs.isNotEmpty())
+      Row(
+        Modifier.padding(horizontal = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
         TextButton(
-          onClick = { confirmClear = true }, Modifier.padding(8.dp).heightIn(min = 48.dp),
-          colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-        ) { Text(stringResource(R.string.clear_records)) }
+          onClick = { confirmResetScores = true }, Modifier.heightIn(min = 48.dp),
+          colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
+        ) { Text(stringResource(R.string.reset_scores_short)) }
+        if (recs.isNotEmpty())
+          TextButton(
+            onClick = { confirmClear = true }, Modifier.heightIn(min = 48.dp),
+            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+          ) { Text(stringResource(R.string.clear_records)) }
+      }
     }
   }
   acting?.let { HandActions(vm, it) { acting = null } }
+  if (confirmResetScores)
+    AlertDialog(
+      onDismissRequest = { confirmResetScores = false },
+      confirmButton = { TextButton(onClick = { vm.resetSession(); confirmResetScores = false }) { Text(stringResource(R.string.reset)) } },
+      dismissButton = { TextButton(onClick = { confirmResetScores = false }) { Text(stringResource(R.string.cancel)) } },
+      text = { Text(stringResource(R.string.reset_confirm), style = MaterialTheme.typography.bodyLarge) },
+    )
   if (confirmClear)
     AlertDialog(
       onDismissRequest = { confirmClear = false },

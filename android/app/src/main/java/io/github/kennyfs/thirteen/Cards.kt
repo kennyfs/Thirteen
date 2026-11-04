@@ -72,6 +72,28 @@ object Cards {
   /** The same cards as sets, whatever their order in each row. */
   fun sameArrangement(a: List<List<Int>>, b: List<List<Int>>) = a.indices.all { a[it].toSet() == b[it].toSet() }
 
+  /** The category (1..9) of a 3- or 5-card row, for tinting when only the cards are known. */
+  fun guessCategory(cards: List<Int>): Int {
+    if (cards.isEmpty()) return 0
+    val counts = cards.groupingBy(::rank).eachCount().values.sortedDescending()
+    if (cards.size == 3) return when (counts.first()) { 3 -> 4; 2 -> 2; else -> 1 }
+    if (cards.size != 5) return 0
+    val flush = cards.map(::suit).distinct().size == 1
+    val ranks = cards.map(::rank).distinct().sorted()
+    val straight = ranks.size == 5 && (ranks[4] - ranks[0] == 4 || ranks == listOf(0, 1, 2, 3, 12))
+    return when {
+      flush && straight -> 9
+      counts[0] == 4 -> 8
+      counts[0] == 3 && counts[1] == 2 -> 7
+      flush -> 6
+      straight -> 5
+      counts[0] == 3 -> 4
+      counts[0] == 2 && counts[1] == 2 -> 3
+      counts[0] == 2 -> 2
+      else -> 1
+    }
+  }
+
   /** Sorted for the hand area: by rank, or by suit and then rank. */
   fun sortHand(cards: Collection<Int>, bySuit: Boolean): List<Int> =
     if (bySuit) cards.sortedWith(compareBy<Int> { suit(it) }.thenBy { rank(it) }) else cards.sorted()

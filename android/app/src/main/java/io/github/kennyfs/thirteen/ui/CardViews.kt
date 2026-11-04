@@ -45,7 +45,7 @@ private val EDGE = Color(0xFF9E9E9E)
 // The same cards in a dark theme: a dark face, light ink.
 private val DARK_FACE = Color(0xFF2B2F2D)
 private val DARK_RED = Color(0xFFFF8A80)
-private val DARK_BLACK = Color(0xFFE8E8E8)
+private val DARK_BLACK = Color(0xFFF0F0F0)
 private val DARK_EDGE = Color(0xFF626865)
 // One hue per category, as in gui/play.html; index = category.
 private val HUES = floatArrayOf(0f, 0f, 48f, 26f, 130f, 185f, 218f, 268f, 335f, 0f)
@@ -53,7 +53,7 @@ private val HUES = floatArrayOf(0f, 0f, 48f, 26f, 130f, 185f, 218f, 268f, 335f, 
 /** The background of a card that makes its row's hand (category > 0), or white (dark in a dark theme) for a kicker. */
 fun tintColor(category: Int, light: Boolean, dark: Boolean = false): Color = when {
   category <= 1 -> if (dark) DARK_FACE else Color.White
-  dark -> Color.hsl(HUES[category], 0.45f, if (light) 0.24f else 0.34f)
+  dark -> Color.hsl(HUES[category], 0.45f, if (light) 0.28f else 0.38f)
   else -> Color.hsl(HUES[category], 0.85f, if (light) 0.90f else 0.74f)
 }
 

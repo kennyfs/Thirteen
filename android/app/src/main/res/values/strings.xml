@@ -31,7 +31,7 @@
   <string name="export">Save as file</string>
   <string name="share">Share</string>
   <string name="clear_records">Clear records</string>
-  <string name="reset_scores">Reset running scores</string>
+  <string name="reset_scores_short">Reset scores</string>
   <string name="delete">Delete</string>
   <string name="reset">Reset</string>
   <string name="clear_records_confirm">Delete all %1$d recorded hands? Export first if you need them.</string>
@@ -292,7 +292,6 @@
   <string name="use_current_rules_named">Use the current rules: %1$s</string>
   <string name="settings_look">Display</string>
   <string name="settings_game">Game</string>
-  <string name="settings_data">Data</string>
   <string name="settings_about">About</string>
   <string name="text_size">Text size</string>
   <string-array name="text_sizes">
@@ -330,7 +329,6 @@
   <string name="records_summary">%1$d hands recorded · %2$d saved · score chart</string>
   <string name="records_info">Every hand you play is recorded on this phone: the cards, your rows, the rules and the time you took. Nothing else, and nothing is sent unless you share it. Sharing the file (JSONL) with the developer helps train better computer players.</string>
   <string name="records_list">All records, newest first</string>
-  <string name="reset_scores_info">Start the running totals and the hand count over</string>
   <string name="about_source">Open source (GPLv3), on GitHub</string>
   <string name="privacy_policy">Privacy policy</string>
   <string name="rules_changed"> (changed)</string>

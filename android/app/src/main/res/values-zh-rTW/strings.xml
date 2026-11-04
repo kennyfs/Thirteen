@@ -31,7 +31,7 @@
   <string name="export">存成檔案</string>
   <string name="share">分享</string>
   <string name="clear_records">清除紀錄</string>
-  <string name="reset_scores">重設累計分數</string>
+  <string name="reset_scores_short">分數歸零</string>
   <string name="delete">刪除</string>
   <string name="reset">重設</string>
   <string name="clear_records_confirm">刪除全部 %1$d 局紀錄？需要的話請先匯出。</string>
@@ -291,7 +291,6 @@
   <string name="use_current_rules_named">改用目前規則：%1$s</string>
   <string name="settings_look">顯示</string>
   <string name="settings_game">遊戲</string>
-  <string name="settings_data">資料</string>
   <string name="settings_about">關於</string>
   <string name="text_size">文字大小</string>
   <string-array name="text_sizes">
@@ -329,7 +328,6 @@
   <string name="records_summary">已記錄 %1$d 局 · 收藏 %2$d 手 · 得分走勢</string>
   <string name="records_info">你打的每一局都記錄在這支手機上：手牌、你的擺法、規則和花的時間，沒有其他資料，也不會自動傳出去。把這個檔案（JSONL）分享給開發者，可以用來訓練更好的電腦對手。</string>
   <string name="records_list">全部紀錄（新的在前）</string>
-  <string name="reset_scores_info">累計分數與局數從頭開始</string>
   <string name="about_source">開放原始碼（GPLv3），在 GitHub 上</string>
   <string name="privacy_policy">隱私權政策</string>
   <string name="rules_changed">（已修改）</string>

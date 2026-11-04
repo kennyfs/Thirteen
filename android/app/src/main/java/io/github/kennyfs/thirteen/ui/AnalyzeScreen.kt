@@ -123,7 +123,7 @@ private fun HandPage(vm: AppViewModel, onRules: () -> Unit) {
         itemVerticalAlignment = Alignment.CenterVertically,
       ) {
         Text(stringResource(R.string.nav_analyze), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(end = 4.dp))
-        Text(stringResource(R.string.pick_13_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (wide) Text(stringResource(R.string.pick_13_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.weight(1f))
         AnalysisChoices(vm, onRules)
       }
@@ -249,11 +249,17 @@ private fun RecordPicker(vm: AppViewModel, onDismiss: () -> Unit) {
 @Composable
 fun CandidatesPage(vm: AppViewModel) {
   val a = vm.analysis ?: return
-  Column(Modifier.fillMaxSize()) {
-    TitleBar(stringResource(R.string.candidates), onBack = { vm.anaPage = 0 }) {
-      InfoButton(stringResource(R.string.analyze_info))
+  BoxWithConstraints(Modifier.fillMaxSize()) {
+    val showHand = maxWidth >= 560.dp && vm.anaHand.size == 13
+    Column(Modifier.fillMaxSize()) {
+      TitleBar(stringResource(R.string.candidates), onBack = { vm.anaPage = 0 }) {
+        if (showHand) Row(horizontalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.padding(end = 4.dp)) {
+          for (c in vm.anaHand.sortedDescending()) CardFace(c, 22.dp)
+        }
+        InfoButton(stringResource(R.string.analyze_info))
+      }
+      CandidateList(a, vm.anaMine, legacyNote(vm, a), Modifier.weight(1f))
     }
-    CandidateList(a, vm.anaMine, legacyNote(vm, a), Modifier.weight(1f))
   }
 }
 
@@ -303,7 +309,7 @@ fun CandidateList(
     // side pane's height takes its details: the expected points and the chances 2 + 2 + 3, each with its difference
     // beside its figure or, when the tiles are narrow, under it.
     val paneWidth = maxWidth * 0.34f - 20.dp
-    val tileLines = listOf(2, 2, 3).sumOf { n -> if ((paneWidth - 4.dp * (n - 1)) / n >= textRoom(78)) 0 else 1 }
+    val tileLines = listOf(2, 2, 3).sumOf { n -> if ((paneWidth - 4.dp * (n - 1)) / n >= textRoom(98)) 0 else 1 }
     val lost = if (a.rules["on_win"] == 1.0) Rules.ROYALTIES.count { (a.rules[it] ?: 0.0) > 0 } else 0
     val paneHeight = 16.dp + textRoom(24) + 4.dp + (textRoom(18) + textRoom(24) + 6.dp + 4.dp) * 3 + textRoom(16) * tileLines +
       (textRoom(18) + textRoom(24) + 10.dp) * ((lost + 1) / 2)
@@ -322,7 +328,7 @@ fun CandidateList(
           }
         }
         if (pinned) item(key = "pinned") {
-          val (label, strong) = badgeOf(mineAt!!, true)
+          val (label, strong) = badgeOf(mineAt, true)
           CandidateItem(
             label, strong, texts[mineAt], a.cands[mineAt], a.cands[0], wheel, tags[mineAt], open = if (wide) current == PINNED else PINNED in openSet,
             mine = true, detail = !wide, a = a,
@@ -370,21 +376,31 @@ private fun CandidateItem(
       .clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 6.dp),
     verticalArrangement = Arrangement.spacedBy(4.dp),
   ) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
       if (strong) Badge(label, colors.primary, colors.onPrimary) else Badge(label, colors.surfaceContainerHighest, colors.onSurface)
+      val shape = Commentary.shapeOf(cd.arrangement, cd.info.categories, wheel)?.let { shapeName(it) }
+      val rowSummary = texts.joinToString(" · ")
+      val middle = when {
+        open && detail -> shape ?: ""
+        shape != null -> "$shape · $rowSummary"
+        else -> rowSummary
+      }
       Text(
-        Commentary.shapeOf(cd.arrangement, cd.info.categories, wheel)?.let { shapeName(it) } ?: "", Modifier.weight(1f),
-        style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = colors.primary, maxLines = 1, overflow = TextOverflow.Ellipsis,
+        middle, Modifier.weight(1f),
+        style = MaterialTheme.typography.bodyMedium, fontWeight = if (shape != null) FontWeight.Medium else FontWeight.Normal,
+        color = if (shape != null) colors.primary else colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
       )
       if (tag != null) Text(tag, style = MaterialTheme.typography.bodyMedium, color = colors.tertiary, maxLines = 1)
       cd.q?.let { q ->
-        if (best?.q != null && best.q - q >= qGap) Text("(${fmtQ(q - best.q)})", style = MaterialTheme.typography.bodyMedium, color = BAD, maxLines = 1, softWrap = false)
+        if (!(open && detail) && best?.q != null && best.q - q >= qGap) Text("(${fmtQ(q - best.q)})", style = MaterialTheme.typography.bodyMedium, color = BAD, maxLines = 1, softWrap = false)
         Text(fmtQ(q), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = qColor(q), maxLines = 1, softWrap = false)
       }
     }
     if (open && detail) BoxWithConstraints(Modifier.fillMaxWidth()) {
-      val left = maxWidth * 0.45f
-      val card = ((left - LINE_GAP * 4) / 5).coerceAtMost(LocalCardSizes.current.play)
+      // Leave room on the right for two 4-character tiles ("被全壘打") at large font sizes.
+      val maxLeft = (maxWidth - textRoom(132) - 8.dp).coerceAtLeast(maxWidth * 0.34f)
+      val card = ((minOf(maxWidth * 0.44f, maxLeft) - LINE_GAP * 4) / 5).coerceAtMost(LocalCardSizes.current.play)
+      val left = rowWidth(5, card, LINE_GAP)
       Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Column(Modifier.width(left), verticalArrangement = Arrangement.spacedBy(4.dp)) {
           for (r in 0 until 3) {
@@ -411,6 +427,7 @@ private fun CandidateDetail(
   val colors = MaterialTheme.colorScheme
   Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
     // The rows' hands, front to back, in as few lines as they take.
+    if (pane) Text(texts.joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
     cd.q?.let { q ->
       // "Expected −0.55 (−0.12)": the gap to the best; on the best, how much more than the player's it is.
       FlowRow(itemVerticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -441,17 +458,17 @@ private fun ProbGrid(a: Analysis, p: List<Double>, best: List<Double>?, pane: Bo
     val tile = textRoom(62)
     val fit = ((maxWidth + gap) / (tile + gap)).toInt()
     val lines: List<List<Int>> = when {
+      // In the side pane of a wide window, cap at 2 + 2 + 3 so 4-character titles like "被全壘打" never truncate
+      pane -> if ((maxWidth - gap * 2) / 3 >= tile * 0.85f) listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6, 7)) else listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6), listOf(7))
       fit >= 7 -> listOf(SHOWN_PROBS)
       fit >= 4 -> listOf(listOf(0, 1, 2, 3), listOf(5, 6, 7))
-      // The side pane of a wide window is only there when its height takes these.
-      pane -> listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6, 7))
       (maxWidth - gap * 2) / 3 >= tile * 0.85f -> listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6, 7))
       else -> listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6), listOf(7))
     }
     Column(verticalArrangement = Arrangement.spacedBy(gap)) {
       for (line in lines) Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(gap)) {
         // The difference beside the figure when the line's tiles have room for both, else under it.
-        val inline = (width - gap * (line.size - 1)) / line.size >= textRoom(78)
+        val inline = (width - gap * (line.size - 1)) / line.size >= textRoom(98)
         for (k in line) {
           val d = gaps.getValue(k)
           val tone = if (k !in notable) 0 else if ((d > 0) == GOOD_WHEN_HIGH[k]) 1 else -1

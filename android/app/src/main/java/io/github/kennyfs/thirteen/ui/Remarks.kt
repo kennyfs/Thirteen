@@ -31,20 +31,20 @@ fun Remarks(remarks: List<Commentary.Remark>, modifier: Modifier = Modifier) {
   val mine = remarks.firstOrNull { it is Commentary.Same || it is Commentary.Mistake }
   val colors = MaterialTheme.colorScheme
   Column(
-    modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(colors.tertiaryContainer).padding(horizontal = 14.dp, vertical = 10.dp),
-    verticalArrangement = Arrangement.spacedBy(4.dp),
+    modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(colors.secondaryContainer).padding(horizontal = 12.dp, vertical = 8.dp),
+    verticalArrangement = Arrangement.spacedBy(3.dp),
   ) {
-    Text(stringResource(R.string.remarks_title), style = MaterialTheme.typography.titleSmall, color = colors.onTertiaryContainer)
-    // A mistake on the error colors' own pair: the theme's error color on the tertiary container can be light on light.
+    Text(stringResource(R.string.remarks_title), style = MaterialTheme.typography.titleSmall, color = colors.onSecondaryContainer)
+    // A mistake on the error colors' own pair: the theme's error color on the container can be light on light.
     if (mine is Commentary.Mistake)
       Text(
-        remarkText(mine), Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(colors.errorContainer).padding(horizontal = 8.dp, vertical = 4.dp),
-        style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = colors.onErrorContainer,
+        remarkText(mine), Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(colors.errorContainer).padding(horizontal = 8.dp, vertical = 3.dp),
+        style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = colors.onErrorContainer,
       )
     else if (mine != null)
-      Text(remarkText(mine), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = colors.onTertiaryContainer)
+      Text(remarkText(mine), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = colors.onSecondaryContainer)
     val rest = (remarks - setOfNotNull(mine)).map { remarkText(it) }.joinToString(stringResource(R.string.remark_sep))
-    if (rest.isNotEmpty()) Text(rest, style = MaterialTheme.typography.bodyLarge, color = colors.onTertiaryContainer)
+    if (rest.isNotEmpty()) Text(rest, style = MaterialTheme.typography.bodyMedium, color = colors.onSecondaryContainer)
   }
 }
 

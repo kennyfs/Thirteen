@@ -58,6 +58,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,6 +80,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -217,8 +219,8 @@ private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
 @Composable
 private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, fit: ArrangeFit, onConfirm: () -> Unit) {
   Column(Modifier.fillMaxSize()) {
-    Felt(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 10.dp)) {
-      BoxWithConstraints(Modifier.fillMaxSize().padding(10.dp)) {
+    Felt(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp)) {
+      BoxWithConstraints(Modifier.fillMaxSize().padding(8.dp)) {
         val density = LocalDensity.current
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
           Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -233,7 +235,15 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
       horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
       val sortLabel = stringResource(if (vm.sortBySuit) R.string.sort_by_suit_on else R.string.sort_by_rank_on)
-      OutlinedIconButton(onClick = { vm.sortBySuit = !vm.sortBySuit }, Modifier.size(46.dp)) { Icon(Icons.Filled.SwapVert, sortLabel) }
+      val sortShort = stringResource(if (vm.sortBySuit) R.string.sort_suit else R.string.sort_rank)
+      OutlinedButton(
+        onClick = { vm.sortBySuit = !vm.sortBySuit },
+        Modifier.height(46.dp).semantics { contentDescription = sortLabel },
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp),
+      ) {
+        Icon(Icons.Filled.SwapVert, null, Modifier.size(20.dp))
+        Text(sortShort, Modifier.padding(start = 4.dp), style = MaterialTheme.typography.labelLarge, maxLines = 1, softWrap = false)
+      }
       OutlinedIconButton(onClick = vm::undo, Modifier.size(46.dp), enabled = vm.canUndo) {
         Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.undo))
       }
@@ -504,15 +514,18 @@ private fun Finished(vm: AppViewModel, arrangements: List<Rows>, score: Score) {
       Row(
         Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, top = if (wide) 0.dp else 4.dp, bottom = if (wide) 0.dp else 4.dp)
           .heightIn(min = if (wide) RESULT_HEADER else 56.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
       ) {
-        Text(if (vm.replaying) stringResource(R.string.replay_title) else stringResource(R.string.hand_n, vm.session.first), style = MaterialTheme.typography.titleLarge)
+        Text(if (vm.replaying) stringResource(R.string.replay_title) else stringResource(R.string.hand_n, vm.session.first), style = MaterialTheme.typography.titleLarge, maxLines = 1, softWrap = false)
         Text(
           stringResource(R.string.this_hand, signed(mine)), style = MaterialTheme.typography.headlineSmall,
-          color = if (mine > 0) GOOD else if (mine < 0) BAD else MaterialTheme.colorScheme.onSurface,
+          color = if (mine > 0) GOOD else if (mine < 0) BAD else MaterialTheme.colorScheme.onSurface, maxLines = 1, softWrap = false,
         )
-        Text(stringResource(R.string.total_so_far, signed(vm.session.second[0])), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.weight(1f))
+        Text(
+          stringResource(R.string.total_so_far, signed(vm.session.second[0])), Modifier.weight(1f),
+          style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
+          maxLines = 1, overflow = TextOverflow.Ellipsis,
+        )
         if (wide) {
           HandKeepers(vm, iconsOnly = true)
           ResultActions(vm, compact = true)
@@ -623,9 +636,11 @@ fun SeatResults(
   BoxWithConstraints(modifier.fillMaxSize()) {
     val seats = arrangements.size
     val nameWidth = textRoom(92)
-    // The result's cards are the `other` size, as everywhere else, unless the width has less room.
+    // The result's cards are the `other` size, as everywhere else, unless the width or height has less room.
+    val byHeight = ((maxHeight - SEAT_GAP * (seats - 1)) / seats - textRoom(18) - 10.dp) / 1.4f
     val lineCard = minOf(
       (maxWidth - nameWidth - ARROWS_WIDTH - 16.dp - COLUMN_GAP * 3 - SMALL_GAP * 10) / 13,
+      byHeight,
       LocalCardSizes.current.other,
     )
     if (maxWidth > maxHeight) SeatLines(arrangements, score, wheel, names, notes, totals, lineCard.coerceAtLeast(14.dp), nameWidth, onSeat)
@@ -746,8 +761,8 @@ private fun SeatName(s: Int, names: List<String>, notes: List<String?>, score: S
 }
 
 /**
- * Narrow screens: a block per player, one under another, the full width: the name and points, then each row's cards
- * with its hand and the result against the player's beside them; the scoops in words.
+ * Narrow screens: a block per player, one under another, the full width: the name, points and scoops in a header, then
+ * the three rows side by side when the width allows, else each row on its own line.
  */
 @Composable
 private fun SeatGrid(
@@ -756,45 +771,77 @@ private fun SeatGrid(
 ) {
   val t = LocalTable.current
   val texts = rowTexts(score, wheel)
+  val sideCard = ((width - 20.dp - COLUMN_GAP * 2 - LINE_GAP * 10 - 12.dp) / 13).coerceAtMost(LocalCardSizes.current.other)
+  // The three rows side by side when the cards are not too small and the front's three are as wide as its name ("散牌 Q").
+  val sideBySide = sideCard >= 20.dp && rowWidth(3, sideCard, LINE_GAP) >= textRoom(48)
   val labelWidth = maxOf(72.dp, textRoom(13) * 5.5f)
-  val card = ((width - 20.dp - labelWidth - 8.dp - SMALL_GAP * 4) / 5).coerceIn(16.dp, LocalCardSizes.current.play)
+  val stackCard = ((width - 20.dp - labelWidth - 8.dp - SMALL_GAP * 4) / 5).coerceIn(16.dp, LocalCardSizes.current.play)
   val scoop = stringArrayResource(R.array.prob_names)[0]
-  Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+  var expandedSeat by rememberSaveable { mutableStateOf<Int?>(null) }
+  Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     for (s in arrangements.indices) {
       val info = score.info[s]
       val x = score.result[s]
+      val scooped = arrangements.indices.filter { score.scoops[s][it] }
+      val by = arrangements.indices.filter { score.scoops[it][s] }
+      val expanded = sideBySide && expandedSeat == s
       Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(if (s == 0) t.onFelt.copy(alpha = 0.14f) else t.slot)
           .let { m -> if (score.homeRun[s]) m.border(2.dp, t.highlight, RoundedCornerShape(12.dp)) else m }
-          .let { m -> if (onSeat != null) m.clickable { onSeat(s) } else m }.padding(horizontal = 10.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+          .clickable {
+            if (sideBySide) expandedSeat = if (expandedSeat == s) null else s
+            onSeat?.invoke(s)
+          }.padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp),
       ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
           Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
               Text(names[s], style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1)
               notes[s]?.let { Text(it, Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodySmall, color = t.onFeltDim, maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }
-            Text(seatSub(s, score, totals), style = MaterialTheme.typography.bodySmall, color = t.onFeltDim, maxLines = 1)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+              Text(seatSub(s, score, totals), style = MaterialTheme.typography.bodySmall, color = t.onFeltDim, maxLines = 1)
+              if (scooped.isNotEmpty())
+                Text("$scoop → " + scooped.joinToString("、") { names[it] }, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = if (s == 0) t.good else t.onFelt, maxLines = 1, overflow = TextOverflow.Ellipsis)
+              if (by.isNotEmpty())
+                Text(stringResource(R.string.scooped_by, by.joinToString("、") { names[it] }), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = if (s == 0) t.bad else t.onFeltDim, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
           }
           if (score.homeRun[s]) Text(stringResource(R.string.home_run), style = MaterialTheme.typography.labelLarge, color = t.highlight)
           Text(signed(x), style = MaterialTheme.typography.headlineSmall, color = if (x > 0) t.good else if (x < 0) t.bad else t.onFelt)
         }
-        val scooped = arrangements.indices.filter { score.scoops[s][it] }
-        val by = arrangements.indices.filter { score.scoops[it][s] }
-        if (scooped.isNotEmpty())
-          Text("$scoop → " + scooped.joinToString("、") { names[it] }, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = if (s == 0) t.good else t.onFelt)
-        if (by.isNotEmpty())
-          Text(stringResource(R.string.scooped_by, by.joinToString("、") { names[it] }), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = if (s == 0) t.bad else t.onFeltDim)
-        for (r in 0 until 3) {
-          Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Column(Modifier.width(labelWidth), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-              Text(texts[s][r].first, style = MaterialTheme.typography.bodySmall, maxLines = 2, color = if (info.valid) t.onFeltDim else t.bad)
-              texts[s][r].second?.let { RowMark(it) }
+        if (sideBySide && !expanded) {
+          // Each row as wide as its cards: the hand's name, and the result against the player's under it when both do
+          // not fit on one line.
+          Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(COLUMN_GAP), verticalAlignment = Alignment.Bottom) {
+            for (r in 0 until 3) {
+              Column(Modifier.width(rowWidth(Cards.ROW_SIZES[r], sideCard, LINE_GAP) + 2.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalArrangement = Arrangement.spacedBy(2.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+                  Text(
+                    texts[s][r].first, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    color = if (info.valid) t.onFeltDim else t.bad,
+                  )
+                  texts[s][r].second?.let { RowMark(it, small = true) }
+                }
+                val bonus = info.royalties[r] > 0
+                Box(if (bonus) Modifier.border(2.dp, t.highlight, RoundedCornerShape(5.dp)).padding(1.dp) else Modifier.padding(1.dp)) {
+                  RowCards(arrangements[s][r], if (info.valid) info.categories[r] else 0, sideCard, LINE_GAP)
+                }
+              }
             }
-            val bonus = info.royalties[r] > 0
-            Box(if (bonus) Modifier.border(2.dp, t.highlight, RoundedCornerShape(6.dp)).padding(2.dp) else Modifier) {
-              RowCards(arrangements[s][r], if (info.valid) info.categories[r] else 0, card, SMALL_GAP)
+          }
+        } else {
+          for (r in 0 until 3) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+              Column(Modifier.width(labelWidth), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(texts[s][r].first, style = MaterialTheme.typography.bodySmall, maxLines = 2, color = if (info.valid) t.onFeltDim else t.bad)
+                texts[s][r].second?.let { RowMark(it) }
+              }
+              val bonus = info.royalties[r] > 0
+              Box(if (bonus) Modifier.border(2.dp, t.highlight, RoundedCornerShape(6.dp)).padding(2.dp) else Modifier) {
+                RowCards(arrangements[s][r], if (info.valid) info.categories[r] else 0, stackCard, SMALL_GAP)
+              }
             }
           }
         }

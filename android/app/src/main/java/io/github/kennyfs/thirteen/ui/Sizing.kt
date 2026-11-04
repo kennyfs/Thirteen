@@ -76,12 +76,12 @@ fun arrangeFit(areaW: Dp, areaH: Dp, wide: Boolean, u: Dp, maxCard: Dp = MAX_PLA
     val s = minOf(byRowsWidth, byHandWidth, byHeight, maxCard).down().coerceAtLeast(18.dp)
     return ArrangeFit(s, true, 13)
   }
-  // Felt padded 10 outside and 10 inside; the bar of buttons under it. The hand in one line or, at most, two.
-  val w = areaW - 40.dp
-  val h = areaH - (BIG_BUTTON + 16.dp) - 20.dp
+  // Felt padded 8 outside and 8 inside; the bar of buttons under it. The hand in one line or, at most, two.
+  val w = areaW - 32.dp
+  val h = areaH - (BIG_BUTTON + 16.dp) - 16.dp
   val header = maxOf(32.dp, room(26))
   var best: ArrangeFit? = null
-  for (perLine in if ((w - HAND_GAP * 12 - (SUIT_GAP - HAND_GAP) * 3) / 13 >= 40.dp) listOf(13) else listOf(7)) {
+  for (perLine in listOf(13, 7)) {
     val lines = ceil(13f / perLine).toInt()
     for (above in listOf(false, true)) {
       val labels = if (above) 0.dp else maxOf(72.dp, room(64)) + 8.dp
@@ -109,7 +109,7 @@ fun cardSizes(w: Dp, h: Dp, u: Dp): CardSizes {
   val other = if (wide) {
     // The result page's four players in the height left by its header (48), the felt's padding and the gaps: each a line
     // of hand names and the cards.
-    val perSeat = (h - RESULT_HEADER - 6.dp - 12.dp - 4.dp * 3) / 4 - room(16) - 12.dp
+    val perSeat = (h - maxOf(RESULT_HEADER, room(32)) - 6.dp - 12.dp - 4.dp * 3) / 4 - room(18) - 12.dp
     // The analysis page's list takes two thirds of the width.
     minOf(lineCard(w * 0.66f - PAGE_PAD * 2), (perSeat / 1.4f).down(), MAX_OTHER)
   } else minOf(lineCard(w - PAGE_PAD * 2), MAX_OTHER)

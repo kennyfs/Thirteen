@@ -34,6 +34,7 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,6 +59,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -151,22 +153,71 @@ data class ToggleColors(val onContainer: Color, val onContent: Color, val offCon
   }
 }
 
-/** A labelled value picked from a menu: the whole row is the touch target. */
+/** A labelled value picked from a selection dialog: the whole row is the touch target. */
 @Composable
-fun <T> SelectRow(title: String, options: List<Pair<T, String>>, value: T, onPick: (T) -> Unit, modifier: Modifier = Modifier) {
+fun <T> SelectRow(
+  title: String,
+  options: List<Pair<T, String>>,
+  value: T,
+  onPick: (T) -> Unit,
+  modifier: Modifier = Modifier,
+  icons: Map<T, ImageVector> = emptyMap(),
+) {
   var open by remember { mutableStateOf(false) }
-  Box(modifier) {
-    SettingRow(
-      title, options.firstOrNull { it.first == value }?.second ?: options.firstOrNull()?.second, arrow = false, onClick = { open = true },
-      trailing = { Icon(Icons.Filled.ArrowDropDown, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+  val current = options.firstOrNull { it.first == value }?.second ?: options.firstOrNull()?.second
+  SettingRow(
+    title, current, arrow = false, onClick = { open = true }, modifier = modifier,
+    trailing = { Icon(Icons.Filled.ArrowDropDown, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+  )
+  if (open) {
+    val colors = MaterialTheme.colorScheme
+    AlertDialog(
+      onDismissRequest = { open = false },
+      shape = RoundedCornerShape(28.dp),
+      containerColor = colors.surfaceContainerHigh,
+      title = { Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) },
+      text = {
+        Column(
+          Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+          verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+          for ((v, text) in options) {
+            val isSelected = v == value
+            val icon = icons[v]
+            Surface(
+              onClick = { onPick(v); open = false },
+              shape = RoundedCornerShape(16.dp),
+              color = if (isSelected) colors.secondaryContainer else Color.Transparent,
+              modifier = Modifier.fillMaxWidth(),
+            ) {
+              Row(
+                Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+              ) {
+                if (icon != null) {
+                  Icon(
+                    icon, null,
+                    tint = if (isSelected) colors.onSecondaryContainer else colors.onSurfaceVariant,
+                    modifier = Modifier.size(24.dp),
+                  )
+                }
+                Text(
+                  text, Modifier.weight(1f),
+                  style = MaterialTheme.typography.bodyLarge,
+                  fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                  color = if (isSelected) colors.onSecondaryContainer else colors.onSurface,
+                )
+                RadioButton(selected = isSelected, onClick = null)
+              }
+            }
+          }
+        }
+      },
+      confirmButton = {
+        TextButton(onClick = { open = false }) { Text(stringResource(R.string.cancel)) }
+      },
     )
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-      for ((v, text) in options)
-        DropdownMenuItem(
-          text = { Text(text, style = MaterialTheme.typography.bodyLarge) }, onClick = { onPick(v); open = false },
-          modifier = Modifier.heightIn(min = 52.dp),
-        )
-    }
   }
 }
 

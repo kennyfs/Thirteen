@@ -45,12 +45,17 @@ fun ScoreChart(totals: List<Double>, firstDate: String, lastDate: String, descri
       val hi = max(points.max(), 0.0)
       val lo = min(points.min(), 0.0)
       val span = (hi - lo).takeIf { it > 0 } ?: 1.0
+      val end = points.last()
+      val endColor = if (end > 0) up else if (end < 0) down else line
+      val e = measurer.measure(signed(end), label.copy(color = endColor, fontSize = 15.sp))
+      val a = measurer.measure(firstDate, label)
+      val b = measurer.measure(lastDate, label)
       val left = measurer.measure(axis(hi), label).size.width.coerceAtLeast(measurer.measure(axis(lo), label).size.width) + 10.dp.toPx()
-      val right = 44.dp.toPx()
-      val top = 10.dp.toPx()
-      val bottom = 26.dp.toPx()
-      val w = size.width - left - right
-      val h = size.height - top - bottom
+      val right = max(44.dp.toPx(), e.size.width + 12.dp.toPx())
+      val top = max(10.dp.toPx(), e.size.height / 2f + 2.dp.toPx())
+      val bottom = max(26.dp.toPx(), max(a.size.height, b.size.height) + 8.dp.toPx())
+      val w = (size.width - left - right).coerceAtLeast(1f)
+      val h = (size.height - top - bottom).coerceAtLeast(1f)
       fun x(i: Int) = left + w * i / max(points.size - 1, 1)
       fun y(v: Double) = top + h * (1 - ((v - lo) / span)).toFloat()
       // The zero line and the extremes.
@@ -64,13 +69,8 @@ fun ScoreChart(totals: List<Double>, firstDate: String, lastDate: String, descri
       }
       val path = Path().apply { points.forEachIndexed { i, v -> if (i == 0) moveTo(x(i), y(v)) else lineTo(x(i), y(v)) } }
       drawPath(path, line, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-      val end = points.last()
-      val endColor = if (end > 0) up else if (end < 0) down else line
       drawCircle(endColor, 5.dp.toPx(), Offset(x(points.size - 1), y(end)))
-      val e = measurer.measure(signed(end), label.copy(color = endColor, fontSize = 15.sp))
-      drawText(e, topLeft = Offset(x(points.size - 1) + 8.dp.toPx(), (y(end) - e.size.height / 2f).coerceIn(0f, size.height - e.size.height)))
-      val a = measurer.measure(firstDate, label)
-      val b = measurer.measure(lastDate, label)
+      drawText(e, topLeft = Offset(x(points.size - 1) + 8.dp.toPx(), (y(end) - e.size.height / 2f).coerceIn(0f, size.height - bottom - e.size.height / 2f)))
       drawText(a, topLeft = Offset(left, size.height - a.size.height))
       if (firstDate != lastDate) drawText(b, topLeft = Offset(left + w - b.size.width, size.height - b.size.height))
     }

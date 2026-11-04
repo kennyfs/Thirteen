@@ -17,8 +17,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BrightnessAuto
+import androidx.compose.material.icons.outlined.Contrast
+import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FileOpen
+import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -63,7 +69,6 @@ fun SettingsSubpage(title: String, onBack: () -> Unit, content: @Composable () -
 @Composable
 fun SettingsScreen(vm: AppViewModel, open: (SettingsPage) -> Unit) {
   val context = LocalContext.current
-  var confirmReset by rememberSaveable { mutableStateOf(false) }
   Column(Modifier.fillMaxSize()) {
     TitleBar(stringResource(R.string.nav_settings))
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
@@ -79,18 +84,28 @@ fun SettingsScreen(vm: AppViewModel, open: (SettingsPage) -> Unit) {
         SelectRow(
           stringResource(R.string.color_style), ColorStyle.entries.filter { dynamic || it == ColorStyle.TABLE || it == ColorStyle.MINIMAL }.map { it to styles[it.ordinal] },
           vm.colorStyle, vm::chooseColorStyle,
+          icons = mapOf(
+            ColorStyle.TABLE to Icons.Outlined.Palette,
+            ColorStyle.MINIMAL to Icons.Outlined.Contrast,
+            ColorStyle.WALLPAPER to Icons.Outlined.Wallpaper,
+          ),
         )
         val darks = stringArrayResource(R.array.dark_modes)
-        SelectRow(stringResource(R.string.dark_mode), DarkMode.entries.map { it to darks[it.ordinal] }, vm.darkMode, vm::chooseDarkMode)
+        SelectRow(
+          stringResource(R.string.dark_mode), DarkMode.entries.map { it to darks[it.ordinal] },
+          vm.darkMode, vm::chooseDarkMode,
+          icons = mapOf(
+            DarkMode.SYSTEM to Icons.Outlined.BrightnessAuto,
+            DarkMode.LIGHT to Icons.Outlined.LightMode,
+            DarkMode.DARK to Icons.Outlined.DarkMode,
+          ),
+        )
 
         SectionHeader(stringResource(R.string.settings_game))
         SettingRow(stringResource(R.string.nav_rules), vm.rulesName(vm.ruleValues).takeIf { vm.ruleValues.isNotEmpty() }) { open(SettingsPage.RULES) }
         val kinds = stringArrayResource(R.array.kinds)
         SettingRow(stringResource(R.string.opponents_title), opponentsSummary(vm, kinds)) { open(SettingsPage.OPPONENTS) }
         SettingRow(stringResource(R.string.networks), stringResource(R.string.networks_summary, vm.models.size)) { open(SettingsPage.NETWORKS) }
-
-        SectionHeader(stringResource(R.string.settings_data))
-        SettingRow(stringResource(R.string.reset_scores), stringResource(R.string.reset_scores_info), arrow = false) { confirmReset = true }
 
         SectionHeader(stringResource(R.string.settings_about))
         val version = runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: ""
@@ -103,13 +118,6 @@ fun SettingsScreen(vm: AppViewModel, open: (SettingsPage) -> Unit) {
       }
     }
   }
-  if (confirmReset)
-    AlertDialog(
-      onDismissRequest = { confirmReset = false },
-      confirmButton = { TextButton(onClick = { vm.resetSession(); confirmReset = false }) { Text(stringResource(R.string.reset)) } },
-      dismissButton = { TextButton(onClick = { confirmReset = false }) { Text(stringResource(R.string.cancel)) } },
-      text = { Text(stringResource(R.string.reset_confirm), style = MaterialTheme.typography.bodyLarge) },
-    )
 }
 
 @Composable

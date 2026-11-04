@@ -157,10 +157,11 @@ private fun EntryPage(vm: BattleViewModel) {
     TitleBar(stringResource(R.string.nav_battle))
     if (vm.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
     BoxWithConstraints(Modifier.fillMaxSize()) {
-      val wide = maxWidth >= 720.dp
-      val scroll = Modifier.verticalScroll(rememberScrollState()).imePadding().padding(horizontal = 16.dp).padding(bottom = 24.dp)
+      val wide = maxWidth > maxHeight || maxWidth >= 700.dp
+      val compact = maxHeight < 440.dp
+      val scroll = Modifier.verticalScroll(rememberScrollState()).imePadding().padding(horizontal = 16.dp).padding(bottom = 12.dp)
       val connection = @Composable {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp)) {
           OutlinedTextField(
             vm.name, { vm.name = it.take(Limits.NAME_LENGTH) }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.battle_name)) },
             singleLine = true, textStyle = MaterialTheme.typography.bodyLarge,
@@ -183,21 +184,21 @@ private fun EntryPage(vm: BattleViewModel) {
         }
       }
       val choices = @Composable {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 10.dp)) {
           val t = LocalTable.current
-          ChoiceTile(stringResource(R.string.battle_new_puzzle), stringResource(R.string.battle_puzzle_info), t.felt, t.onFelt, enabled = !vm.busy) { create(Mode.PUZZLE) }
+          ChoiceTile(stringResource(R.string.battle_new_puzzle), stringResource(R.string.battle_puzzle_info), t.felt, t.onFelt, compact = compact, enabled = !vm.busy) { create(Mode.PUZZLE) }
           ChoiceTile(
             stringResource(R.string.battle_new_game), stringResource(R.string.battle_game_info), MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.colorScheme.onSecondaryContainer, enabled = !vm.busy,
+            MaterialTheme.colorScheme.onSecondaryContainer, compact = compact, enabled = !vm.busy,
           ) { create(Mode.GAME) }
-          JoinTile(vm) { nearby(it) }
+          JoinTile(vm, compact = compact) { nearby(it) }
         }
       }
-      if (wide) Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-        Column(Modifier.weight(1f).then(scroll)) { connection() }
-        Column(Modifier.weight(1.2f).then(scroll)) { choices() }
+      if (wide) Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+        Column(Modifier.weight(0.95f).then(scroll)) { connection() }
+        Column(Modifier.weight(1.25f).then(scroll)) { choices() }
       }
-      else Column(Modifier.fillMaxSize().then(scroll).readable(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+      else Column(Modifier.fillMaxSize().then(scroll).readable(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         connection()
         choices()
       }
@@ -207,25 +208,25 @@ private fun EntryPage(vm: BattleViewModel) {
 
 /** A large choice: a title in large type and a line about it. */
 @Composable
-private fun ChoiceTile(title: String, info: String, container: Color, content: Color, enabled: Boolean = true, onClick: () -> Unit) {
-  Surface(onClick = onClick, enabled = enabled, shape = RoundedCornerShape(20.dp), color = container, contentColor = content, modifier = Modifier.fillMaxWidth()) {
-    Column(Modifier.padding(horizontal = 18.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-      Text(title, style = MaterialTheme.typography.headlineSmall)
-      Text(info, style = MaterialTheme.typography.bodyLarge, color = content.copy(alpha = 0.85f))
+private fun ChoiceTile(title: String, info: String, container: Color, content: Color, compact: Boolean = false, enabled: Boolean = true, onClick: () -> Unit) {
+  Surface(onClick = onClick, enabled = enabled, shape = RoundedCornerShape(16.dp), color = container, contentColor = content, modifier = Modifier.fillMaxWidth()) {
+    Column(Modifier.padding(horizontal = 14.dp, vertical = if (compact) 8.dp else 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+      Text(title, style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+      Text(info, style = if (compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium, color = content.copy(alpha = 0.88f))
     }
   }
 }
 
 /** Joining a room by its number; nearby, the rooms found around first. */
 @Composable
-private fun JoinTile(vm: BattleViewModel, nearby: (() -> Unit) -> Unit) {
+private fun JoinTile(vm: BattleViewModel, compact: Boolean = false, nearby: (() -> Unit) -> Unit) {
   val colors = MaterialTheme.colorScheme
   Column(
-    Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).border(2.dp, colors.outlineVariant, RoundedCornerShape(20.dp)).padding(horizontal = 18.dp, vertical = 16.dp),
-    verticalArrangement = Arrangement.spacedBy(10.dp),
+    Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).border(2.dp, colors.outlineVariant, RoundedCornerShape(16.dp)).padding(horizontal = 14.dp, vertical = if (compact) 8.dp else 12.dp),
+    verticalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 8.dp),
   ) {
-    Text(stringResource(R.string.battle_join_room), style = MaterialTheme.typography.headlineSmall)
-    Text(stringResource(R.string.battle_join_room_info), style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
+    Text(stringResource(R.string.battle_join_room), style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+    Text(stringResource(R.string.battle_join_room_info), style = if (compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
     if (vm.via == Via.NEARBY) {
       val found = vm.found
       if (vm.entry != Entry.JOIN || found == null)
