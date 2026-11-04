@@ -44,7 +44,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -385,15 +384,18 @@ private fun LobbyPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) {
                 i == -1 -> vm.changeSettings(s.copy(rules = vm.rulesFromPage()))
               }
             })
-            if (s.mode == Mode.PUZZLE)
-              SettingRow(stringResource(R.string.battle_hard), stringResource(R.string.battle_hard_info), arrow = false, trailing = {
-                Switch(s.hard, { vm.changeSettings(s.copy(hard = it)) })
-              }) { vm.changeSettings(s.copy(hard = !s.hard)) }
+            if (s.mode == Mode.PUZZLE) {
+              val levels = stringArrayResource(R.array.battle_levels)
+              // `hard` too, for a server before levels.
+              SelectRow(stringResource(R.string.battle_level), levels.indices.map { it + 1 to levels[it] }, s.puzzleLevel, {
+                vm.changeSettings(s.copy(level = it, hard = it >= 3))
+              })
+            }
           } else {
             SettingRow(stringResource(R.string.battle_hands), stringResource(R.string.battle_hands_n, s.hands))
             SettingRow(stringResource(R.string.battle_time), if (s.timeLimit == 0) stringResource(R.string.battle_no_limit) else stringResource(R.string.battle_seconds, s.timeLimit))
             SettingRow(stringResource(R.string.nav_rules), ruleName)
-            if (s.mode == Mode.PUZZLE) SettingRow(stringResource(R.string.battle_hard), stringResource(if (s.hard) R.string.on else R.string.off))
+            if (s.mode == Mode.PUZZLE) SettingRow(stringResource(R.string.battle_level), stringArrayResource(R.array.battle_levels)[s.puzzleLevel - 1])
           }
         }
       }
@@ -731,7 +733,7 @@ private fun settingsLine(room: RoomView, app: AppViewModel): String {
     app.rulesName(Rules.values(room.rules)),
     stringResource(R.string.battle_time) + " " + if (s.timeLimit == 0) stringResource(R.string.battle_no_limit) else stringResource(R.string.battle_seconds, s.timeLimit),
   )
-  if (s.hard) parts += stringResource(R.string.battle_hard)
+  if (s.mode == Mode.PUZZLE) parts += stringResource(R.string.battle_level) + " " + stringArrayResource(R.array.battle_levels)[s.puzzleLevel - 1]
   return parts.joinToString("，")
 }
 

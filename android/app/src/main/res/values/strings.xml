@@ -220,8 +220,15 @@
   <string name="battle_time">Time per hand</string>
   <string name="battle_no_limit">none</string>
   <string name="battle_seconds">%1$d s</string>
-  <string name="battle_hard">Hard hands only</string>
-  <string name="battle_hard_info">Hands that two simple strategies (the strongest back first, and rows judged one by one) both set at least a red mark\'s worth worse than the network\'s best.</string>
+  <string name="battle_level">Difficulty</string>
+  <!-- Puzzle levels 1 to 5: hands of about the same strength as random ones, easier or harder to arrange. -->
+  <string-array name="battle_levels">
+    <item>Easy</item>
+    <item>Random</item>
+    <item>Tricky</item>
+    <item>Hard</item>
+    <item>Hardest</item>
+  </string-array>
   <string name="battle_leave">Leave</string>
   <string name="battle_host">host</string>
   <string name="battle_away">away</string>
@@ -254,8 +261,6 @@
   <string name="back">Back</string>
   <string name="increase">Increase</string>
   <string name="decrease">Decrease</string>
-  <string name="on">On</string>
-  <string name="off">Off</string>
   <string name="change">Change</string>
   <string name="show_more">Show more</string>
   <string name="analyzing">The network is thinking…</string>

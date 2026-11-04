@@ -8,17 +8,32 @@ Two modes, played in the app's Multiplayer tab against people on a server or on 
 - **Table game** (1 to 4 players): one table, networks in the empty seats, scored as usual; the most points wins.
 
 The host sets the number of hands (1 to 30), the rules (the Rules page's, then fixed for the game), a time limit
-per hand, and for a puzzle whether to deal only **hard hands**. After the game the hands are listed with their cards;
+per hand, and for a puzzle the **level** of its hands. After the game the hands are listed with their cards;
 each opens the analysis of the player's hand, with the others' choices marked (a puzzle) or the table's result (a
 table game). Every hand played also goes to the records, labelled `battle`.
 
-## Hard hands
+## Puzzle levels
 
-A hand is hard when two simple strategies, greedy (the strongest back, then middle, then front) and `indep`
-(rows judged one by one), both lose at least one red mark's worth (the app's `notableQGap`: 0.1 under family,
-scaled with the scoring) against the network's best. About a third of random hands are (34% under family, 27%
-under taiwan, over 300 hands); the room tries up to 12 random hands and takes the first hard one, or the hardest.
-This definition is a first one and may change before a release (with records of other players, for example).
+A puzzle deals at one of five levels: 1 easy, 2 random, 3 to 5 harder and harder. Levels change how hard a hand is
+to arrange, not how good it is: harder hands chosen among random ones would otherwise lean to weak hands, which
+have many shapes of about the same worth and none clearly best.
+
+A hand's **strength** is the network's best Q. How **hard** it is (`Difficulty.score`) has two parts, in units of
+the app's `notableQGap` g (a red mark's worth: 0.1 under family, scaled with the scoring):
+- the other shapes close to the best, a shape being the rows' categories (pair / straight / flush, ...) and each
+  counted by its best arrangement: 1 - gap / 5g, nothing from a gap of 5g;
+- what the better of two simple strategies, greedy (the strongest back, then middle, then front) and `indep` (rows
+  judged one by one), loses against the best, over 3g.
+
+Strong hands have fewer close shapes but lose more to simple play, so the sum hardly depends on the strength
+(correlation -0.02 over 40,000 random hands under family, against +0.22 for the loss alone and -0.31 for the
+shapes alone). Level 2 deals a random hand. The others draw 3n random hands (`Levels`), keep the n closest in strength
+to the first one drawn, and deal the easiest (level 1, n = 4) or the hardest (levels 3, 4, 5: n = 3, 6, 12). Over the
+same 40,000 hands the median best Q stays at -0.11 to -0.20 at every level, and greedy or indep lose at least 0.1
+in 7% (level 1), 34% (random), 58%, 68% and 68% of the hands.
+
+A client before levels sends only `hard`, dealt as level 4; clients send `hard` = level >= 3 for servers before
+levels, which deal hard hands as before.
 
 ## Structure
 
@@ -69,11 +84,11 @@ What the server limits (environment variables in `server/compose.yml`):
 with one ONNX Runtime thread), so it never takes more than that many cores whatever the rooms do. At most
 `ENGINE_QUEUE` (64) requests wait; beyond that a request fails at once and its room closes instead of piling up. A
 request that takes longer than `ENGINE_TIMEOUT_MS` (10 s) kills its process, which is started again. Only rooms ask
-the engine anything, and only what the game needs: per hand a bounded number of requests (the hard-hand search, the
+the engine anything, and only what the game needs: per hand a bounded number of requests (the puzzle level's search, the
 networks' seats, greedy for timeouts, the score or the losses), and each room has a budget it cannot exceed. There
 is no request a client can make that runs the network on its own; analyses after the game run on the phone. A
 puzzle hand's analysis is one request for all its players. For a sense of scale: one hand's analysis takes about
-1 to 10 ms on one core, the hard-hand search about 3.5 ms per try.
+1 to 10 ms on one core, the level search about 10 ms per hand drawn (36 at level 5).
 
 **Memory.** About 70 MiB idle and about 160 MiB with 30 rooms playing at once (half table games, half hard
 puzzles): the JVM (heap at most 128 MiB) about 110 MiB, and each engine process about 47 MiB. More load than the

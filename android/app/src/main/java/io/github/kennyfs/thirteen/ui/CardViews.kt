@@ -46,6 +46,8 @@ private val EDGE = Color(0xFF9E9E9E)
 private val DARK_FACE = Color(0xFF2B2F2D)
 private val DARK_RED = Color(0xFFFF8A80)
 private val DARK_BLACK = Color(0xFFF0F0F0)
+/** How much larger the text form of a suit is set than the emoji form, for about the same glyph size. */
+private const val SUIT_TEXT_SCALE = 1.5f
 private val DARK_EDGE = Color(0xFF626865)
 // One hue per category, as in gui/play.html; index = category.
 private val HUES = floatArrayOf(0f, 0f, 48f, 26f, 130f, 185f, 218f, 268f, 335f, 0f)
@@ -139,7 +141,12 @@ fun CardFace(
         Cards.rankText(card), color = color, fontSize = rankSize, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold,
         lineHeight = rankSize, maxLines = 1, softWrap = false, letterSpacing = (-0.04).sp,
       )
-      Text(Cards.SUIT_SYMBOLS[Cards.suit(card)], color = color, fontSize = suitSize, lineHeight = suitSize, maxLines = 1)
+      // The text form of the suit (U+FE0E): the emoji form ignores the color, black spades and clubs on a dark card. Its
+      // glyph is smaller, so it takes a larger size in the same line height.
+      Text(
+        Cards.SUIT_SYMBOLS[Cards.suit(card)] + "\uFE0E", color = color, fontSize = suitSize * SUIT_TEXT_SCALE, lineHeight = suitSize,
+        maxLines = 1, softWrap = false,
+      )
     }
   }
 }

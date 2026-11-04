@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.Base64
+import kotlin.math.abs
 
 /** Where a room sends a player's messages: a WebSocket, a Nearby endpoint, or the hosting phone's own screen. */
 interface Peer {
@@ -271,22 +272,20 @@ class Room(
     checkClose()
   }
 
-  /** A random hand, or with `hard`, the hardest of a few random ones (the first hard enough ends the search). */
+  /**
+   * A random hand, or at a level other than Levels.RANDOM, the easiest or hardest of the hands closest in strength to
+   * a random one (Levels).
+   */
   private suspend fun puzzleHand(): List<Int> {
     fun random13() = (0 until 52).toMutableList().also { it.shuffle(random) }.take(13).sorted()
-    if (!settings.hard) return random13()
-    var best = random13()
-    var bestD = -1.0
-    for (t in 0 until HARD_TRIES) {
-      val h = if (t == 0) best else random13()
-      val d = useEngine { engine.difficulty(h, rules) }
-      if (d > bestD) {
-        best = h
-        bestD = d
-      }
-      if (d >= HARD_ENOUGH) break
-    }
-    return best
+    val level = settings.puzzleLevel
+    val kept = Levels.POOL.getValue(level)
+    if (level == Levels.RANDOM) return random13()
+    // The first hand drawn sets the strength; the closest ones to it, itself included, are compared.
+    val drawn = List(kept * Levels.DRAWS_PER_KEPT) { random13() }.map { it to useEngine { engine.difficulty(it, rules) } }
+    val target = drawn[0].second.strength
+    val pool = drawn.sortedBy { abs(it.second.strength - target) }.take(kept)
+    return (if (level < Levels.RANDOM) pool.minBy { it.second.score } else pool.maxBy { it.second.score }).first
   }
 
   /**
@@ -360,7 +359,7 @@ class Room(
     return block()
   }
 
-  private fun budget() = 20 + settings.hands * (2 * HARD_TRIES + 3 * Limits.TABLE + 4) + 8 * maxPlayers
+  private fun budget() = 20 + settings.hands * (Levels.MAX_DRAWS + 3 * Limits.TABLE + 4) + 8 * maxPlayers
 
   // ---- Output ----
 
@@ -389,10 +388,6 @@ class Room(
   private fun token(): String = ByteArray(16).also(random::nextBytes).let { Base64.getUrlEncoder().withoutPadding().encodeToString(it) }
 
   companion object {
-    /** Up to this many hands are tried for a hard puzzle hand: about a third of random hands are hard enough. */
-    const val HARD_TRIES = 12
-    const val HARD_ENOUGH = 1.0
-
     fun constantTimeEquals(a: String, b: String) = MessageDigest.isEqual(a.toByteArray(), b.toByteArray())
   }
 }

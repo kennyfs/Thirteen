@@ -31,6 +31,7 @@ import io.github.kennyfs.thirteen.protocol.HubLimits
 import io.github.kennyfs.thirteen.protocol.Join
 import io.github.kennyfs.thirteen.protocol.Joined
 import io.github.kennyfs.thirteen.protocol.Leave
+import io.github.kennyfs.thirteen.protocol.Levels
 import io.github.kennyfs.thirteen.protocol.Mode
 import io.github.kennyfs.thirteen.protocol.PROTOCOL_VERSION
 import io.github.kennyfs.thirteen.protocol.Phase
@@ -131,8 +132,11 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   /** New rooms start with the rules page's rules and the last hands, time and difficulty chosen. */
   fun defaults(mode: Mode) = RoomSettings(
     mode, prefs.getInt("hands", 10), settings.rules.let { RuleChoice(it.preset, it.overrides) }, prefs.getInt("time", 0),
-    mode == Mode.PUZZLE && prefs.getBoolean("hard", false),
-  )
+    level = level(mode, prefs.getInt("level", if (prefs.getBoolean("hard", false)) 4 else Levels.RANDOM)),
+  ).let { if (mode == Mode.PUZZLE) it.copy(hard = it.level >= 3) else it }
+
+  /** A puzzle room's level (0 for a game). */
+  private fun level(mode: Mode, level: Int) = if (mode == Mode.PUZZLE) level.coerceIn(Levels.EASIEST, Levels.HARDEST) else 0
 
   // ---- Into a room ----
 
@@ -219,7 +223,8 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   // ---- In the room ----
 
   fun changeSettings(s: RoomSettings) {
-    prefs.edit().putInt("hands", s.hands).putInt("time", s.timeLimit).putBoolean("hard", s.hard).apply()
+    prefs.edit().putInt("hands", s.hands).putInt("time", s.timeLimit).apply()
+    if (s.mode == Mode.PUZZLE) prefs.edit().putInt("level", s.puzzleLevel).apply()
     link?.send(ChangeSettings(s))
   }
 

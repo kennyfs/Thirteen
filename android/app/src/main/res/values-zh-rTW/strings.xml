@@ -219,8 +219,14 @@
   <string name="battle_time">每手時限</string>
   <string name="battle_no_limit">不限</string>
   <string name="battle_seconds">%1$d 秒</string>
-  <string name="battle_hard">只出有難度的牌</string>
-  <string name="battle_hard_info">兩種簡單策略（後墩最大優先、各墩分開估計）都比 AI 首選差至少一個紅標差距的牌。</string>
+  <string name="battle_level">難度</string>
+  <string-array name="battle_levels">
+    <item>簡單</item>
+    <item>隨機</item>
+    <item>稍難</item>
+    <item>困難</item>
+    <item>最難</item>
+  </string-array>
   <string name="battle_leave">離開</string>
   <string name="battle_host">房主</string>
   <string name="battle_away">離線</string>
@@ -253,8 +259,6 @@
   <string name="back">返回</string>
   <string name="increase">增加</string>
   <string name="decrease">減少</string>
-  <string name="on">開</string>
-  <string name="off">關</string>
   <string name="change">更改</string>
   <string name="show_more">顯示更多</string>
   <string name="analyzing">神經網路思考中…</string>

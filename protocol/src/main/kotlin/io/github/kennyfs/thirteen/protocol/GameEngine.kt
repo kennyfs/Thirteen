@@ -27,12 +27,20 @@ interface GameEngine {
   suspend fun score(plays: List<Rows>, rules: String): TableScore
   /** The network's best arrangement of a hand and what each play loses against it (best Q minus its Q, at least 0). */
   suspend fun losses(hand: List<Int>, rules: String, plays: List<Rows>): Pair<Rows, List<Double>>
-  /**
-   * How hard a hand is: what the better of two simple strategies (greedy and independent rows) loses against the
-   * network's best, in units of the Q gap worth a red mark in the app (0.1 under family, scaled with the scoring).
-   */
-  suspend fun difficulty(hand: List<Int>, rules: String): Double
+  /** How good a hand is and how hard to arrange, from one analysis. */
+  suspend fun difficulty(hand: List<Int>, rules: String): Difficulty
 }
+
+/**
+ * `strength` is the network's best Q. `score` is how hard the hand is to arrange, two parts in units of the Q gap
+ * worth a red mark in the app (g: 0.1 under family, scaled with the scoring):
+ * - the other shapes (the rows' categories, as pair / straight / flush) close to the best: each best of its shape
+ *   counts 1 - gap / 5g, nothing from 5g down, so several shapes worth weighing make a hand hard;
+ * - what the better of two simple strategies (greedy and independent rows) loses against the best, over 3g.
+ * Stronger hands have fewer good shapes but lose more to simple play, so the sum hardly depends on the strength
+ * (from 40,000 random hands under family).
+ */
+data class Difficulty(val strength: Double, val score: Double)
 
 /**
  * GameEngine over the engine's JSON requests (cpp/command/guiengine.h), one request line to one answer line through
@@ -105,11 +113,29 @@ class EngineClient(private val model: String, private val call: suspend (String)
   private suspend fun rowKeys(rows: Rows, rules: String): List<Int> =
     ask(buildJsonObject { put("cmd", "rows"); put("rows", rows(rows)); put("rules", rules) })["keys"]!!.jsonArray.map { it.jsonPrimitive.int }
 
-  override suspend fun difficulty(hand: List<Int>, rules: String): Double {
-    val simple = listOf(greedy(hand, rules), arrange("indep", hand, rules))
-    val loss = losses(hand, rules, simple).second.min()
-    val v = ruleValues(rules)
-    return loss / notableQGap(v)
+  override suspend fun difficulty(hand: List<Int>, rules: String): Difficulty {
+    val simple = listOf(greedy(hand, rules), arrange("indep", hand, rules)).distinctBy(::canonical)
+    val a = ask(buildJsonObject {
+      put("cmd", "analyze"); put("hand", cards(hand.sorted())); put("rules", rules); put("model", model)
+      put("extra", JsonArray(simple.map(::rows)))
+    })
+    val cands = a["cands"]!!.jsonArray.map { it.jsonObject }
+    val q = cands.map { it["q"]!!.jsonPrimitive.double }
+    val best = q.first()
+    val g = notableQGap(ruleValues(rules))
+    // A simple play is a candidate, or took the place of one with the same row hands; two with the same row hands
+    // leave one of them, with the same Q.
+    val byCards = cands.indices.associateBy { canonical(rowsOf(cands[it]["arrangement"]!!)) }
+    val loss = simple.mapNotNull { byCards[canonical(it)] }.minOfOrNull { best - q[it] } ?: 0.0
+    val shapes = HashMap<List<Int>, Double>()
+    for ((i, c) in cands.withIndex()) {
+      val info = c["info"]!!.jsonObject
+      if (c["extra"]!!.jsonPrimitive.boolean || !info["valid"]!!.jsonPrimitive.boolean) continue
+      val shape = info["categories"]!!.jsonArray.map { it.jsonPrimitive.int }
+      shapes[shape] = maxOf(shapes[shape] ?: Double.NEGATIVE_INFINITY, q[i])
+    }
+    val others = shapes.values.sortedDescending().drop(1).sumOf { (1 - (best - it) / (5 * g)).coerceAtLeast(0.0) }
+    return Difficulty(best, others + loss.coerceAtLeast(0.0) / (3 * g))
   }
 
   companion object {

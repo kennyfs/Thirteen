@@ -55,7 +55,8 @@ object Validation {
   fun settings(s: RoomSettings): RoomSettings? {
     if (s.hands !in Limits.MIN_HANDS..Limits.MAX_HANDS || s.timeLimit !in Limits.TIME_LIMITS) return null
     if (ruleSpec(s.rules) == null) return null
-    return if (s.mode == Mode.GAME) s.copy(hard = false) else s
+    if (s.level != 0 && s.level !in Levels.EASIEST..Levels.HARDEST) return null
+    return if (s.mode == Mode.GAME) s.copy(hard = false, level = 0) else s
   }
 
   /**
