@@ -58,6 +58,12 @@ data class Config(
    * and then Traefik; 0 when clients reach the server directly.
    */
   val proxies: Int = env("TRUST_PROXY", "0").toInt(),
+  /**
+   * A Google Cloud service account key (JSON) for Play Integrity: with one, clients from Google Play prove it and
+   * their rooms take no others. The server must then be able to reach Google. Empty: no checks.
+   */
+  val playIntegrityKey: String = env("PLAY_INTEGRITY_KEY", ""),
+  val packageName: String = env("PLAY_PACKAGE", "io.github.kennyfs.thirteen"),
 )
 
 private fun env(name: String, default: String) = System.getenv(name)?.takeIf { it.isNotBlank() } ?: default
@@ -78,8 +84,9 @@ fun main() {
   runBlocking { pool.call("{\"cmd\":\"model\",\"model\":${JsonPrimitive(config.model)}}") }
     .let { require("\"legacy\"" in it) { "The model does not load: $it" } }
   val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-  val hub = Hub(EngineClient(config.model, pool::call), scope, HubLimits(maxRooms = config.maxRooms))
-  log.info("Thirteen battle server on ${config.host}:${config.port}, ${config.workers} engine workers")
+  val attestor = config.playIntegrityKey.takeIf { it.isNotEmpty() }?.let { PlayIntegrity(it, config.packageName) }
+  val hub = Hub(EngineClient(config.model, pool::call), scope, HubLimits(maxRooms = config.maxRooms), attestor = attestor)
+  log.info("Thirteen battle server on ${config.host}:${config.port}, ${config.workers} engine workers, Play Integrity ${if (attestor != null) "on" else "off"}")
   embeddedServer(CIO, host = config.host, port = config.port) { battle(hub, config) }.start(wait = true)
 }
 

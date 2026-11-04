@@ -113,7 +113,7 @@ class WsLink(url: String, private val listener: LinkListener) : Link {
 /** The hosting phone's own seat in its hub: no network in between. */
 class LocalLink(private val hub: Hub, private val scope: CoroutineScope, private val listener: LinkListener) : Link {
   private var closed = false
-  private val conn = hub.open("local", { msg -> main.post { if (!closed) listener.onMessage(this, msg) } }, {})
+  private val conn = hub.open(Hub.LOCAL, { msg -> main.post { if (!closed) listener.onMessage(this, msg) } }, {})
 
   override fun send(msg: ClientMsg) {
     scope.launch { hub.receive(conn, encode(msg)) }
@@ -191,6 +191,22 @@ class NearbyHost(context: Context, private val hub: Hub, private val scope: Coro
     for (c in conns.values) hub.closed(c)
     conns.clear()
   }
+}
+
+/**
+ * A room's advertised name: what the players see, and for a room carried on by another phone, the room (the start of
+ * its id) and its epoch after a tab, so the players find it again. See [roomTag].
+ */
+fun advertised(shown: String, room: String? = null, epoch: Int = 0): String =
+  shown.replace('\t', ' ') + if (room != null && epoch > 0) "\t${room.take(8)}:$epoch" else ""
+
+/** What the players see of an advertised name. */
+fun shownName(advertised: String) = advertised.substringBefore('\t')
+
+/** The room and epoch of an advertised name, for a room carried on by another phone. */
+fun roomTag(advertised: String): Pair<String, Int>? {
+  val tag = advertised.substringAfter('\t', "").takeIf { it.isNotEmpty() } ?: return null
+  return tag.substringBefore(':') to (tag.substringAfter(':').toIntOrNull() ?: return null)
 }
 
 /** Rooms advertised nearby: endpoint id to the host's advertised name. */

@@ -7,13 +7,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.kennyfs.thirteen.Analysis
 import io.github.kennyfs.thirteen.Arranger
 import io.github.kennyfs.thirteen.Engine
 import io.github.kennyfs.thirteen.R
+import io.github.kennyfs.thirteen.BattleStore
 import io.github.kennyfs.thirteen.RecordStore
-import io.github.kennyfs.thirteen.Score
 import io.github.kennyfs.thirteen.Settings
+import io.github.kennyfs.thirteen.protocol.BattleRecord
+import io.github.kennyfs.thirteen.protocol.Backup
+import io.github.kennyfs.thirteen.protocol.RoomSnapshot
+import io.github.kennyfs.thirteen.protocol.Attest
 import io.github.kennyfs.thirteen.protocol.ChangeSettings
 import io.github.kennyfs.thirteen.protocol.ClientMsg
 import io.github.kennyfs.thirteen.protocol.Closed
@@ -64,6 +67,7 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   private val prefs = app.getSharedPreferences("battle", Context.MODE_PRIVATE)
   private val settings = Settings(app)
   private val records = RecordStore(app.filesDir)
+  private val battles = BattleStore(app.filesDir)
 
   private fun str(id: Int, vararg args: Any) = getApplication<Application>().getString(id, *args)
 
@@ -88,31 +92,21 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   var roomAt by mutableStateOf(0L); private set
   var me by mutableStateOf(-1); private set
   var deal by mutableStateOf<Deal?>(null); private set
-  var outcomes by mutableStateOf<List<HandOutcome>>(emptyList()); private set
-  /** Each row's category of the plays shown (by their rows, sorted within each row), for laying them out. */
-  var categories by mutableStateOf<Map<List<List<Int>>, List<Int>>>(emptyMap()); private set
-  /**
-   * A table game's hands as the practice table shows them, by hand index: the plays' indices with the player's own
-   * first, then the others in seat order, and the full score in that order (the room's, with each row's hand).
-   */
-  var tables by mutableStateOf<Map<Int, Pair<List<Int>, Score>>>(emptyMap()); private set
+  /** The closed hands and the pages that look at them, shared with the records' battles. */
+  val review = BattleReview(viewModelScope, { settings.models().first().path }) { error = it }
+  val outcomes: List<HandOutcome> get() = review.outcomes
   var submitting by mutableStateOf(false); private set
   /** The room is gone but its results stay to look at. */
   var finished by mutableStateOf(false); private set
+  /** In a room still going (the lobby too): the app keeps to the battle until the player leaves it. */
+  val inRoom: Boolean get() = room != null && !finished && room?.phase != Phase.OVER
   /** This phone hosts the room (nearby). */
   var hosting by mutableStateOf(false); private set
   /** Rooms advertised nearby, endpoint id to name, while searching. */
   var found by mutableStateOf<Map<String, String>?>(null); private set
 
-  /** The hand of the results opened for a closer look, and its analysis. */
-  var detail by mutableStateOf<Int?>(null); private set
-  /** The player whose hand of `detail` is analyzed. */
-  var analyzed by mutableStateOf<Int?>(null); private set
   /** The table of the last hand has been shown (it comes before the final standings, whatever the room says). */
   var lastSeen by mutableStateOf(false); private set
-  var detailAnalysis by mutableStateOf<Analysis?>(null); private set
-  /** Candidates by index to the names of the other players who chose them (a puzzle). */
-  var detailTags by mutableStateOf<Map<Int, String>>(emptyMap()); private set
 
   val arranger = Arranger(viewModelScope, { error = it }) { row, free ->
     str(R.string.row_room, getApplication<Application>().resources.getStringArray(R.array.row_names)[row], free)
@@ -125,6 +119,11 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   private var hub: Hub? = null
   private var host: NearbyHost? = null
   private var finder: NearbyFinder? = null
+  /** This player is the room's backup (a room on a phone): the latest snapshot, to carry on the room if it goes. */
+  private var backup: RoomSnapshot? = null
+  /** While the room is found again: a phone that carries it on (endpoint, epoch). */
+  private var mover: NearbyFinder? = null
+  private var moved: Pair<String, Int>? = null
   /** The nearby endpoint of the room, to reconnect to. */
   private var endpoint: String? = null
   private var reconnect: Job? = null
@@ -251,7 +250,20 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
 
   /** Leaves the room (for good) and the results. */
   fun leave() {
+    saveBattle(left = true)
     link?.send(Leave)
+    // Hosting: the room hears the Leave and sends its backup the last snapshot before the phone stops it.
+    val h = host
+    val l = link
+    if (h != null) {
+      host = null
+      link = null
+      viewModelScope.launch {
+        delay(1500)
+        l?.close()
+        h.stop()
+      }
+    }
     clear()
     chooseEntry(null)
   }
@@ -264,6 +276,10 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
 
   private fun clear() {
     reconnect?.cancel()
+    mover?.stop()
+    mover = null
+    moved = null
+    backup = null
     link?.close()
     link = null
     host?.stop()
@@ -275,14 +291,14 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     room = null
     me = -1
     deal = null
-    outcomes = emptyList()
-    categories = emptyMap()
-    tables = emptyMap()
+    review.clear()
+    battleId = null
+    battleStart = 0L
     lastSeen = false
     submitting = false
     finished = false
     busy = false
-    closeDetail()
+    review.closeDetail()
   }
 
   override fun onCleared() {
@@ -295,26 +311,47 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   override fun onMessage(link: Link, msg: ServerMsg) {
     if (link !== this.link) return
     when (msg) {
-      is Welcome -> pending?.let(link::send)
+      is Welcome -> {
+        val next = pending
+        val nonce = msg.nonce
+        if (nonce == null || !Integrity.enabled) next?.let(link::send)
+        // The server checks clients: the token first (if one comes), then the room.
+        else viewModelScope.launch {
+          Integrity.token(getApplication(), nonce)?.let { link.send(Attest(it)) }
+          if (link === this@BattleViewModel.link) next?.let(link::send)
+        }
+      }
       is Joined -> {
         joined = msg
         me = msg.you
+        review.me = msg.you
         busy = false
         // In a room: no more looking for others (the endpoint to reconnect to is kept).
         stopSearch()
+        mover?.stop()
+        mover = null
+        moved = null
         // A resume tells everything again.
         pending = Resume(msg.room, msg.token)
       }
       is State -> {
         val previous = room
         room = msg.room
+        review.rules = msg.room.rules
+        review.names = msg.room.players.associate { it.id to it.name }
+        if (msg.room.phase != Phase.LOBBY && battleId == null) {
+          battleId = java.util.UUID.randomUUID().toString()
+          battleStart = System.currentTimeMillis()
+        }
+        // The totals change with each hand: the battle as it stands.
+        if (previous?.hand != msg.room.hand || previous?.phase != msg.room.phase) saveBattle()
         roomAt = System.currentTimeMillis()
         // An ended room takes no one in, nor back: no longer shown to phones looking for rooms.
         if (msg.room.phase == Phase.OVER) host?.stopAdvertising()
         if (msg.room.players.firstOrNull { it.id == me }?.submitted == true) submitting = false
         if (previous?.hand != msg.room.hand && msg.room.phase == Phase.PLAYING) {
           submitting = false
-          if (fromReview) closeDetail()
+          if (review.fromReview) review.closeDetail()
         }
       }
       is Deal -> {
@@ -323,12 +360,13 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
         arranger.reset(msg.cards, room?.rules ?: "family", msg.mine ?: Arranger.EMPTY)
       }
       is HandResult -> addOutcomes(listOf(msg.outcome))
+      is Backup -> backup = msg.snapshot
       is History -> addOutcomes(msg.outcomes)
       is Error -> {
         busy = false
         submitting = false
         error = errorText(msg)
-        if (joined == null && msg.code in setOf(ErrorCode.VERSION, ErrorCode.NO_ROOM, ErrorCode.ROOM_FULL, ErrorCode.STARTED, ErrorCode.TOO_MANY, ErrorCode.BUSY, ErrorCode.RATE)) {
+        if (joined == null && msg.code in setOf(ErrorCode.VERSION, ErrorCode.NO_ROOM, ErrorCode.ROOM_FULL, ErrorCode.STARTED, ErrorCode.TOO_MANY, ErrorCode.BUSY, ErrorCode.RATE, ErrorCode.UNVERIFIED)) {
           link.close()
           this.link = null
         }
@@ -351,7 +389,31 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
       }
       return roomGone(null)
     }
-    // A dropped connection in a game: the seat is kept, so try to take it back.
+    // A dropped connection in a game: the seat is kept, so try to take it back. Nearby, the hosting phone may be
+    // gone: its backup carries on the room after a try at the phone, and the others look for it there too.
+    val r = room
+    val snap = backup
+    if (via == Via.NEARBY && r != null && !hosting) {
+      if (r.backup == me && snap != null) {
+        reconnect = viewModelScope.launch {
+          busy = true
+          val l = endpoint?.let { NearbyLink(getApplication(), it, playerName, this@BattleViewModel) }
+          if (l != null) {
+            pending = Resume(j.room, j.token)
+            open(l)
+            delay(4000)
+            if (this@BattleViewModel.link === l && !busy) return@launch
+            if (this@BattleViewModel.link === l) {
+              l.close()
+              this@BattleViewModel.link = null
+            }
+          }
+          takeOver(snap, j, r)
+        }
+        return
+      }
+      lookForMove(j.room, r.epoch)
+    }
     reconnect = viewModelScope.launch {
       busy = true
       for (attempt in 0 until 6) {
@@ -359,7 +421,11 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
         pending = Resume(j.room, j.token)
         val l = when (via) {
           Via.ONLINE -> serverUrl(server)?.let { WsLink(it, this@BattleViewModel) }
-          Via.NEARBY -> endpoint?.let { NearbyLink(getApplication(), it, playerName, this@BattleViewModel) }
+          // The room's new phone once found, else the old one.
+          Via.NEARBY -> (moved?.first ?: endpoint)?.let { e ->
+            if (moved != null) endpoint = e
+            NearbyLink(getApplication(), e, playerName, this@BattleViewModel)
+          }
         } ?: break
         open(l)
         // Up within a while, or the next attempt.
@@ -373,6 +439,38 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
       busy = false
       roomGone(str(R.string.battle_lost))
     }
+  }
+
+  /** This phone carries on the room from its snapshot: it hosts it now, and takes its own seat back. */
+  private fun takeOver(snap: RoomSnapshot, j: Joined, r: RoomView) {
+    viewModelScope.launch {
+      try {
+        val h = Hub(EngineClient(settings.models().first().path, Engine::raw), viewModelScope, HubLimits.NEARBY)
+        h.restore(snap, outcomes)
+        hub = h
+        hosting = true
+        backup = null
+        host = NearbyHost(getApplication(), h, viewModelScope, advertised(advertisedName(r.settings.mode), snap.id, snap.epoch)) {
+          error = str(R.string.battle_nearby_failed, it)
+        }
+        pending = Resume(j.room, j.token)
+        open(LocalLink(h, viewModelScope, this@BattleViewModel))
+      } catch (e: Exception) {
+        busy = false
+        roomGone(str(R.string.battle_lost))
+      }
+    }
+  }
+
+  /** Looks for the room carried on by another phone: its advertisement names the room and a later epoch. */
+  private fun lookForMove(roomId: String, epoch: Int) {
+    mover?.stop()
+    moved = null
+    mover = NearbyFinder(getApplication(), { found ->
+      val best = found.mapNotNull { (e, name) -> roomTag(name)?.takeIf { it.first == roomId.take(8) && it.second > epoch }?.let { e to it.second } }
+        .maxByOrNull { it.second }
+      if (best != null && (moved == null || best.second > moved!!.second)) moved = best
+    }) {}
   }
 
   /** The room is gone; what it showed stays when anything was played. */
@@ -391,29 +489,22 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   }
 
   private fun addOutcomes(list: List<HandOutcome>) {
-    val known = outcomes.associateBy { it.index }.toMutableMap()
-    for (o in list) {
-      if (o.index !in known) record(o)
-      known[o.index] = o
-    }
-    outcomes = known.values.sortedBy { it.index }
-    val rules = room?.rules ?: return
-    viewModelScope.launch {
-      for (o in list) {
-        if (o.score == null || o.index in tables) continue
-        val mine = o.plays.indexOfFirst { it.player == me }
-        val order = if (mine < 0) o.plays.indices.toList() else listOf(mine) + o.plays.indices.filter { it != mine }
-        runCatching { Engine.score(order.map { o.plays[it].rows }, rules) }.onSuccess { tables = tables + (o.index to (order to it)) }
-      }
-      for (o in list) for (rows in o.plays.map { it.rows } + listOfNotNull(o.best)) {
-        val key = rows.map { it.sorted() }
-        if (key in categories) continue
-        runCatching { Engine.rows(rows, rules).categories }.onSuccess { categories = categories + (key to it) }
-      }
-    }
+    for (o in review.add(list)) record(o)
+    saveBattle()
   }
 
-  fun categoriesOf(rows: List<List<Int>>): List<Int>? = categories[rows.map { it.sorted() }]
+  /** This battle's id in the records (BattleStore), from its first hand, and when that was dealt. */
+  private var battleId: String? = null
+  private var battleStart = 0L
+
+  /** The battle as it stands, to the records, once it has a closed hand. */
+  private fun saveBattle(left: Boolean = false) {
+    val id = battleId ?: return
+    val r = room ?: return
+    if (outcomes.isEmpty()) return
+    val b = BattleRecord(id, battleStart, via.name.lowercase(), r.settings, r.rules, me, r.players, outcomes, left)
+    runCatching { battles.save(b) }
+  }
 
   /** The player's play of a closed hand goes to the records, labelled "battle" (a table game) or "puzzle". */
   private fun record(o: HandOutcome) {
@@ -422,7 +513,10 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     if (i < 0) return
     val play = o.plays[i]
     val result = o.score?.result?.get(i) ?: -(o.losses?.get(i) ?: 0.0)
-    records.add(play.rows.flatten(), play.rows, 0.0, r.rules, 0, result, label = if (r.settings.mode == Mode.PUZZLE) "puzzle" else "battle")
+    records.add(
+      play.rows.flatten(), play.rows, 0.0, r.rules, 0, result, label = if (r.settings.mode == Mode.PUZZLE) "puzzle" else "battle",
+      battle = battleId, battleHand = o.index,
+    )
   }
 
   private fun errorText(e: Error) = when (e.code) {
@@ -435,79 +529,15 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     ErrorCode.BAD_SETTINGS -> str(R.string.battle_err_settings)
     ErrorCode.BAD_ROWS -> str(if (e.message == "fouled") R.string.fouled else R.string.battle_err_rows)
     ErrorCode.NOT_ALLOWED, ErrorCode.BAD_MESSAGE -> str(R.string.battle_err_not_allowed)
+    ErrorCode.UNVERIFIED -> str(R.string.battle_err_unverified)
   }
 
   // ---- Results ----
 
-  /** A closed hand opened from the results: its table first. */
-  fun openDetail(index: Int) {
-    if (outcomes.none { it.index == index }) return
-    detail = index
-    fromReview = false
-    closeAnalysis()
-  }
-
-  /**
-   * Opened from a hand's result while the room waits for the next: back goes straight back to the result, and the
-   * next hand's deal closes it.
-   */
-  var fromReview by mutableStateOf(false); private set
-
   /** Analyzes a player's hand of the hand just closed, from its result. */
   fun analyzeHand(player: Int) {
     val index = room?.hand ?: return
-    openDetail(index)
-    if (detail != index) return
-    fromReview = true
-    openAnalysis(player)
-  }
-
-  /**
-   * Analyzes one player's hand of the opened hand with the built-in network, their play pinned and, in a puzzle,
-   * the others' plays of the same cards marked.
-   */
-  fun openAnalysis(player: Int) {
-    val index = detail ?: return
-    val o = outcomes.firstOrNull { it.index == index } ?: return
-    val r = room ?: return
-    val play = o.plays.firstOrNull { it.player == player } ?: return
-    analyzed = player
-    detailAnalysis = null
-    detailTags = emptyMap()
-    viewModelScope.launch {
-      try {
-        val hand = play.rows.flatten().sorted()
-        // In a puzzle everyone set these cards; at a table the others had other hands.
-        val same = o.plays.filter { it.rows.flatten().toSet() == hand.toSet() }
-        val a = Engine.analyze(hand, r.rules, settings.models().first().path, same.map { it.rows })
-        val names = r.players.associate { it.id to it.name }
-        val tags = HashMap<Int, MutableList<String>>()
-        for (p in same) {
-          if (p.player == player) continue
-          val keys = Engine.rows(p.rows, r.rules).keys
-          val i = a.cands.indexOfFirst { it.info.keys == keys }
-          if (i >= 0) tags.getOrPut(i) { mutableListOf() } += names[p.player] ?: "?"
-        }
-        if (detail == index && analyzed == player) {
-          detailAnalysis = a
-          detailTags = tags.mapValues { it.value.joinToString(", ") }
-        }
-      } catch (e: Exception) {
-        error = e.message ?: e.toString()
-      }
-    }
-  }
-
-  fun closeAnalysis() {
-    analyzed = null
-    detailAnalysis = null
-    detailTags = emptyMap()
-  }
-
-  fun closeDetail() {
-    detail = null
-    fromReview = false
-    closeAnalysis()
+    review.analyzeFromResult(index, player)
   }
 
   /** The last hand's table was seen; the final standings come next. */

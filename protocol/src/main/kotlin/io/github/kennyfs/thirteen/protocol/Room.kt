@@ -14,6 +14,8 @@ import java.util.Base64
 /** Where a room sends a player's messages: a WebSocket, a Nearby endpoint, or the hosting phone's own screen. */
 interface Peer {
   fun send(msg: ServerMsg)
+  /** The phone's own player, on a room hosted on a phone: never the room's backup, as it goes away with the room. */
+  val local: Boolean get() = false
 }
 
 /**
@@ -38,6 +40,12 @@ class Room(
   private val now: () -> Long,
   private val maxPlayers: Int,
   private val onClosed: (Room) -> Unit,
+  /** A room on a phone: its backup gets a Backup with each change, to carry on the room should the phone go away. */
+  private val backups: Boolean = false,
+  /** Only clients checked by Play Integrity may join. */
+  val verified: Boolean = false,
+  /** How many times the room has moved to another phone. */
+  private val epoch: Int = 0,
 ) {
   var settings = settings; private set
   var rules = rules; private set
@@ -46,7 +54,8 @@ class Room(
   @Volatile var phase = Phase.LOBBY; private set
   @Volatile var closed = false; private set
 
-  private class Player(val id: Int, val name: String, val token: String, val bot: Boolean) {
+  /** `tokenHash`: SHA-256 of the player's secret token (Base64), which only the player has. */
+  private class Player(val id: Int, val name: String, val tokenHash: String, val bot: Boolean) {
     var peer: Peer? = null
     /** Left for good: plays by timeout from now on and is waited for by nobody. */
     var left = false
@@ -59,6 +68,8 @@ class Room(
 
   private val players = mutableListOf<Player>()
   private var host = -1
+  /** The player on the hosting phone itself (Peer.local), if any. */
+  private var localPlayer = -1
   private var nextId = 0
   private var hand = -1
   /** The current hand's cards by player id (a puzzle deals one hand to all). */
@@ -163,21 +174,25 @@ class Room(
       e.peer.send(Error(ErrorCode.ROOM_FULL))
       return null
     }
-    val p = Player(nextId++, Validation.name(e.name), token(), bot = false)
+    val token = token()
+    val p = Player(nextId++, Validation.name(e.name), hash(token), bot = false)
     p.peer = e.peer
     players += p
     if (host < 0) host = p.id
-    val joined = Joined(id, p.id, p.token)
+    if (e.peer.local) localPlayer = p.id
+    val joined = Joined(id, p.id, token)
     e.peer.send(joined)
     broadcastState()
     return joined
   }
 
   private fun resume(e: ResumeEvent): Joined? {
-    val p = humans().firstOrNull { !it.left && constantTimeEquals(it.token, e.token) } ?: return null
+    val h = hash(e.token)
+    val p = humans().firstOrNull { !it.left && constantTimeEquals(it.tokenHash, h) } ?: return null
     if (p.peer !== e.peer) p.peer?.send(Closed("resumed elsewhere"))
     p.peer = e.peer
-    val joined = Joined(id, p.id, p.token)
+    if (e.peer.local) localPlayer = p.id
+    val joined = Joined(id, p.id, e.token)
     e.peer.send(joined)
     broadcastState()
     if (outcomes.isNotEmpty()) e.peer.send(History(outcomes.toList()))
@@ -223,7 +238,7 @@ class Room(
           checkReady()
         }
       }
-      is Hello, is Create, is Join, is Resume -> peer.send(Error(ErrorCode.NOT_ALLOWED))
+      is Hello, is Create, is Join, is Resume, is Attest -> peer.send(Error(ErrorCode.NOT_ALLOWED))
     }
   }
 
@@ -352,14 +367,53 @@ class Room(
   private fun view() = RoomView(
     pin, settings, rules, phase, hand, host,
     players.map { PlayerView(it.id, it.name, it.bot, it.bot || !it.away, it.rows != null, it.ready, it.total) },
-    remaining(),
+    remaining(), backupPlayer()?.id ?: -1, epoch,
   )
 
   private fun broadcast(msg: ServerMsg) {
     for (p in players) p.peer?.send(msg)
   }
 
-  private fun broadcastState() = broadcast(State(view()))
+  private fun broadcastState() {
+    broadcast(State(view()))
+    // After the state, so the backup has the room's view and every closed hand before the snapshot.
+    if (phase != Phase.OVER) backupPlayer()?.peer?.send(Backup(snapshot()))
+  }
+
+  /** A room on a phone: the connected player, not the phone's own, with the lowest id. */
+  private fun backupPlayer(): Player? =
+    if (!backups) null else humans().filter { !it.left && it.peer != null && it.id != localPlayer }.minByOrNull { it.id }
+
+  /** The room for its backup (RoomSnapshot), the next epoch's. */
+  private fun snapshot() = RoomSnapshot(
+    id, pin, settings, rules, phase, hand, host, nextId,
+    players.map { SnapshotPlayer(it.id, it.name, it.tokenHash, it.bot, it.left, it.total, it.ready, it.rows, it.timedOut) },
+    cards, remaining(), engineCalls, epoch + 1, verified,
+  )
+
+  /** Takes up a snapshot's state: the room carried on from another phone, which is gone (its player away). */
+  private fun restore(s: RoomSnapshot, closed: List<HandOutcome>) {
+    phase = s.phase
+    hand = s.hand
+    host = s.host
+    nextId = s.nextId
+    for (sp in s.players) players += Player(sp.id, sp.name, sp.tokenHash, sp.bot).apply {
+      left = sp.left
+      total = sp.total
+      ready = sp.ready
+      rows = sp.rows
+      timedOut = sp.timedOut
+    }
+    cards = s.cards
+    outcomes += closed.filter { it.index <= s.hand }.sortedBy { it.index }
+    engineCalls = s.engineCalls
+    // Time for everyone to find the room again, on top of what was left.
+    when (phase) {
+      Phase.PLAYING -> setTimer((s.remainingMs ?: Limits.HAND_CAP_MS) + MOVE_GRACE_MS)
+      Phase.REVIEW -> setTimer(Limits.REVIEW_MS)
+      else -> {}
+    }
+  }
 
   private fun close(reason: String) {
     if (closed) return
@@ -374,6 +428,18 @@ class Room(
   private fun token(): String = ByteArray(16).also(random::nextBytes).let { Base64.getUrlEncoder().withoutPadding().encodeToString(it) }
 
   companion object {
+    /** Added to the time left of a hand that moved to another phone, while the players connect to it. */
+    const val MOVE_GRACE_MS = 15_000L
+
     fun constantTimeEquals(a: String, b: String) = MessageDigest.isEqual(a.toByteArray(), b.toByteArray())
+
+    fun hash(token: String): String = Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA-256").digest(token.toByteArray()))
+
+    /** A room carried on from a snapshot (a phone's room, its phone gone) with the closed hands its backup has. */
+    fun restore(
+      s: RoomSnapshot, closed: List<HandOutcome>, engine: GameEngine, scope: CoroutineScope, random: SecureRandom, now: () -> Long,
+      maxPlayers: Int, onClosed: (Room) -> Unit,
+    ): Room = Room(s.id, s.pin, s.settings, s.rules, engine, scope, random, now, maxPlayers, onClosed, backups = true, verified = s.verified, epoch = s.epoch)
+      .also { it.restore(s, closed) }
   }
 }

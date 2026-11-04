@@ -46,7 +46,8 @@ class RoomTest {
 
   private val engine = FakeEngine()
 
-  private fun TestScope.hub(limits: HubLimits = HubLimits()) = Hub(engine, backgroundScope as CoroutineScope, limits, { testScheduler.currentTime })
+  private fun TestScope.hub(limits: HubLimits = HubLimits(), attestor: Attestor? = null) =
+    Hub(engine, backgroundScope as CoroutineScope, limits, { testScheduler.currentTime }, attestor = attestor)
 
   private suspend fun TestScope.client(hub: Hub, name: String, address: String = name): Client =
     Client(hub, address).also { it.send(Hello(PROTOCOL_VERSION, name)); runCurrent() }
@@ -262,6 +263,104 @@ class RoomTest {
     for (c in clients) c.send(Create(RoomSettings(Mode.PUZZLE)))
     runCurrent()
     assertEquals(ErrorCode.TOO_MANY, clients[2].errors().last())
+  }
+
+  @Test
+  fun aPhonesRoomMovesToItsBackupAndEveryoneTakesTheirSeatBack() = runTest {
+    // The hosting phone's own player connects as "local"; B, the lowest id of the others, is the backup.
+    val hub = hub(HubLimits.NEARBY)
+    val host = client(hub, "H", address = Hub.LOCAL)
+    host.send(Create(RoomSettings(Mode.PUZZLE, hands = 2, timeLimit = 60)))
+    runCurrent()
+    val pin = host.last<State>()!!.room.pin
+    val (b, c) = listOf("B", "C").map { n -> client(hub, n, address = "nearby").also { it.send(Join(pin)); runCurrent() } }
+    val bId = b.last<Joined>()!!.you
+    assertEquals(bId, c.last<State>()!!.room.backup)
+    assertTrue(b.all<Backup>().isNotEmpty())
+    assertTrue(c.all<Backup>().isEmpty() && host.all<Backup>().isEmpty())
+    host.send(Start)
+    runCurrent()
+    val cards = b.last<Deal>()!!.cards
+    for (x in listOf(host, b, c)) x.send(Submit(0, rowsOf(cards)))
+    runCurrent()
+    for (x in listOf(host, b, c)) x.send(Ready(0))
+    runCurrent()
+    // Hand 1: C has set it when the phone goes away; the snapshot holds C's play, and tokens only as hashes.
+    val cards1 = c.last<Deal>()!!.cards
+    c.send(Submit(1, rowsOf(cards1)))
+    runCurrent()
+    val snap = b.last<Backup>()!!.snapshot
+    assertEquals(1, snap.epoch)
+    assertTrue(snap.players.none { it.tokenHash == b.last<Joined>()!!.token })
+    val closed = b.all<HandResult>().map { it.outcome }
+
+    // B's phone carries on the room; B (now local) and C take their seats back with their tokens.
+    val hub2 = hub(HubLimits.NEARBY)
+    hub2.restore(snap, closed)
+    val b2 = client(hub2, "B", address = Hub.LOCAL)
+    b2.send(Resume(snap.id, b.last<Joined>()!!.token))
+    val c2 = client(hub2, "C", address = "nearby")
+    c2.send(Resume(snap.id, "wrong"))
+    runCurrent()
+    assertEquals(ErrorCode.NO_ROOM, c2.errors().last())
+    c2.send(Resume(snap.id, c.last<Joined>()!!.token))
+    runCurrent()
+    val room = c2.last<State>()!!.room
+    assertEquals(1, room.epoch)
+    assertEquals(c.last<Joined>()!!.you, room.backup)
+    assertEquals(1, c2.last<History>()!!.outcomes.size)
+    // C's play stands; B sets the hand and the gone host times out into greedy, after its grace.
+    assertEquals(rowsOf(cards1).map { it.sortedDescending() }, c2.last<Deal>()!!.mine)
+    b2.send(Submit(1, rowsOf(b2.last<Deal>()!!.cards)))
+    runCurrent()
+    assertNull(c2.last<HandResult>())
+    advanceTimeBy(Limits.AWAY_GRACE_MS + 1)
+    runCurrent()
+    val last = c2.last<HandResult>()!!.outcome
+    assertEquals(1, last.index)
+    assertTrue(last.plays.first { it.player == host.last<Joined>()!!.you }.timedOut)
+    assertEquals(Phase.OVER, c2.last<State>()!!.room.phase)
+  }
+
+  @Test
+  fun aServerRoomHasNoBackup() = runTest {
+    val hub = hub()
+    val (a, b) = room(hub, RoomSettings(Mode.PUZZLE), "A", "B")
+    assertEquals(-1, b.last<State>()!!.room.backup)
+    assertTrue(a.all<Backup>().isEmpty() && b.all<Backup>().isEmpty())
+  }
+
+  @Test
+  fun aRoomOfCheckedClientsTakesNoOthers() = runTest {
+    val hub = hub(attestor = { token, nonce -> token == "good:$nonce" })
+    val a = Client(hub, "A")
+    a.send(Hello(PROTOCOL_VERSION, "A"))
+    runCurrent()
+    a.send(Attest("good:" + a.last<Welcome>()!!.nonce))
+    a.send(Create(RoomSettings(Mode.PUZZLE)))
+    runCurrent()
+    val pin = a.last<State>()!!.room.pin
+    // No token: refused. A wrong one: refused, and the nonce is used up.
+    val b = client(hub, "B")
+    b.send(Join(pin))
+    runCurrent()
+    assertEquals(ErrorCode.UNVERIFIED, b.errors().last())
+    val c = client(hub, "C")
+    c.send(Attest("bad"))
+    c.send(Attest("good:" + c.last<Welcome>()!!.nonce))
+    c.send(Join(pin))
+    runCurrent()
+    assertEquals(listOf(ErrorCode.NOT_ALLOWED, ErrorCode.UNVERIFIED), c.errors())
+    val d = Client(hub, "D")
+    d.send(Hello(PROTOCOL_VERSION, "D"))
+    runCurrent()
+    d.send(Attest("good:" + d.last<Welcome>()!!.nonce))
+    d.send(Join(pin))
+    runCurrent()
+    assertNotNull(d.last<Joined>())
+    // An unchecked client's room takes anyone.
+    val (e, f) = room(hub, RoomSettings(Mode.PUZZLE), "E", "F")
+    assertNotNull(f.last<Joined>())
   }
 
   @Test

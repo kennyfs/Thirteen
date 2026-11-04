@@ -27,10 +27,17 @@ data class HubLimits(
   val lobbyIdleMs: Long = 30 * 60_000L,
   val keepOverMs: Long = 10 * 60_000L,
   val roomLifetimeMs: Long = 6 * 3600_000L,
+  /** Rooms keep a backup player (a phone's room, carried on by another phone should it go away). */
+  val backups: Boolean = false,
 ) {
   companion object {
-    val NEARBY = HubLimits(maxRooms = 1, roomsPerAddress = 1, maxPuzzlePlayers = 16)
+    val NEARBY = HubLimits(maxRooms = 1, roomsPerAddress = 1, maxPuzzlePlayers = 16, backups = true)
   }
+}
+
+/** Checks a Play Integrity token for a nonce: whether the client is the app from Google Play on a genuine device. */
+fun interface Attestor {
+  suspend fun verify(token: String, nonce: String): Boolean
 }
 
 /**
@@ -44,9 +51,16 @@ class Hub(
   private val limits: HubLimits = HubLimits(),
   private val now: () -> Long = System::currentTimeMillis,
   private val random: SecureRandom = SecureRandom(),
+  /** With one, clients may prove they are the app from Google Play; rooms of such clients take no others. */
+  private val attestor: Attestor? = null,
 ) {
   inner class Connection internal constructor(val address: String, private val sink: (ServerMsg) -> Unit, private val drop: () -> Unit) : Peer {
+    override val local get() = address == LOCAL
     internal var name: String? = null
+    /** For Attest; null once used. */
+    internal var nonce: String? = null
+    /** Checked by Play Integrity. */
+    internal var verified = false
     internal var room: Room? = null
     internal var player = -1
     internal var strikes = 0
@@ -107,11 +121,26 @@ class Hub(
         return c.close()
       }
       c.name = Validation.name(msg.name)
-      return c.send(Welcome(PROTOCOL_VERSION))
+      if (attestor != null) c.nonce = ByteArray(24).also(random::nextBytes).let { Base64.getUrlEncoder().withoutPadding().encodeToString(it) }
+      return c.send(Welcome(PROTOCOL_VERSION, c.nonce))
     }
     val room = c.room?.takeIf { !it.closed }
     when (msg) {
       is Hello -> strike(c, Error(ErrorCode.NOT_ALLOWED))
+      is Attest -> {
+        val nonce = c.nonce
+        val a = attestor
+        if (a == null || nonce == null || room != null) return strike(c, Error(ErrorCode.NOT_ALLOWED))
+        c.nonce = null
+        c.verified = try {
+          a.verify(msg.token, nonce)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+          throw e
+        } catch (e: Exception) {
+          false
+        }
+        // Failed, the client goes on unchecked: it may still play in rooms that take anyone.
+      }
       is Create -> if (room != null) strike(c, Error(ErrorCode.NOT_ALLOWED)) else create(c, msg.settings)
       is Join -> if (room != null) strike(c, Error(ErrorCode.NOT_ALLOWED)) else join(c, msg.pin)
       is Resume -> if (room != null) strike(c, Error(ErrorCode.NOT_ALLOWED)) else resume(c, msg)
@@ -150,7 +179,7 @@ class Hub(
       do pin = (random.nextInt(900_000) + 100_000).toString() while (pin in byPin)
       val id = ByteArray(12).also(random::nextBytes).let { Base64.getUrlEncoder().withoutPadding().encodeToString(it) }
       val max = if (s.mode == Mode.GAME) Limits.TABLE else limits.maxPuzzlePlayers
-      val room = Room(id, pin, s, rules, engine, scope, random, now, max, ::removed)
+      val room = Room(id, pin, s, rules, engine, scope, random, now, max, ::removed, limits.backups, verified = c.verified)
       rooms[id] = room
       byPin[pin] = room
       owners[room] = c.address
@@ -166,12 +195,14 @@ class Hub(
       failed(c)
       return c.send(Error(ErrorCode.NO_ROOM))
     }
+    if (room.verified && !c.verified) return c.send(Error(ErrorCode.UNVERIFIED))
     enter(c, room, room.join(c, c.name!!))
   }
 
   private suspend fun resume(c: Connection, msg: Resume) {
     if (refused(c)) return
     val room = mutex.withLock { rooms[msg.room]?.takeIf { !it.closed } }
+    if (room != null && room.verified && !c.verified) return c.send(Error(ErrorCode.UNVERIFIED))
     val joined = room?.resume(c, msg.token)
     if (joined == null) {
       failed(c)
@@ -231,4 +262,21 @@ class Hub(
   }
 
   suspend fun roomCount() = mutex.withLock { rooms.size }
+
+  /**
+   * Carries on a phone's room from its snapshot (this phone was its backup and the phone is gone): the players take
+   * their seats back with Resume. `closed`: the room's closed hands, as this phone has them.
+   */
+  suspend fun restore(snapshot: RoomSnapshot, closed: List<HandOutcome>): Room = mutex.withLock {
+    val max = if (snapshot.settings.mode == Mode.GAME) Limits.TABLE else limits.maxPuzzlePlayers
+    val room = Room.restore(snapshot, closed, engine, scope, random, now, max, ::removed)
+    rooms[room.id] = room
+    byPin[room.pin] = room
+    room
+  }
+
+  companion object {
+    /** The address of the hosting phone's own connection (Peer.local). */
+    const val LOCAL = "local"
+  }
 }

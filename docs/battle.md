@@ -11,7 +11,13 @@ The host sets the number of hands (1 to 30), the rules (the Rules page's, then f
 per hand. A puzzle's hands are random: choosing harder ones (by how much simple strategies lose, or how many
 shapes come close to the best) made no difference one could feel in play, so there is no setting for it. After the game the hands are listed with their cards;
 each opens the analysis of the player's hand, with the others' choices marked (a puzzle) or the table's result (a
-table game). Every hand played also goes to the records, labelled `battle`.
+table game). The game goes to the records as one battle (the settings, rules, players and every hand; marked when
+one left early), whose hands open there the same way; each hand is also kept on its own, labelled `battle`, for the
+hand analyses. A battle and a hand can each be a favorite. Records from before this kept no battles: each of their
+hands shows as a battle of one hand.
+
+During a game the app shows only the game (no navigation bar); back with nothing to go back to asks before leaving
+it. One who leaves is away for the rest of the game: their seat times out (the network's choice) on its hands.
 
 ## Structure
 
@@ -83,13 +89,28 @@ reproducible build, pin the base images by digest as well.
 
 **What the server cannot see.** A player can still ask another phone (or this app's analysis on another phone)
 for the best arrangement during a puzzle; the time limit makes that slower, nothing can make it impossible. A
-modified app can claim any version: the app's version and signature reported by a client prove nothing. Making
-sure clients are the published app would take Play Integrity (Google's signed verdict, checked by the server), once
-the app is on the Play Store; it does not work offline.
+modified app can claim any version: the app's version and signature reported by a client prove nothing.
+
+**Play Integrity.** A server with `PLAY_INTEGRITY_KEY` (a Google Cloud service account key, JSON, whose project is
+linked to the app in the Play Console and has the Play Integrity API on) sends a nonce in `welcome`. The app built
+for Google Play (`THIRTEEN_PLAY_PROJECT`, the Cloud project's number, set when building it) answers with `attest`, a
+token from Google for that nonce, before creating or joining a room; the server has Google decode it
+(playintegrity.googleapis.com) and takes the client as checked when the token is for that nonce and this package,
+at most 5 minutes old, the app is the one Google Play has (`PLAY_RECOGNIZED`) and the device passes
+`MEETS_DEVICE_INTEGRITY`. A room created by a checked client takes only checked clients (`error` UNVERIFIED for the
+others); a room of an unchecked one takes anyone, so betas and test builds, which do not ask (no project number), play
+among themselves. The server must reach Google for this (compose.yml keeps it off the internet otherwise). Nearby
+rooms are not checked: a phone cannot decode the tokens.
 
 **Nearby play.** The host's phone runs the room (the same code), and computes the networks' seats. The other
 players get the same protections against each other, but the host's phone has every hand: a modified app on the
-host could cheat. Nearby Connections encrypts the connections; joining still takes the room's PIN, and failed
+host could cheat. The room has a backup: the connected player with the lowest id, not the host's phone's own, gets
+a `backup` (a RoomSnapshot) with each change of the room: the current hand's cards and plays, the players with only a
+hash of each token. If the host's phone goes away (it left, or its app stopped), the backup tries it once, then
+carries the room on itself (the next epoch) and advertises it under the room's id and epoch; the others look for
+that advertisement while they try the old phone, and take their seats back with their tokens. A hand in play gets
+15 s more for that; the host's phone's own player is away from then on (it left, or times out). So the backup's
+phone has the current hand's cards as the host's has: it is trusted as much. Nearby Connections encrypts the connections; joining still takes the room's PIN, and failed
 PINs from nearby phones are limited together. Nearby needs Google Play services and the Bluetooth and nearby
 devices permissions; it uses Bluetooth and Wi-Fi directly, without a network.
 

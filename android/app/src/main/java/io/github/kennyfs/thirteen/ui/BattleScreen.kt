@@ -1,5 +1,11 @@
 package io.github.kennyfs.thirteen.ui
 
+import io.github.kennyfs.thirteen.protocol.BattleRecord
+import io.github.kennyfs.thirteen.battle.BattleReview
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.runtime.rememberCoroutineScope
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -38,6 +44,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
@@ -82,6 +89,7 @@ import io.github.kennyfs.thirteen.Rules
 import io.github.kennyfs.thirteen.battle.BattleViewModel
 import io.github.kennyfs.thirteen.battle.Entry
 import io.github.kennyfs.thirteen.battle.Via
+import io.github.kennyfs.thirteen.battle.shownName
 import io.github.kennyfs.thirteen.protocol.HandOutcome
 import io.github.kennyfs.thirteen.protocol.Limits
 import io.github.kennyfs.thirteen.protocol.Mode
@@ -98,22 +106,34 @@ fun BattleScreen(vm: BattleViewModel, app: AppViewModel) {
   val room = vm.room
   // Back: one page up within the battle, where there is one.
   val over = room != null && (vm.finished || room.phase == Phase.OVER)
+  var confirmLeave by rememberSaveable { mutableStateOf(false) }
   val back: (() -> Unit)? = when {
-    vm.detail != null && room != null -> if (vm.analyzed != null && !vm.fromReview) vm::closeAnalysis else vm::closeDetail
+    vm.review.detail != null && room != null -> if (vm.review.analyzed != null && !vm.review.fromReview) vm.review::closeAnalysis else vm.review::closeDetail
     room == null -> if (vm.entry != null) ({ vm.chooseEntry(null) }) else null
     over && !vm.lastSeen && vm.outcomes.isNotEmpty() -> vm::toSummary
     over -> vm::dismiss
-    room.phase == Phase.LOBBY -> vm::leave
-    // A hand in play: Back does not leave the room.
-    else -> null
+    // In the room, with no page to go back to: leave it, once confirmed.
+    else -> ({ confirmLeave = true })
   }
   BackHandler(back != null) { back?.invoke() }
+  if (confirmLeave && room != null && vm.inRoom) AlertDialog(
+    onDismissRequest = { confirmLeave = false },
+    confirmButton = { TextButton(onClick = { confirmLeave = false; vm.leave() }) { Text(stringResource(R.string.battle_leave)) } },
+    dismissButton = { TextButton(onClick = { confirmLeave = false }) { Text(stringResource(R.string.cancel)) } },
+    title = { Text(stringResource(R.string.battle_leave_title)) },
+    text = {
+      Text(
+        stringResource(if (room.phase == Phase.LOBBY) R.string.battle_leave_lobby else R.string.battle_leave_game),
+        style = MaterialTheme.typography.bodyLarge,
+      )
+    },
+  )
   Column(Modifier.fillMaxSize()) {
     when {
-      vm.detail != null && room != null -> if (vm.analyzed != null) PlayerAnalysisPage(vm, room) else DetailPage(vm, room)
+      vm.review.detail != null && room != null -> if (vm.review.analyzed != null) PlayerAnalysisPage(vm.review, room) else DetailPage(vm.review, room)
       room == null -> EntryPage(vm)
       (vm.finished || room.phase == Phase.OVER) && !vm.lastSeen && vm.outcomes.isNotEmpty() -> LastHandPage(vm, room)
-      vm.finished || room.phase == Phase.OVER -> SummaryPage(vm, room, app)
+      vm.finished || room.phase == Phase.OVER -> SummaryPage(vm.review, room, app, vm::dismiss)
       room.phase == Phase.LOBBY -> LobbyPage(vm, room, app)
       room.phase == Phase.PLAYING && room.players.firstOrNull { it.id == vm.me }?.submitted != true -> PlayingPage(vm, room)
       room.phase == Phase.PLAYING -> WaitingPage(vm, room)
@@ -257,7 +277,7 @@ private fun JoinTile(vm: BattleViewModel, compact: Boolean = false, nearby: (() 
             Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(RoundedCornerShape(12.dp))
               .background(if (vm.picked == id) colors.secondaryContainer else colors.surfaceContainer).clickable { vm.pick(id) }.padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
-          ) { Text(name, style = MaterialTheme.typography.bodyLarge) }
+          ) { Text(shownName(name), style = MaterialTheme.typography.bodyLarge) }
       }
     }
     if (vm.via == Via.ONLINE || vm.picked != null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -497,8 +517,8 @@ private fun WaitingPage(vm: BattleViewModel, room: RoomView) {
 
 /** One play's three rows as the analysis shows them: the cards that make each hand first, tinted by its category. */
 @Composable
-private fun PlayRows(vm: BattleViewModel, rows: List<List<Int>>, modifier: Modifier = Modifier) {
-  ThreeRows(rows, vm.categoriesOf(rows), modifier)
+private fun PlayRows(r: BattleReview, rows: List<List<Int>>, modifier: Modifier = Modifier) {
+  ThreeRows(rows, r.categoriesOf(rows), modifier)
 }
 
 /** A hand's value: a puzzle's loss ("0.144", nothing lost "0"), or a table's points ("+3"). */
@@ -519,9 +539,9 @@ private fun handColor(room: RoomView, o: HandOutcome, i: Int): Color {
 
 /** What a table game's hand gave the player, as the practice screen shows it; nothing in a puzzle. */
 @Composable
-private fun MyHandResult(vm: BattleViewModel, o: HandOutcome?) {
+private fun MyHandResult(r: BattleReview, o: HandOutcome?) {
   val score = o?.score ?: return
-  val i = o.plays.indexOfFirst { it.player == vm.me }
+  val i = o.plays.indexOfFirst { it.player == r.me }
   if (i < 0) return
   val x = score.result[i]
   Text(
@@ -542,7 +562,7 @@ private fun rankOf(room: RoomView, p: PlayerView): Int {
  * player's cards go under their line.
  */
 @Composable
-private fun ResultTable(vm: BattleViewModel, room: RoomView, o: HandOutcome, onPlayer: ((Int) -> Unit)? = null) {
+private fun ResultTable(r: BattleReview, room: RoomView, o: HandOutcome, onPlayer: ((Int) -> Unit)? = null) {
   val puzzle = room.settings.mode == Mode.PUZZLE
   val nameStyle = MaterialTheme.typography.bodyLarge
   val numStyle = MaterialTheme.typography.titleMedium
@@ -573,12 +593,12 @@ private fun ResultTable(vm: BattleViewModel, room: RoomView, o: HandOutcome, onP
             if (note != null) Text(note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
           }
           if (!stacked) {
-            if (rows != null) PlayRows(vm, rows, Modifier.weight(1f)) else Spacer(Modifier.weight(1f))
+            if (rows != null) PlayRows(r, rows, Modifier.weight(1f)) else Spacer(Modifier.weight(1f))
           }
           Text(hand, Modifier.width(numWidth), style = numStyle, color = handColor, textAlign = TextAlign.End, maxLines = 1)
           Text(total, Modifier.width(numWidth), style = numStyle, textAlign = TextAlign.End, maxLines = 1)
         }
-        if (stacked && rows != null) PlayRows(vm, rows, Modifier.fillMaxWidth())
+        if (stacked && rows != null) PlayRows(r, rows, Modifier.fillMaxWidth())
       }
     }
     Column {
@@ -591,7 +611,7 @@ private fun ResultTable(vm: BattleViewModel, room: RoomView, o: HandOutcome, onP
           // The player's own line is highlighted: no "(you)" to cut the name short.
           stringResource(R.string.battle_rank, rankOf(room, p)), p.name,
           if (o.plays[i].timedOut) stringResource(R.string.battle_timed_out).trim() else null,
-          o.plays[i].rows, handValue(o, i), handColor(room, o, i), if (puzzle) fmtLoss(p.total) else signed(p.total), p.id == vm.me,
+          o.plays[i].rows, handValue(o, i), handColor(room, o, i), if (puzzle) fmtLoss(p.total) else signed(p.total), p.id == r.me,
           onPlayer?.let { f -> { f(p.id) } },
         )
       }
@@ -604,15 +624,15 @@ private fun ResultTable(vm: BattleViewModel, room: RoomView, o: HandOutcome, onP
  * table game's hand is shown as on the practice screen, from the player's seat, once its full score is in.
  */
 @Composable
-private fun HandTable(vm: BattleViewModel, room: RoomView, o: HandOutcome?, modifier: Modifier = Modifier, onPlayer: ((Int) -> Unit)? = null) {
-  val table = o?.let { vm.tables[it.index] }
+private fun HandTable(r: BattleReview, room: RoomView, o: HandOutcome?, modifier: Modifier = Modifier, onPlayer: ((Int) -> Unit)? = null) {
+  val table = o?.let { r.tables[it.index] }
   if (o != null && table != null) {
     val (order, score) = table
     val plays = order.map { o.plays[it] }
     val byId = room.players.associateBy { it.id }
     // Each player's total up to this hand.
     val totals = plays.map { p ->
-      vm.outcomes.filter { it.index <= o.index }.sumOf { h -> h.plays.indexOfFirst { it.player == p.player }.let { i -> if (i < 0) 0.0 else h.score?.result?.get(i) ?: 0.0 } }
+      r.outcomes.filter { it.index <= o.index }.sumOf { h -> h.plays.indexOfFirst { it.player == p.player }.let { i -> if (i < 0) 0.0 else h.score?.result?.get(i) ?: 0.0 } }
     }
     val you = stringResource(R.string.you)
     val timedOut = stringResource(R.string.battle_timed_out).trim()
@@ -620,7 +640,7 @@ private fun HandTable(vm: BattleViewModel, room: RoomView, o: HandOutcome?, modi
     Surface(modifier.fillMaxSize().padding(start = 8.dp, end = 12.dp, bottom = 10.dp), shape = MaterialTheme.shapes.large, color = t.felt, contentColor = t.onFelt) {
       SeatResults(
         plays.map { it.rows }, score, Rules.values(room.rules)["wheel"]?.toInt() ?: 0,
-        plays.map { if (it.player == vm.me) you else byId[it.player]?.name ?: "?" },
+        plays.map { if (it.player == r.me) you else byId[it.player]?.name ?: "?" },
         plays.map { if (it.timedOut) timedOut else null }, totals, Modifier.padding(8.dp),
         onPlayer?.let { f -> { s: Int -> f(plays[s].player) } },
       )
@@ -629,7 +649,7 @@ private fun HandTable(vm: BattleViewModel, room: RoomView, o: HandOutcome?, modi
   }
   BoxWithConstraints(modifier.fillMaxSize().padding(horizontal = 12.dp)) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-      if (o != null) ResultTable(vm, room, o, onPlayer)
+      if (o != null) ResultTable(r, room, o, onPlayer)
     }
   }
 }
@@ -645,7 +665,7 @@ private fun ReviewPage(vm: BattleViewModel, room: RoomView) {
   val o = vm.outcomes.lastOrNull { it.index == room.hand }
   val puzzle = room.settings.mode == Mode.PUZZLE
   var analysisMode by rememberSaveable(room.hand) { mutableStateOf(false) }
-  HandHeader(vm, room, info = { MyHandResult(vm, o) }) {
+  HandHeader(vm, room, info = { MyHandResult(vm.review, o) }) {
     val label = stringResource(R.string.battle_analyze)
     if (o != null && (!puzzle || o.plays.any { it.player == vm.me })) {
       if (puzzle) OutlinedButton(
@@ -676,7 +696,7 @@ private fun ReviewPage(vm: BattleViewModel, room: RoomView) {
     stringResource(R.string.battle_tap_player), Modifier.padding(horizontal = 16.dp, vertical = 2.dp), style = MaterialTheme.typography.bodyMedium,
     color = MaterialTheme.colorScheme.primary,
   )
-  HandTable(vm, room, o, onPlayer = if (analysisMode && !puzzle) vm::analyzeHand else null)
+  HandTable(vm.review, room, o, onPlayer = if (analysisMode && !puzzle) vm::analyzeHand else null)
 }
 
 /** The last hand's table, which the room skips (the game is over): shown before the final standings. */
@@ -688,21 +708,25 @@ private fun LastHandPage(vm: BattleViewModel, room: RoomView) {
     horizontalArrangement = Arrangement.spacedBy(12.dp),
   ) {
     Text(stringResource(R.string.battle_hand_of, o.index + 1, room.settings.hands), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, maxLines = 1)
-    MyHandResult(vm, o)
+    MyHandResult(vm.review, o)
     Button(onClick = vm::toSummary, Modifier.heightIn(min = BIG_BUTTON), shape = RoundedCornerShape(18.dp)) {
       Text(stringResource(R.string.battle_to_summary), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
     }
   }
-  HandTable(vm, room, o)
+  HandTable(vm.review, room, o)
 }
 
 /** The final standings, then every hand with the player's rows, what it gave them and their place in it. */
 @Composable
-private fun SummaryPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) {
+fun SummaryPage(
+  r: BattleReview, room: RoomView, app: AppViewModel, onDone: (() -> Unit)?, title: String? = null, onBack: (() -> Unit)? = null,
+  actions: @Composable RowScope.() -> Unit = {},
+) {
   val puzzle = room.settings.mode == Mode.PUZZLE
   Column(Modifier.fillMaxSize()) {
-    TitleBar(stringResource(R.string.battle_over) + " · " + modeName(room.settings.mode)) {
-      Button(onClick = vm::dismiss, Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.battle_done)) }
+    TitleBar(title ?: (stringResource(R.string.battle_over) + " · " + modeName(room.settings.mode)), onBack) {
+      actions()
+      if (onDone != null) Button(onClick = onDone, Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.battle_done)) }
     }
     val numStyle = MaterialTheme.typography.titleMedium
     val handHead = stringResource(if (puzzle) R.string.battle_col_hand_loss else R.string.battle_col_hand)
@@ -716,7 +740,7 @@ private fun SummaryPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) 
         item {
           Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             for (p in standings(room)) {
-              val mine = p.id == vm.me
+              val mine = p.id == r.me
               val place = rankOf(room, p)
               Row(
                 Modifier.fillMaxWidth().heightIn(min = 52.dp).clip(RoundedCornerShape(14.dp))
@@ -738,13 +762,13 @@ private fun SummaryPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) 
             Text(rankHead, Modifier.width(numWidth), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.End)
           }
         }
-        items(vm.outcomes) { o ->
-          val i = o.plays.indexOfFirst { it.player == vm.me }
-          Column(Modifier.fillMaxWidth().clickable(enabled = i >= 0) { vm.openDetail(o.index) }.padding(vertical = 8.dp)) {
+        items(r.outcomes) { o ->
+          val i = o.plays.indexOfFirst { it.player == r.me }
+          Column(Modifier.fillMaxWidth().clickable(enabled = i >= 0) { r.openDetail(o.index) }.padding(vertical = 8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
               Text("${o.index + 1}", Modifier.width(indexWidth), style = numStyle, textAlign = TextAlign.End)
               if (i >= 0) {
-                if (!stacked) PlayRows(vm, o.plays[i].rows, Modifier.weight(1f)) else Spacer(Modifier.weight(1f))
+                if (!stacked) PlayRows(r, o.plays[i].rows, Modifier.weight(1f)) else Spacer(Modifier.weight(1f))
                 Column(Modifier.width(numWidth), horizontalAlignment = Alignment.End) {
                   Text(handValue(o, i), style = numStyle, color = handColor(room, o, i))
                   if (o.plays[i].timedOut)
@@ -756,7 +780,7 @@ private fun SummaryPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) 
                 Text(stringResource(R.string.battle_hand_rank, place, o.plays.size), Modifier.width(numWidth), style = numStyle, textAlign = TextAlign.End)
               }
             }
-            if (stacked && i >= 0) PlayRows(vm, o.plays[i].rows, Modifier.fillMaxWidth().padding(top = 4.dp))
+            if (stacked && i >= 0) PlayRows(r, o.plays[i].rows, Modifier.fillMaxWidth().padding(top = 4.dp))
           }
           HorizontalDivider()
         }
@@ -778,24 +802,74 @@ private fun settingsLine(room: RoomView, app: AppViewModel): String {
 
 /** A hand from the results: its table; a player's line opens the analysis of their hand. */
 @Composable
-private fun DetailPage(vm: BattleViewModel, room: RoomView) {
-  val o = vm.outcomes.firstOrNull { it.index == vm.detail } ?: return
-  TitleBar(stringResource(R.string.battle_hand_of, o.index + 1, room.settings.hands), onBack = vm::closeDetail) { MyHandResult(vm, o) }
+fun DetailPage(r: BattleReview, room: RoomView, actions: @Composable RowScope.(HandOutcome) -> Unit = {}) {
+  val o = r.outcomes.firstOrNull { it.index == r.detail } ?: return
+  TitleBar(stringResource(R.string.battle_hand_of, o.index + 1, room.settings.hands), onBack = r::closeDetail) {
+    MyHandResult(r, o)
+    actions(o)
+  }
   Text(
     stringResource(R.string.battle_tap_player), Modifier.padding(horizontal = 16.dp, vertical = 2.dp), style = MaterialTheme.typography.bodyMedium,
     color = MaterialTheme.colorScheme.onSurfaceVariant,
   )
-  HandTable(vm, room, o) { vm.openAnalysis(it) }
+  HandTable(r, room, o) { r.openAnalysis(it) }
 }
 
 /** One player's hand of a hand from the results, analyzed, their play pinned. */
 @Composable
-private fun PlayerAnalysisPage(vm: BattleViewModel, room: RoomView) {
-  val o = vm.outcomes.firstOrNull { it.index == vm.detail } ?: return
-  val play = o.plays.firstOrNull { it.player == vm.analyzed } ?: return
+fun PlayerAnalysisPage(r: BattleReview, room: RoomView) {
+  val o = r.outcomes.firstOrNull { it.index == r.detail } ?: return
+  val play = o.plays.firstOrNull { it.player == r.analyzed } ?: return
   val name = room.players.firstOrNull { it.id == play.player }?.name ?: "?"
-  TitleBar("${stringResource(R.string.battle_hand_of, o.index + 1, room.settings.hands)} · $name", onBack = vm::closeAnalysis)
-  val a = vm.detailAnalysis
+  TitleBar("${stringResource(R.string.battle_hand_of, o.index + 1, room.settings.hands)} · $name", onBack = r::closeAnalysis)
+  val a = r.detailAnalysis
   if (a == null) Loading(stringResource(R.string.analyzing))
-  else CandidateList(a, play.rows, legacyNote = null, tags = vm.detailTags, mineLabel = if (play.player == vm.me) null else name)
+  else CandidateList(a, play.rows, legacyNote = null, tags = r.detailTags, mineLabel = if (play.player == r.me) null else name)
+}
+
+/**
+ * A battle from the records: its standings and hands as at its end, a hand's table, a player's analysis. A star saves
+ * the battle, and in a hand's table, the player's own hand of it (as a record).
+ */
+@Composable
+fun BattleRecordPage(app: AppViewModel, record: BattleRecord, onBack: () -> Unit) {
+  val scope = rememberCoroutineScope()
+  val r = remember(record.id) {
+    BattleReview(scope, { app.settings.models().first().path }) { app.error = it }.apply {
+      me = record.me
+      rules = record.rules
+      names = record.players.associate { it.id to it.name }
+      add(record.outcomes)
+    }
+  }
+  val room = remember(record) { record.view() }
+  BackHandler(r.detail != null) { if (r.analyzed != null) r.closeAnalysis() else r.closeDetail() }
+  val star = @Composable { saved: Boolean, label: Int, onClick: () -> Unit ->
+    IconButton(onClick = onClick) {
+      Icon(
+        if (saved) Icons.Filled.Star else Icons.Outlined.StarBorder, stringResource(label),
+        tint = if (saved) Color(0xFFE0A100) else MaterialTheme.colorScheme.onSurfaceVariant,
+      )
+    }
+  }
+  Column(Modifier.fillMaxSize()) {
+    when {
+      r.detail != null && r.analyzed != null -> PlayerAnalysisPage(r, room)
+      r.detail != null -> DetailPage(r, room) { o ->
+        // The player's own hand of it, as a record, to save.
+        val rec = remember(o.index, app.recordCount) { app.battleHandRecord(record.id, o.index) }
+        if (rec != null) {
+          val saved = rec.optString("id") in app.favoriteIds
+          star(saved, if (saved) R.string.favorite_remove else R.string.favorite_add) { app.toggleFavorite(rec) }
+        }
+      }
+      else -> {
+        val saved = record.id in app.favoriteBattleIds
+        SummaryPage(
+          r, room, app, onDone = null, title = localTime(java.time.Instant.ofEpochMilli(record.startedAt).toString()) + " · " + modeName(record.settings.mode),
+          onBack = onBack,
+        ) { star(saved, if (saved) R.string.favorite_battle_remove else R.string.favorite_battle_add) { app.toggleFavoriteBattle(record) } }
+      }
+    }
+  }
 }

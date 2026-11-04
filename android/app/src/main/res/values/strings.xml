@@ -222,6 +222,9 @@
   <string name="battle_no_limit">none</string>
   <string name="battle_seconds">%1$d s</string>
   <!-- Puzzle levels 1 to 5: hands of about the same strength as random ones, easier or harder to arrange. -->
+  <string name="battle_leave_title">Leave the battle?</string>
+  <string name="battle_leave_lobby">You leave the room.</string>
+  <string name="battle_leave_game">From now on each of your hands is set for you as a timed-out one would be, and you cannot come back.</string>
   <string name="battle_leave">Leave</string>
   <string name="battle_host">host</string>
   <string name="battle_away">away</string>
@@ -384,4 +387,11 @@
   <string name="chart_puzzle_note">A puzzle contest scores how many expected points your arrangement is short of the best; closer to 0 is better.</string>
   <string name="records_none">No records of this kind yet.</string>
   <string name="ready_hint">Ready to play</string>
+  <string name="records_battles">Battles</string>
+  <string name="favorite_battles_title">Saved battles</string>
+  <string name="favorite_battle_add">Save the battle</string>
+  <string name="favorite_battle_remove">Drop the saved battle</string>
+  <string name="battle_record_size">%1$d of %2$d hands, %3$d players</string>
+  <string name="battle_record_left">left early</string>
+  <string name="battle_err_unverified">This room takes only the app from Google Play, checked by Google (Play Integrity), and this copy could not be checked.</string>
 </resources>

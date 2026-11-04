@@ -2,6 +2,8 @@ package io.github.kennyfs.thirteen
 
 import android.content.ContentResolver
 import android.net.Uri
+import io.github.kennyfs.thirteen.protocol.BattleJson
+import io.github.kennyfs.thirteen.protocol.BattleRecord
 import org.json.JSONObject
 import java.io.File
 import java.time.Instant
@@ -15,8 +17,12 @@ import java.util.UUID
 class RecordStore(dir: File) {
   private val file = File(dir, "records.jsonl")
 
+  /** `battle` and `battleHand`: the battle (BattleStore) and the hand of it this one is. */
   @Synchronized
-  fun add(hand: List<Int>, rows: Arrangement, c: Double, rules: String, timeMs: Long, result: Double, label: String = "android"): JSONObject {
+  fun add(
+    hand: List<Int>, rows: Arrangement, c: Double, rules: String, timeMs: Long, result: Double, label: String = "android",
+    battle: String? = null, battleHand: Int? = null,
+  ): JSONObject {
     val rec = JSONObject()
       .put("version", 1)
       .put("id", UUID.randomUUID().toString())
@@ -30,6 +36,7 @@ class RecordStore(dir: File) {
       .put("timestamp", Instant.now().toString())
       .put("label", label)
       .put("result", result)
+    if (battle != null) rec.put("battle", battle).put("battle_hand", battleHand ?: 0)
     file.appendText(rec.toString() + "\n")
     return rec
   }
@@ -58,6 +65,46 @@ class RecordStore(dir: File) {
   @Synchronized
   fun exportTo(resolver: ContentResolver, uri: Uri) {
     resolver.openOutputStream(uri, "wt")!!.use { out -> if (file.exists()) file.inputStream().use { it.copyTo(out) } }
+  }
+}
+
+/**
+ * Battles, one file each in `dir/name` (BattleRecord as JSON): rewritten as each hand closes, so a battle left early
+ * is kept with the hands it had. The battles' hands are in the records too (RecordStore, with the battle's id).
+ */
+class BattleStore(dir: File, name: String = "battles") {
+  private val folder = File(dir, name)
+
+  @Synchronized
+  fun save(b: BattleRecord) {
+    folder.mkdirs()
+    val tmp = File(folder, "${b.id}.tmp")
+    tmp.writeText(BattleJson.encodeToString(BattleRecord.serializer(), b))
+    tmp.renameTo(File(folder, "${b.id}.json"))
+  }
+
+  /** Newest first. */
+  @Synchronized
+  fun all(): List<BattleRecord> =
+    (folder.listFiles { f -> f.name.endsWith(".json") } ?: emptyArray())
+      .mapNotNull { f -> runCatching { BattleJson.decodeFromString(BattleRecord.serializer(), f.readText()) }.getOrNull() }
+      .sortedByDescending { it.startedAt }
+
+  @Synchronized
+  fun get(id: String): BattleRecord? =
+    File(folder, "$id.json").takeIf { it.exists() }?.let { runCatching { BattleJson.decodeFromString(BattleRecord.serializer(), it.readText()) }.getOrNull() }
+
+  @Synchronized
+  fun ids(): Set<String> = (folder.list() ?: emptyArray()).filter { it.endsWith(".json") }.map { it.removeSuffix(".json") }.toSet()
+
+  @Synchronized
+  fun remove(id: String) {
+    File(folder, "$id.json").delete()
+  }
+
+  @Synchronized
+  fun clear() {
+    folder.deleteRecursively()
   }
 }
 

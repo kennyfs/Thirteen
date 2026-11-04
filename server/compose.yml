@@ -20,8 +20,12 @@ services:
       CONNECTIONS_PER_ADDRESS: "16"
       # One proxy, Caddy, writes X-Forwarded-For; the server is reachable only through it (no ports below).
       TRUST_PROXY: "1"
+      # Play Integrity (docs/battle.md): a Google Cloud service account key in server/keys/, and a way out to Google
+      # (add `public` to the networks below). Without it, clients are not checked.
+      # PLAY_INTEGRITY_KEY: /keys/play-integrity.json
     volumes:
       - ./models:/models:ro
+      # - ./keys:/keys:ro
     networks: [internal]
     read_only: true
     tmpfs:

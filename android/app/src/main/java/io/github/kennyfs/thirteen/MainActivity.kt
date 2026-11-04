@@ -62,6 +62,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import io.github.kennyfs.thirteen.battle.BattleViewModel
+import io.github.kennyfs.thirteen.ui.BattleRecordPage
 import io.github.kennyfs.thirteen.ui.AnalyzeScreen
 import io.github.kennyfs.thirteen.ui.CandidatesPage
 import io.github.kennyfs.thirteen.ui.MyHandAnalysis
@@ -94,7 +95,7 @@ enum class Screen(val label: Int, val icon: ImageVector, val selectedIcon: Image
 }
 
 /** A destination: a top-level screen or a page opened from one. */
-enum class Dest { PLAY, BATTLE, ANALYZE, RECORDS, SETTINGS, RULES, OPPONENTS, NETWORKS, MY_ANALYSIS, CANDIDATES }
+enum class Dest { PLAY, BATTLE, ANALYZE, RECORDS, SETTINGS, RULES, OPPONENTS, NETWORKS, MY_ANALYSIS, CANDIDATES, BATTLE_RECORD }
 
 private fun root(s: Screen) = Dest.valueOf(s.name)
 
@@ -150,6 +151,7 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
   val opened = when (tab) {
     Screen.PLAY -> listOfNotNull(Dest.MY_ANALYSIS.takeIf { vm.result != null && vm.resultTab == 1 })
     Screen.ANALYZE -> listOfNotNull(Dest.CANDIDATES.takeIf { vm.analysis != null && vm.anaPage == 1 })
+    Screen.RECORDS -> listOfNotNull(Dest.BATTLE_RECORD.takeIf { vm.openedBattle != null })
     else -> emptyList()
   }
   val stack = pushed.take(1) + opened + pushed.drop(1)
@@ -161,6 +163,7 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
       pushed.size > 1 -> stacks = stacks + (tab.name to stacks.getValue(tab.name).dropLast(1))
       Dest.MY_ANALYSIS in opened -> vm.resultTab = 0
       Dest.CANDIDATES in opened -> vm.anaPage = 0
+      Dest.BATTLE_RECORD in opened -> vm.openedBattle = null
     }
   }
   fun open(page: SettingsPage) = push(Dest.valueOf(page.name))
@@ -190,7 +193,9 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
     controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     if (landscape) controller.hide(WindowInsetsCompat.Type.systemBars()) else controller.show(WindowInsetsCompat.Type.systemBars())
   }
-  BackHandler(tab != Screen.PLAY && stack.size == 1) { tab = Screen.PLAY }
+  // In a battle the other screens are out of reach (no bar or rail), until the player leaves it.
+  LaunchedEffect(battle.inRoom) { if (battle.inRoom) tab = Screen.BATTLE }
+  BackHandler(tab != Screen.PLAY && stack.size == 1 && !battle.inRoom) { tab = Screen.PLAY }
   NavigationSuiteScaffold(
     navigationSuiteItems = {
       for (s in Screen.entries) {
@@ -209,10 +214,11 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
         )
       }
     },
-    layoutType = type,
+    layoutType = if (battle.inRoom) NavigationSuiteType.None else type,
   ) {
     // The bar or rail looks after its own side; the content keeps clear of the rest.
-    val sides = if (type == NavigationSuiteType.NavigationBar) WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+    val sides = if (battle.inRoom) WindowInsetsSides.Top + WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
+    else if (type == NavigationSuiteType.NavigationBar) WindowInsetsSides.Top + WindowInsetsSides.Horizontal
     else WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom
     BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(sides))) {
       // The two sizes of card, for the room the pages have.
@@ -242,6 +248,7 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
                   Dest.NETWORKS -> NetworksPage(vm, ::pop)
                   Dest.MY_ANALYSIS -> MyHandAnalysis(vm)
                   Dest.CANDIDATES -> CandidatesPage(vm)
+                  Dest.BATTLE_RECORD -> vm.openedBattle?.let { b -> BattleRecordPage(vm, b) { vm.openedBattle = null } }
                 }
               }
             }

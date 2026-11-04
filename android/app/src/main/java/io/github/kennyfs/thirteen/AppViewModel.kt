@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import io.github.kennyfs.thirteen.protocol.BattleRecord
 import org.json.JSONObject
 import kotlin.random.Random
 
@@ -19,6 +20,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   val settings = Settings(app)
   val records = RecordStore(app.filesDir)
   val favorites = FavoriteStore(app.filesDir)
+  /** Battles (the hands of each are in the records too), and the saved ones: copies, kept when the records are cleared. */
+  val battles = BattleStore(app.filesDir)
+  val favoriteBattles = BattleStore(app.filesDir, "favorite_battles")
 
   private fun str(id: Int, vararg args: Any) = getApplication<Application>().getString(id, *args)
 
@@ -139,6 +143,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   var recordCount by mutableStateOf(records.count()); private set
   /** Ids of the saved hands, and the finished hand's record (what the star on the result saves). */
   var favoriteIds by mutableStateOf(favorites.ids()); private set
+  var favoriteBattleIds by mutableStateOf(favoriteBattles.ids()); private set
+  /** The battle opened from the records. */
+  var openedBattle by mutableStateOf<BattleRecord?>(null)
   var lastRecord by mutableStateOf<JSONObject?>(null); private set
   /** A screen asks for another: the number of requests so far and the screen's name ("PLAY" to rearrange a hand...). */
   var tabRequest by mutableStateOf(0 to ""); private set
@@ -246,6 +253,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     favoriteIds = favorites.ids()
   }
 
+  /** Saves a battle, or drops it if it is saved. */
+  fun toggleFavoriteBattle(b: BattleRecord) {
+    if (b.id in favoriteBattles.ids()) favoriteBattles.remove(b.id) else favoriteBattles.save(b)
+    favoriteBattleIds = favoriteBattles.ids()
+  }
+
+  /** The player's record of a battle's hand. */
+  fun battleHandRecord(battle: String, hand: Int): JSONObject? =
+    records.all().lastOrNull { it.optString("battle") == battle && it.optInt("battle_hand", -1) == hand }
+      ?: favorites.all().lastOrNull { it.optString("battle") == battle && it.optInt("battle_hand", -1) == hand }
+
   /**
    * The same 13 cards again, to arrange another way: the finished hand with the same opponents' cards, or (a record's
    * or a saved hand) with the other 39 cards dealt anew. Not counted in the totals.
@@ -264,6 +282,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
   fun clearRecords() {
     records.clear()
+    battles.clear()
     recordCount = 0
   }
 

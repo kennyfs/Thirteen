@@ -78,6 +78,10 @@ data class RoomView(
   val players: List<PlayerView>,
   /** Time left in the current phase, when it has a limit. */
   val remainingMs: Long? = null,
+  /** A room hosted on a phone: the player who would host it if that phone went away (-1: none, or not a phone's). */
+  val backup: Int = -1,
+  /** How many times the room has moved to another phone; the room's advertisement carries it. */
+  val epoch: Int = 0,
 )
 
 /** One player's arrangement of a closed hand; `timedOut`: set by greedy for the player. */
@@ -141,11 +145,16 @@ data class Ready(val hand: Int) : ClientMsg
 @Serializable @SerialName("leave")
 data object Leave : ClientMsg
 
+/** A Play Integrity token for the nonce of Welcome: the client is the app from Google Play, on a genuine device. */
+@Serializable @SerialName("attest")
+data class Attest(val token: String) : ClientMsg
+
 @Serializable
 sealed interface ServerMsg
 
+/** `nonce`: the server checks clients (Play Integrity); a client that can sends Attest for it before anything else. */
 @Serializable @SerialName("welcome")
-data class Welcome(val version: Int) : ServerMsg
+data class Welcome(val version: Int, val nonce: String? = null) : ServerMsg
 
 /** In a room as player `you`; `token` (secret) resumes the seat after a dropped connection. */
 @Serializable @SerialName("joined")
@@ -168,6 +177,10 @@ data class History(val outcomes: List<HandOutcome>) : ServerMsg
 @Serializable @SerialName("error")
 data class Error(val code: ErrorCode, val message: String = "") : ServerMsg
 
+/** To the room's backup only (a room on a phone): what it takes to carry on the room if the phone goes away. */
+@Serializable @SerialName("backup")
+data class Backup(val snapshot: RoomSnapshot) : ServerMsg
+
 /** The room is gone (closed, or the player left); the connection may stay for another room. */
 @Serializable @SerialName("closed")
 data class Closed(val reason: String = "") : ServerMsg
@@ -175,4 +188,43 @@ data class Closed(val reason: String = "") : ServerMsg
 @Serializable
 enum class ErrorCode {
   VERSION, BAD_MESSAGE, NOT_ALLOWED, NO_ROOM, ROOM_FULL, STARTED, TOO_MANY, BUSY, BAD_SETTINGS, BAD_ROWS, RATE,
+  /** The room takes only clients checked by Play Integrity, or the check failed. */
+  UNVERIFIED,
 }
+
+/**
+ * A room as it stands, for its backup to carry on with: everything but the closed hands (which every player has) and
+ * the players' tokens, of which only a hash is here, so the backup cannot take anyone's seat.
+ */
+@Serializable
+data class RoomSnapshot(
+  val id: String,
+  val pin: String,
+  val settings: RoomSettings,
+  val rules: String,
+  val phase: Phase,
+  val hand: Int,
+  val host: Int,
+  val nextId: Int,
+  val players: List<SnapshotPlayer>,
+  /** The current hand's cards by player id. */
+  val cards: Map<Int, List<Int>>,
+  val remainingMs: Long?,
+  val engineCalls: Int,
+  val epoch: Int,
+  val verified: Boolean = false,
+)
+
+@Serializable
+data class SnapshotPlayer(
+  val id: Int,
+  val name: String,
+  /** SHA-256 of the token, Base64. */
+  val tokenHash: String,
+  val bot: Boolean,
+  val left: Boolean,
+  val total: Double,
+  val ready: Boolean,
+  val rows: Rows? = null,
+  val timedOut: Boolean = false,
+)

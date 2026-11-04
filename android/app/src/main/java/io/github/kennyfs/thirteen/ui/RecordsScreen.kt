@@ -61,6 +61,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import io.github.kennyfs.thirteen.AppViewModel
 import io.github.kennyfs.thirteen.R
+import io.github.kennyfs.thirteen.protocol.BattleRecord
+import io.github.kennyfs.thirteen.protocol.Mode
 import java.io.File
 import java.time.LocalDate
 
@@ -158,6 +160,45 @@ fun RecordList(recs: List<JSONObject>, vm: AppViewModel?, onClick: (JSONObject) 
   }
 }
 
+private fun stampMs(stamp: String): Long = runCatching { java.time.Instant.parse(stamp).toEpochMilli() }.getOrDefault(0L)
+
+/** A battle in the records: when, how many hands and players, the player's place and total, and a star to save it. */
+@Composable
+private fun BattleLine(vm: AppViewModel, b: BattleRecord, onClick: () -> Unit) {
+  val colors = MaterialTheme.colorScheme
+  val puzzle = b.settings.mode == Mode.PUZZLE
+  val mine = b.players.firstOrNull { it.id == b.me }
+  val place = mine?.let { m -> 1 + b.players.count { if (puzzle) it.total < m.total - 1e-9 else it.total > m.total + 1e-9 } }
+  val humans = b.players.count { !it.bot }
+  Row(
+    Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable(onClick = onClick).padding(vertical = 6.dp),
+    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
+  ) {
+    Column(Modifier.weight(1f)) {
+      Text(
+        if (place != null) stringResource(R.string.battle_place, place) + " · " +
+          (if (puzzle) stringResource(R.string.battle_total_loss, "%.3f".format(mine.total)) else signed(mine.total))
+        else "—",
+        style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+      )
+      Text(
+        localTime(java.time.Instant.ofEpochMilli(b.startedAt).toString()) + " · " +
+          stringResource(R.string.battle_record_size, b.outcomes.size, b.settings.hands, humans) +
+          if (b.left) " · " + stringResource(R.string.battle_record_left) else "",
+        style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis,
+      )
+    }
+    val saved = b.id in vm.favoriteBattleIds
+    IconButton(onClick = { vm.toggleFavoriteBattle(b) }, Modifier.size(40.dp)) {
+      Icon(
+        if (saved) Icons.Filled.Star else Icons.Outlined.StarBorder,
+        stringResource(if (saved) R.string.favorite_battle_remove else R.string.favorite_battle_add),
+        tint = if (saved) Color(0xFFE0A100) else colors.onSurfaceVariant,
+      )
+    }
+  }
+}
+
 /** What to do with a hand of the lists: analyze it, or play it again to arrange it another way. */
 @Composable
 private fun HandActions(vm: AppViewModel, r: JSONObject, onDismiss: () -> Unit) {
@@ -235,6 +276,17 @@ fun RecordsPage(vm: AppViewModel) {
   val recs = remember(vm.recordCount) { vm.records.all().asReversed() }
   val ofKind = remember(recs, kind) { recs.filter { kindOf(it) == kind } }
   val saved = remember(vm.favoriteIds) { vm.favorites.all().asReversed() }
+  // A battle's hands are listed under the battle; a hand of a battle from before battles were kept is one on its own.
+  val battles = remember(vm.recordCount, kind) {
+    if (kind == RecordKind.PRACTICE) emptyList()
+    else vm.battles.all().filter { (it.settings.mode == Mode.PUZZLE) == (kind == RecordKind.PUZZLE) }
+  }
+  val entries: List<Any> = remember(ofKind, battles) {
+    if (kind == RecordKind.PRACTICE) ofKind
+    else (battles.map { it.startedAt to it } + ofKind.filter { !it.has("battle") }.map { stampMs(it.optString("timestamp")) to it })
+      .sortedByDescending { it.first }.map { it.second }
+  }
+  val savedBattles = remember(vm.favoriteBattleIds) { vm.favoriteBattles.all() }
   Column(Modifier.fillMaxSize()) {
     TitleBar(stringResource(R.string.records_title))
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
@@ -243,14 +295,28 @@ fun RecordsPage(vm: AppViewModel) {
       SectionHeader(stringResource(R.string.chart_title))
       ChartSection(vm, ofKind, kind)
 
-      if (ofKind.isNotEmpty()) {
-        SectionHeader(stringResource(R.string.records_list))
+      if (entries.isNotEmpty()) {
+        SectionHeader(stringResource(if (kind == RecordKind.PRACTICE) R.string.records_list else R.string.records_battles))
         Column(Modifier.padding(horizontal = 16.dp)) {
-          RecordList(ofKind.take(shown), vm) { acting = it }
-          if (ofKind.size > shown) TextButton(onClick = { shown += 50 }) { Text(stringResource(R.string.show_more)) }
+          if (kind == RecordKind.PRACTICE) RecordList(ofKind.take(shown), vm) { acting = it }
+          else for (e in entries.take(shown)) {
+            if (e is BattleRecord) BattleLine(vm, e) { vm.openedBattle = e }
+            else RecordLine(e as JSONObject, Modifier.clickable { acting = e }, vm)
+            HorizontalDivider()
+          }
+          if (entries.size > shown) TextButton(onClick = { shown += 50 }) { Text(stringResource(R.string.show_more)) }
         }
       }
 
+      if (savedBattles.isNotEmpty()) {
+        SectionHeader(stringResource(R.string.favorite_battles_title))
+        Column(Modifier.padding(horizontal = 16.dp)) {
+          for (b in savedBattles) {
+            BattleLine(vm, b) { vm.openedBattle = b }
+            HorizontalDivider()
+          }
+        }
+      }
       SectionHeader(stringResource(R.string.favorites_title))
       if (saved.isEmpty())
         Text(stringResource(R.string.favorites_empty), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
