@@ -67,15 +67,22 @@ fun RulesPage(vm: AppViewModel, onBack: () -> Unit) {
         }
       }
     }
-    if (spec.overrides.isNotEmpty())
-      OutlinedButton(onClick = { vm.choosePreset(spec.preset) }, Modifier.padding(horizontal = 16.dp, vertical = 8.dp).heightIn(min = 48.dp)) {
-        Text(stringResource(R.string.restore_preset))
-      }
+    // Always there (off when nothing is changed): nothing on the page comes and goes, so nothing moves.
+    OutlinedButton(
+      onClick = { vm.choosePreset(spec.preset) }, Modifier.padding(horizontal = 16.dp, vertical = 8.dp).heightIn(min = 48.dp),
+      enabled = spec.overrides.isNotEmpty(),
+    ) {
+      Text(stringResource(R.string.restore_preset))
+    }
     // Networks in a seat or the analysis that would play these rules as family.
     val legacy = (vm.seatChoices.filter { it.kind == Kind.NET }.map { it.model } + vm.anaModel)
       .map { vm.settings.model(it) }.distinct().filter { it.path in vm.legacyModels }
-    if (vm.legacyMismatch(values))
-      for (m in legacy) Text(stringResource(R.string.legacy_warning, modelLabel(m)), Modifier.padding(horizontal = 16.dp), color = BAD, style = MaterialTheme.typography.bodyMedium)
+    // Shown while such a network is chosen, whatever the rules (they only set its color), so it does not come and go.
+    val mismatch = vm.legacyMismatch(values)
+    for (m in legacy) Text(
+      stringResource(R.string.legacy_warning, modelLabel(m)), Modifier.padding(horizontal = 16.dp),
+      color = if (mismatch) BAD else colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium,
+    )
     if (values.isEmpty()) return@SettingsSubpage
 
     SectionHeader(stringResource(R.string.rules_play))

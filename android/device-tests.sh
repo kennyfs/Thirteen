@@ -45,6 +45,8 @@ if [ "${ALL:-0}" = 1 ]; then
   "$GRADLE" --no-daemon connectedDebugAndroidTest || status=$?
 else
   "$ADB" shell rm -rf /data/local/tmp/shots
+  # The log of this run only.
+  "$ADB" logcat -c
   "$GRADLE" --no-daemon connectedDebugAndroidTest \
     -Pandroid.testInstrumentationRunnerArguments.class=io.github.kennyfs.thirteen.ScreenshotTest \
     -Pandroid.testInstrumentationRunnerArguments.store="${STORE:-0}" \

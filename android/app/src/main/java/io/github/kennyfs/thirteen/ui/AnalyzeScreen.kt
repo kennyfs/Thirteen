@@ -49,6 +49,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringArrayResource
@@ -480,10 +481,8 @@ private fun ProbGrid(a: Analysis, p: List<Double>, best: List<Double>?, pane: Bo
       (maxWidth - gap * 2) / 3 >= tile * 0.85f -> listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6, 7))
       else -> listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6), listOf(7))
     }
-    Column(if (fill) Modifier.fillMaxHeight() else Modifier, verticalArrangement = Arrangement.spacedBy(gap)) {
-      for (line in lines) Row(
-        Modifier.fillMaxWidth().then(if (fill) Modifier.weight(1f) else Modifier.height(IntrinsicSize.Min)), horizontalArrangement = Arrangement.spacedBy(gap),
-      ) {
+    StretchColumn(fill, gap) {
+      for (line in lines) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap)) {
         // The difference beside the figure when the line's tiles have room for both, else under it.
         val inline = (width - gap * (line.size - 1)) / line.size >= textRoom(98)
         for (k in line) {
@@ -493,7 +492,7 @@ private fun ProbGrid(a: Analysis, p: List<Double>, best: List<Double>?, pane: Bo
         }
       }
       for (line in lostShown.chunked(maxOf(2, minOf(fit, 4)))) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap)) {
-        for (t in line) ProbTile(names[ROYALTY_LOST + t], p[ROYALTY_LOST + t], 0, 0.0, Modifier.weight(1f), true)
+        for (t in line) ProbTile(names[ROYALTY_LOST + t], p[ROYALTY_LOST + t], 0, 0.0, Modifier.weight(1f).fillMaxHeight(), true)
         repeat(maxOf(2, minOf(fit, 4)) - line.size) { Spacer(Modifier.weight(1f)) }
       }
     }
@@ -535,6 +534,25 @@ fun modelLabel(m: Model): String = if (m.builtIn) stringResource(R.string.built_
  * `left` (`leftWidth` wide) and `right` beside it in the rest; when `right` comes out shorter than `left`, it is laid out
  * again at `left`'s height with `fill` = true, to stretch to it. A taller `right` leaves `left` as it is.
  */
+@Composable
+private fun StretchColumn(fill: Boolean, gap: Dp, content: @Composable () -> Unit) {
+  // Each line as tall as its tallest tile; with `fill`, what the height has over that shared out evenly among them
+  // (never less than a line needs, so a tile is never cut off).
+  Layout(content, if (fill) Modifier.fillMaxHeight() else Modifier) { ms, c ->
+    val w = c.maxWidth
+    val g = gap.roundToPx()
+    val natural = ms.map { it.minIntrinsicHeight(w) }
+    val total = natural.sum() + g * (ms.size - 1).coerceAtLeast(0)
+    val extra = if (fill && c.hasBoundedHeight && ms.isNotEmpty()) (c.maxHeight - total).coerceAtLeast(0) / ms.size else 0
+    val ps = ms.mapIndexed { i, m -> m.measure(Constraints.fixed(w, natural[i] + extra)) }
+    val h = (ps.sumOf { it.height } + g * (ps.size - 1).coerceAtLeast(0)).coerceIn(c.minHeight, c.maxHeight)
+    layout(w, h) {
+      var y = 0
+      for (p in ps) { p.place(0, y); y += p.height + g }
+    }
+  }
+}
+
 @Composable
 private fun MatchHeightRow(leftWidth: Dp, gap: Dp, left: @Composable () -> Unit, right: @Composable (fill: Boolean) -> Unit) {
   SubcomposeLayout(Modifier.fillMaxWidth()) { c ->

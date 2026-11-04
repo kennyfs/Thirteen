@@ -7,7 +7,16 @@ import android.os.Build
 import android.os.LocaleList
 import android.os.ParcelFileDescriptor
 import android.util.Log
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.text.TextLayoutResult
+import io.github.kennyfs.thirteen.protocol.BattleRecord
+import io.github.kennyfs.thirteen.protocol.HandOutcome
+import io.github.kennyfs.thirteen.protocol.Mode
+import io.github.kennyfs.thirteen.protocol.Play
+import io.github.kennyfs.thirteen.protocol.PlayerView
+import io.github.kennyfs.thirteen.protocol.RoomSettings
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -57,11 +66,13 @@ class ScreenshotTest {
     shell("settings put system user_rotation 0")
     shell("cmd uimode night no")
     instrumentation.targetContext.getSharedPreferences("settings", 0).edit().remove("look.colors").remove("look.text").commit()
+    BattleStore(instrumentation.targetContext.filesDir).remove(BATTLE.id)
   }
 
   @Test
   fun everyScreenFits() {
     shell("mkdir -p $DIR")
+
     // The rotation is set for each config, not followed from the sensor.
     shell("settings put system accelerometer_rotation 0")
     shell("cmd overlay enable com.android.internal.systemui.navbar.gestural")
@@ -141,6 +152,13 @@ class ScreenshotTest {
       scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
       compose.onNodeWithTag("nav_RECORDS").performClick()
       shot(c, "9-records")
+      // A puzzle battle in the records, for its pages, under the rules of the hand just played.
+      val battle = BATTLE.copy(rules = vm.records.all().last().getString("rules"))
+      BattleStore(instrumentation.targetContext.filesDir).save(battle)
+      compose.onNodeWithText(instrumentation.targetContext.getString(R.string.records_puzzle)).performClick()
+      shot(c, "9b-records-puzzle")
+      instrumentation.runOnMainSync { vm.openedBattle = battle }
+      shot(c, "9c-battle-record")
     }
   }
 
@@ -176,6 +194,19 @@ class ScreenshotTest {
       if (shown.height <= 0f) continue
       if (shown.width < node.size.width - 1) cutOff += "$what: a card shows ${shown.width} of ${node.size.width} px (screen $width)"
       else if (shown.height < node.size.height - 1) Log.i(TAG, "$what: a card shows ${shown.height} of ${node.size.height} px in height")
+    }
+    // Text cut off (or ellipsized: some is meant to be) is logged for a look; FitText picks its short words instead.
+    val texts = compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult), useUnmergedTree = true).fetchSemanticsNodes()
+    instrumentation.runOnMainSync {
+      for (node in texts) {
+        val results = mutableListOf<TextLayoutResult>()
+        node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(results)
+        val t = results.firstOrNull() ?: continue
+        // didOverflowWidth is no use: a line that may not wrap is laid out as wide as allowed. The lines' own widths are.
+        val cut = (0 until t.lineCount).any { t.getLineRight(it) - t.getLineLeft(it) > t.size.width + 1 || t.isLineEllipsized(it) } ||
+          t.lineCount > 0 && t.getLineBottom(t.lineCount - 1) > t.size.height + 1
+        if (cut && node.boundsInRoot.height > 0f) Log.i(TAG, "$what: text cut off: ${t.layoutInput.text}")
+      }
     }
     // The shell, not the app, can write to DIR: the PNG goes through dd.
     val (out, into) = instrumentation.uiAutomation.executeShellCommandRw("dd of=$DIR/${c.name}-$name.png")
@@ -249,5 +280,15 @@ class ScreenshotTest {
       listOf(2, 5, 6, 20, 21, 23, 31, 33, 36, 41, 42, 45, 51),
     )
     private val MINE = listOf(listOf(9, 13, 22), listOf(27, 34, 35, 37, 47), listOf(12, 16, 24, 28, 44))
+    // Its other player set the middle and the back the other way round (a foul); they lost the second hand by time.
+    private val BATTLE = BattleRecord(
+      "screenshot-battle", 1_790_000_000_000L, "nearby", RoomSettings(Mode.PUZZLE, hands = 3, timeLimit = 60), "",
+      me = 1, players = listOf(PlayerView(0, "Player20481", total = 3.2), PlayerView(1, "Player7314", total = 0.41)),
+      outcomes = listOf(
+        HandOutcome(0, listOf(Play(0, listOf(MINE[0], MINE[2], MINE[1])), Play(1, MINE)), best = MINE, losses = listOf(2.1, 0.0)),
+        HandOutcome(1, listOf(Play(0, listOf(MINE[0], MINE[1], MINE[2]), timedOut = true), Play(1, listOf(MINE[0], MINE[2], MINE[1]))), best = MINE, losses = listOf(1.1, 0.41)),
+      ),
+      left = true,
+    )
   }
 }

@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -67,6 +68,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -186,7 +188,8 @@ private fun EntryPage(vm: BattleViewModel) {
   fun create(mode: Mode) = if (vm.via == Via.NEARBY) nearby { vm.create(mode) } else vm.create(mode)
   Column(Modifier.fillMaxSize()) {
     TitleBar(stringResource(R.string.nav_battle))
-    if (vm.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+    // Its room kept while not busy, so the page does not move.
+    Box(Modifier.fillMaxWidth().height(4.dp)) { if (vm.busy) LinearProgressIndicator(Modifier.fillMaxWidth()) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
       val wide = maxWidth > maxHeight || maxWidth >= 700.dp
       val compact = maxHeight < 440.dp
@@ -481,7 +484,7 @@ private fun HandHeader(vm: BattleViewModel, room: RoomView, info: @Composable ()
 @Composable
 private fun PlayingPage(vm: BattleViewModel, room: RoomView) {
   HandHeader(vm, room)
-  Arranging(vm.arranger, Rules.values(room.rules)["wheel"]?.toInt() ?: 0, vm.submitting, stringResource(R.string.battle_submit)) { vm.submit() }
+  Arranging(vm.arranger, Rules.values(room.rules)["wheel"]?.toInt() ?: 0, vm.submitting, stringResource(R.string.battle_submit), confirmShort = stringResource(R.string.battle_submit_short)) { vm.submit() }
 }
 
 @Composable
@@ -689,11 +692,13 @@ private fun ReviewPage(vm: BattleViewModel, room: RoomView) {
       }
     }
     Button(onClick = vm::ready, Modifier.heightIn(min = BIG_BUTTON), enabled = me?.ready != true, shape = RoundedCornerShape(18.dp)) {
-      Text(stringResource(R.string.battle_next), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+      FitText(stringResource(R.string.battle_next), stringResource(R.string.battle_next_short), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
     }
   }
-  if (analysisMode && !puzzle) Text(
-    stringResource(R.string.battle_tap_player), Modifier.padding(horizontal = 16.dp, vertical = 2.dp), style = MaterialTheme.typography.bodyMedium,
+  // Its line kept (unseen) while the mode is off, so the table does not move when it is turned on.
+  if (!puzzle) Text(
+    stringResource(R.string.battle_tap_player), Modifier.padding(horizontal = 16.dp, vertical = 2.dp).alpha(if (analysisMode) 1f else 0f),
+    style = MaterialTheme.typography.bodyMedium,
     color = MaterialTheme.colorScheme.primary,
   )
   HandTable(vm.review, room, o, onPlayer = if (analysisMode && !puzzle) vm::analyzeHand else null)

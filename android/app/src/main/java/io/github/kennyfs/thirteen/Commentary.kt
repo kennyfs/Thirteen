@@ -105,9 +105,6 @@ object Commentary {
 
   enum class RowsKind { BOTH, ROWS, SCOOPS }
 
-  /** Far ahead of any other category triple. */
-  data class Clear(val gap: Double) : Remark
-
   data class Strong(val scoop: Double) : Remark
   data class Weak(val scooped: Double) : Remark
   data class HomeRunChance(val p: Double) : Remark
@@ -145,7 +142,6 @@ object Commentary {
         }
       }
       else styleOf(bp, ap)?.let { out += Style(it, (0 until 3).maxBy { r -> bp[WIN + r] - ap[WIN + r] }) }
-      if (gap >= 2 * qGap) out += Clear(gap)
     }
 
     when {

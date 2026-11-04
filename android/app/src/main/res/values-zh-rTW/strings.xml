@@ -11,7 +11,7 @@
   <string name="you">你</string>
   <string name="ready">可以出牌</string>
   <string name="fouled">倒水：須頭墩 ≤ 中墩 ≤ 尾墩</string>
-  <string name="confirm">確定出牌</string>
+  <string name="confirm">出牌</string>
   <string name="next_hand">下一局</string>
   <string name="analyze_my_hand">分析我的牌</string>
   <string name="fouled_short">倒水</string>
@@ -177,7 +177,6 @@
   <string name="remark_rows_both">首選的墩數與打槍都勝過其他牌型組合。</string>
   <string name="remark_rows">首選以搶墩為主，不拚打槍。</string>
   <string name="remark_scoops_first">首選以打槍為主，犧牲一些墩數。</string>
-  <string name="remark_clear">其他牌型組合都差很多。</string>
   <string name="remark_strong">這手牌很強。</string>
   <string name="remark_weak">這手牌偏弱，重點是少被打槍。</string>
   <string name="remark_home_run">有機會全壘打。</string>
@@ -188,7 +187,7 @@
   <string name="battle_server">伺服器位址</string>
   <string name="battle_server_hint">例如 thirteen.example.com</string>
   <string name="battle_puzzle">解題比賽</string>
-  <string name="battle_puzzle_info">所有人擺同樣的牌，每手扣掉你的擺法比 AI 首選少的分數，總扣分最少者勝，沒有運氣成分。一個人也可以開始，當作挑戰。</string>
+  <string name="battle_puzzle_info">所有人擺同樣的牌，每手扣掉你的擺法比 AI 首選少的分數，總扣分最少者勝，沒有運氣成分。</string>
   <string name="battle_game">同桌對局</string>
   <string name="battle_game_info">最多四人，空位由 AI 補上，總分最高者勝。</string>
   <string name="battle_join">加入</string>
@@ -376,7 +375,7 @@
   <string name="replay_title">重排這手牌</string>
   <string name="replay_note">不計分、不記錄</string>
   <string name="arrange_help_title">如何出牌</string>
-  <string name="arrange_help">• 點手牌選牌（手指滑過多張可一次選取），再點要放進的那一墩。\n• 也可以先點一墩，再點牌放進去。\n• 點墩上的牌可收回；長按一墩或按「全部取下」收回整墩。\n• 三墩放滿、而且頭墩 ≤ 中墩 ≤ 尾墩（沒有倒水），就可以按「確定出牌」。\n• 「依點數／依花色」切換手牌的排列方式，方便找對子、順子或同花。</string>
+  <string name="arrange_help">• 點手牌選牌（手指滑過多張可一次選取），再點要放進的那一墩。\n• 也可以先點一墩，再點牌放進去。\n• 點墩上的牌可收回；長按一墩或按「全部取下」收回整墩。\n• 三墩放滿、而且頭墩 ≤ 中墩 ≤ 尾墩（沒有倒水），就可以按「出牌」。\n• 「依點數／依花色」切換手牌的排列方式，方便找對子、順子或同花。</string>
   <string name="help">說明</string>
   <string name="nav_records">紀錄</string>
   <string name="records_practice">練習</string>
@@ -392,4 +391,9 @@
   <string name="battle_record_size">%1$d／%2$d 手，%3$d 人</string>
   <string name="battle_record_left">中途離開</string>
   <string name="battle_err_unverified">這個房間只接受經 Google 驗證（Play Integrity）、從 Google Play 安裝的 app，這個 app 無法通過驗證。</string>
+  <string name="sort_rank_short">點數</string>
+  <string name="sort_suit_short">花色</string>
+  <string name="next_hand_short">下一局</string>
+  <string name="battle_next_short">下一手</string>
+  <string name="battle_submit_short">交出</string>
 </resources>

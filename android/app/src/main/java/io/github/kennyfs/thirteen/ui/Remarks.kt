@@ -93,7 +93,6 @@ private fun remarkText(r: Commentary.Remark): String {
       RowsKind.ROWS -> stringResource(R.string.remark_rows)
       RowsKind.SCOOPS -> stringResource(R.string.remark_scoops_first)
     }
-    is Commentary.Clear -> stringResource(R.string.remark_clear)
     is Commentary.Strong -> stringResource(R.string.remark_strong)
     is Commentary.Weak -> stringResource(R.string.remark_weak)
     is Commentary.HomeRunChance -> stringResource(R.string.remark_home_run)

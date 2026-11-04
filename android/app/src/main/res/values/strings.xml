@@ -11,7 +11,7 @@
   <string name="you">You</string>
   <string name="ready">Ready</string>
   <string name="fouled">Fouled: front ≤ middle ≤ back</string>
-  <string name="confirm">Play these rows</string>
+  <string name="confirm">Play</string>
   <string name="next_hand">Next hand</string>
   <string name="analyze_my_hand">Analyze my hand</string>
   <string name="fouled_short">Fouled</string>
@@ -178,7 +178,6 @@
   <string name="remark_rows_both">The best one beats the other kinds on both rows and scoops.</string>
   <string name="remark_rows">The best one plays for rows rather than scoops.</string>
   <string name="remark_scoops_first">The best one plays for scoops rather than rows.</string>
-  <string name="remark_clear">Every other kind is well behind.</string>
   <string name="remark_strong">A strong hand.</string>
   <string name="remark_weak">A weak hand: avoid being scooped.</string>
   <string name="remark_home_run">A home run is in reach.</string>
@@ -189,7 +188,7 @@
   <string name="battle_server">Server</string>
   <string name="battle_server_hint">e.g. thirteen.example.com</string>
   <string name="battle_puzzle">Puzzle contest</string>
-  <string name="battle_puzzle_info">Everyone sets the same hands. Each hand costs what your choice loses against the network\'s best; the least in total wins. No luck involved. Alone, it is a challenge.</string>
+  <string name="battle_puzzle_info">Everyone sets the same hands. Each hand costs what your choice loses against the network\'s best; the least in total wins. No luck involved.</string>
   <string name="battle_game">Table game</string>
   <string name="battle_game_info">Up to four players, networks in the empty seats; the most points wins.</string>
   <string name="battle_join">Join</string>
@@ -394,4 +393,9 @@
   <string name="battle_record_size">%1$d of %2$d hands, %3$d players</string>
   <string name="battle_record_left">left early</string>
   <string name="battle_err_unverified">This room takes only the app from Google Play, checked by Google (Play Integrity), and this copy could not be checked.</string>
+  <string name="sort_rank_short">Rank</string>
+  <string name="sort_suit_short">Suit</string>
+  <string name="next_hand_short">Next</string>
+  <string name="battle_next_short">Next</string>
+  <string name="battle_submit_short">Submit</string>
 </resources>

@@ -146,12 +146,17 @@ fun OpponentsPage(vm: AppViewModel, onBack: () -> Unit) {
       ) {
         Text(stringResource(R.string.seat_pos, i + 1), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.titleMedium)
         ToggleGroup(Kind.entries.map { it to kinds[it.ordinal] }, seat.kind, { vm.setSeat(i, seat.copy(kind = it)) }, Modifier.fillMaxWidth().padding(horizontal = 12.dp))
-        if (seat.kind == Kind.NET)
-          SelectRow(stringResource(R.string.network), vm.models.map { it.path to modelLabel(it) }, vm.settings.model(seat.model).path, { vm.setSeat(i, seat.copy(model = it)) })
+        // Off, not gone, for a seat of another kind: the page keeps its height.
+        SelectRow(
+          stringResource(R.string.network), vm.models.map { it.path to modelLabel(it) }, vm.settings.model(seat.model).path,
+          { vm.setSeat(i, seat.copy(model = it)) }, enabled = seat.kind == Kind.NET,
+        )
       }
     }
-    if (vm.seatChoices.any { it.kind == Kind.MC })
-      SelectRow(stringResource(R.string.mc_samples), listOf(100, 200, 500, 1000).map { it to it.toString() }, vm.mcSamples, vm::chooseMcSamples)
+    SelectRow(
+      stringResource(R.string.mc_samples), listOf(100, 200, 500, 1000).map { it to it.toString() }, vm.mcSamples, vm::chooseMcSamples,
+      enabled = vm.seatChoices.any { it.kind == Kind.MC },
+    )
     Text(
       stringResource(R.string.opponents_info), Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium,
       color = MaterialTheme.colorScheme.onSurfaceVariant,

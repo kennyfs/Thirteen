@@ -63,6 +63,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
@@ -182,12 +183,15 @@ private fun readiness(vm: Arranger): Pair<String, Boolean> {
  * window gives the page with the most above the table (practice's), so a battle's cards are the same.
  */
 @Composable
-fun Arranging(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, modifier: Modifier = Modifier, onConfirm: () -> Unit) {
+fun Arranging(
+  vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, modifier: Modifier = Modifier, confirmShort: String = confirmLabel,
+  onConfirm: () -> Unit,
+) {
   BoxWithConstraints(modifier.fillMaxSize()) {
     val wide = maxWidth > maxHeight * 1.15f
     val fit = arrangeFit(maxWidth, maxHeight, wide, textRoom(14), LocalCardSizes.current.play)
-    if (wide) ArrangeWide(vm, wheel, busy, confirmLabel, fit.card, onConfirm)
-    else ArrangeTall(vm, wheel, busy, confirmLabel, fit, onConfirm)
+    if (wide) ArrangeWide(vm, wheel, busy, confirmLabel, confirmShort, fit.card, onConfirm)
+    else ArrangeTall(vm, wheel, busy, confirmLabel, confirmShort, fit, onConfirm)
   }
 }
 
@@ -203,23 +207,23 @@ private fun Felt(modifier: Modifier = Modifier, content: @Composable () -> Unit)
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, card: Dp, onConfirm: () -> Unit) {
+private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, confirmShort: String, card: Dp, onConfirm: () -> Unit) {
   Felt(Modifier.fillMaxSize().padding(start = 8.dp, end = 12.dp, bottom = 6.dp)) {
     Column(Modifier.fillMaxSize().padding(6.dp), verticalArrangement = Arrangement.SpaceBetween, horizontalAlignment = Alignment.CenterHorizontally) {
       val density = LocalDensity.current
+      // The buttons fill the room right of the rows, in three lines as tall as the rows' (sorting, the tools, the confirm).
+      var rowsHeight by remember { mutableStateOf(0.dp) }
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ROWS_GAP)) {
-        RowsStack(vm, card, labelWidth(density), wheel, Modifier.width(IntrinsicSize.Max))
-        Column(Modifier.weight(1f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-          FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalArrangement = Arrangement.spacedBy(8.dp),
-            itemVerticalAlignment = Alignment.CenterVertically,
-          ) {
-            SortToggle(vm, Modifier.width(textRoom(150)).height(BAR_HEIGHT))
-            FeltIconButton(stringResource(R.string.undo), Icons.AutoMirrored.Filled.Undo, vm.canUndo, Modifier.width(52.dp)) { vm.undo() }
-            FeltIconButton(stringResource(R.string.take_all), Icons.Outlined.ClearAll, vm.rows.any { it.isNotEmpty() }, Modifier.width(52.dp)) { vm.clearRows() }
-            ArrangeHelp()
+        RowsStack(vm, card, labelWidth(density), wheel, Modifier.width(IntrinsicSize.Max).onSizeChanged { rowsHeight = with(density) { it.height.toDp() } })
+        Column(Modifier.weight(1f).height(rowsHeight), verticalArrangement = Arrangement.spacedBy(ROW_STACK_GAP)) {
+          SortToggle(vm, Modifier.fillMaxWidth().weight(1f))
+          Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            val tool = Modifier.weight(1f).fillMaxHeight()
+            FeltIconButton(stringResource(R.string.undo), Icons.AutoMirrored.Filled.Undo, vm.canUndo, tool) { vm.undo() }
+            FeltIconButton(stringResource(R.string.take_all), Icons.Outlined.ClearAll, vm.rows.any { it.isNotEmpty() }, tool) { vm.clearRows() }
+            ArrangeHelp(modifier = tool)
           }
-          ConfirmButton(vm, busy, confirmLabel, Modifier.widthIn(min = textRoom(132)).height(BAR_HEIGHT), onConfirm)
+          ConfirmButton(vm, busy, confirmLabel, confirmShort, Modifier.fillMaxWidth().weight(1f), onConfirm)
         }
       }
       HandTray(vm, card, 13)
@@ -232,7 +236,7 @@ private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
  * it touches back to the hand (one undo step for the swipe); a tap still takes back one.
  */
 @Composable
-private fun RowsStack(vm: Arranger, card: Dp, labelWidth: Dp?, wheel: Int, modifier: Modifier = Modifier, scroll: Boolean = false) {
+private fun RowsStack(vm: Arranger, card: Dp, labelWidth: Dp?, wheel: Int, modifier: Modifier = Modifier, scroll: Boolean = false, labelFill: Boolean = false) {
   val density = LocalDensity.current
   val bounds = remember { mutableMapOf<Int, Rect>() }
   var box by remember { mutableStateOf<LayoutCoordinates?>(null) }
@@ -243,7 +247,7 @@ private fun RowsStack(vm: Arranger, card: Dp, labelWidth: Dp?, wheel: Int, modif
     verticalArrangement = Arrangement.spacedBy(if (labelWidth == null) 8.dp else ROW_STACK_GAP),
   ) {
     for (r in 0 until 3)
-      RowSlotTall(vm, r, card, labelWidth, headerHeight(density), wheel) { c ->
+      RowSlotTall(vm, r, card, labelWidth, headerHeight(density), wheel, labelFill) { c ->
         Modifier.onGloballyPositioned { coords -> box?.let { if (coords.isAttached) bounds[c] = it.localBoundingBoxOf(coords) } }
       }
   }
@@ -269,7 +273,7 @@ private fun Modifier.swipeUnplace(vm: Arranger, placed: List<Int>, bounds: Map<I
   }
 
 @Composable
-private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, fit: ArrangeFit, onConfirm: () -> Unit) {
+private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, confirmShort: String, fit: ArrangeFit, onConfirm: () -> Unit) {
   Column(Modifier.fillMaxSize()) {
     Felt(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp)) {
       BoxWithConstraints(Modifier.fillMaxSize().padding(8.dp)) {
@@ -279,7 +283,7 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
         val rowsH = (rowH + ROW_PAD * 2) * 3 + 8.dp * 2
         val handRoom = maxHeight - rowsH - 8.dp
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-          RowsStack(vm, fit.card, if (fit.above) null else labelWidth(density), wheel, Modifier.weight(1f, fill = false), scroll = true)
+          RowsStack(vm, fit.card, if (fit.above) null else labelWidth(density), wheel, Modifier.weight(1f, fill = false), scroll = true, labelFill = true)
           HandTray(vm, fit.card, fit.perLine, Modifier.padding(top = 8.dp), room = handRoom)
         }
       }
@@ -290,13 +294,14 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
     ) {
       val sortLabel = stringResource(if (vm.sortBySuit) R.string.sort_by_suit_on else R.string.sort_by_rank_on)
       val sortShort = stringResource(if (vm.sortBySuit) R.string.sort_suit else R.string.sort_rank)
+      val sortTiny = stringResource(if (vm.sortBySuit) R.string.sort_suit_short else R.string.sort_rank_short)
       OutlinedButton(
         onClick = { vm.sortBySuit = !vm.sortBySuit },
         Modifier.height(46.dp).semantics { contentDescription = sortLabel },
         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp),
       ) {
         Icon(Icons.Filled.SwapVert, null, Modifier.size(20.dp))
-        Text(sortShort, Modifier.padding(start = 4.dp), style = MaterialTheme.typography.labelLarge, maxLines = 1, softWrap = false)
+        FitText(sortShort, sortTiny, Modifier.padding(start = 4.dp), style = MaterialTheme.typography.labelLarge)
       }
       OutlinedIconButton(onClick = vm::undo, Modifier.size(46.dp), enabled = vm.canUndo) {
         Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.undo))
@@ -310,7 +315,7 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
         shape = RoundedCornerShape(18.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp),
       ) {
         if (busy) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 3.dp, color = MaterialTheme.colorScheme.onPrimary)
-        else Text(confirmLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+        else FitText(confirmLabel, confirmShort, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
       }
     }
   }
@@ -318,11 +323,11 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
 
 /** A (?) button: how to set a hand, in a dialog. */
 @Composable
-private fun ArrangeHelp(onFelt: Boolean = true) {
+private fun ArrangeHelp(onFelt: Boolean = true, modifier: Modifier = Modifier.width(52.dp)) {
   var open by remember { mutableStateOf(false) }
   val t = LocalTable.current
   val label = stringResource(R.string.help)
-  if (onFelt) FeltIconButton(label, Icons.AutoMirrored.Outlined.HelpOutline, true, Modifier.width(52.dp)) { open = true }
+  if (onFelt) FeltIconButton(label, Icons.AutoMirrored.Outlined.HelpOutline, true, modifier) { open = true }
   else OutlinedIconButton(onClick = { open = true }, Modifier.size(46.dp)) { Icon(Icons.AutoMirrored.Outlined.HelpOutline, label) }
   if (open)
     AlertDialog(
@@ -370,7 +375,10 @@ private fun Modifier.rowGround(vm: Arranger, r: Int, target: Boolean, t: TableCo
 }
 
 @Composable
-private fun RowSlotTall(vm: Arranger, r: Int, card: Dp, labelWidth: Dp?, headerHeight: Dp, wheel: Int, cardModifier: (Int) -> Modifier = { Modifier }) {
+private fun RowSlotTall(
+  vm: Arranger, r: Int, card: Dp, labelWidth: Dp?, headerHeight: Dp, wheel: Int, labelFill: Boolean = false,
+  cardModifier: (Int) -> Modifier = { Modifier },
+) {
   val t = LocalTable.current
   val cards = vm.rows[r]
   val eval = vm.rowsEval
@@ -397,20 +405,24 @@ private fun RowSlotTall(vm: Arranger, r: Int, card: Dp, labelWidth: Dp?, headerH
     }
     RowWithSlots(cards, category, Cards.ROW_SIZES[r], card, onCardClick = { vm.unplace(it) }, cardModifier = cardModifier)
   } else Row(ground, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    Column(Modifier.width(labelWidth), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    // labelFill: the label takes what the cards leave, the cards at the right, the front row's under the others' first three.
+    Column(if (labelFill) Modifier.weight(1f) else Modifier.width(labelWidth), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       // No room for the take-back button here: a placed card goes back with a tap, a row with a long press.
       name(Modifier)
       stateText(Modifier, 2)
     }
-    RowWithSlots(cards, category, Cards.ROW_SIZES[r], card, onCardClick = { vm.unplace(it) }, cardModifier = cardModifier)
+    Box(if (labelFill) Modifier.width(card * 5 + CARD_GAP * 4) else Modifier) {
+      RowWithSlots(cards, category, Cards.ROW_SIZES[r], card, onCardClick = { vm.unplace(it) }, cardModifier = cardModifier)
+    }
   }
 }
 
 /** A row's label beside its cards in a tall layout, and its header above them. */
-private fun labelWidth(d: androidx.compose.ui.unit.Density): Dp = maxOf(72.dp, with(d) { (14 * 4.6f).sp.toDp() })
-private fun headerHeight(d: androidx.compose.ui.unit.Density): Dp = maxOf(32.dp, with(d) { 26.sp.toDp() })
+// Sizes from the text's: a small size scaled (a large sp would be scaled less, as large text is under a large font).
+private fun labelWidth(d: androidx.compose.ui.unit.Density): Dp = maxOf(72.dp, with(d) { 14.sp.toDp() } * 4.6f)
+private fun headerHeight(d: androidx.compose.ui.unit.Density): Dp = maxOf(32.dp, with(d) { 13.sp.toDp() } * 2)
 /** The height of a label beside the cards: the name and a line of state. */
-private fun labelHeight(d: androidx.compose.ui.unit.Density): Dp = with(d) { 40.sp.toDp() } + 2.dp
+private fun labelHeight(d: androidx.compose.ui.unit.Density): Dp = with(d) { 24.sp.toDp() + 16.sp.toDp() } + 2.dp
 
 /** Returns a row's cards to the hand (as a long press on the row does). */
 @Composable
@@ -446,7 +458,7 @@ private fun FeltIconButton(description: String, icon: androidx.compose.ui.graphi
 
 /** The main action on the table: light on the felt, enabled once the rows can be played. */
 @Composable
-private fun ConfirmButton(vm: Arranger, busy: Boolean, label: String, modifier: Modifier, onConfirm: () -> Unit) {
+private fun ConfirmButton(vm: Arranger, busy: Boolean, label: String, short: String, modifier: Modifier, onConfirm: () -> Unit) {
   val t = LocalTable.current
   Button(
     onClick = onConfirm, modifier, enabled = !busy && vm.rowsEval?.valid == true, shape = RoundedCornerShape(18.dp),
@@ -456,7 +468,7 @@ private fun ConfirmButton(vm: Arranger, busy: Boolean, label: String, modifier: 
     ),
   ) {
     if (busy) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 3.dp, color = t.onAction)
-    else Text(label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+    else FitText(label, short, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
   }
 }
 
@@ -617,10 +629,10 @@ private fun ResultActions(vm: AppViewModel, modifier: Modifier = Modifier, compa
   ) {
     // The icon only where the button has the room: the full words matter more.
     if (compact) Icon(Icons.Outlined.Analytics, null, Modifier.padding(end = 6.dp))
-    Text(stringResource(R.string.analyze_my_hand), maxLines = 1, softWrap = false)
+    FitText(stringResource(R.string.analyze_my_hand), stringResource(R.string.battle_analyze))
   }
   Button(onClick = { vm.deal() }, modifier.heightIn(min = height), shape = RoundedCornerShape(18.dp)) {
-    Text(stringResource(R.string.next_hand), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+    FitText(stringResource(R.string.next_hand), stringResource(R.string.next_hand_short), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
   }
 }
 

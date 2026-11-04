@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -60,6 +61,13 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -133,7 +141,7 @@ fun <T> ToggleGroup(
         topEnd = if (i == options.lastIndex) 24.dp else 6.dp, bottomEnd = if (i == options.lastIndex) 24.dp else 6.dp,
       )
       Box(
-        Modifier.weight(1f).heightIn(min = 48.dp).clip(shape).background(if (on) colors.onContainer else colors.offContainer)
+        Modifier.weight(1f).fillMaxHeight().heightIn(min = 48.dp).clip(shape).background(if (on) colors.onContainer else colors.offContainer)
           .selectable(on, role = Role.RadioButton) { onSelect(o.first) }.padding(horizontal = 10.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center,
       ) {
@@ -162,11 +170,12 @@ fun <T> SelectRow(
   onPick: (T) -> Unit,
   modifier: Modifier = Modifier,
   icons: Map<T, ImageVector> = emptyMap(),
+  enabled: Boolean = true,
 ) {
   var open by remember { mutableStateOf(false) }
   val current = options.firstOrNull { it.first == value }?.second ?: options.firstOrNull()?.second
   SettingRow(
-    title, current, arrow = false, onClick = { open = true }, modifier = modifier,
+    title, current, arrow = false, onClick = { open = true }, modifier = modifier, enabled = enabled,
     trailing = { Icon(Icons.Filled.ArrowDropDown, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
   )
   if (open) {
@@ -328,3 +337,27 @@ fun twoPane(width: Dp, min: Dp = 720.dp): Boolean = width >= min
 
 /** Keeps a column of text and controls to a readable width on large screens. */
 fun Modifier.readable(max: Dp = 720.dp) = this.widthIn(max = max)
+
+/**
+ * One line of text, or `short` in its place when the text does not fit the width it has (a large font, a narrow
+ * button): never cut off. Screen readers get the full text.
+ */
+@Composable
+fun FitText(
+  text: String, short: String, modifier: Modifier = Modifier, style: TextStyle = LocalTextStyle.current,
+  fontWeight: FontWeight? = null, color: Color = Color.Unspecified,
+) {
+  Layout(
+    content = {
+      Text(text, style = style, fontWeight = fontWeight, color = color, maxLines = 1, softWrap = false)
+      Text(short, style = style, fontWeight = fontWeight, color = color, maxLines = 1, softWrap = false)
+    },
+    modifier = modifier.clearAndSetSemantics { this.text = AnnotatedString(text) },
+  ) { measurables, constraints ->
+    val long = measurables[0].measure(constraints.copy(minWidth = 0, maxWidth = Constraints.Infinity))
+    val p = if (long.width <= constraints.maxWidth) long else measurables[1].measure(constraints.copy(minWidth = 0))
+    val w = p.width.coerceIn(constraints.minWidth, constraints.maxWidth)
+    val h = p.height.coerceIn(constraints.minHeight, constraints.maxHeight)
+    layout(w, h) { p.placeRelative((w - p.width) / 2, (h - p.height) / 2) }
+  }
+}
