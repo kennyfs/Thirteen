@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -196,25 +197,76 @@ private fun Felt(modifier: Modifier = Modifier, content: @Composable () -> Unit)
   Surface(modifier, shape = MaterialTheme.shapes.medium, color = t.felt, contentColor = t.onFelt, content = content)
 }
 
+/**
+ * The wide page: the three rows one above another at the left, the buttons at their right (the confirm button under
+ * the others), and the hand in a line as wide as the table under them.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, card: Dp, onConfirm: () -> Unit) {
   Felt(Modifier.fillMaxSize().padding(start = 8.dp, end = 12.dp, bottom = 6.dp)) {
     Column(Modifier.fillMaxSize().padding(6.dp), verticalArrangement = Arrangement.SpaceBetween, horizontalAlignment = Alignment.CenterHorizontally) {
-      Row(Modifier.fillMaxWidth().height(BAR_HEIGHT), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        SortToggle(vm, Modifier.width(textRoom(150)))
-        FeltIconButton(stringResource(R.string.undo), Icons.AutoMirrored.Filled.Undo, vm.canUndo, Modifier.width(52.dp)) { vm.undo() }
-        FeltIconButton(stringResource(R.string.take_all), Icons.Outlined.ClearAll, vm.rows.any { it.isNotEmpty() }, Modifier.width(52.dp)) { vm.clearRows() }
-        ArrangeHelp()
-        Spacer(Modifier.weight(1f))
-        ConfirmButton(vm, busy, confirmLabel, Modifier.widthIn(min = textRoom(132)).height(BAR_HEIGHT), onConfirm)
-      }
-      Row(horizontalArrangement = Arrangement.spacedBy(ROWS_GAP)) {
-        for (r in 0 until 3) RowGroup(vm, r, card, wheel)
+      val density = LocalDensity.current
+      Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ROWS_GAP)) {
+        RowsStack(vm, card, labelWidth(density), wheel, Modifier.width(IntrinsicSize.Max))
+        Column(Modifier.weight(1f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+          FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalArrangement = Arrangement.spacedBy(8.dp),
+            itemVerticalAlignment = Alignment.CenterVertically,
+          ) {
+            SortToggle(vm, Modifier.width(textRoom(150)).height(BAR_HEIGHT))
+            FeltIconButton(stringResource(R.string.undo), Icons.AutoMirrored.Filled.Undo, vm.canUndo, Modifier.width(52.dp)) { vm.undo() }
+            FeltIconButton(stringResource(R.string.take_all), Icons.Outlined.ClearAll, vm.rows.any { it.isNotEmpty() }, Modifier.width(52.dp)) { vm.clearRows() }
+            ArrangeHelp()
+          }
+          ConfirmButton(vm, busy, confirmLabel, Modifier.widthIn(min = textRoom(132)).height(BAR_HEIGHT), onConfirm)
+        }
       }
       HandTray(vm, card, 13)
     }
   }
 }
+
+/**
+ * The three rows one above another, each with its name and state at its left. A swipe over their cards takes each card
+ * it touches back to the hand (one undo step for the swipe); a tap still takes back one.
+ */
+@Composable
+private fun RowsStack(vm: Arranger, card: Dp, labelWidth: Dp?, wheel: Int, modifier: Modifier = Modifier, scroll: Boolean = false) {
+  val density = LocalDensity.current
+  val bounds = remember { mutableMapOf<Int, Rect>() }
+  var box by remember { mutableStateOf<LayoutCoordinates?>(null) }
+  val placed = vm.rows.flatten()
+  Column(
+    modifier.let { if (scroll) it.verticalScroll(rememberScrollState()) else it }
+      .onGloballyPositioned { box = it }.swipeUnplace(vm, placed, bounds),
+    verticalArrangement = Arrangement.spacedBy(if (labelWidth == null) 8.dp else ROW_STACK_GAP),
+  ) {
+    for (r in 0 until 3)
+      RowSlotTall(vm, r, card, labelWidth, headerHeight(density), wheel) { c ->
+        Modifier.onGloballyPositioned { coords -> box?.let { if (coords.isAttached) bounds[c] = it.localBoundingBoxOf(coords) } }
+      }
+  }
+}
+
+/** A swipe over the rows' cards returns each card it touches to the hand. */
+private fun Modifier.swipeUnplace(vm: Arranger, placed: List<Int>, bounds: Map<Int, Rect>): Modifier =
+  pointerInput(placed) {
+    fun at(p: Offset): Int? = placed.firstOrNull { c -> bounds[c]?.contains(p) == true }
+    val touched = mutableSetOf<Int>()
+    var last = Offset.Zero
+    fun touch(p: Offset) {
+      val c = at(p) ?: return
+      if (touched.add(c)) vm.unplace(c, saveUndo = touched.size == 1)
+    }
+    detectDragGestures(onDragStart = { o -> touched.clear(); last = o; touch(o) }) { change, _ ->
+      change.consume()
+      val p = change.position
+      val steps = ((p - last).getDistance() / 4.dp.toPx()).toInt().coerceIn(1, 200)
+      for (k in 1..steps) touch(last + (p - last) * (k / steps.toFloat()))
+      last = p
+    }
+  }
 
 @Composable
 private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, fit: ArrangeFit, onConfirm: () -> Unit) {
@@ -222,11 +274,13 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
     Felt(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp)) {
       BoxWithConstraints(Modifier.fillMaxSize().padding(8.dp)) {
         val density = LocalDensity.current
+        // What the rows take, for the hand's room under them.
+        val rowH = if (fit.above) headerHeight(density) + cardHeight(fit.card) else maxOf(cardHeight(fit.card), labelHeight(density))
+        val rowsH = (rowH + ROW_PAD * 2) * 3 + 8.dp * 2
+        val handRoom = maxHeight - rowsH - 8.dp
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-          Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            for (r in 0 until 3) RowSlotTall(vm, r, fit.card, if (fit.above) null else labelWidth(density), headerHeight(density), wheel)
-          }
-          HandTray(vm, fit.card, fit.perLine, Modifier.padding(top = 8.dp))
+          RowsStack(vm, fit.card, if (fit.above) null else labelWidth(density), wheel, Modifier.weight(1f, fill = false), scroll = true)
+          HandTray(vm, fit.card, fit.perLine, Modifier.padding(top = 8.dp), room = handRoom)
         }
       }
     }
@@ -286,12 +340,12 @@ private fun rowState(vm: Arranger, r: Int, wheel: Int): Triple<String, Boolean, 
   val free = Cards.ROW_SIZES[r] - cards.size
   val eval = vm.rowsEval
   val picked = vm.selected.size
+  // The lit ground says where the picked cards can go; no words for it.
+  val target = (picked > 0 && free >= picked) || vm.armed == r
+  val dim = picked > free
   return when {
-    picked > 0 && free >= picked -> Triple(stringResource(R.string.put_here, picked), true, false)
-    picked > 0 && free > 0 -> Triple(stringResource(R.string.room_for, free), false, true)
-    vm.armed == r -> Triple(stringResource(R.string.pick_n, free - picked), true, false)
-    free == 0 && eval != null && eval.categories[r] > 0 -> Triple(Cards.rowLabel(eval.keys[r], rowLabels(), wheel), false, false)
-    else -> Triple("${cards.size}/${Cards.ROW_SIZES[r]}", false, false)
+    free == 0 && eval != null && eval.categories[r] > 0 -> Triple(Cards.rowLabel(eval.keys[r], rowLabels(), wheel), target, dim)
+    else -> Triple("${cards.size}/${Cards.ROW_SIZES[r]}", target, dim)
   }
 }
 
@@ -315,28 +369,8 @@ private fun Modifier.rowGround(vm: Arranger, r: Int, target: Boolean, t: TableCo
     .testTag("row_$r")
 }
 
-/** A row of the wide page: its name and state above its cards, no wider than they are. */
 @Composable
-private fun RowGroup(vm: Arranger, r: Int, card: Dp, wheel: Int) {
-  val t = LocalTable.current
-  val cards = vm.rows[r]
-  val eval = vm.rowsEval
-  val category = if (cards.size == Cards.ROW_SIZES[r] && eval != null) eval.categories[r] else 0
-  val (state, target, dim) = rowState(vm, r, wheel)
-  Column(Modifier.rowGround(vm, r, target, t).padding(ROW_PAD), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-    Row(Modifier.width(rowWidth(Cards.ROW_SIZES[r], card)), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-      Text(stringArrayResource(R.array.row_names)[r], style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
-      Text(
-        state, Modifier.weight(1f), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
-        color = if (target) t.highlight else if (dim) t.onFeltDim else t.onFelt, fontWeight = if (target) FontWeight.Bold else FontWeight.Medium,
-      )
-    }
-    RowWithSlots(cards, category, Cards.ROW_SIZES[r], card, onCardClick = vm::unplace)
-  }
-}
-
-@Composable
-private fun RowSlotTall(vm: Arranger, r: Int, card: Dp, labelWidth: Dp?, headerHeight: Dp, wheel: Int) {
+private fun RowSlotTall(vm: Arranger, r: Int, card: Dp, labelWidth: Dp?, headerHeight: Dp, wheel: Int, cardModifier: (Int) -> Modifier = { Modifier }) {
   val t = LocalTable.current
   val cards = vm.rows[r]
   val eval = vm.rowsEval
@@ -361,20 +395,22 @@ private fun RowSlotTall(vm: Arranger, r: Int, card: Dp, labelWidth: Dp?, headerH
       stateText(Modifier.weight(1f), 1)
       if (cards.isNotEmpty()) TakeBack(vm, r, Modifier.size(32.dp))
     }
-    RowWithSlots(cards, category, Cards.ROW_SIZES[r], card, onCardClick = vm::unplace)
+    RowWithSlots(cards, category, Cards.ROW_SIZES[r], card, onCardClick = { vm.unplace(it) }, cardModifier = cardModifier)
   } else Row(ground, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
     Column(Modifier.width(labelWidth), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       // No room for the take-back button here: a placed card goes back with a tap, a row with a long press.
       name(Modifier)
       stateText(Modifier, 2)
     }
-    RowWithSlots(cards, category, Cards.ROW_SIZES[r], card, onCardClick = vm::unplace)
+    RowWithSlots(cards, category, Cards.ROW_SIZES[r], card, onCardClick = { vm.unplace(it) }, cardModifier = cardModifier)
   }
 }
 
 /** A row's label beside its cards in a tall layout, and its header above them. */
 private fun labelWidth(d: androidx.compose.ui.unit.Density): Dp = maxOf(72.dp, with(d) { (14 * 4.6f).sp.toDp() })
 private fun headerHeight(d: androidx.compose.ui.unit.Density): Dp = maxOf(32.dp, with(d) { 26.sp.toDp() })
+/** The height of a label beside the cards: the name and a line of state. */
+private fun labelHeight(d: androidx.compose.ui.unit.Density): Dp = with(d) { 40.sp.toDp() } + 2.dp
 
 /** Returns a row's cards to the hand (as a long press on the row does). */
 @Composable
@@ -429,25 +465,30 @@ private fun ConfirmButton(vm: Arranger, busy: Boolean, label: String, modifier: 
  * touches (or unpicks them, when it starts on a picked card). Once all are placed, whether the rows can be played.
  */
 @Composable
-private fun HandTray(vm: Arranger, card: Dp, perLine: Int, modifier: Modifier = Modifier) {
+private fun HandTray(vm: Arranger, card: Dp, perLine: Int, modifier: Modifier = Modifier, room: Dp? = null) {
   val hand = vm.unplaced
   // Each card's bounds in the tray, for swipes.
   val bounds = remember(hand) { mutableMapOf<Int, Rect>() }
   var tray by remember { mutableStateOf<LayoutCoordinates?>(null) }
   val count = hand.groupingBy(Cards::rank).eachCount()
-  // Sorted by suit, a wider gap between the suits, which the page's sizes leave room for in a single line.
-  val single = perLine >= 13
   val lines = ceil(13f / perLine).toInt()
+  // Sorted by suit with the room for it: a line a suit, from the left.
+  val bySuit = if (vm.sortBySuit && room != null) {
+    val suitLines = hand.groupBy(Cards::suit).values.flatMap { it.chunked(perLine.coerceAtLeast(1)) }
+    suitLines.takeIf { n -> cardHeight(card) * n.size + 6.dp * (n.size - 1) + card * 0.22f <= room }
+  } else null
+  // Else, sorted by suit, a wider gap between the suits, which the page's sizes leave room for in a single line.
+  val single = perLine >= 13
   Column(
     modifier.fillMaxWidth().onGloballyPositioned { tray = it }.swipeSelect(vm, hand, bounds).padding(top = card * 0.22f),
-    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp),
+    horizontalAlignment = if (bySuit != null) Alignment.Start else Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp),
   ) {
-    for (line in hand.chunked(perLine.coerceAtLeast(1))) {
+    for (line in bySuit ?: hand.chunked(perLine.coerceAtLeast(1))) {
       Row(verticalAlignment = Alignment.Bottom) {
         for ((i, c) in line.withIndex()) {
-          if (i > 0) Spacer(Modifier.width(if (single && vm.sortBySuit && Cards.suit(line[i - 1]) != Cards.suit(c)) SUIT_GAP else HAND_GAP))
-          // Sorted by rank, pairs, trips and quads are tinted (light) as their category.
-          val n = if (!vm.sortBySuit) count.getValue(Cards.rank(c)) else 1
+          if (i > 0) Spacer(Modifier.width(if (single && bySuit == null && vm.sortBySuit && Cards.suit(line[i - 1]) != Cards.suit(c)) SUIT_GAP else HAND_GAP))
+          // Pairs, trips and quads are tinted (light) as their category, whichever way the hand is sorted.
+          val n = count.getValue(Cards.rank(c))
           CardFace(
             c, card, Modifier.onGloballyPositioned { coords -> tray?.let { bounds[c] = it.localBoundingBoxOf(coords) } },
             tint = SAME_RANK_CATEGORY[n], light = true, selected = c in vm.selected, onClick = { vm.toggle(c) },
@@ -789,8 +830,8 @@ private fun SeatGrid(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(if (s == 0) t.onFelt.copy(alpha = 0.14f) else t.slot)
           .let { m -> if (score.homeRun[s]) m.border(2.dp, t.highlight, RoundedCornerShape(12.dp)) else m }
           .clickable {
-            if (sideBySide) expandedSeat = if (expandedSeat == s) null else s
-            onSeat?.invoke(s)
+            // With `onSeat` a tap is for it (an analysis); else it shows the rows one above another.
+            if (onSeat != null) onSeat(s) else if (sideBySide) expandedSeat = if (expandedSeat == s) null else s
           }.padding(horizontal = 10.dp, vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(3.dp),
       ) {

@@ -97,6 +97,7 @@
   <string name="rules_play">影響玩法</string>
   <string name="rules_play_note">這兩項會改變哪些擺法算倒水、牌型大小。</string>
   <string name="rules_scoring">計分：每位對手付的分數</string>
+  <string name="rule_range">%1$s～%2$s</string>
   <string name="rules_royalties">特殊墩</string>
   <string name="strict_rows">嚴格墩：頭 &lt; 中 &lt; 尾（同大算倒水）</string>
   <string name="wheel">A-2-3-4-5</string>
@@ -205,7 +206,7 @@
   <string name="battle_no_connection">無法連線：%1$s</string>
   <string name="battle_lost">與房間的連線中斷了。</string>
   <string name="battle_closed">房間已關閉。</string>
-  <string name="battle_err_version">伺服器的協定版本不同，請更新 app。</string>
+  <string name="battle_err_version">房間（伺服器或開房的手機）使用的 app 版本不同，所有玩家必須使用相同版本，請更新 app。</string>
   <string name="battle_err_no_room">找不到這個 PIN 的房間。</string>
   <string name="battle_err_full">房間已滿。</string>
   <string name="battle_err_started">對局已經開始了。</string>
@@ -219,14 +220,6 @@
   <string name="battle_time">每手時限</string>
   <string name="battle_no_limit">不限</string>
   <string name="battle_seconds">%1$d 秒</string>
-  <string name="battle_level">難度</string>
-  <string-array name="battle_levels">
-    <item>簡單</item>
-    <item>隨機</item>
-    <item>稍難</item>
-    <item>困難</item>
-    <item>最難</item>
-  </string-array>
   <string name="battle_leave">離開</string>
   <string name="battle_host">房主</string>
   <string name="battle_away">離線</string>
@@ -253,6 +246,7 @@
   <string name="battle_col_hand_rank">本手名次</string>
   <string name="battle_hand_rank">%1$d／%2$d</string>
   <string name="battle_to_summary">最終結果</string>
+  <string name="battle_analyze">分析</string>
   <string name="battle_tap_player">點選一位玩家，查看他這手牌的分析</string>
 
   <!-- 改版後的畫面。 -->
@@ -266,8 +260,6 @@
   <string name="hint_selected">已選 %1$d 張，點一墩放進去。</string>
   <string name="hint_armed">點牌放進%1$s，還要 %2$d 張。</string>
   <string name="hint_left">還剩 %1$d 張。點墩上的牌可收回。</string>
-  <string name="put_here">點這裡放入 %1$d 張</string>
-  <string name="room_for">只剩 %1$d 個位置</string>
   <string name="take_back_row">收回%1$s</string>
   <string name="undo">復原</string>
   <string name="take_all">全部收回</string>

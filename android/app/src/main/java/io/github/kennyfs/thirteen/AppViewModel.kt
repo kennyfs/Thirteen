@@ -59,7 +59,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   var ruleSpec by mutableStateOf(settings.rules); private set
   /** Its values, once the engine has checked them. */
   var ruleValues by mutableStateOf<Map<String, Double>>(emptyMap()); private set
-  var rulesError by mutableStateOf<String?>(null); private set
   /** Each preset's values, to name the rules of a game or record. */
   var presetValues by mutableStateOf<Map<String, Map<String, Double>>>(emptyMap()); private set
   /** Networks that predate the rules input, by path. */
@@ -81,9 +80,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         ruleValues = Engine.rules(spec.spec())
         ruleSpec = spec
         settings.rules = spec
-        rulesError = null
       } catch (e: EngineException) {
-        rulesError = e.message
+        // The steppers keep to the ranges the engine takes, so this is a bug: say so in a dialog, not in the page.
+        error = e.message
       }
     }
   }

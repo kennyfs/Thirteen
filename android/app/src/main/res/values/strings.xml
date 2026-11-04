@@ -97,6 +97,7 @@
   <string name="rules_play">Changes the play</string>
   <string name="rules_play_note">These two change which arrangements foul and how hands rank.</string>
   <string name="rules_scoring">Scoring: points from each opponent</string>
+  <string name="rule_range">%1$s to %2$s</string>
   <string name="rules_royalties">Special rows</string>
   <string name="strict_rows">Strict rows: front &lt; middle &lt; back (equal rows foul)</string>
   <string name="wheel">A-2-3-4-5</string>
@@ -206,7 +207,7 @@
   <string name="battle_no_connection">Could not connect: %1$s</string>
   <string name="battle_lost">The connection to the room was lost.</string>
   <string name="battle_closed">The room was closed.</string>
-  <string name="battle_err_version">The server speaks another version of the protocol: update the app.</string>
+  <string name="battle_err_version">The room runs another version of the app (the server or the phone that hosts it). Everyone needs the same version: update the app.</string>
   <string name="battle_err_no_room">No room with that PIN.</string>
   <string name="battle_err_full">The room is full.</string>
   <string name="battle_err_started">That game has already started.</string>
@@ -220,15 +221,7 @@
   <string name="battle_time">Time per hand</string>
   <string name="battle_no_limit">none</string>
   <string name="battle_seconds">%1$d s</string>
-  <string name="battle_level">Difficulty</string>
   <!-- Puzzle levels 1 to 5: hands of about the same strength as random ones, easier or harder to arrange. -->
-  <string-array name="battle_levels">
-    <item>Easy</item>
-    <item>Random</item>
-    <item>Tricky</item>
-    <item>Hard</item>
-    <item>Hardest</item>
-  </string-array>
   <string name="battle_leave">Leave</string>
   <string name="battle_host">host</string>
   <string name="battle_away">away</string>
@@ -255,6 +248,7 @@
   <string name="battle_col_hand_rank">Place</string>
   <string name="battle_hand_rank">%1$d of %2$d</string>
   <string name="battle_to_summary">Final standings</string>
+  <string name="battle_analyze">Analyze</string>
   <string name="battle_tap_player">Tap a player for the analysis of their hand</string>
 
   <!-- The redesigned screens. -->
@@ -268,8 +262,6 @@
   <string name="hint_selected">%1$d picked: tap a row to put them in.</string>
   <string name="hint_armed">Tap cards for the %1$s: %2$d more.</string>
   <string name="hint_left">%1$d left. Tap a placed card to take it back.</string>
-  <string name="put_here">Tap to put %1$d here</string>
-  <string name="room_for">Room for %1$d only</string>
   <string name="take_back_row">Take back the %1$s</string>
   <string name="undo">Undo</string>
   <string name="take_all">Take all back</string>

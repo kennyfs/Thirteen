@@ -31,7 +31,6 @@ import io.github.kennyfs.thirteen.protocol.HubLimits
 import io.github.kennyfs.thirteen.protocol.Join
 import io.github.kennyfs.thirteen.protocol.Joined
 import io.github.kennyfs.thirteen.protocol.Leave
-import io.github.kennyfs.thirteen.protocol.Levels
 import io.github.kennyfs.thirteen.protocol.Mode
 import io.github.kennyfs.thirteen.protocol.PROTOCOL_VERSION
 import io.github.kennyfs.thirteen.protocol.Phase
@@ -69,6 +68,11 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   private fun str(id: Int, vararg args: Any) = getApplication<Application>().getString(id, *args)
 
   var name by mutableStateOf(prefs.getString("name", "") ?: "")
+  /** The name of a player who gives none: "Player" and a number of their own, so two of them can be told apart. */
+  val defaultName: String = prefs.getString("default_name", null) ?: ("Player" + kotlin.random.Random.nextInt(1000, 100000)).also {
+    prefs.edit().putString("default_name", it).apply()
+  }
+  private val playerName: String get() = name.ifBlank { defaultName }
   // An empty address (as saved before there was a default) means the default.
   var server by mutableStateOf(prefs.getString("server", null)?.ifBlank { null } ?: DEFAULT_SERVER)
   var via by mutableStateOf(Via.ONLINE); private set
@@ -129,14 +133,10 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     prefs.edit().putString("name", name).putString("server", server).apply()
   }
 
-  /** New rooms start with the rules page's rules and the last hands, time and difficulty chosen. */
+  /** New rooms start with the rules page's rules and the last hands and time chosen. */
   fun defaults(mode: Mode) = RoomSettings(
     mode, prefs.getInt("hands", 10), settings.rules.let { RuleChoice(it.preset, it.overrides) }, prefs.getInt("time", 0),
-    level = level(mode, prefs.getInt("level", if (prefs.getBoolean("hard", false)) 4 else Levels.RANDOM)),
-  ).let { if (mode == Mode.PUZZLE) it.copy(hard = it.level >= 3) else it }
-
-  /** A puzzle room's level (0 for a game). */
-  private fun level(mode: Mode, level: Int) = if (mode == Mode.PUZZLE) level.coerceIn(Levels.EASIEST, Levels.HARDEST) else 0
+  )
 
   // ---- Into a room ----
 
@@ -171,18 +171,18 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
       } else {
         val e = picked ?: return
         endpoint = e
-        open(NearbyLink(getApplication(), e, name.ifBlank { "Player" }, this))
+        open(NearbyLink(getApplication(), e, playerName, this))
       }
     }
   }
 
   private fun advertisedName(mode: Mode) =
-    "${name.ifBlank { "Player" }} · ${str(if (mode == Mode.PUZZLE) R.string.battle_puzzle else R.string.battle_game)}"
+    "${playerName} · ${str(if (mode == Mode.PUZZLE) R.string.battle_puzzle else R.string.battle_game)}"
 
   private fun open(l: Link) {
     busy = true
     link = l
-    l.send(Hello(PROTOCOL_VERSION, name.ifBlank { "Player" }))
+    l.send(Hello(PROTOCOL_VERSION, playerName))
   }
 
   fun chooseVia(v: Via) {
@@ -224,7 +224,6 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
 
   fun changeSettings(s: RoomSettings) {
     prefs.edit().putInt("hands", s.hands).putInt("time", s.timeLimit).apply()
-    if (s.mode == Mode.PUZZLE) prefs.edit().putInt("level", s.puzzleLevel).apply()
     link?.send(ChangeSettings(s))
   }
 
@@ -313,7 +312,10 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
         // An ended room takes no one in, nor back: no longer shown to phones looking for rooms.
         if (msg.room.phase == Phase.OVER) host?.stopAdvertising()
         if (msg.room.players.firstOrNull { it.id == me }?.submitted == true) submitting = false
-        if (previous?.hand != msg.room.hand && msg.room.phase == Phase.PLAYING) submitting = false
+        if (previous?.hand != msg.room.hand && msg.room.phase == Phase.PLAYING) {
+          submitting = false
+          if (fromReview) closeDetail()
+        }
       }
       is Deal -> {
         deal = msg
@@ -357,7 +359,7 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
         pending = Resume(j.room, j.token)
         val l = when (via) {
           Via.ONLINE -> serverUrl(server)?.let { WsLink(it, this@BattleViewModel) }
-          Via.NEARBY -> endpoint?.let { NearbyLink(getApplication(), it, name.ifBlank { "Player" }, this@BattleViewModel) }
+          Via.NEARBY -> endpoint?.let { NearbyLink(getApplication(), it, playerName, this@BattleViewModel) }
         } ?: break
         open(l)
         // Up within a while, or the next attempt.
@@ -441,7 +443,23 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   fun openDetail(index: Int) {
     if (outcomes.none { it.index == index }) return
     detail = index
+    fromReview = false
     closeAnalysis()
+  }
+
+  /**
+   * Opened from a hand's result while the room waits for the next: back goes straight back to the result, and the
+   * next hand's deal closes it.
+   */
+  var fromReview by mutableStateOf(false); private set
+
+  /** Analyzes a player's hand of the hand just closed, from its result. */
+  fun analyzeHand(player: Int) {
+    val index = room?.hand ?: return
+    openDetail(index)
+    if (detail != index) return
+    fromReview = true
+    openAnalysis(player)
   }
 
   /**
@@ -488,6 +506,7 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
 
   fun closeDetail() {
     detail = null
+    fromReview = false
     closeAnalysis()
   }
 

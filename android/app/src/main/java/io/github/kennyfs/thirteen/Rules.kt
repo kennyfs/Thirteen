@@ -30,6 +30,20 @@ object Rules {
     "front_trips", "middle_full_house", "middle_quads", "middle_straight_flush", "back_quads", "back_straight_flush",
   )
 
+  /** The highest value a stepper offers. */
+  const val MAX_VALUE = 100.0
+  /** Royalties the engine wants in order, low to high (cpp/game/rules.cpp, Rules::check). */
+  private val ORDERED = listOf(listOf("middle_full_house", "middle_quads", "middle_straight_flush"), listOf("back_quads", "back_straight_flush"))
+
+  /** The values `name` may take given the others: at least 0 and the royalty below it, at most the one above. */
+  fun range(name: String, values: Map<String, Double>): ClosedFloatingPointRange<Double> {
+    val chain = ORDERED.firstOrNull { name in it } ?: return 0.0..MAX_VALUE
+    val i = chain.indexOf(name)
+    val lo = chain.getOrNull(i - 1)?.let { values[it] } ?: 0.0
+    val hi = chain.getOrNull(i + 1)?.let { values[it] } ?: MAX_VALUE
+    return lo..hi
+  }
+
   fun fmt(x: Double): String = if (x == kotlin.math.floor(x)) "%.0f".format(x) else x.toString()
 
   /** The values of a full spec ("c=0,row=1,...", as the engine's toString and the records' rules field). */

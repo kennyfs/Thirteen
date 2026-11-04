@@ -76,7 +76,6 @@ fun RulesPage(vm: AppViewModel, onBack: () -> Unit) {
       .map { vm.settings.model(it) }.distinct().filter { it.path in vm.legacyModels }
     if (vm.legacyMismatch(values))
       for (m in legacy) Text(stringResource(R.string.legacy_warning, modelLabel(m)), Modifier.padding(horizontal = 16.dp), color = BAD, style = MaterialTheme.typography.bodyMedium)
-    vm.rulesError?.let { Text(it, Modifier.padding(horizontal = 16.dp), color = BAD, style = MaterialTheme.typography.bodyMedium) }
     if (values.isEmpty()) return@SettingsSubpage
 
     SectionHeader(stringResource(R.string.rules_play))
@@ -115,15 +114,25 @@ private fun SwitchRow(label: String, on: Boolean, onChange: (Boolean) -> Unit) {
   }
 }
 
-/** A label and its value with − and + buttons. */
+/**
+ * A label and its value with − and + buttons, which stop at the value's range: royalties keep their order (a middle
+ * row's quads pay no less than its full house), so the range follows the neighbours' values and is shown under the label.
+ */
 @Composable
 private fun NumberRow(label: String, name: String, values: Map<String, Double>, onSet: (String, Double) -> Unit) {
   val value = values[name] ?: 0.0
+  val range = Rules.range(name, values)
   Row(
     Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 16.dp, end = 12.dp),
     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
   ) {
-    Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-    NumberStepper(value, { onSet(name, it) }, text = Rules.fmt(value))
+    Column(Modifier.weight(1f)) {
+      Text(label, style = MaterialTheme.typography.bodyLarge)
+      Text(
+        stringResource(R.string.rule_range, Rules.fmt(range.start), Rules.fmt(range.endInclusive)),
+        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
+    }
+    NumberStepper(value, { onSet(name, it) }, min = range.start, max = range.endInclusive, text = Rules.fmt(value))
   }
 }

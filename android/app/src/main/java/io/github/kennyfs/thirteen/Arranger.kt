@@ -78,8 +78,10 @@ class Arranger(
     updateRows(next)
   }
 
-  fun unplace(card: Int) {
-    saveForUndo()
+  /** Returns a card to the hand; a swipe over several saves one undo step, at its first card (`saveUndo`). */
+  fun unplace(card: Int, saveUndo: Boolean = true) {
+    if (rows.none { card in it }) return
+    if (saveUndo) saveForUndo()
     updateRows(rows.map { it - card })
   }
 

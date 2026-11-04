@@ -29,10 +29,6 @@ private class FakeEngine : GameEngine {
     listOf(3.0, -1.0, -1.0, -1.0), listOf(3.0, -1.0, -1.0, -1.0), List(4) { List(4) { false } }, List(4) { false }, List(4) { List(4) { 0.0 } },
   )
   override suspend fun losses(hand: List<Int>, rules: String, plays: List<Rows>) = split(hand) to plays.indices.map { 0.1 * it }
-  override suspend fun difficulty(hand: List<Int>, rules: String): Difficulty {
-    calls++
-    return Difficulty(0.0, 0.5)
-  }
   private fun split(hand: List<Int>): Rows = hand.sorted().let { listOf(it.take(3), it.subList(3, 8), it.drop(8)) }
 }
 
@@ -269,24 +265,6 @@ class RoomTest {
   }
 
   @Test
-  fun levelsAskTheEngineABoundedNumberOfTimes() = runTest {
-    // Level 4 from a client before levels (hard), random hands without the engine, the hardest level.
-    for ((settings, draws) in listOf(
-      RoomSettings(Mode.PUZZLE, hands = 1, hard = true) to 6 * Levels.DRAWS_PER_KEPT,
-      RoomSettings(Mode.PUZZLE, hands = 1, level = Levels.RANDOM) to 0,
-      RoomSettings(Mode.PUZZLE, hands = 1, level = Levels.HARDEST) to Levels.MAX_DRAWS,
-    )) {
-      val hub = hub()
-      val (a, b) = room(hub, settings, "A", "B")
-      val before = engine.calls
-      a.send(Start)
-      runCurrent()
-      assertEquals(draws, engine.calls - before)
-      assertNotNull(b.last<Deal>())
-    }
-  }
-
-  @Test
   fun settingsAreChecked() {
     assertNull(Validation.ruleSpec(RuleChoice("family", mapOf("c" to 1.0))))
     assertNull(Validation.ruleSpec(RuleChoice("family", mapOf("row" to 1000.0))))
@@ -296,8 +274,6 @@ class RoomTest {
     assertEquals("taiwan,scoop=2.0,c=0", Validation.ruleSpec(RuleChoice("taiwan", mapOf("scoop" to 2.0))))
     assertNull(Validation.settings(RoomSettings(Mode.PUZZLE, hands = 31)))
     assertNull(Validation.settings(RoomSettings(Mode.PUZZLE, timeLimit = 7)))
-    assertNull(Validation.settings(RoomSettings(Mode.PUZZLE, level = 6)))
-    assertEquals(0, Validation.settings(RoomSettings(Mode.GAME, level = 5))!!.level)
     assertEquals("Alice Bob", Validation.name("  Ali‮ce\n\tBob "))
     assertEquals("Player", Validation.name("​\u0000"))
     assertEquals(Limits.NAME_LENGTH, Validation.name("x".repeat(100)).length)

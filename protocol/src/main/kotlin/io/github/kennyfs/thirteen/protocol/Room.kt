@@ -10,7 +10,6 @@ import kotlinx.coroutines.launch
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.Base64
-import kotlin.math.abs
 
 /** Where a room sends a player's messages: a WebSocket, a Nearby endpoint, or the hosting phone's own screen. */
 interface Peer {
@@ -272,21 +271,8 @@ class Room(
     checkClose()
   }
 
-  /**
-   * A random hand, or at a level other than Levels.RANDOM, the easiest or hardest of the hands closest in strength to
-   * a random one (Levels).
-   */
-  private suspend fun puzzleHand(): List<Int> {
-    fun random13() = (0 until 52).toMutableList().also { it.shuffle(random) }.take(13).sorted()
-    val level = settings.puzzleLevel
-    val kept = Levels.POOL.getValue(level)
-    if (level == Levels.RANDOM) return random13()
-    // The first hand drawn sets the strength; the closest ones to it, itself included, are compared.
-    val drawn = List(kept * Levels.DRAWS_PER_KEPT) { random13() }.map { it to useEngine { engine.difficulty(it, rules) } }
-    val target = drawn[0].second.strength
-    val pool = drawn.sortedBy { abs(it.second.strength - target) }.take(kept)
-    return (if (level < Levels.RANDOM) pool.minBy { it.second.score } else pool.maxBy { it.second.score }).first
-  }
+  /** A random hand. */
+  private fun puzzleHand(): List<Int> = (0 until 52).toMutableList().also { it.shuffle(random) }.take(13).sorted()
 
   /**
    * Closes the hand once everyone has set it; when only players who are away have not, after AWAY_GRACE_MS (or the
@@ -359,7 +345,7 @@ class Room(
     return block()
   }
 
-  private fun budget() = 20 + settings.hands * (Levels.MAX_DRAWS + 3 * Limits.TABLE + 4) + 8 * maxPlayers
+  private fun budget() = 20 + settings.hands * (3 * Limits.TABLE + 4) + 8 * maxPlayers
 
   // ---- Output ----
 

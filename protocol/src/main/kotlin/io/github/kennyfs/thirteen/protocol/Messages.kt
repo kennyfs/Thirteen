@@ -11,7 +11,7 @@ import kotlinx.serialization.json.Json
  *
  * Cards are ids as in cpp/game/cards.h (rank * 4 + suit); rows are [front, middle, back].
  */
-const val PROTOCOL_VERSION = 1
+const val PROTOCOL_VERSION = 2
 
 val BattleJson = Json {
   classDiscriminator = "t"
@@ -40,30 +40,7 @@ data class RoomSettings(
   val rules: RuleChoice = RuleChoice(),
   /** Seconds per hand, one of Limits.TIME_LIMITS; 0 is no limit of the room's own (the server's cap still holds). */
   val timeLimit: Int = 0,
-  /** Puzzle, for servers before `level`: hard hands (level 4). Clients set it to level >= 3. */
-  val hard: Boolean = false,
-  /** Puzzle: how hard the hands are, Levels.EASIEST..Levels.HARDEST (Levels.RANDOM is random hands); 0 when not set. */
-  val level: Int = 0,
-) {
-  /** The level the room deals at: `level`, or from `hard` for a client before it. */
-  val puzzleLevel: Int get() = if (level in Levels.EASIEST..Levels.HARDEST) level else if (hard) 4 else Levels.RANDOM
-}
-
-/**
- * Puzzle levels. Each but RANDOM draws a target hand and more random hands, keeps the ones closest to the target in
- * strength (the network's best Q) and deals the easiest (level 1) or the hardest of them (Difficulty.score), so a
- * level changes how hard the hands are to arrange, not how good they are.
- */
-object Levels {
-  const val EASIEST = 1
-  const val RANDOM = 2
-  const val HARDEST = 5
-  /** Of how many hands of about the same strength the dealt one is the easiest (level 1) or the hardest; by level. */
-  val POOL = mapOf(1 to 4, 2 to 1, 3 to 3, 4 to 6, 5 to 12)
-  /** Hands drawn per kept one: the pool is the closest third in strength. */
-  const val DRAWS_PER_KEPT = 3
-  val MAX_DRAWS = POOL.values.max() * DRAWS_PER_KEPT
-}
+)
 
 @Serializable
 enum class Phase {

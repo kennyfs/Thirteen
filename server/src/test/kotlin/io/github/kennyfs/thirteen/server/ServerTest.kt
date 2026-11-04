@@ -63,7 +63,7 @@ class ServerTest {
       val client = createClient { install(WebSockets) }
       client.webSocket("/ws") {
         send(Hello(PROTOCOL_VERSION, "Host"))
-        send(Create(RoomSettings(Mode.PUZZLE, hands = 1, rules = RuleChoice("taiwan"), hard = true)))
+        send(Create(RoomSettings(Mode.PUZZLE, hands = 1, rules = RuleChoice("taiwan"))))
         val room = next<State>().room
         val pin = room.pin
         val other = async {

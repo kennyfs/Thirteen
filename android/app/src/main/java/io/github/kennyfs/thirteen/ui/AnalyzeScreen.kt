@@ -57,6 +57,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.layout.SubcomposeLayout
 import io.github.kennyfs.thirteen.AppViewModel
 import io.github.kennyfs.thirteen.Analysis
 import io.github.kennyfs.thirteen.Arrangement as Rows
@@ -372,7 +374,11 @@ private fun CandidateItem(
   val qGap = Rules.notableQGap(a.rules)
   Column(
     Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 2.dp).clip(RoundedCornerShape(12.dp))
-      .background(if (open) colors.secondaryContainer else if (mine) colors.surfaceContainerHigh else Color.Transparent)
+      // Another player's play (a puzzle) on a tint of its own, as their names are.
+      .background(
+        if (open) colors.secondaryContainer else if (mine) colors.surfaceContainerHigh
+        else if (tag != null) colors.tertiaryContainer.copy(alpha = 0.45f) else Color.Transparent,
+      )
       .clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 6.dp),
     verticalArrangement = Arrangement.spacedBy(4.dp),
   ) {
@@ -390,7 +396,12 @@ private fun CandidateItem(
         style = MaterialTheme.typography.bodyMedium, fontWeight = if (shape != null) FontWeight.Medium else FontWeight.Normal,
         color = if (shape != null) colors.primary else colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
       )
-      if (tag != null) Text(tag, style = MaterialTheme.typography.bodyMedium, color = colors.tertiary, maxLines = 1)
+      // The names give way first when the line is short: cut to "…".
+      if (tag != null) Text(
+        tag, Modifier.weight(0.6f, fill = false).clip(RoundedCornerShape(6.dp)).background(colors.tertiaryContainer).padding(horizontal = 6.dp, vertical = 1.dp),
+        style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = colors.onTertiaryContainer, maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
       cd.q?.let { q ->
         if (!(open && detail) && best?.q != null && best.q - q >= qGap) Text("(${fmtQ(q - best.q)})", style = MaterialTheme.typography.bodyMedium, color = BAD, maxLines = 1, softWrap = false)
         Text(fmtQ(q), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = qColor(q), maxLines = 1, softWrap = false)
@@ -401,15 +412,18 @@ private fun CandidateItem(
       val maxLeft = (maxWidth - textRoom(132) - 8.dp).coerceAtLeast(maxWidth * 0.34f)
       val card = ((minOf(maxWidth * 0.44f, maxLeft) - LINE_GAP * 4) / 5).coerceAtMost(LocalCardSizes.current.play)
       val left = rowWidth(5, card, LINE_GAP)
-      Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Column(Modifier.width(left), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-          for (r in 0 until 3) {
-            RowCards(cd.arrangement[r], cd.info.categories[r], card, LINE_GAP)
-            Text(texts[r], style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+      // The chances stretched to the cards' height when shorter; the rows never spread to theirs.
+      MatchHeightRow(
+        left, 8.dp,
+        {
+          Column(Modifier.width(left), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            for (r in 0 until 3) {
+              Text(texts[r], style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+              RowCards(cd.arrangement[r], cd.info.categories[r], card, LINE_GAP)
+            }
           }
-        }
-        CandidateDetail(a, a.cands.indexOf(cd), texts, wheel, best, null, pane = false, modifier = Modifier.weight(1f))
-      }
+        },
+      ) { fill -> CandidateDetail(a, a.cands.indexOf(cd), texts, wheel, best, null, pane = false, fill = fill) }
     } else ThreeRows(cd.arrangement, cd.info.categories)
   }
 }
@@ -422,10 +436,11 @@ private fun CandidateItem(
 @Composable
 private fun CandidateDetail(
   a: Analysis, i: Int, texts: List<String>, wheel: Int, best: Candidate?, mineAt: Int?, pane: Boolean, modifier: Modifier = Modifier,
+  fill: Boolean = false,
 ) {
   val cd = a.cands[i]
   val colors = MaterialTheme.colorScheme
-  Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+  Column(if (fill) modifier.fillMaxHeight() else modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
     // The rows' hands, front to back, in as few lines as they take.
     if (pane) Text(texts.joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
     cd.q?.let { q ->
@@ -437,7 +452,7 @@ private fun CandidateDetail(
         if (bq != null && bq > q) Text("(${fmtQ(q - bq)})", style = MaterialTheme.typography.bodyMedium, color = BAD, maxLines = 1, softWrap = false)
       }
     }
-    cd.probs?.let { p -> ProbGrid(a, p, best?.probs, pane) }
+    cd.probs?.let { p -> ProbGrid(a, p, best?.probs, pane, if (fill) Modifier.weight(1f) else Modifier, fill) }
   }
 }
 
@@ -447,13 +462,13 @@ private fun CandidateDetail(
  * a line of their own for the last. The chances of losing royalties, when shown, follow.
  */
 @Composable
-private fun ProbGrid(a: Analysis, p: List<Double>, best: List<Double>?, pane: Boolean = false) {
+private fun ProbGrid(a: Analysis, p: List<Double>, best: List<Double>?, pane: Boolean = false, modifier: Modifier = Modifier, fill: Boolean = false) {
   val names = stringArrayResource(R.array.prob_names)
   val lostShown = if (a.rules["on_win"] == 1.0) Rules.ROYALTIES.indices.filter { (a.rules[Rules.ROYALTIES[it]] ?: 0.0) > 0 } else emptyList()
   val gaps = SHOWN_PROBS.associateWith { k -> if (best != null) p[k] - best[k] else 0.0 }
   val notable = SHOWN_PROBS.filter { kotlin.math.abs(gaps.getValue(it)) >= NOTABLE_GAP[it] }.toSet()
   val gap = 4.dp
-  BoxWithConstraints(Modifier.fillMaxWidth()) {
+  BoxWithConstraints(modifier.fillMaxWidth()) {
     val width = maxWidth
     val tile = textRoom(62)
     val fit = ((maxWidth + gap) / (tile + gap)).toInt()
@@ -465,8 +480,10 @@ private fun ProbGrid(a: Analysis, p: List<Double>, best: List<Double>?, pane: Bo
       (maxWidth - gap * 2) / 3 >= tile * 0.85f -> listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6, 7))
       else -> listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6), listOf(7))
     }
-    Column(verticalArrangement = Arrangement.spacedBy(gap)) {
-      for (line in lines) Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(gap)) {
+    Column(if (fill) Modifier.fillMaxHeight() else Modifier, verticalArrangement = Arrangement.spacedBy(gap)) {
+      for (line in lines) Row(
+        Modifier.fillMaxWidth().then(if (fill) Modifier.weight(1f) else Modifier.height(IntrinsicSize.Min)), horizontalArrangement = Arrangement.spacedBy(gap),
+      ) {
         // The difference beside the figure when the line's tiles have room for both, else under it.
         val inline = (width - gap * (line.size - 1)) / line.size >= textRoom(98)
         for (k in line) {
@@ -494,7 +511,10 @@ private fun ProbTile(name: String, p: Double, tone: Int, diff: Double, modifier:
       color = color, maxLines = 1, softWrap = false,
     )
   }
-  Column(modifier.clip(RoundedCornerShape(8.dp)).background(colors.surfaceContainerHighest).padding(horizontal = 6.dp, vertical = 3.dp)) {
+  Column(
+    modifier.clip(RoundedCornerShape(8.dp)).background(colors.surfaceContainerHighest).padding(horizontal = 6.dp, vertical = 3.dp),
+    verticalArrangement = Arrangement.Center,
+  ) {
     Text(name, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
     Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
       Text(
@@ -510,3 +530,24 @@ private fun ProbTile(name: String, p: Double, tone: Int, diff: Double, modifier:
 /** A network's name, with "(built-in)" for the one in the APK. */
 @Composable
 fun modelLabel(m: Model): String = if (m.builtIn) stringResource(R.string.built_in, m.name) else m.name
+
+/**
+ * `left` (`leftWidth` wide) and `right` beside it in the rest; when `right` comes out shorter than `left`, it is laid out
+ * again at `left`'s height with `fill` = true, to stretch to it. A taller `right` leaves `left` as it is.
+ */
+@Composable
+private fun MatchHeightRow(leftWidth: Dp, gap: Dp, left: @Composable () -> Unit, right: @Composable (fill: Boolean) -> Unit) {
+  SubcomposeLayout(Modifier.fillMaxWidth()) { c ->
+    val l = subcompose("left", left).map { it.measure(c.copy(minWidth = 0, maxWidth = leftWidth.roundToPx())) }
+    val lh = l.maxOfOrNull { it.height } ?: 0
+    val rw = (c.maxWidth - leftWidth.roundToPx() - gap.roundToPx()).coerceAtLeast(0)
+    var r = subcompose("right", { right(false) }).map { it.measure(Constraints(minWidth = rw, maxWidth = rw)) }
+    if ((r.maxOfOrNull { it.height } ?: 0) < lh)
+      r = subcompose("fill", { right(true) }).map { it.measure(Constraints.fixed(rw, lh)) }
+    val h = maxOf(lh, r.maxOfOrNull { it.height } ?: 0)
+    layout(c.maxWidth, h) {
+      l.forEach { it.place(0, 0) }
+      r.forEach { it.place(c.maxWidth - rw, 0) }
+    }
+  }
+}

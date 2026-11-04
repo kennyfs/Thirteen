@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,9 +36,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -95,7 +99,7 @@ fun BattleScreen(vm: BattleViewModel, app: AppViewModel) {
   // Back: one page up within the battle, where there is one.
   val over = room != null && (vm.finished || room.phase == Phase.OVER)
   val back: (() -> Unit)? = when {
-    vm.detail != null && room != null -> if (vm.analyzed != null) vm::closeAnalysis else vm::closeDetail
+    vm.detail != null && room != null -> if (vm.analyzed != null && !vm.fromReview) vm::closeAnalysis else vm::closeDetail
     room == null -> if (vm.entry != null) ({ vm.chooseEntry(null) }) else null
     over && !vm.lastSeen && vm.outcomes.isNotEmpty() -> vm::toSummary
     over -> vm::dismiss
@@ -118,7 +122,15 @@ fun BattleScreen(vm: BattleViewModel, app: AppViewModel) {
   }
 }
 
+/**
+ * The permissions nearby rooms need. From Android 17 an app that targets it also needs local network access, or Nearby
+ * Connections fails with 8: INTERNAL_ERROR once it tries the Wi-Fi LAN.
+ */
 private fun nearbyPermissions(): Array<String> = when {
+  Build.VERSION.SDK_INT >= 37 -> arrayOf(
+    Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.BLUETOOTH_CONNECT,
+    Manifest.permission.NEARBY_WIFI_DEVICES, Manifest.permission.ACCESS_LOCAL_NETWORK,
+  )
   Build.VERSION.SDK_INT >= 33 -> arrayOf(
     Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.BLUETOOTH_CONNECT,
     Manifest.permission.NEARBY_WIFI_DEVICES,
@@ -163,6 +175,7 @@ private fun EntryPage(vm: BattleViewModel) {
         Column(verticalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp)) {
           OutlinedTextField(
             vm.name, { vm.name = it.take(Limits.NAME_LENGTH) }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.battle_name)) },
+            placeholder = { Text(vm.defaultName) },
             singleLine = true, textStyle = MaterialTheme.typography.bodyLarge,
           )
           Text(stringResource(R.string.battle_how), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -384,18 +397,10 @@ private fun LobbyPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) {
                 i == -1 -> vm.changeSettings(s.copy(rules = vm.rulesFromPage()))
               }
             })
-            if (s.mode == Mode.PUZZLE) {
-              val levels = stringArrayResource(R.array.battle_levels)
-              // `hard` too, for a server before levels.
-              SelectRow(stringResource(R.string.battle_level), levels.indices.map { it + 1 to levels[it] }, s.puzzleLevel, {
-                vm.changeSettings(s.copy(level = it, hard = it >= 3))
-              })
-            }
           } else {
             SettingRow(stringResource(R.string.battle_hands), stringResource(R.string.battle_hands_n, s.hands))
             SettingRow(stringResource(R.string.battle_time), if (s.timeLimit == 0) stringResource(R.string.battle_no_limit) else stringResource(R.string.battle_seconds, s.timeLimit))
             SettingRow(stringResource(R.string.nav_rules), ruleName)
-            if (s.mode == Mode.PUZZLE) SettingRow(stringResource(R.string.battle_level), stringArrayResource(R.array.battle_levels)[s.puzzleLevel - 1])
           }
         }
       }
@@ -423,9 +428,11 @@ private fun LobbyPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) {
 /** The hand's place in the game, the time left, who has set it, and the player's standing: chips under the title. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun HandHeader(vm: BattleViewModel, room: RoomView, trailing: @Composable () -> Unit = {}) {
+private fun HandHeader(vm: BattleViewModel, room: RoomView, info: @Composable () -> Unit = {}, actions: @Composable RowScope.() -> Unit = {}) {
+  // The facts wrap in their own room; the buttons stay at the right end.
+  Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
   FlowRow(
-    Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, top = 4.dp, bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp),
+    Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(12.dp),
     itemVerticalAlignment = Alignment.CenterVertically,
   ) {
     Text(stringResource(R.string.battle_hand_of, room.hand + 1, room.settings.hands), style = MaterialTheme.typography.titleLarge)
@@ -445,8 +452,9 @@ private fun HandHeader(vm: BattleViewModel, room: RoomView, trailing: @Composabl
       val rank = standings(room).indexOfFirst { it.id == vm.me } + 1
       if (rank > 0 && room.hand > 0) Text(stringResource(R.string.battle_your_rank, rank), style = MaterialTheme.typography.bodyLarge)
     }
-    Spacer(Modifier.weight(1f))
-    trailing()
+    info()
+  }
+  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp), content = actions)
   }
 }
 
@@ -626,17 +634,49 @@ private fun HandTable(vm: BattleViewModel, room: RoomView, o: HandOutcome?, modi
   }
 }
 
+/**
+ * A hand's result while the room waits for everyone to go on: the table, an analysis button and the next button at the
+ * right. A puzzle's analysis is of the one hand everyone set; at a table the button turns on an analysis mode, where a
+ * tap on a player opens the analysis of their hand (else it shows their rows one above another).
+ */
 @Composable
 private fun ReviewPage(vm: BattleViewModel, room: RoomView) {
   val me = room.players.firstOrNull { it.id == vm.me }
   val o = vm.outcomes.lastOrNull { it.index == room.hand }
-  HandHeader(vm, room) {
-    MyHandResult(vm, o)
+  val puzzle = room.settings.mode == Mode.PUZZLE
+  var analysisMode by rememberSaveable(room.hand) { mutableStateOf(false) }
+  HandHeader(vm, room, info = { MyHandResult(vm, o) }) {
+    val label = stringResource(R.string.battle_analyze)
+    if (o != null && (!puzzle || o.plays.any { it.player == vm.me })) {
+      if (puzzle) OutlinedButton(
+        onClick = { vm.analyzeHand(vm.me ?: return@OutlinedButton) }, Modifier.heightIn(min = BIG_BUTTON),
+        shape = RoundedCornerShape(18.dp), contentPadding = PaddingValues(horizontal = 12.dp),
+      ) {
+        Icon(Icons.Outlined.Analytics, null, Modifier.size(20.dp))
+        Text(label, Modifier.padding(start = 4.dp), maxLines = 1, softWrap = false)
+      } else if (analysisMode) FilledTonalButton(
+        onClick = { analysisMode = false }, Modifier.heightIn(min = BIG_BUTTON), shape = RoundedCornerShape(18.dp),
+        contentPadding = PaddingValues(horizontal = 12.dp),
+      ) {
+        Icon(Icons.Outlined.Analytics, null, Modifier.size(20.dp))
+        Text(label, Modifier.padding(start = 4.dp), maxLines = 1, softWrap = false)
+      } else OutlinedButton(
+        onClick = { analysisMode = true }, Modifier.heightIn(min = BIG_BUTTON), shape = RoundedCornerShape(18.dp),
+        contentPadding = PaddingValues(horizontal = 12.dp),
+      ) {
+        Icon(Icons.Outlined.Analytics, null, Modifier.size(20.dp))
+        Text(label, Modifier.padding(start = 4.dp), maxLines = 1, softWrap = false)
+      }
+    }
     Button(onClick = vm::ready, Modifier.heightIn(min = BIG_BUTTON), enabled = me?.ready != true, shape = RoundedCornerShape(18.dp)) {
-      Text(stringResource(R.string.battle_next), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+      Text(stringResource(R.string.battle_next), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
     }
   }
-  HandTable(vm, room, o)
+  if (analysisMode && !puzzle) Text(
+    stringResource(R.string.battle_tap_player), Modifier.padding(horizontal = 16.dp, vertical = 2.dp), style = MaterialTheme.typography.bodyMedium,
+    color = MaterialTheme.colorScheme.primary,
+  )
+  HandTable(vm, room, o, onPlayer = if (analysisMode && !puzzle) vm::analyzeHand else null)
 }
 
 /** The last hand's table, which the room skips (the game is over): shown before the final standings. */
@@ -733,7 +773,6 @@ private fun settingsLine(room: RoomView, app: AppViewModel): String {
     app.rulesName(Rules.values(room.rules)),
     stringResource(R.string.battle_time) + " " + if (s.timeLimit == 0) stringResource(R.string.battle_no_limit) else stringResource(R.string.battle_seconds, s.timeLimit),
   )
-  if (s.mode == Mode.PUZZLE) parts += stringResource(R.string.battle_level) + " " + stringArrayResource(R.array.battle_levels)[s.puzzleLevel - 1]
   return parts.joinToString("，")
 }
 
