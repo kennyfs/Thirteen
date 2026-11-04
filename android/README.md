@@ -38,8 +38,8 @@ copies them to `android/build/apk/thirteen-<version>.apk` and `.aab` (or `$THIRT
 and the Android SDK with platform 37, build-tools 37, NDK 30.0.16248370 and CMake 4.1.2. Their paths come from the environment or from
 `android/local.env` (shell assignments such as `ANDROID_HOME=...`, `GRADLE=...`, kept out of the repository); see the
 script for the variables. The built-in network is not in the repository: put it at
-`android/app/src/main/assets/run2_net10.onnx` (any network exported by `python/train.py`, see docs/training.md)
-before building; the app and its device tests expect it. The version code is the minutes from 2026-01-01 to the last commit, so a newer
+`android/app/src/main/assets/run2_net10.onnx` (any network exported by `python/train.py`, see docs/training.md; the
+release stores its weights as float16 with `python/fp16_weights.py`, 2 MB instead of 4) before building; the app and its device tests expect it. The version code is the minutes from 2026-01-01 to the last commit, so a newer
 build always installs over an older one. The version name is the release's `vX.Y.Z` tag on the tagged commit (`1.0.0`);
 any other build is a beta, named after the latest tag (`1.0.0+beta.3` three commits after it).
 

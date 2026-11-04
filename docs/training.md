@@ -195,6 +195,10 @@ even on a slow link. One iteration of 1M rows takes ~190 MB on disk.
 **Check an export.** `python python/check_onnx.py --binary cpp/build/thirteen --checkpoint run/checkpoints/net_5.pt
 --onnx run/models/net_5.onnx --ema` compares C++ and PyTorch Q values.
 
+**Half the file.** `python python/fp16_weights.py net_5.onnx net_5.fp16.onnx` stores the weights as float16 (the
+network still computes in float32; Q moves by ~0.0001 on average). The app's built-in network is stored so; the
+engine, the server and the app load either kind.
+
 **Evaluate.** Net players work everywhere a player spec does:
 
 ```bash
