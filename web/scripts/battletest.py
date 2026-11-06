@@ -110,7 +110,7 @@ with sync_playwright() as p:
     host.locator('.result-table button.line').nth(1).click()
     wait(host, 'B.review.detailAnalysis !== null')
     shot(host, 'detail-analysis')
-    host.go_back(); host.go_back()
+    host.go_back(); host.wait_for_timeout(300); host.go_back()
     host.wait_for_timeout(300)
     print('back twice', host.evaluate(f'[{B}.review.detail, location.hash]'))
     recs = host.evaluate("JSON.parse('[' + localStorage.getItem('thirteen.records').trim().split('\\n').join(',') + ']').filter(r => r.label === 'puzzle').length")
