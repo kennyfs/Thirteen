@@ -215,17 +215,14 @@ private fun Felt(modifier: Modifier = Modifier, content: @Composable () -> Unit)
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, confirmShort: String, card: Dp, onConfirm: () -> Unit) {
-  Felt(Modifier.fillMaxSize().padding(start = 8.dp, end = 12.dp, bottom = WIDE_GAP)) {
-    Column(
-      Modifier.fillMaxSize().padding(horizontal = 6.dp, vertical = WIDE_GAP), verticalArrangement = Arrangement.SpaceBetween,
-      horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+  Felt(Modifier.fillMaxSize().padding(start = 8.dp, end = 12.dp, bottom = 6.dp)) {
+    Column(Modifier.fillMaxSize().padding(6.dp), verticalArrangement = Arrangement.SpaceBetween, horizontalAlignment = Alignment.CenterHorizontally) {
       val density = LocalDensity.current
       // The buttons fill the room right of the rows, in three lines as tall as the rows' (sorting, the tools, the confirm).
       var rowsHeight by remember { mutableStateOf(0.dp) }
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ROWS_GAP)) {
-        RowsStack(vm, card, labelWidth(density), wheel, Modifier.width(IntrinsicSize.Max).onSizeChanged { rowsHeight = with(density) { it.height.toDp() } }, wide = true)
-        Column(Modifier.weight(1f).height(rowsHeight), verticalArrangement = Arrangement.spacedBy(WIDE_GAP)) {
+        RowsStack(vm, card, labelWidth(density), wheel, Modifier.width(IntrinsicSize.Max).onSizeChanged { rowsHeight = with(density) { it.height.toDp() } })
+        Column(Modifier.weight(1f).height(rowsHeight), verticalArrangement = Arrangement.spacedBy(ROW_STACK_GAP)) {
           SortToggle(vm, Modifier.fillMaxWidth().weight(1f), MaterialTheme.typography.titleMedium)
           // The three tools lay out alike: their names all beside the icons, all under them, or none (icons only).
           BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
@@ -251,7 +248,7 @@ private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
           ConfirmButton(vm, busy, confirmLabel, confirmShort, Modifier.fillMaxWidth().weight(1f), MaterialTheme.typography.titleLarge, onConfirm)
         }
       }
-      HandTray(vm, card, 13, Modifier.padding(top = WIDE_GAP))
+      HandTray(vm, card, 13)
     }
   }
 }
@@ -261,10 +258,7 @@ private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
  * it touches back to the hand (one undo step for the swipe); a tap still takes back one.
  */
 @Composable
-private fun RowsStack(
-  vm: Arranger, card: Dp, labelWidth: Dp?, wheel: Int, modifier: Modifier = Modifier, scroll: Boolean = false, labelFill: Boolean = false,
-  wide: Boolean = false,
-) {
+private fun RowsStack(vm: Arranger, card: Dp, labelWidth: Dp?, wheel: Int, modifier: Modifier = Modifier, scroll: Boolean = false, labelFill: Boolean = false) {
   val density = LocalDensity.current
   val bounds = remember { mutableMapOf<Int, Rect>() }
   var box by remember { mutableStateOf<LayoutCoordinates?>(null) }
@@ -272,10 +266,10 @@ private fun RowsStack(
   Column(
     modifier.let { if (scroll) it.verticalScroll(rememberScrollState()) else it }
       .onGloballyPositioned { box = it }.swipeUnplace(vm, placed, bounds),
-    verticalArrangement = Arrangement.spacedBy(if (wide) WIDE_GAP else if (labelWidth == null) 8.dp else ROW_STACK_GAP),
+    verticalArrangement = Arrangement.spacedBy(if (labelWidth == null) 8.dp else ROW_STACK_GAP),
   ) {
     for (r in 0 until 3)
-      RowSlotTall(vm, r, card, labelWidth, headerHeight(density), wheel, labelFill, if (wide) WIDE_GAP else ROW_PAD) { c ->
+      RowSlotTall(vm, r, card, labelWidth, headerHeight(density), wheel, labelFill) { c ->
         Modifier.onGloballyPositioned { coords -> box?.let { if (coords.isAttached) bounds[c] = it.localBoundingBoxOf(coords) } }
       }
   }
@@ -404,7 +398,7 @@ private fun Modifier.rowGround(vm: Arranger, r: Int, target: Boolean, t: TableCo
 
 @Composable
 private fun RowSlotTall(
-  vm: Arranger, r: Int, card: Dp, labelWidth: Dp?, headerHeight: Dp, wheel: Int, labelFill: Boolean = false, padV: Dp = ROW_PAD,
+  vm: Arranger, r: Int, card: Dp, labelWidth: Dp?, headerHeight: Dp, wheel: Int, labelFill: Boolean = false,
   cardModifier: (Int) -> Modifier = { Modifier },
 ) {
   val t = LocalTable.current
@@ -424,7 +418,7 @@ private fun RowSlotTall(
       color = if (target) t.highlight else if (dim) t.onFeltDim else t.onFelt, fontWeight = if (target) FontWeight.Bold else FontWeight.Medium,
     )
   }
-  val ground = Modifier.fillMaxWidth().rowGround(vm, r, target, t).padding(horizontal = ROW_PAD, vertical = padV)
+  val ground = Modifier.fillMaxWidth().rowGround(vm, r, target, t).padding(ROW_PAD)
   if (labelWidth == null) Column(ground) {
     Row(Modifier.fillMaxWidth().height(headerHeight), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       name(Modifier.padding(start = 4.dp))
@@ -794,13 +788,10 @@ fun SeatResults(
   BoxWithConstraints(modifier.fillMaxSize()) {
     val seats = arrangements.size
     val nameWidth = textRoom(92)
-    // The result's cards are the `other` size, as everywhere else, unless the width or height has less room.
+    // On a wide window the players' lines, as many as there are players, fill the height: their cards as large as the
+    // height and the width allow (each line's padding, its labels' line, and each row's border room of 2 at each side).
     val byHeight = ((maxHeight - SEAT_GAP * (seats - 1)) / seats - textRoom(18) - 10.dp) / 1.4f
-    val lineCard = minOf(
-      (maxWidth - nameWidth - ARROWS_WIDTH - 16.dp - COLUMN_GAP * 3 - SMALL_GAP * 10) / 13,
-      byHeight,
-      LocalCardSizes.current.other,
-    )
+    val lineCard = minOf((maxWidth - nameWidth - ARROWS_WIDTH - 16.dp - COLUMN_GAP * 3 - SMALL_GAP * 10 - 12.dp) / 13, byHeight, MAX_PLAY)
     if (maxWidth > maxHeight) SeatLines(arrangements, score, wheel, names, notes, totals, lineCard.coerceAtLeast(14.dp), nameWidth, onSeat)
     else SeatGrid(arrangements, score, wheel, names, notes, totals, maxWidth, onSeat)
   }
