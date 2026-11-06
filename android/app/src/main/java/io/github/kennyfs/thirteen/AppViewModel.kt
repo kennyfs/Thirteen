@@ -15,6 +15,13 @@ import io.github.kennyfs.thirteen.protocol.BattleRecord
 import org.json.JSONObject
 import kotlin.random.Random
 
+/** A finished hand as its result pages show it: the one just played, or the one before it ([AppViewModel.prev]). */
+data class FinishedHand(
+  val hand: List<Int>, val rules: String, val values: Map<String, Double>, val seats: List<Seat>,
+  val result: Pair<List<Arrangement>, Score>, val record: JSONObject?, val replaying: Boolean, val handNo: Int,
+  val totals: List<Double>, val analysis: Analysis?,
+)
+
 /** The game against three computer players (always c = 0) under the chosen rules, and the analysis of single hands. */
 class AppViewModel(app: Application) : AndroidViewModel(app) {
   val settings = Settings(app)
@@ -47,6 +54,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   fun chooseTextSize(v: TextSize) {
     textSize = v
     settings.textSize = v
+  }
+
+  /** The welcome card of the first start (the tutorial, the tour, or play). */
+  var welcome by mutableStateOf(!settings.welcomeSeen); private set
+
+  fun welcomed() {
+    welcome = false
+    settings.welcomeSeen = true
   }
 
   private fun launchCatching(block: suspend () -> Unit) = viewModelScope.launch {
@@ -160,6 +175,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   var tabRequest by mutableStateOf(0 to ""); private set
   /** The hand is one played again: neither in the totals nor in the records. */
   var replaying by mutableStateOf(false); private set
+  /**
+   * The hand finished before the one in play, kept when the next is dealt: its result ([peek] 1) and its analysis (2)
+   * are a button away from the table, and back comes back to the hand in play as it was.
+   */
+  var prev by mutableStateOf<FinishedHand?>(null); private set
+  var peek by mutableStateOf(0)
+  var prevAnalyzing by mutableStateOf(false); private set
+
+  /** The hand just finished, as its result pages show it; null while a hand is in play. */
+  val current: FinishedHand?
+    get() = result?.let { FinishedHand(hand, gameRules, gameValues, seats, it, lastRecord, replaying, session.first, session.second, gameAnalysis) }
 
   private var others: List<List<Int>> = emptyList()
   private var opponents: Deferred<List<Arrangement>>? = null
@@ -175,6 +201,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
   /** Deals a new hand; tests pass `fixed` hands (the player's first). */
   fun deal(fixed: List<List<Int>>? = null, again: Boolean = false) = launchCatching {
+    current?.let { prev = it }
+    peek = 0
     replaying = again
     lastRecord = null
     result = null
@@ -235,8 +263,23 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     try {
       val a = Engine.analyze(hand.sorted(), gameRules, settings.model(anaModel).path, listOf(r.first[0]))
       if (result === r) gameAnalysis = a
+      else prev?.let { p -> if (p.result === r && p.analysis == null) prev = p.copy(analysis = a) }
     } finally {
       analyzing = false
+    }
+  }
+
+  /** The previous hand's analysis, computing it the first time. */
+  fun showPrevAnalysis() = launchCatching {
+    peek = 2
+    val p = prev ?: return@launchCatching
+    if (p.analysis != null || prevAnalyzing) return@launchCatching
+    prevAnalyzing = true
+    try {
+      val a = Engine.analyze(p.hand.sorted(), p.rules, settings.model(anaModel).path, listOf(p.result.first[0]))
+      if (prev === p) prev = p.copy(analysis = a)
+    } finally {
+      prevAnalyzing = false
     }
   }
 
@@ -323,9 +366,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     anaPage = 0
   }
 
-  fun toggleAnalyzeCard(card: Int) {
-    if (card in anaHand) setAnalyzeHand(anaHand - card, rules = anaRules)
-    else if (anaHand.size < 13) setAnalyzeHand(anaHand + card, rules = anaRules)
+  fun toggleAnalyzeCard(card: Int) = setAnalyzeCard(card, card !in anaHand)
+
+  /** Picks or unpicks one card (a swipe's): no more than 13. */
+  fun setAnalyzeCard(card: Int, on: Boolean) {
+    if ((card in anaHand) == on || (on && anaHand.size >= 13)) return
+    setAnalyzeHand(if (on) anaHand + card else anaHand - card, rules = anaRules)
   }
 
   /** Analyzes under the rules page's rules instead of the game's. */

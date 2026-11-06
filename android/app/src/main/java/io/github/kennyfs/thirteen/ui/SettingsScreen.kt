@@ -107,6 +107,12 @@ fun SettingsScreen(vm: AppViewModel, open: (SettingsPage) -> Unit) {
         SettingRow(stringResource(R.string.opponents_title), opponentsSummary(vm, kinds)) { open(SettingsPage.OPPONENTS) }
         SettingRow(stringResource(R.string.networks), stringResource(R.string.networks_summary, vm.models.size)) { open(SettingsPage.NETWORKS) }
 
+        SectionHeader(stringResource(R.string.help))
+        val tour = LocalTour.current
+        val openTutorial = LocalOpenTutorial.current
+        SettingRow(stringResource(R.string.tut_title), stringResource(R.string.tut_note)) { openTutorial() }
+        SettingRow(stringResource(R.string.tour_title), stringResource(R.string.tour_note)) { tour.start() }
+
         SectionHeader(stringResource(R.string.settings_about))
         val version = runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: ""
         SettingRow(stringResource(R.string.app_name) + " " + version, stringResource(R.string.about_source)) {

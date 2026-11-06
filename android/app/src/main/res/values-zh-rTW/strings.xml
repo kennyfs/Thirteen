@@ -427,6 +427,7 @@
   <string name="tut_foul_strict">目前的規則是嚴格墩：兩墩一樣大也算倒水。</string>
   <string name="tut_foul_bad">倒水：頭墩的一對比中墩的散牌大。</string>
   <string name="tut_foul_good">同樣的牌換個擺法：一對放中墩就沒問題。</string>
+  <string name="list_sep">"、"</string>
   <string name="tut_score_title">計分</string>
   <string name="tut_score_rules">目前選的規則（%1$s），你和每一位對手之間：</string>
   <string name="tut_score_rows">每贏一墩：對方付你 %1$s 分（平手不算）。</string>

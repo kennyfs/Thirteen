@@ -17,6 +17,7 @@ import io.github.kennyfs.thirteen.ui.cardSizes
 import io.github.kennyfs.thirteen.ui.LocalCardSizes
 import android.util.Log
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -77,7 +78,17 @@ import androidx.compose.material.icons.outlined.History
 import io.github.kennyfs.thirteen.ui.BattleScreen
 import io.github.kennyfs.thirteen.ui.NetworksPage
 import io.github.kennyfs.thirteen.ui.OpponentsPage
+import io.github.kennyfs.thirteen.ui.LastAnalysis
+import io.github.kennyfs.thirteen.ui.LastResult
+import io.github.kennyfs.thirteen.ui.LocalOpenTutorial
+import io.github.kennyfs.thirteen.ui.LocalTour
 import io.github.kennyfs.thirteen.ui.PlayScreen
+import io.github.kennyfs.thirteen.ui.TOUR_STEPS
+import io.github.kennyfs.thirteen.ui.TourOverlay
+import io.github.kennyfs.thirteen.ui.TourState
+import io.github.kennyfs.thirteen.ui.TutorialPage
+import io.github.kennyfs.thirteen.ui.WelcomeDialog
+import io.github.kennyfs.thirteen.ui.tourAnchor
 import io.github.kennyfs.thirteen.ui.RecordsPage
 import io.github.kennyfs.thirteen.ui.RulesPage
 import io.github.kennyfs.thirteen.ui.SettingsPage
@@ -95,7 +106,10 @@ enum class Screen(val label: Int, val icon: ImageVector, val selectedIcon: Image
 }
 
 /** A destination: a top-level screen or a page opened from one. */
-enum class Dest { PLAY, BATTLE, ANALYZE, RECORDS, SETTINGS, RULES, OPPONENTS, NETWORKS, MY_ANALYSIS, CANDIDATES, BATTLE_RECORD }
+enum class Dest {
+  PLAY, BATTLE, ANALYZE, RECORDS, SETTINGS, RULES, OPPONENTS, NETWORKS, MY_ANALYSIS, CANDIDATES, BATTLE_RECORD, TUTORIAL, LAST_RESULT,
+  LAST_ANALYSIS,
+}
 
 private fun root(s: Screen) = Dest.valueOf(s.name)
 
@@ -149,7 +163,12 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
   // The pages the view models open: the analysis of the finished hand, the candidates of the analyzed one. They sit
   // in the stack too, so that back (and its preview) leaves them as any other page.
   val opened = when (tab) {
-    Screen.PLAY -> listOfNotNull(Dest.MY_ANALYSIS.takeIf { vm.result != null && vm.resultTab == 1 })
+    Screen.PLAY -> listOfNotNull(
+      Dest.MY_ANALYSIS.takeIf { vm.result != null && vm.resultTab == 1 },
+      // The hand before the one in play: its result, then its analysis.
+      Dest.LAST_RESULT.takeIf { vm.result == null && vm.prev != null && vm.peek >= 1 },
+      Dest.LAST_ANALYSIS.takeIf { vm.result == null && vm.prev != null && vm.peek == 2 },
+    )
     Screen.ANALYZE -> listOfNotNull(Dest.CANDIDATES.takeIf { vm.analysis != null && vm.anaPage == 1 })
     Screen.RECORDS -> listOfNotNull(Dest.BATTLE_RECORD.takeIf { vm.openedBattle != null })
     else -> emptyList()
@@ -162,11 +181,23 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
     when {
       pushed.size > 1 -> stacks = stacks + (tab.name to stacks.getValue(tab.name).dropLast(1))
       Dest.MY_ANALYSIS in opened -> vm.resultTab = 0
+      Dest.LAST_ANALYSIS in opened -> vm.peek = 1
+      Dest.LAST_RESULT in opened -> vm.peek = 0
       Dest.CANDIDATES in opened -> vm.anaPage = 0
       Dest.BATTLE_RECORD in opened -> vm.openedBattle = null
     }
   }
   fun open(page: SettingsPage) = push(Dest.valueOf(page.name))
+  // The tutorial, on top of the screen it is opened from; and the tour, which goes from screen to screen.
+  val tour = remember { TourState() }
+  fun openTutorial() { if (Dest.TUTORIAL !in pushed) push(Dest.TUTORIAL) }
+  fun closeTutorial() { stacks = stacks + (tab.name to stacks.getValue(tab.name).filter { it != Dest.TUTORIAL.name }) }
+  LaunchedEffect(tour.step) {
+    val s = TOUR_STEPS.getOrNull(tour.step) ?: return@LaunchedEffect
+    tab = s.screen
+    stacks = stacks + (s.screen.name to listOf(root(s.screen).name))
+    if (s.screen == Screen.PLAY) vm.peek = 0
+  }
   // A hand to rearrange or to analyze (from a record or the result): to that screen's first page.
   var handled by rememberSaveable { mutableStateOf(vm.tabRequest.first) }
   LaunchedEffect(vm.tabRequest) {
@@ -196,6 +227,7 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
   // In a battle the other screens are out of reach (no bar or rail), until the player leaves it.
   LaunchedEffect(battle.inRoom) { if (battle.inRoom) tab = Screen.BATTLE }
   BackHandler(tab != Screen.PLAY && stack.size == 1 && !battle.inRoom) { tab = Screen.PLAY }
+  CompositionLocalProvider(LocalTour provides tour, LocalOpenTutorial provides ::openTutorial) {
   NavigationSuiteScaffold(
     navigationSuiteItems = {
       for (s in Screen.entries) {
@@ -209,7 +241,7 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
           // Practice's cards are held at the bottom, fanned out from there.
           icon = { Icon(if (selected) s.selectedIcon else s.icon, null, if (s == Screen.PLAY) Modifier.graphicsLayer(scaleY = -1f) else Modifier) },
           label = { Text(stringResource(s.label), maxLines = 1) },
-          modifier = Modifier.testTag("nav_${s.name}"),
+          modifier = Modifier.testTag("nav_${s.name}").tourAnchor("nav_${s.name}"),
           alwaysShowLabel = true,
         )
       }
@@ -249,6 +281,13 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
                   Dest.MY_ANALYSIS -> MyHandAnalysis(vm)
                   Dest.CANDIDATES -> CandidatesPage(vm)
                   Dest.BATTLE_RECORD -> vm.openedBattle?.let { b -> BattleRecordPage(vm, b) { vm.openedBattle = null } }
+                  Dest.TUTORIAL -> TutorialPage(
+                    vm, onBack = ::pop,
+                    onPlay = { closeTutorial(); tab = Screen.PLAY },
+                    onTour = { closeTutorial(); tour.start() },
+                  )
+                  Dest.LAST_RESULT -> LastResult(vm)
+                  Dest.LAST_ANALYSIS -> LastAnalysis(vm)
                 }
               }
             }
@@ -257,5 +296,14 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
       }
       }
     }
+  }
+  // The first start: the welcome card (the tutorial, the tour, or play), once. Not over a battle's room.
+  if (vm.welcome && !battle.inRoom)
+    WelcomeDialog(
+      onLearn = { vm.welcomed(); openTutorial() },
+      onTour = { vm.welcomed(); tour.start() },
+      onClose = { vm.welcomed() },
+    )
+  if (tour.on && !battle.inRoom) TourOverlay(tour, ::openTutorial)
   }
 }

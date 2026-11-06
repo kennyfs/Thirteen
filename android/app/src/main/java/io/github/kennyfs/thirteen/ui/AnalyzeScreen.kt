@@ -42,6 +42,12 @@ import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -94,6 +100,30 @@ fun fmtQ(x: Double) = (if (x >= 0) "+" else "−") + "%.2f".format(kotlin.math.a
 @Composable
 fun qColor(q: Double) = if (q >= 0) GOOD else BAD
 
+/**
+ * A swipe over the 52 cards picks each card it touches when the card it starts on is not picked, and unpicks them when
+ * it is, as the table's hand; a tap still toggles one card.
+ */
+private fun Modifier.swipePick(vm: AppViewModel, bounds: Map<Int, Rect>): Modifier =
+  pointerInput(Unit) {
+    fun at(p: Offset): Int? = bounds.entries.firstOrNull { it.value.contains(p) }?.key
+    var on = true
+    val touched = mutableSetOf<Int>()
+    var last = Offset.Zero
+    fun touch(p: Offset) {
+      val c = at(p) ?: return
+      if (touched.isEmpty()) on = c !in vm.anaHand
+      if (touched.add(c)) vm.setAnalyzeCard(c, on)
+    }
+    detectDragGestures(onDragStart = { o -> touched.clear(); last = o; touch(o) }) { change, _ ->
+      change.consume()
+      val p = change.position
+      val steps = ((p - last).getDistance() / 4.dp.toPx()).toInt().coerceIn(1, 200)
+      for (k in 1..steps) touch(last + (p - last) * (k / steps.toFloat()))
+      last = p
+    }
+  }
+
 /** Analyze: pick 13 cards (or take them from somewhere), then the candidates. */
 @Composable
 fun AnalyzeScreen(vm: AppViewModel, onRules: () -> Unit) {
@@ -140,7 +170,13 @@ private fun HandPage(vm: AppViewModel, onRules: () -> Unit) {
         val roomy = (maxHeight - 4.dp * (lines - 4) - suitGap * 3) / lines
         val gap = if (roomy >= cellWidth * 1.3f) 4.dp else 2.dp
         val cellHeight = minOf((maxHeight - 1.dp - gap * (lines - 4) - (if (wide) gap else suitGap) * 3) / lines, cellWidth * 1.3f).coerceAtLeast(26.dp)
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(if (wide) gap else suitGap)) {
+        // Each card's bounds in the grid, for swipes.
+        val bounds = remember { mutableMapOf<Int, Rect>() }
+        var grid by remember { mutableStateOf<LayoutCoordinates?>(null) }
+        Column(
+          Modifier.fillMaxSize().onGloballyPositioned { grid = it }.swipePick(vm, bounds).verticalScroll(rememberScrollState()),
+          verticalArrangement = Arrangement.spacedBy(if (wide) gap else suitGap),
+        ) {
           for (suit in 3 downTo 0) {
             val ranks = (12 downTo 0).toList()
             Column(verticalArrangement = Arrangement.spacedBy(gap)) {
@@ -148,7 +184,7 @@ private fun HandPage(vm: AppViewModel, onRules: () -> Unit) {
                 for (rank in line) {
                   val c = rank * 4 + suit
                   val on = c in vm.anaHand
-                  CardFace(c, cellWidth, height = cellHeight, fill = if (on) (if (LocalDark.current) PICKED_DARK else PICKED) else CARD_FACE, selected = on, lift = false, onClick = { vm.toggleAnalyzeCard(c) })
+                  CardFace(c, cellWidth, Modifier.onGloballyPositioned { coords -> grid?.let { bounds[c] = it.localBoundingBoxOf(coords) } }, height = cellHeight, fill = if (on) (if (LocalDark.current) PICKED_DARK else PICKED) else CARD_FACE, selected = on, lift = false, onClick = { vm.toggleAnalyzeCard(c) })
                 }
               }
             }

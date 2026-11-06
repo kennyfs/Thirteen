@@ -69,6 +69,11 @@ class Settings(private val context: Context) {
     prefs.edit().putString("seat$i.kind", seat.kind.name).putString("seat$i.model", seat.model).apply()
   }
 
+  /** The welcome card was shown (and answered, or put away): it comes once. */
+  var welcomeSeen: Boolean
+    get() = prefs.getBoolean("welcome.seen", false)
+    set(v) = prefs.edit().putBoolean("welcome.seen", v).apply()
+
   var mcSamples: Int
     get() = prefs.getInt("mc.samples", 200)
     set(v) = prefs.edit().putInt("mc.samples", v).apply()

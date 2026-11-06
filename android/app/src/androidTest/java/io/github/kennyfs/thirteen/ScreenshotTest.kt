@@ -102,6 +102,8 @@ class ScreenshotTest {
     if (STORE) demoStatusBar()
     if (Build.VERSION.SDK_INT >= 33)
       instrumentation.targetContext.getSystemService(LocaleManager::class.java).applicationLocales = LocaleList.forLanguageTags(c.locale)
+    // The welcome card of a first start would cover the screens.
+    InstrumentationRegistry.getInstrumentation().targetContext.getSharedPreferences("settings", 0).edit().putBoolean("welcome.seen", true).commit()
     ActivityScenario.launch(MainActivity::class.java).use { scenario ->
       lateinit var vm: AppViewModel
       scenario.onActivity { vm = ViewModelProvider(it)[AppViewModel::class.java] }

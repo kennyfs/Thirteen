@@ -11,6 +11,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.kennyfs.thirteen.ui.CARD_TAG
 import org.junit.Assert.assertEquals
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,6 +23,8 @@ class SwipeSelectTest {
 
   @Test
   fun swipeSelectsThenUnselects() {
+    // The welcome card of a first start would cover the screens.
+    InstrumentationRegistry.getInstrumentation().targetContext.getSharedPreferences("settings", 0).edit().putBoolean("welcome.seen", true).commit()
     ActivityScenario.launch(MainActivity::class.java).use { scenario ->
       lateinit var vm: AppViewModel
       scenario.onActivity { vm = ViewModelProvider(it)[AppViewModel::class.java] }
