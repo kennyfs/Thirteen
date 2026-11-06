@@ -13,6 +13,7 @@ bar of screens at the bottom) and on a desktop (a rail at the side), with the sa
 | `build-engine.sh` | Builds the engine into `public/engine/` and copies the built-in network into `public/models/`. |
 | `scripts/strings.mjs` | The app's strings (`android/.../res/values*/strings.xml`) to `src/generated/strings.json`; run by `npm run dev` and `npm run build`. |
 | `scripts/shots.py` | Screenshots in headless Firefox (playwright) at phone and desktop sizes. |
+| `scripts/desktest.py`, `scripts/tutest.py` | A computer's mouse and keys; the welcome card, tutorial, tour, last hand, sweeps and the cursor keys (playwright). |
 | `src/lib/` | The state (`app.svelte.ts` ports `AppViewModel.kt`), arranging, rules, cards, the engine's client and worker, storage. |
 | `src/components/` | The screens and their parts. |
 | `tests/engine-native.mjs` | Checks the WebAssembly engine's answers against the native `thirteen gui`. |

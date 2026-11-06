@@ -281,13 +281,14 @@
                 <div class="place">
                   <!-- svelte-ignore a11y_no_static_element_interactions -->
                   <span class="hold" ondblclick={() => doubleCard(c)} onclickcapture={(e) => (shift = e.shiftKey)}>
-                    <Card card={c} width={card} tint={SAME_RANK_CATEGORY[counts.get(rank(c)) ?? 0]} light selected={vm.selected.has(c)} onclick={() => clickCard(c)} />
+                    <Card card={c} width={card} tint={SAME_RANK_CATEGORY[counts.get(rank(c)) ?? 0]} light selected={vm.selected.has(c)} onclick={() => clickCard(c)}
+                      marked={!!km.cursor && li * km.perLine + i === cursor} />
                   </span>
                   {#if keyLabel}<span class="cardkey" class:on={vm.selected.has(c)} style:height="{below}px"><Kbd k={keyLabel} always /></span>
                   {:else if km.cursor}
                     {@const here = li * km.perLine + i === cursor}
-                    <span class="cursor" class:here class:painting={here && paint !== null} style:height="{below}px" style:width="{card}px"
-                      aria-hidden={!here}>{#if here}<span class="caret">▲</span>{#if paint !== null}<span class="label-small">{paint ? '+' : '−'}</span>{/if}{/if}</span>
+                    <span class="cursor" style:height="{below}px" style:width="{card}px" aria-hidden={!here}>
+                      {#if here && paint !== null}<span class="painting label-small">{paint ? t('cursor_on') : t('cursor_off_mark')}</span>{/if}</span>
                   {/if}
                 </div>
               {/each}
@@ -325,10 +326,8 @@
   .cardkey { display: flex; align-items: flex-end; justify-content: center; color: var(--on-felt); }
   .cardkey :global(kbd) { font-size: 0.8rem; padding: 3px 6px; }
   .cardkey.on { color: var(--highlight); }
-  .cursor { display: flex; align-items: flex-end; justify-content: center; gap: 2px; color: var(--on-felt); font-weight: 700; line-height: 1; }
-  .cursor.here { border-bottom: 3px solid var(--on-felt); }
-  .cursor.painting { color: var(--highlight); border-bottom-color: var(--highlight); }
-  .caret { font-size: 0.9rem; }
+  .cursor { display: flex; align-items: flex-end; justify-content: center; overflow: visible; white-space: nowrap; }
+  .painting { background: var(--mark); color: #fff; border-radius: 6px; padding: 2px 6px; font-weight: 700; }
   .gap { flex: none; display: block; }
   .ready { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--on-felt); }
   .ready.bad { color: var(--felt-bad); }

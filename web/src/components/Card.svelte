@@ -11,8 +11,10 @@
   interface Props {
     card: number; width: number; height?: number; tint?: number; light?: boolean; fill?: string | null;
     selected?: boolean; lift?: boolean; onclick?: (() => void) | null;
+    /** Framed in blue (--mark): a computer's cursor, or a card in another row than in the arrangement compared with. */
+    marked?: boolean;
   }
-  let { card, width, height, tint = 0, light = false, fill = null, selected = false, lift, onclick = null }: Props = $props();
+  let { card, width, height, tint = 0, light = false, fill = null, selected = false, lift, onclick = null, marked = false }: Props = $props();
 
   const h = $derived(height ?? width * 1.4);
   const base = $derived(Math.min(width, h / 1.4));
@@ -23,7 +25,7 @@
 
 {#if onclick}
   <button
-    class="card" class:selected class:red={isRed(card)} aria-pressed={selected} aria-label={name} data-card={card}
+    class="card" class:selected class:marked class:red={isRed(card)} aria-pressed={selected} aria-label={name} data-card={card}
     style:width="{width}px" style:height="{h}px" style:background={bg} style:border-radius="{width * 0.14}px"
     style:transform={lifted ? `translateY(${-width * 0.2}px)` : null} onclick={onclick}
   >
@@ -32,7 +34,7 @@
   </button>
 {:else}
   <div
-    class="card" class:selected class:red={isRed(card)} role="img" aria-label={name}
+    class="card" class:selected class:marked class:red={isRed(card)} role="img" aria-label={name}
     style:width="{width}px" style:height="{h}px" style:background={bg} style:border-radius="{width * 0.14}px"
   >
     <span class="rank" style:font-size="{base * 0.46}px">{rankText(card)}</span>
@@ -49,5 +51,6 @@
   button.card { cursor: pointer; font: inherit; }
   .card.red { color: var(--card-red); }
   .card.selected { border: 3px solid var(--highlight); box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35); }
+  .card.marked { outline: 4px solid var(--mark); outline-offset: 1px; }
   .rank { font-family: Georgia, "Times New Roman", "Noto Serif", serif; font-weight: 700; line-height: 1; letter-spacing: -0.04em; }
 </style>

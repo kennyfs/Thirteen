@@ -18,7 +18,7 @@
       <div class="label-large name">{keys ? rowLabel(keys[r], ta('row_labels'), wheel) : ta('row_names')[r]}</div>
       <div class="cards" style:gap="{CARD_GAP}px">
         {#each rowLayout(rows[r], categories?.[r] ?? 0) as p (p.card)}
-          <Card card={p.card} {width} tint={p.tint} light={p.light} selected={outlined.has(p.card)} lift={false} />
+          <Card card={p.card} {width} tint={p.tint} light={p.light} marked={outlined.has(p.card)} lift={false} />
         {/each}
       </div>
     </div>

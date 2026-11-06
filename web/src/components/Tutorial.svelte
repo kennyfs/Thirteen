@@ -1,7 +1,7 @@
 <!--
   How to play: a few pages for someone who has never played. The rows; which row hand is bigger; fouls; the points
   under the rules now chosen; a hand to set and have the AI judge (not scored or recorded); tips from the AI's own
-  analysis of 10,000 random hands (tips-summary.md); and on to practice or the tour. At #/<screen>/tutorial, from the
+  analysis of 10,000 random hands (docs/tips.md); and on to practice or the tour. At #/<screen>/tutorial, from the
   welcome card, the settings, the table's help and the tour's end; Back leaves it.
 -->
 <script lang="ts">
@@ -40,7 +40,7 @@
   const FOUL = rows('Qs Qh 5c', 'Ad Kc 9s 7h 3d', 'Th 8h 6h 4h 2h');
   const FIXED = rows('Ad Kc 5c', 'Qs Qh 9s 7h 3d', 'Th 8h 6h 4h 2h');
   // The hand to try: the instinctive way (aces with the queens' full house in the back) is far from the best (the
-  // aces in front, the sixes in the full house) under every preset (python run of tips/pick_hand.py).
+  // aces in front, the sixes in the full house) under family and taiwan (python/tips/pick_hand.py).
   const TRY = cards('As Ad Kh Kd Qh Qd Qc Jh 7h 6s 6h 3h 2h');
 
   const PAGES = 7;
