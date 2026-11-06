@@ -108,6 +108,8 @@ android {
   }
   // The reduced library goes in as it is; the AAR's comes with the AAR.
   if (ownOrt != null) sourceSets["main"].jniLibs.directories += ortDir.dir("jni").asFile.absolutePath
+  // A test build (another id) has the night icon of src/nightly, over main's.
+  if (System.getenv("THIRTEEN_ID_SUFFIX") != null) for (t in listOf("debug", "release")) sourceSets[t].res.directories += "src/nightly/res"
   packaging {
     // The AAR and the imported library in CMake both bring it.
     jniLibs.pickFirsts += "**/libonnxruntime.so"
