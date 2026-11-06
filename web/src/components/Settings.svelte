@@ -9,6 +9,7 @@
   import Rules from './Rules.svelte';
   import SettingRow from './SettingRow.svelte';
   import TitleBar from './TitleBar.svelte';
+  import { ui } from '../lib/ui.svelte';
   import Toggle from './Toggle.svelte';
   let { app }: { app: App } = $props();
   const sizes = Object.keys(TEXT_SCALE) as TextSize[];
@@ -22,13 +23,7 @@
   const back = () => nav.back();
 </script>
 
-{#if nav.sub === 'rules'}
-  <Rules {app} onback={back} />
-{:else if nav.sub === 'opponents'}
-  <Opponents {app} onback={back} />
-{:else if nav.sub === 'networks'}
-  <Networks {app} onback={back} />
-{:else}
+{#snippet list(desk: boolean)}
   <div class="page">
     <TitleBar title={t('nav_settings')} />
     <div class="scroll"><div class="readable">
@@ -51,9 +46,9 @@
       </SettingRow>
 
       <div class="section-header">{t('settings_game')}</div>
-      <SettingRow title={t('nav_rules')} value={Object.keys(app.ruleValues).length ? app.rulesName(app.ruleValues) : null} onclick={() => nav.open('rules')} />
-      <SettingRow title={t('opponents_title')} value={opponents} onclick={() => nav.open('opponents')} />
-      <SettingRow title={t('networks')} value={t('networks_summary', app.models.length)} onclick={() => nav.open('networks')} />
+      <SettingRow title={t('nav_rules')} value={Object.keys(app.ruleValues).length ? app.rulesName(app.ruleValues) : null} onclick={() => nav.open('rules')} selected={desk && (nav.sub ?? 'rules') === 'rules'} />
+      <SettingRow title={t('opponents_title')} value={opponents} onclick={() => nav.open('opponents')} selected={desk && nav.sub === 'opponents'} />
+      <SettingRow title={t('networks')} value={t('networks_summary', app.models.length)} onclick={() => nav.open('networks')} selected={desk && nav.sub === 'networks'} />
 
       <div class="section-header">{t('settings_about')}</div>
       <SettingRow title={t('app_name')} value={t('about_source')} href="https://github.com/kennyfs/Thirteen" />
@@ -61,11 +56,34 @@
       <SettingRow title={t('privacy_policy')} href="https://github.com/kennyfs/Thirteen/blob/main/docs/privacy.md" />
     </div></div>
   </div>
+{/snippet}
+
+{#if ui.desk}
+  <!-- A computer's: the list at the left, the page chosen in it (the rules at first) at the right. -->
+  <div class="desk">
+    <div class="desk-list">{@render list(true)}</div>
+    <div class="desk-pane">
+      {#if nav.sub === 'opponents'}<Opponents {app} />
+      {:else if nav.sub === 'networks'}<Networks {app} />
+      {:else}<Rules {app} />{/if}
+    </div>
+  </div>
+{:else if nav.sub === 'rules'}
+  <Rules {app} onback={back} />
+{:else if nav.sub === 'opponents'}
+  <Opponents {app} onback={back} />
+{:else if nav.sub === 'networks'}
+  <Networks {app} onback={back} />
+{:else}
+  {@render list(false)}
 {/if}
 
 <style>
   .page { height: 100%; display: flex; flex-direction: column; min-height: 0; }
   .scroll { flex: 1; overflow: auto; padding-bottom: 24px; }
   .readable { max-width: 720px; margin: 0 auto; }
+  .desk { height: 100%; display: flex; min-height: 0; }
+  .desk-list { flex: 0 1 440px; min-width: 340px; border-right: 1px solid var(--outline-variant, var(--surface-container-highest)); }
+  .desk-pane { flex: 1; min-width: 0; }
   .block { padding: 8px 16px; display: flex; flex-direction: column; gap: 8px; }
 </style>

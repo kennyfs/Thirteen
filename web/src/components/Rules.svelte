@@ -10,7 +10,7 @@
   import Switch from './Switch.svelte';
   import TitleBar from './TitleBar.svelte';
 
-  let { app, onback }: { app: App; onback: () => void } = $props();
+  let { app, onback = null }: { app: App; onback?: (() => void) | null } = $props();
   onDestroy(() => app.rulesClosed());
   const spec = $derived(app.ruleSpec);
   const values = $derived(app.ruleValues);

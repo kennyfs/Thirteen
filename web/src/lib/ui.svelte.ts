@@ -1,11 +1,12 @@
-// What the screens share about the window: whether it is wide (a rail at the side) or tall (a bar under), the room the
-// screens have, `u` (what a 14px text takes now), and the card sizes worked out once for them (sizing.ts).
-import { cardSizes, type CardSizes } from './sizing';
+// What the screens share about the window: whether it is wide (a rail at the side) or tall (a bar under), whether it
+// is a computer's (`desk`: a mouse, and room for a side panel), the room the screens have, `u` (what a 14px text takes
+// now), and the card sizes worked out once for them (sizing.ts).
+import { ASIDE, cardSizes, deskCardSizes, type CardSizes } from './sizing';
 
 export const NAV_BAR = 80;
 export const NAV_RAIL = 88;
 
-export const ui = $state({ w: 0, h: 0, wide: false, u: 14, sizes: { play: 44, other: 26, record: 26 } as CardSizes });
+export const ui = $state({ w: 0, h: 0, wide: false, desk: false, u: 14, sizes: { play: 44, other: 26, record: 26 } as CardSizes });
 
 export function measure(textScale: number) {
   const root = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16 * textScale;
@@ -24,7 +25,9 @@ export function measure(textScale: number) {
   ui.h = h;
   ui.wide = wide;
   ui.u = u;
-  ui.sizes = cardSizes(w, h, u);
+  // A computer's: a mouse (or a touchpad) that hovers, and a window with room for the practice page's side panel.
+  ui.desk = matchMedia('(hover: hover) and (pointer: fine)').matches && wide && w >= 900 + ASIDE * 0.5 && h >= 540;
+  ui.sizes = ui.desk ? deskCardSizes(w, h, u) : cardSizes(w, h, u);
 }
 
 /** Room for text: what a `px` text takes, as the app's textRoom. */

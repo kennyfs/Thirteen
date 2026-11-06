@@ -2,7 +2,9 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import Icon from './Icon.svelte';
-  let { title, value = null, onclick = null, href = null, trailing }: { title: string; value?: string | null; onclick?: (() => void) | null; href?: string | null; trailing?: Snippet } = $props();
+  let { title, value = null, onclick = null, href = null, selected = false, trailing }: {
+    title: string; value?: string | null; onclick?: (() => void) | null; href?: string | null; selected?: boolean; trailing?: Snippet;
+  } = $props();
 </script>
 
 {#snippet inner()}
@@ -13,7 +15,7 @@
 {#if href}
   <a class="row" {href} target="_blank" rel="noopener">{@render inner()}</a>
 {:else if onclick}
-  <button class="row" {onclick}>{@render inner()}</button>
+  <button class="row" class:selected aria-current={selected ? 'page' : undefined} {onclick}>{@render inner()}</button>
 {:else}
   <div class="row">{@render inner()}</div>
 {/if}
@@ -23,5 +25,6 @@
     background: none; border: none; text-align: left; color: inherit; font: inherit; text-decoration: none; }
   button.row, a.row { cursor: pointer; }
   button.row:hover, a.row:hover { background: var(--surface-container); }
+  button.row.selected { background: var(--secondary-container); }
   .text { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 </style>

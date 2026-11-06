@@ -5,7 +5,7 @@
   import Dialog from './Dialog.svelte';
   import Icon from './Icon.svelte';
   import TitleBar from './TitleBar.svelte';
-  let { app, onback }: { app: App; onback: () => void } = $props();
+  let { app, onback = null }: { app: App; onback?: (() => void) | null } = $props();
   let deleting = $state<Model | null>(null);
   let input: HTMLInputElement;
 </script>

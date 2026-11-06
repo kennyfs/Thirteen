@@ -5,7 +5,7 @@
   import Menu from './Menu.svelte';
   import TitleBar from './TitleBar.svelte';
   import Toggle from './Toggle.svelte';
-  let { app, onback }: { app: App; onback: () => void } = $props();
+  let { app, onback = null }: { app: App; onback?: (() => void) | null } = $props();
   const modelLabel = (m: { name: string; builtIn: boolean }) => (m.builtIn ? t('built_in', m.name) : m.name);
 </script>
 

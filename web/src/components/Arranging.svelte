@@ -2,14 +2,20 @@
   Setting a hand into three rows on the table. Wide: the rows one above another with the buttons at their right, the
   hand in a line under them; tall: the rows, the hand in a line or two under them, and the buttons in a bar under the
   table. The rows' cards and the hand's are one size, the largest the room allows up to the window's `play` size.
+  `bare` (a computer's): the rows one above another in the middle and the hand under them, without the buttons, which
+  the page's side panel has (Play.svelte), and the keys below.
+
+  With a mouse, cards are dragged: from the hand (the picked ones with the one dragged) into a row, from a row into
+  another or back to the hand. Keys: 1 2 3 put the picked cards into a row (or pick the row for the next ones), ← →
+  go along the hand and Space picks, S sorts, Z undoes, Delete takes all back, Esc unpicks, Enter plays.
 -->
 <script lang="ts">
   import type { Arranger } from '../lib/arranger.svelte';
   import { ROW_SIZES, rank, rowLabel, rowLayout, suit } from '../lib/cards';
   import { t, ta } from '../lib/i18n.svelte';
   import {
-    arrangeFit, cardHeight, BIG_BUTTON, CARD_GAP, HAND_GAP, HAND_LINE_GAP, HAND_LINE_GAP_TIGHT, ROW_PAD, ROW_STACK_GAP, ROWS_GAP,
-    SUIT_GAP,
+    arrangeFit, cardHeight, deskFit, BIG_BUTTON, CARD_GAP, DESK_LABEL, HAND_GAP, HAND_LINE_GAP, HAND_LINE_GAP_TIGHT, ROW_PAD,
+    ROW_STACK_GAP, ROWS_GAP, SUIT_GAP,
   } from '../lib/sizing';
   import { signed, textRoom, ui } from '../lib/ui.svelte';
   import Card from './Card.svelte';
@@ -17,20 +23,23 @@
   import Icon from './Icon.svelte';
   import Toggle from './Toggle.svelte';
 
-  interface Props { vm: Arranger; wheel: number; busy: boolean; confirmLabel: string; onconfirm: () => void }
-  let { vm, wheel, busy, confirmLabel, onconfirm }: Props = $props();
+  interface Props {
+    vm: Arranger; wheel: number; busy: boolean; confirmLabel: string; onconfirm: () => void; bare?: boolean;
+    /** Help asked for (the ? key, or the button): the page shows it when it has the buttons. */
+    help?: boolean;
+  }
+  let { vm, wheel, busy, confirmLabel, onconfirm, bare = false, help = $bindable(false) }: Props = $props();
 
   let areaW = $state(0);
   let areaH = $state(0);
-  const wide = $derived(areaW > areaH * 1.15);
+  const wide = $derived(bare || areaW > areaH * 1.15);
   const fit = $derived(arrangeFit(areaW, areaH, wide, ui.u, ui.sizes.play));
-  const card = $derived(fit.card);
+  const card = $derived(bare ? Math.min(ui.sizes.play, deskFit(areaW, areaH)) : fit.card);
   // The labels beside the rows: sizes from the text's.
   const labelWidth = $derived(Math.max(72, textRoom(14) * 4.6));
   const headerHeight = $derived(Math.max(32, textRoom(13) * 2));
   const labelHeight = $derived(textRoom(24) + textRoom(16) + 2);
   const above = $derived(!wide && fit.above);
-  let help = $state(false);
 
   const hand = $derived(vm.unplaced);
   const counts = $derived.by(() => {
@@ -101,9 +110,53 @@
     return Number(el.dataset.card);
   }
 
+  // With a mouse a press on a card starts a drag instead: the cards follow the pointer and drop into the row under it
+  // (or the hand). `target`: a row, null for the hand, undefined for nowhere.
+  type Drag = { from: 'hand' | 'rows'; card: number; cards: number[] | null; x0: number; y0: number; x: number; y: number; id: number; target?: number | null };
+  let drag = $state<Drag | null>(null);
+
+  function dropTarget(x: number, y: number): number | null | undefined {
+    const el = document.elementFromPoint(x, y);
+    const row = el?.closest('[data-row]') as HTMLElement | null;
+    if (row) return Number(row.dataset.row);
+    return el?.closest('.tray') ? null : undefined;
+  }
+
+  /** Whether the dragged cards fit row `r`. */
+  function fits(r: number, cards: number[]) { return vm.rows[r].filter((c) => !cards.includes(c)).length + cards.length <= ROW_SIZES[r]; }
+
   function down(e: PointerEvent, kind: 'hand' | 'rows') {
     if (e.button !== 0) return;
+    if (e.pointerType === 'mouse') {
+      const c = cardAt(e.clientX, e.clientY, kind);
+      if (c !== null) drag = { from: kind, card: c, cards: null, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, id: e.pointerId };
+      return;
+    }
     swipe = { kind, x: e.clientX, y: e.clientY, moved: false, on: true, touched: new Set(), id: e.pointerId };
+  }
+
+  function dragMove(e: PointerEvent) {
+    const d = drag!;
+    if (e.pointerId !== d.id) return;
+    if (!d.cards) {
+      if (Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 6) return;
+      d.cards = d.from === 'hand' && vm.selected.has(d.card) ? [d.card, ...[...vm.selected].filter((c) => c !== d.card)] : [d.card];
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    }
+    d.x = e.clientX;
+    d.y = e.clientY;
+    d.target = dropTarget(e.clientX, e.clientY);
+  }
+
+  function dragUp(e: PointerEvent) {
+    const d = drag!;
+    if (e.pointerId !== d.id) return;
+    drag = null;
+    if (!d.cards) return;
+    suppressClick = true;
+    setTimeout(() => (suppressClick = false), 0);
+    if (typeof d.target === 'number') vm.move(d.cards, d.target);
+    else if (d.target === null && d.from === 'rows') vm.move(d.cards, null);
   }
 
   function touch(x: number, y: number) {
@@ -121,6 +174,7 @@
   }
 
   function move(e: PointerEvent) {
+    if (drag) return dragMove(e);
     if (!swipe || e.pointerId !== swipe.id) return;
     if (!swipe.moved && Math.hypot(e.clientX - swipe.x, e.clientY - swipe.y) < 8) return;
     if (!swipe.moved) {
@@ -136,6 +190,7 @@
   }
 
   function up(e: PointerEvent) {
+    if (drag) return dragUp(e);
     if (!swipe || e.pointerId !== swipe.id) return;
     if (swipe.moved) {
       suppressClick = true;
@@ -162,6 +217,30 @@
   }
   function rowKey(e: KeyboardEvent, r: number) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); vm.tapRow(r); } }
 
+  // ---- Keys ----
+  function onKey(e: KeyboardEvent) {
+    const el = e.target as HTMLElement | null;
+    if (el && (el.closest('input, textarea, select, [contenteditable]') || document.querySelector('dialog[open]'))) return;
+    if (e.altKey || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() !== 'z')) return;
+    const k = e.key;
+    const done = () => e.preventDefault();
+    if (k === '1' || k === '2' || k === '3') { vm.tapRow(Number(k) - 1); return done(); }
+    if (k.toLowerCase() === 's') { vm.sortBySuit = !vm.sortBySuit; return done(); }
+    if (k.toLowerCase() === 'z') { vm.undo(); return done(); }
+    if (k === 'Delete' || k === 'Backspace') { vm.clearRows(); return done(); }
+    if (k === 'Escape' && (vm.selected.size > 0 || vm.armed !== null)) { vm.selected = new Set(); vm.armed = null; return done(); }
+    if (k === '?') { help = true; return done(); }
+    if (k === 'Enter' && canConfirm) { onconfirm(); return done(); }
+    if (k === 'ArrowLeft' || k === 'ArrowRight') {
+      const cards = [...document.querySelectorAll<HTMLElement>('.tray [data-card]')];
+      if (cards.length === 0) return;
+      const i = cards.indexOf(document.activeElement as HTMLElement);
+      const next = i < 0 ? (k === 'ArrowRight' ? 0 : cards.length - 1) : Math.max(0, Math.min(cards.length - 1, i + (k === 'ArrowRight' ? 1 : -1)));
+      cards[next].focus();
+      return done();
+    }
+  }
+
   const rowNames = $derived(ta('row_names'));
   const sortOptions = $derived<[boolean, string][]>([[false, t('sort_rank')], [true, t('sort_suit')]]);
   const canConfirm = $derived(!busy && vm.rowsEval?.valid === true);
@@ -171,8 +250,11 @@
   {@const st = rowState(r)}
   {@const ev = vm.rowsEval}
   {@const category = vm.rows[r].length === ROW_SIZES[r] && ev ? ev.categories[r] : 0}
+  {@const dragging = drag?.cards ?? null}
   <div
-    class="slot-row" class:target={st.target} class:above role="button" tabindex="0" data-row={r}
+    class="slot-row" class:target={dragging ? drag?.target === r && fits(r, dragging) : st.target} class:above
+    class:refuse={!!dragging && drag?.target === r && !fits(r, dragging)} class:can={vm.selected.size > 0 && st.target}
+    role="button" tabindex="0" data-row={r}
     aria-label="{rowNames[r]} {st.text}" style:padding="{ROW_PAD}px"
     onclick={(e) => rowClick(e, r)} onkeydown={(e) => rowKey(e, r)}
     onpointerdown={(e) => rowDown(e, r)} onpointerup={rowUp} onpointerleave={rowUp} onpointercancel={rowUp}
@@ -186,14 +268,14 @@
         {/if}
       </div>
     {:else}
-      <div class="row-label" style:width={wide ? `${labelWidth}px` : null} class:fill={!wide}>
+      <div class="row-label" style:width={bare ? `${DESK_LABEL}px` : wide ? `${labelWidth}px` : null} class:fill={!wide}>
         <span class="title-medium bold nowrap">{rowNames[r]}</span>
         <span class="state body-small" class:hl={st.target} class:dimmed={st.dim}>{st.text}</span>
       </div>
     {/if}
-    <div class="row-cards" style:gap="{CARD_GAP}px" style:width={!wide && !above ? `${card * 5 + CARD_GAP * 4}px` : null}>
+    <div class="row-cards" style:gap="{CARD_GAP}px" style:width={bare || (!wide && !above) ? `${card * 5 + CARD_GAP * 4}px` : null}>
       {#each rowLayout(vm.rows[r], category) as p (p.card)}
-        <Card card={p.card} width={card} tint={p.tint} light={p.light} lift={false} onclick={() => clickPlaced(p.card)} />
+        <Card card={p.card} width={card} tint={p.tint} light={p.light} lift={false} faded={!!drag?.cards?.includes(p.card)} onclick={() => clickPlaced(p.card)} />
       {/each}
       {#each Array(ROW_SIZES[r] - vm.rows[r].length) as _, i (i)}
         <div class="empty" style:width="{card}px" style:height="{card * 1.4}px" style:border-radius="{card * 0.14}px"></div>
@@ -216,7 +298,7 @@
       <div class="hand-line">
         {#each line as c, i (c)}
           {#if i > 0}<span style:width="{single && !suitLines && vm.sortBySuit && suit(line[i - 1]) !== suit(c) ? SUIT_GAP : HAND_GAP}px" class="gap"></span>{/if}
-          <Card card={c} width={card} tint={SAME_RANK_CATEGORY[counts.get(rank(c)) ?? 0]} light selected={vm.selected.has(c)} onclick={() => clickCard(c)} />
+          <Card card={c} width={card} tint={SAME_RANK_CATEGORY[counts.get(rank(c)) ?? 0]} light selected={vm.selected.has(c)} faded={!!drag?.cards?.includes(c)} onclick={() => clickCard(c)} />
         {/each}
       </div>
     {/each}
@@ -229,9 +311,16 @@
   </div>
 {/snippet}
 
+<svelte:window onkeydown={onKey} />
+
 <div class="area" bind:clientWidth={areaW} bind:clientHeight={areaH}>
   {#if areaW > 0}
-    {#if wide}
+    {#if bare}
+      <div class="felt desk-felt" class:dropping={drag?.cards && drag.from === 'rows' && drag.target === null}>
+        <div class="desk-rows">{@render rowsStack()}</div>
+        {@render tray()}
+      </div>
+    {:else if wide}
       <div class="felt wide-felt" style:margin="0 12px 6px 8px" style:padding="6px">
         <div class="wide-top" style:gap="{ROWS_GAP}px">
           {@render rowsStack()}
@@ -265,7 +354,16 @@
   {/if}
 </div>
 
-{#if help}
+{#if drag?.cards}
+  <!-- The dragged cards, under the pointer. -->
+  <div class="ghost" style:left="{drag.x - card / 2}px" style:top="{drag.y - card * 0.7}px">
+    {#each drag.cards as c, i (c)}
+      <div style:margin-left={i > 0 ? `${-card * 0.62}px` : null}><Card card={c} width={card} light /></div>
+    {/each}
+  </div>
+{/if}
+
+{#if help && !bare}
   <Dialog title={t('arrange_help_title')} onclose={() => (help = false)}>
     <p class="body-large help-text">{t('arrange_help')}</p>
     {#snippet actions()}<button class="btn text" onclick={() => (help = false)}>{t('ok')}</button>{/snippet}
@@ -315,4 +413,15 @@
   .sort { flex: none; height: 46px; padding: 0 10px; gap: 4px; }
   .go { flex: 1; min-width: 0; }
   .help-text { white-space: pre-line; margin: 0; }
+  .desk-felt { flex: 1; min-height: 0; margin: 0 12px 12px; padding: 16px; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 28px; }
+  .desk-felt.dropping .tray { outline: 2.5px dashed var(--highlight); outline-offset: 4px; border-radius: 10px; }
+  .desk-rows { display: flex; justify-content: center; }
+  .slot-row.refuse { outline: 2.5px dashed var(--felt-bad); outline-offset: -2.5px; }
+  .ghost { position: fixed; z-index: 50; pointer-events: none; display: flex; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35)); }
+  @media (hover: hover) {
+    .tray :global(button.card:not(.selected):hover) { transform: translateY(-4px); box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25); }
+    .rows :global(button.card:hover) { filter: brightness(0.94); }
+    .slot-row.can:hover { outline-style: solid; }
+  }
 </style>

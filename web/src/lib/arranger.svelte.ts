@@ -62,17 +62,29 @@ export class Arranger {
 
   /** Puts the selected cards into a row, then fills the last open row if the cards left fit it exactly. */
   placeInto(row: number) {
-    const free = ROW_SIZES[row] - this.rows[row].length;
     if (this.selected.size === 0) return;
-    if (this.selected.size > free) return this.onError(this.rowRoom(row, free));
-    let next = this.rows.map((cards, r) => (r === row ? [...cards, ...[...this.selected].sort((a, b) => b - a)] : cards));
+    this.move([...this.selected], row);
+  }
+
+  /**
+   * Moves cards (from the hand or from rows) into a row, or back to the hand (`row` null): what dragging them does.
+   * Into a row, the last open row is filled too if the cards left fit it exactly.
+   */
+  move(cards: number[], row: number | null) {
+    let next = this.rows.map((r) => r.filter((c) => !cards.includes(c)));
+    if (row !== null) {
+      const free = ROW_SIZES[row] - next[row].length;
+      if (cards.length > free) return this.onError(this.rowRoom(row, free));
+      next = next.map((r, i) => (i === row ? [...r, ...[...cards].sort((a, b) => b - a)] : r));
+      const left = this.hand.filter((c) => !next.some((r) => r.includes(c)));
+      const open = [0, 1, 2].filter((r) => next[r].length < ROW_SIZES[r]);
+      if (open.length === 1 && left.length === ROW_SIZES[open[0]] - next[open[0]].length)
+        next = next.map((r, i) => (i === open[0] ? [...r, ...left] : r));
+    }
     this.selected = new Set();
     this.armed = null;
+    if (next.every((r, i) => r.length === this.rows[i].length && r.every((c, k) => c === this.rows[i][k]))) return;
     this.save();
-    const left = this.hand.filter((c) => !next.some((r) => r.includes(c)));
-    const open = [0, 1, 2].filter((r) => next[r].length < ROW_SIZES[r]);
-    if (open.length === 1 && left.length === ROW_SIZES[open[0]] - next[open[0]].length)
-      next = next.map((cards, r) => (r === open[0] ? [...cards, ...left] : cards));
     this.update(next);
   }
 

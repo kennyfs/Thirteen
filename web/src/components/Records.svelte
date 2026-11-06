@@ -59,10 +59,7 @@
   }
 </script>
 
-<div class="page">
-  <TitleBar title={t('records_title')} />
-  <div class="scroll">
-    <div class="readable">
+{#snippet chart()}
       <div class="section-header">{t('chart_title')}</div>
       <div class="pad">
         {#if list.length === 0}
@@ -79,6 +76,8 @@
         {/if}
       </div>
 
+{/snippet}
+{#snippet records()}
       {#if practice.length}
         <div class="section-header">{t('records_list')}</div>
         <div class="pad">
@@ -87,12 +86,16 @@
         </div>
       {/if}
 
+{/snippet}
+{#snippet favorites()}
       <div class="section-header">{t('favorites_title')}</div>
       <div class="pad">
         {#if saved.length === 0}<p class="body-large dim">{t('favorites_empty')}</p>
         {:else}<RecordList recs={saved} {app} onpick={(r) => (acting = r)} />{/if}
       </div>
 
+{/snippet}
+{#snippet share()}
       <div class="section-header">{t('records_share_title')}</div>
       <div class="pad col">
         <p class="body-large">{t('records_info')}</p>
@@ -103,8 +106,21 @@
         <button class="btn text dim" onclick={() => (confirmReset = true)}>{t('reset_scores_short')}</button>
         {#if recs.length}<button class="btn text bad" onclick={() => (confirmClear = true)}>{t('clear_records')}</button>{/if}
       </div>
+{/snippet}
+
+<div class="page">
+  <TitleBar title={t('records_title')} />
+  {#if ui.desk}
+    <!-- A computer's: the chart, the saved hands and the file at the left, the records at the right, each scrolled on its own. -->
+    <div class="desk">
+      <div class="scroll">{@render chart()}{@render favorites()}{@render share()}</div>
+      <div class="scroll">{#if practice.length}{@render records()}{:else}<div class="section-header">{t('records_list')}</div><p class="pad body-large dim">{t('records_none')}</p>{/if}</div>
     </div>
-  </div>
+  {:else}
+    <div class="scroll">
+      <div class="readable">{@render chart()}{@render records()}{@render favorites()}{@render share()}</div>
+    </div>
+  {/if}
 </div>
 
 {#if acting}
@@ -139,6 +155,8 @@
   .page { height: 100%; display: flex; flex-direction: column; min-height: 0; }
   .scroll { flex: 1; overflow: auto; padding-bottom: 24px; }
   .readable { max-width: 840px; margin: 0 auto; }
+  .desk { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(360px, 1fr) minmax(0, 1.3fr); gap: 8px; padding: 0 8px; }
+  .desk .scroll { min-height: 0; }
   .pad { padding: 0 16px; }
   .col { display: flex; flex-direction: column; gap: 12px; }
   .col p, .pad > p { margin: 0; }

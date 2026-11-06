@@ -77,3 +77,29 @@ export function cardSizes(w: number, h: number, u: number): CardSizes {
   const record = w >= 560 + PAGE_PAD * 2 ? lineCard(w - PAGE_PAD * 2) : down(((w - PAGE_PAD * 2 - 12) / 2 - 8 - LINE_GAP * 4) / 5);
   return { play, other: Math.max(14, other), record: Math.max(14, Math.min(record, MAX_RECORD)) };
 }
+
+// ---- A computer's window: the practice page has a side panel (its header, the scores and the buttons), the table
+// the rest: the rows one above another in the middle, the hand in a line under them. ----
+
+/** The side panel's width. */
+export const ASIDE = 320;
+/** The largest card on a computer: a mouse needs no more, and a big screen should not show huge ones. */
+export const MAX_DESK = 104;
+export const DESK_LABEL = 76;
+
+/** The card for the table on a computer: an area `w` x `h` (beside the side panel). */
+export function deskFit(w: number, h: number): number {
+  const innerW = w - 24 - 32;
+  const innerH = h - 12 - 32;
+  const byHand = (innerW - HAND_GAP * 12 - (SUIT_GAP - HAND_GAP) * 3) / 13;
+  const byRows = (innerW - DESK_LABEL - 8 - ROW_PAD * 2 - CARD_GAP * 4) / 5;
+  // Three rows (padded), their gaps, the gap above the hand, the hand and a picked card's lift.
+  const byHeight = (innerH - ROW_PAD * 6 - 8 * 2 - 28) / (1.4 * 4 + 0.22);
+  return Math.max(24, down(Math.min(byHand, byRows, byHeight, MAX_DESK)));
+}
+
+/** The sizes on a computer, for the window area `w` x `h`: the practice page's table is beside its side panel. */
+export function deskCardSizes(w: number, h: number, u: number): CardSizes {
+  const s = cardSizes(w - ASIDE, h, u);
+  return { ...s, play: deskFit(w - ASIDE, h) };
+}
