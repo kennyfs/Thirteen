@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -651,8 +652,12 @@ private fun Finished(vm: AppViewModel, arrangements: List<Rows>, score: Score) {
           ResultActions(vm, compact = true)
         }
       }
-      Felt(Modifier.weight(1f).fillMaxWidth().padding(start = 8.dp, end = 12.dp, bottom = if (wide) 6.dp else 0.dp)) {
-        SeatResults(arrangements, score, vm.gameValues["wheel"]?.toInt() ?: 0, names, notes, vm.session.second, Modifier.padding(if (wide) 6.dp else 8.dp))
+      // Narrow: the felt and the players close to the edges, for larger cards.
+      Felt(Modifier.weight(1f).fillMaxWidth().padding(start = if (wide) 8.dp else 4.dp, end = if (wide) 12.dp else 4.dp, bottom = if (wide) 6.dp else 0.dp)) {
+        SeatResults(
+          arrangements, score, vm.gameValues["wheel"]?.toInt() ?: 0, names, notes, vm.session.second,
+          Modifier.padding(if (wide) PaddingValues(6.dp) else PaddingValues(horizontal = 2.dp, vertical = 4.dp)),
+        )
       }
       if (!wide) Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) { HandKeepers(vm, iconsOnly = false) }
@@ -730,14 +735,47 @@ private val ARROWS_WIDTH = 56.dp
 private val SEAT_GAP = 4.dp
 private val COLUMN_GAP = 10.dp
 private val SMALL_GAP = 3.dp
+/** The narrow result's blocks: their padding, and the gaps between their rows and between the cards side by side. */
+private val GRID_PAD = 6.dp
+private val GRID_COLUMN_GAP = 6.dp
+private val GRID_CARD_GAP = 1.dp
+
+/**
+ * A row's hand name in the narrow result: plain for the player's own rows; against another's, on the color of the
+ * player's result there (as [RowMark]'s), which the screen reader says.
+ */
+@Composable
+private fun RowName(name: String, d: Int?, valid: Boolean) {
+  val t = LocalTable.current
+  val style = MaterialTheme.typography.labelSmall
+  if (d == null || !valid) {
+    Text(name, style = style, maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (valid) t.onFeltDim else t.bad)
+    return
+  }
+  val (container, content) = when {
+    d > 0 -> WIN_CONTAINER to WIN_CONTENT
+    d < 0 -> LOSE_CONTAINER to LOSE_CONTENT
+    else -> t.onFelt.copy(alpha = 0.18f) to t.onFelt
+  }
+  val said = stringResource(if (d > 0) R.string.row_win else if (d < 0) R.string.row_lose else R.string.row_tie)
+  Text(
+    name, Modifier.clip(RoundedCornerShape(5.dp)).background(container).padding(horizontal = 4.dp).semantics { contentDescription = "$name, $said" },
+    style = style, color = content, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+  )
+}
+
+private val WIN_CONTAINER = Color(0xFFD6EFD8)
+private val WIN_CONTENT = Color(0xFF1E5E22)
+private val LOSE_CONTAINER = Color(0xFFF8D9D6)
+private val LOSE_CONTENT = Color(0xFF8C1D18)
 
 /** A row's result for the player against another's: "You win", "You lose", "Tie". */
 @Composable
 private fun RowMark(d: Int, small: Boolean = false) {
   val t = LocalTable.current
   when {
-    d > 0 -> Badge(stringResource(R.string.row_win), Color(0xFFD6EFD8), Color(0xFF1E5E22), small = small)
-    d < 0 -> Badge(stringResource(R.string.row_lose), Color(0xFFF8D9D6), Color(0xFF8C1D18), small = small)
+    d > 0 -> Badge(stringResource(R.string.row_win), WIN_CONTAINER, WIN_CONTENT, small = small)
+    d < 0 -> Badge(stringResource(R.string.row_lose), LOSE_CONTAINER, LOSE_CONTENT, small = small)
     else -> Badge(stringResource(R.string.row_tie), t.onFelt.copy(alpha = 0.18f), t.onFelt, small = small)
   }
 }
@@ -891,11 +929,13 @@ private fun SeatGrid(
 ) {
   val t = LocalTable.current
   val texts = rowTexts(score, wheel)
-  val sideCard = ((width - 20.dp - COLUMN_GAP * 2 - LINE_GAP * 10 - 12.dp) / 13).coerceAtMost(LocalCardSizes.current.other)
+  // Side by side, the cards fill the width: the block's padding, the gaps between the rows and between the cards, and
+  // each row's 2 dp of border room; larger than `other`, as there is nothing beside them here.
+  val sideCard = ((width - GRID_PAD * 2 - GRID_COLUMN_GAP * 2 - GRID_CARD_GAP * 10 - 2.dp * 3) / 13).coerceAtMost(MAX_OTHER)
   // The three rows side by side when the cards are not too small and the front's three are as wide as its name ("散牌 Q").
-  val sideBySide = sideCard >= 20.dp && rowWidth(3, sideCard, LINE_GAP) >= textRoom(48)
+  val sideBySide = sideCard >= 20.dp && rowWidth(3, sideCard, GRID_CARD_GAP) >= textRoom(48)
   val labelWidth = maxOf(72.dp, textRoom(13) * 5.5f)
-  val stackCard = ((width - 20.dp - labelWidth - 8.dp - SMALL_GAP * 4) / 5).coerceIn(16.dp, LocalCardSizes.current.play)
+  val stackCard = ((width - GRID_PAD * 2 - labelWidth - 8.dp - SMALL_GAP * 4) / 5).coerceIn(16.dp, LocalCardSizes.current.play)
   val scoop = stringArrayResource(R.array.prob_names)[0]
   var expandedSeat by rememberSaveable { mutableStateOf<Int?>(null) }
   Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -911,7 +951,7 @@ private fun SeatGrid(
           .clickable {
             // With `onSeat` a tap is for it (an analysis); else it shows the rows one above another.
             if (onSeat != null) onSeat(s) else if (sideBySide) expandedSeat = if (expandedSeat == s) null else s
-          }.padding(horizontal = 10.dp, vertical = 6.dp),
+          }.padding(horizontal = GRID_PAD, vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(3.dp),
       ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -932,22 +972,16 @@ private fun SeatGrid(
           Text(signed(x), style = MaterialTheme.typography.headlineSmall, color = if (x > 0) t.good else if (x < 0) t.bad else t.onFelt)
         }
         if (sideBySide && !expanded) {
-          // Each row as wide as its cards: the hand's name, and the result against the player's under it when both do
-          // not fit on one line. The three labels from the top and the cards along the bottom, whichever label wraps.
-          Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(COLUMN_GAP)) {
+          // Each row as wide as its cards, its hand's name over it; against another player, the name on the color of
+          // the player's result there (won, lost, tied), so it stays one line even over the front's three cards.
+          Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(GRID_COLUMN_GAP)) {
             for (r in 0 until 3) {
-              Column(Modifier.width(rowWidth(Cards.ROW_SIZES[r], sideCard, LINE_GAP) + 2.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalArrangement = Arrangement.spacedBy(2.dp), itemVerticalAlignment = Alignment.CenterVertically) {
-                  Text(
-                    texts[s][r].first, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    color = if (info.valid) t.onFeltDim else t.bad,
-                  )
-                  texts[s][r].second?.let { RowMark(it, small = true) }
-                }
+              Column(Modifier.width(rowWidth(Cards.ROW_SIZES[r], sideCard, GRID_CARD_GAP) + 2.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                RowName(texts[s][r].first, texts[s][r].second, info.valid)
                 Spacer(Modifier.weight(1f))
                 val bonus = info.royalties[r] > 0
                 Box(if (bonus) Modifier.border(2.dp, t.highlight, RoundedCornerShape(5.dp)).padding(1.dp) else Modifier.padding(1.dp)) {
-                  RowCards(arrangements[s][r], if (info.valid) info.categories[r] else 0, sideCard, LINE_GAP)
+                  RowCards(arrangements[s][r], if (info.valid) info.categories[r] else 0, sideCard, GRID_CARD_GAP)
                 }
               }
             }

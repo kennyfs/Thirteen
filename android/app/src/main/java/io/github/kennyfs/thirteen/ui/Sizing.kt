@@ -28,7 +28,7 @@ val LINE_GROUP_GAP = 8.dp
 val PAGE_PAD = 16.dp
 /** The height of the result page's header on a wide window. */
 val RESULT_HEADER = 48.dp
-private val MAX_OTHER = 56.dp
+val MAX_OTHER = 56.dp
 private val MAX_RECORD = 64.dp
 private val MAX_PLAY = 100.dp
 
