@@ -789,10 +789,14 @@ fun SeatResults(
     val seats = arrangements.size
     val nameWidth = textRoom(92)
     // On a wide window the players' lines, as many as there are players, fill the height: their cards as large as the
-    // height and the width allow (each line's padding, its labels' line, and each row's border room of 2 at each side).
-    val byHeight = ((maxHeight - SEAT_GAP * (seats - 1)) / seats - textRoom(18) - 10.dp) / 1.4f
+    // height and the width allow. Each line: its padding (2 above and under), its labels' line (as measured: with a
+    // badge, a CJK line is taller than the style's line height; until then a guess), 2 under it, and each row's border
+    // room of 2 above and under.
+    var labelLine by remember { mutableStateOf<Dp?>(null) }
+    val byHeight = ((maxHeight - SEAT_GAP * (seats - 1)) / seats - (labelLine ?: textRoom(22)) - 10.dp) / 1.4f
     val lineCard = minOf((maxWidth - nameWidth - ARROWS_WIDTH - 16.dp - COLUMN_GAP * 3 - SMALL_GAP * 10 - 12.dp) / 13, byHeight, MAX_PLAY)
-    if (maxWidth > maxHeight) SeatLines(arrangements, score, wheel, names, notes, totals, lineCard.coerceAtLeast(14.dp), nameWidth, onSeat)
+    if (maxWidth > maxHeight)
+      SeatLines(arrangements, score, wheel, names, notes, totals, lineCard.coerceAtLeast(14.dp), nameWidth, onSeat) { h -> if (h > (labelLine ?: 0.dp)) labelLine = h }
     else SeatGrid(arrangements, score, wheel, names, notes, totals, maxWidth, onSeat)
   }
 }
@@ -827,13 +831,14 @@ private fun seatSub(s: Int, score: Score, totals: List<Double>): String {
 @Composable
 private fun SeatLines(
   arrangements: List<Rows>, score: Score, wheel: Int, names: List<String>, notes: List<String?>, totals: List<Double>, card: Dp,
-  nameWidth: Dp, onSeat: ((Int) -> Unit)?,
+  nameWidth: Dp, onSeat: ((Int) -> Unit)?, onLabelLine: (Dp) -> Unit = {},
 ) {
   val t = LocalTable.current
   val seats = arrangements.size
   val texts = rowTexts(score, wheel)
   val density = LocalDensity.current
-  var seatHeight by remember { mutableStateOf(0.dp) }
+  // The tallest line, which all take; anew when the cards change size.
+  var seatHeight by remember(card) { mutableStateOf(0.dp) }
   Row(Modifier.verticalScroll(rememberScrollState())) {
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(SEAT_GAP)) {
       for (s in 0 until seats) {
@@ -851,7 +856,10 @@ private fun SeatLines(
           SeatName(s, names, notes, score, totals, Modifier.width(nameWidth), compact = true)
           for (r in 0 until 3) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-              Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+              Row(
+                Modifier.onGloballyPositioned { with(density) { onLabelLine(it.size.height.toDp()) } },
+                horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically,
+              ) {
                 Text(
                   texts[s][r].first, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false,
                   color = if (info.valid) t.onFeltDim else t.bad,
