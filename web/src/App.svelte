@@ -19,8 +19,10 @@
   const app = new App();
   // For the page's screenshot script (scripts/shots.py): the state and the engine, only when asked.
   if (new URLSearchParams(location.search).has('test')) Object.assign(window, { thirteen: { app, engine } });
-  const tabs: [Screen, string, IconName][] = [
-    ['PLAY', 'nav_play', 'cards'], ['ANALYZE', 'nav_analyze', 'analytics'], ['RECORDS', 'nav_records', 'history'], ['SETTINGS', 'nav_settings', 'settings'],
+  // As the app's: an outlined icon, filled when the screen is shown.
+  const tabs: [Screen, string, IconName, IconName][] = [
+    ['PLAY', 'nav_play', 'styleOutlined', 'style'], ['ANALYZE', 'nav_analyze', 'insightsOutlined', 'insights'],
+    ['RECORDS', 'nav_records', 'historyOutlined', 'historyFilled'], ['SETTINGS', 'nav_settings', 'settingsOutlined', 'settingsFilled'],
   ];
   let systemDark = $state(matchMedia('(prefers-color-scheme: dark)').matches);
   const dark = $derived(app.darkMode === 'DARK' || (app.darkMode === 'SYSTEM' && systemDark));
@@ -75,9 +77,9 @@
 
 <div class="shell" class:wide={ui.wide}>
   <nav aria-label={t('app_name')}>
-    {#each tabs as [s, label, icon] (s)}
+    {#each tabs as [s, label, icon, chosen] (s)}
       <button class:on={app.screen === s} aria-current={app.screen === s ? 'page' : undefined} onclick={() => go(s)}>
-        <span class="pill"><Icon name={icon} /></span><span class="label">{t(label)}</span>
+        <span class="pill"><Icon name={app.screen === s ? chosen : icon} /></span><span class="label">{t(label)}</span>
       </button>
     {/each}
   </nav>
