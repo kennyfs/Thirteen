@@ -40,11 +40,12 @@ COPY android/app/build.gradle.kts /build.gradle.kts
 RUN sed -n 's/^val ortVersion = "\(.*\)"/\1/p' /build.gradle.kts > /ort-version && test -s /ort-version
 
 # The app's reduced ONNX Runtime (its operators, android/ort-ops.config) as a WebAssembly static library, in the
-# emsdk's own image. Several GB of source and build, removed in the same layer.
+# emsdk's own image. Several GB of source and build, removed in the same layer. build.py reads the operator list
+# with the flatbuffers module.
 FROM emscripten/emsdk:6.0.13 AS web-ort
 RUN apt-get update && apt-get install -y --no-install-recommends git ninja-build python3-venv \
   && rm -rf /var/lib/apt/lists/* \
-  && python3 -m venv /opt/tools && /opt/tools/bin/pip install --no-cache-dir cmake==4.4.4
+  && python3 -m venv /opt/tools && /opt/tools/bin/pip install --no-cache-dir cmake==4.4.4 flatbuffers==25.12.19
 ENV PATH=/opt/tools/bin:$PATH
 WORKDIR /src
 COPY --from=ort-version /ort-version /ort-version
