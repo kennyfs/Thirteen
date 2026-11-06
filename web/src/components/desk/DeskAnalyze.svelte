@@ -19,6 +19,7 @@
   import TitleBar from '../TitleBar.svelte';
   import DeskCandidates from './DeskCandidates.svelte';
   import Kbd from './Kbd.svelte';
+  import KeyHint from './KeyHint.svelte';
 
   let { app, onrules }: { app: App; onrules: () => void } = $props();
   let pickRecord = $state(false);
@@ -81,7 +82,7 @@
   {#if candidates && app.analysis}
     <TitleBar title={t('candidates')} onback={() => nav.back()}>
       <div class="hand">{#each [...app.analysis.cands[0].arrangement.flat()].sort((a, b) => b - a) as c (c)}<Card card={c} width={30} />{/each}</div>
-      <span class="body-small dim keys"><Kbd k="Esc" />{t('k_back')}</span>
+      {#if ui.showKeys}<span class="body-small dim keys"><Kbd k="Esc" />{t('k_back')}</span>{/if}
       <button class="btn icon text" aria-label={t('info')} onclick={() => (info = true)}><Icon name="info" /></button>
     </TitleBar>
     <DeskCandidates a={app.analysis} mine={app.anaMine} legacyNote={resultLegacy} />
@@ -130,10 +131,13 @@
       {/each}
     </div>
     <div class="keyline body-small dim">
+      <KeyHint />
+      {#if ui.showKeys}
       <span><Kbd k="←" /><Kbd k="→" /><Kbd k="↑" /><Kbd k="↓" /><Kbd k="Space" /> {t('k_deck')}</span>
       <span><Kbd k="R" /> {t('k_random')}</span>
       <span><Kbd k="Del" /> {t('k_clear')}</span>
       <span><Kbd k="Enter" /> {t('k_start')}</span>
+      {/if}
     </div>
   {/if}
 </div>

@@ -87,11 +87,21 @@
     then?.();
   }
   const openTutorial = () => nav.open('tutorial', 'PLAY');
+  // A computer's ?: its pages' keys shown or put away (ui.showKeys), wherever the page is.
+  function onKey(e: KeyboardEvent) {
+    if (!ui.desk || e.key !== '?' || e.ctrlKey || e.metaKey || e.altKey || tour.on) return;
+    const el = e.target as HTMLElement | null;
+    if (el?.closest('input, textarea, select, [contenteditable]') || document.querySelector('dialog[open]')) return;
+    ui.showKeys = !ui.showKeys;
+    e.preventDefault();
+  }
   // In a room the other screens are out of reach, as in the app: no bar or rail, and the battle shown (after a reload too).
   const immersive = $derived(app.battle.immersive);
   $effect(() => { if (immersive && app.screen !== 'BATTLE') nav.go('BATTLE'); });
   $effect(() => { void immersive; tick().then(() => measure(TEXT_SCALE[app.textSize])); });
 </script>
+
+<svelte:window onkeydown={onKey} />
 
 <div class="shell" class:wide={ui.wide}>
   <nav aria-label={t('app_name')} hidden={immersive}>

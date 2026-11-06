@@ -10,7 +10,7 @@
   import { t, ta, td } from '../../lib/i18n.svelte';
   import { nav } from '../../lib/nav.svelte';
   import { MAX_DESK_PLAY } from '../../lib/sizing';
-  import { signed } from '../../lib/ui.svelte';
+  import { signed, ui } from '../../lib/ui.svelte';
   import Dialog from '../Dialog.svelte';
   import Icon from '../Icon.svelte';
   import SeatResults from '../SeatResults.svelte';
@@ -173,7 +173,7 @@
 {#if analysisPage}
   <div class="page">
     <TitleBar title={peek ? `${t('analyze_my_hand')} · ${t('last_hand')}` : t('analyze_my_hand')} onback={() => nav.back()}>
-      <span class="body-small dim keys"><Kbd k="Esc" />{t('k_back')}</span>
+      {#if ui.showKeys}<span class="body-small dim keys"><Kbd k="Esc" />{t('k_back')}</span>{/if}
       <button class="btn outlined" disabled={!f?.record} onclick={favorite}>
         <span class:star={saved}><Icon name={saved ? 'star' : 'starBorder'} /></span>{t(saved ? 'favorite_saved' : 'favorite_short')}<Kbd k="F" inline />
       </button>
@@ -221,7 +221,7 @@
         </div>
         <button class="btn filled big" data-tour="confirm" disabled={!canConfirm} onclick={() => app.confirm()}>{app.waiting ? '…' : t('confirm')}<Kbd k="Enter" inline /></button>
         <span class="grow"></span>
-        <KeyList keys={keyList(app.deskKeys)} mouse={t('mouse_tips')} />
+        <KeyList keys={keyList(app.deskKeys)} mouse={t('mouse_tips')} onhelp={() => (help = true)} />
       {:else}
         {@render onward()}
         {@render keepers()}

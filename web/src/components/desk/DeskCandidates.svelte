@@ -16,7 +16,7 @@
   import { remarkText } from '../../lib/remarks';
   import { notableQGap } from '../../lib/rules';
   import { CARD_GAP } from '../../lib/sizing';
-  import { fmtQ } from '../../lib/ui.svelte';
+  import { fmtQ, ui } from '../../lib/ui.svelte';
   import ThreeRows from '../ThreeRows.svelte';
   import ProbTiles from './ProbTiles.svelte';
   import DeskRows from './DeskRows.svelte';
@@ -164,7 +164,7 @@
         <div class="detail-head" bind:clientHeight={headH}>
           <span class="body-small dim">{rightAt !== null ? t('cmp_moved', label(leftAt).text) : ''}</span>
           <span class="grow"></span>
-          <span class="body-small dim keys"><Kbd k="↑" /><Kbd k="↓" />{t('k_move')}</span>
+          {#if ui.showKeys}<span class="body-small dim keys"><Kbd k="↑" /><Kbd k="↓" />{t('k_move')}</span>{/if}
         </div>
         <div class="pair" bind:clientHeight={pairH} bind:this={pairEl}>
           {@render column(leftAt, rightAt)}

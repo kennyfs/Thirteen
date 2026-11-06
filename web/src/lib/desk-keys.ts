@@ -66,7 +66,7 @@ export function keyList(k: DeskKeys): [string[], string][] {
   const m = keyMap(k);
   const rows: [string[], string] = [m.rowLabels, t('k_rows')];
   const back: [string[], string] = [['⇧', m.rowLabels.join(' ')], t('k_row_back')];
-  const tail: [string[], string][] = [[['Esc'], t('k_unpick')], [['L'], t('last_hand')], [['?'], t('k_help')]];
+  const tail: [string[], string][] = [[['Esc'], t('k_unpick')], [['L'], t('last_hand')], [['?'], t('k_hide_keys')]];
   if (m.cursor) return [rows, back, [['A', 'D'], t('k_cursor_move')], [['W'], t('k_cursor_on')], [['S'], t('k_cursor_off')], [[m.sortLabel], t('k_sort')], [[m.undoLabel], t('k_undo')], ...tail];
   const pick: [string[], string] = m.cards ? [[m.cardLabels![0], '…', m.cardLabels![12]], t('k_card_keys')] : [['←', '→', 'Space'], t('k_pick')];
   return [rows, back, pick, ...tail];

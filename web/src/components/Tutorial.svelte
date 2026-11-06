@@ -68,7 +68,7 @@
   const vm = new Arranger((m) => (app.error = m), (row, free) => t('row_room', ta('row_names')[row], free));
   let tryRules = $state('');
   let checking = $state(false);
-  let verdict = $state<{ a: Analysis; mine: Rows } | null>(null);
+  let verdict = $state<{ a: Analysis; mine: Rows; cats: number[] } | null>(null);
   const tryWheel = $derived(R.values(tryRules).wheel ?? 0);
 
   async function resetTry() {
@@ -85,7 +85,7 @@
     try {
       const mine = $state.snapshot(vm.rows) as Rows;
       const a = await engine.analyze([...TRY].sort((x, y) => x - y), tryRules, engine.BUILT_IN, [mine]);
-      verdict = { a, mine };
+      verdict = { a, mine, cats: ev.categories };
     } catch (e) {
       app.error = (e as Error).message;
     } finally {
@@ -150,7 +150,7 @@
       <p class="body-large">{t('tut_foul_text')}</p>
       {#if values.strict === 1}<p class="body-medium">{t('tut_foul_strict')}</p>{/if}
       <p class="title-small bad">{t('tut_foul_bad')}</p>
-      {@render threeRows(FOUL, [0, 0, 0], ui.desk ? 46 : 36)}
+      {@render threeRows(FOUL, [2, 1, 6], ui.desk ? 46 : 36)}
       <p class="title-small good">{t('tut_foul_good')}</p>
       {@render threeRows(FIXED, [1, 2, 6], ui.desk ? 46 : 36)}
     {:else if page === 3}
@@ -164,7 +164,7 @@
         <p class="title-medium" class:good={judged.good}>{judged.text}</p>
         {#if !judged.good}
           <p class="body-medium dim">{t('yours')}</p>
-          {@render threeRows(verdict.mine, [0, 0, 0], ui.desk ? 46 : 34)}
+          {@render threeRows(verdict.mine, verdict.cats, ui.desk ? 46 : 34)}
         {/if}
         <p class="body-medium dim">{t('tut_try_best_rows')}</p>
         {@render threeRows(judged.best.arrangement, judged.best.info.categories, ui.desk ? 46 : 34)}

@@ -223,7 +223,6 @@
     if (km.undo.includes(code)) { vm.undo(); return done(); }
     if (code === 'Delete' || (!km.cards && code === 'Backspace')) { vm.clearRows(); return done(); }
     if (e.key === 'Escape' && (vm.selected.size > 0 || vm.armed !== null || paint !== null)) { vm.selected = new Set(); vm.armed = null; paint = null; return done(); }
-    if (e.key === '?') { help = true; return done(); }
     if (e.key === 'Enter' && canConfirm && !(el?.closest('button'))) { onconfirm(); return done(); }
     const vertical = km.perLine < 13 && (e.key === 'ArrowUp' || e.key === 'ArrowDown');
     if (!km.cards && (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || vertical)) {
@@ -284,7 +283,7 @@
                   <span class="hold" ondblclick={() => doubleCard(c)} onclickcapture={(e) => (shift = e.shiftKey)}>
                     <Card card={c} width={card} tint={SAME_RANK_CATEGORY[counts.get(rank(c)) ?? 0]} light selected={vm.selected.has(c)} onclick={() => clickCard(c)} />
                   </span>
-                  {#if keyLabel}<span class="cardkey" class:on={vm.selected.has(c)} style:height="{below}px"><Kbd k={keyLabel} /></span>
+                  {#if keyLabel}<span class="cardkey" class:on={vm.selected.has(c)} style:height="{below}px"><Kbd k={keyLabel} always /></span>
                   {:else if km.cursor}
                     {@const here = li * km.perLine + i === cursor}
                     <span class="cursor" class:here class:painting={here && paint !== null} style:height="{below}px" style:width="{card}px"

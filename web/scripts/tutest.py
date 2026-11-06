@@ -199,6 +199,18 @@ with sync_playwright() as p:
     page.locator('.tutbar button.filled').click()
     page.wait_for_timeout(300)
 
+    # ?: the keys shown, then put away.
+    kbds = lambda: page.locator('kbd').count()
+    check('desk: only ? among the keys at first', kbds() == 1, kbds())
+    page.keyboard.press('?')
+    page.wait_for_timeout(200)
+    check('desk: ? shows the keys', kbds() > 10, kbds())
+    page.screenshot(path=str(out / 'desk-keys-shown.png'))
+    page.keyboard.press('?')
+    page.wait_for_timeout(200)
+    check('desk: ? again puts them away', kbds() == 1, kbds())
+    page.screenshot(path=str(out / 'desk-keys-hidden.png'))
+
     # L: the previous hand's result, its analysis, back.
     page.evaluate(FINISH)
     page.wait_for_function(f'{A}.result !== null', timeout=30000)

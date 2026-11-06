@@ -15,7 +15,7 @@
   import { clock, handClass as handClassOf, handValue, modeName, playerNotes, settingsLine, timedOut, timeText, totalText as totalTextOf } from '../../lib/battle-text';
   import * as R from '../../lib/rules';
   import { MAX_DESK_PLAY } from '../../lib/sizing';
-  import { localTime, signed } from '../../lib/ui.svelte';
+  import { localTime, signed, ui } from '../../lib/ui.svelte';
   import Dialog from '../Dialog.svelte';
   import Icon from '../Icon.svelte';
   import Menu from '../Menu.svelte';
@@ -354,7 +354,7 @@
         </div>
         <button class="btn filled big" disabled={!canSubmit} onclick={() => b.submit()}>{b.submitting ? '…' : t('battle_submit')}<Kbd k="Enter" inline /></button>
         <span class="grow"></span>
-        <KeyList keys={keyList(app.deskKeys)} mouse={t('mouse_tips')} />
+        <KeyList keys={keyList(app.deskKeys)} mouse={t('mouse_tips')} onhelp={() => (help = true)} />
       </aside>
     </div>
     {#if help}
@@ -439,7 +439,7 @@
     {#if o}
       <TitleBar title={t('battle_hand_of', o.index + 1, room.settings.hands)} onback={() => r.closeDetail()}>
         <span class="body-medium hl">{td('battle_tap_player')}</span>
-        <span class="body-small dim keys"><Kbd k="Esc" />{t('k_back')}</span>
+        {#if ui.showKeys}<span class="body-small dim keys"><Kbd k="Esc" />{t('k_back')}</span>{/if}
       </TitleBar>
       {@render handTable(o, (p) => r.openAnalysis(p))}
     {/if}
@@ -450,7 +450,7 @@
     {#if o && play}
       {@const name = room.players.find((p) => p.id === play.player)?.name ?? '?'}
       <TitleBar title={`${t('battle_hand_of', o.index + 1, room.settings.hands)} · ${name}`} onback={() => (r.fromReview ? r.closeDetail() : r.closeAnalysis())}>
-        <span class="body-small dim keys"><Kbd k="Esc" />{t('k_back')}</span>
+        {#if ui.showKeys}<span class="body-small dim keys"><Kbd k="Esc" />{t('k_back')}</span>{/if}
       </TitleBar>
       {#if r.detailAnalysis}
         <DeskCandidates a={r.detailAnalysis} mine={play.rows} tags={r.detailTags} mineLabel={play.player === r.me ? null : name} />
