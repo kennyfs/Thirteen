@@ -1,0 +1,98 @@
+/* The app's colors (ui/theme/Theme.kt): the brand's green, the felt, and their dark forms. Sizes in px stand for the
+   app's dp; text in rem follows the browser's font size and the page's own text size (--text-scale on <html>). */
+:root {
+  --primary: #1f6f54; --on-primary: #fff; --primary-container: #aeefd0; --on-primary-container: #002115;
+  --secondary-container: #cfe9d9; --on-secondary-container: #0a1f15;
+  --tertiary-container: #c1e8fb; --on-tertiary-container: #001f29;
+  --error: #ba1a1a; --error-container: #ffdad6; --on-error-container: #410002;
+  --surface: #f5fbf6; --on-surface: #171d1a; --on-surface-variant: #404943; --outline: #707973; --outline-variant: #bfc9c2;
+  --surface-container-low: #eff5f0; --surface-container: #e9efea; --surface-container-high: #e4eae5; --surface-container-highest: #dee4df;
+  --good: #2e7d32; --bad: #c62828;
+  --felt: #1f6f54; --slot: #27795c; --target: #2e8665; --on-felt: #eef7f2; --on-felt-dim: #b9d9c8; --highlight: #f0c058;
+  --felt-good: #a8e6b0; --felt-bad: #ffb4ab; --action: #eef7f2; --on-action: #1f6f54;
+  --card-face: #fff; --card-edge: #9e9e9e; --card-red: #c62828; --card-black: #1b1b1b;
+  /* The cards' tints by row category, as the app's tintColor. */
+  --tint-2: hsl(48 85% 74%); --tint-2-light: hsl(48 85% 90%);
+  --tint-3: hsl(26 85% 74%); --tint-3-light: hsl(26 85% 90%);
+  --tint-4: hsl(130 85% 74%); --tint-4-light: hsl(130 85% 90%);
+  --tint-5: hsl(185 85% 74%); --tint-5-light: hsl(185 85% 90%);
+  --tint-6: hsl(218 85% 74%); --tint-6-light: hsl(218 85% 90%);
+  --tint-7: hsl(268 85% 74%); --tint-7-light: hsl(268 85% 90%);
+  --tint-8: hsl(335 85% 74%); --tint-8-light: hsl(335 85% 90%);
+  --tint-9: hsl(0 85% 74%); --tint-9-light: hsl(0 85% 90%);
+  color-scheme: light;
+}
+:root.dark {
+  --primary: #8cd5b4; --on-primary: #003827; --primary-container: #00513a; --on-primary-container: #aeefd0;
+  --secondary-container: #354b40; --on-secondary-container: #cfe9d9;
+  --tertiary-container: #244c5b; --on-tertiary-container: #c1e8fb;
+  --error: #ffb4ab; --error-container: #93000a; --on-error-container: #ffdad6;
+  --surface: #0f1512; --on-surface: #dee4df; --on-surface-variant: #bfc9c2; --outline: #8a938c; --outline-variant: #404943;
+  --surface-container-low: #171d1a; --surface-container: #1b211e; --surface-container-high: #252b28; --surface-container-highest: #303633;
+  --good: #81c784; --bad: #ef9a9a;
+  --felt: #164f3d; --slot: #1d5c47; --target: #256a52; --on-felt: #e3f0e9; --on-felt-dim: #a3c4b3; --highlight: #e8b954;
+  --action: #e3f0e9; --on-action: #164f3d;
+  color-scheme: dark;
+}
+/* The minimal colors: the felt is the page; only in its dark theme are the cards dark. */
+:root.minimal { --felt: var(--surface); --slot: var(--surface-container); --target: var(--primary-container); --on-felt: var(--on-surface);
+  --on-felt-dim: var(--on-surface-variant); --highlight: var(--primary); --felt-good: var(--good); --felt-bad: var(--bad);
+  --action: var(--primary); --on-action: var(--on-primary); }
+:root.minimal.dark {
+  --tint-2: hsl(48 45% 38%); --tint-2-light: hsl(48 45% 28%);
+  --tint-3: hsl(26 45% 38%); --tint-3-light: hsl(26 45% 28%);
+  --tint-4: hsl(130 45% 38%); --tint-4-light: hsl(130 45% 28%);
+  --tint-5: hsl(185 45% 38%); --tint-5-light: hsl(185 45% 28%);
+  --tint-6: hsl(218 45% 38%); --tint-6-light: hsl(218 45% 28%);
+  --tint-7: hsl(268 45% 38%); --tint-7-light: hsl(268 45% 28%);
+  --tint-8: hsl(335 45% 38%); --tint-8-light: hsl(335 45% 28%);
+  --tint-9: hsl(0 45% 38%); --tint-9-light: hsl(0 45% 28%);
+  --card-face: #2b2f2d; --card-edge: #626865; --card-red: #ff8a80; --card-black: #f0f0f0; }
+
+* { box-sizing: border-box; }
+html { font-size: calc(100% * var(--text-scale, 1)); -webkit-text-size-adjust: 100%; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--surface); color: var(--on-surface);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  font-size: 1rem; line-height: 1.45; overscroll-behavior: none;
+}
+#app { height: 100%; }
+button { font: inherit; color: inherit; }
+
+/* Material's sizes, a little firmer (AppTypography). */
+.title-large { font-size: 1.25rem; line-height: 1.625rem; font-weight: 700; }
+.title-medium { font-size: 1rem; line-height: 1.375rem; font-weight: 500; }
+.title-small { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
+.headline-small { font-size: 1.375rem; line-height: 1.875rem; font-weight: 700; }
+.body-large { font-size: 1rem; line-height: 1.4375rem; }
+.body-medium { font-size: 0.875rem; line-height: 1.25rem; }
+.body-small { font-size: 0.8125rem; line-height: 1.125rem; }
+.label-large { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
+.label-small { font-size: 0.75rem; line-height: 1rem; font-weight: 500; }
+.dim { color: var(--on-surface-variant); }
+.good { color: var(--good); }
+.bad { color: var(--bad); }
+.bold { font-weight: 700; }
+.nowrap { white-space: nowrap; }
+.ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+/* Buttons as Material 3's. */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 16px;
+  border-radius: 20px; border: none; cursor: pointer; font-weight: 500; font-size: 0.875rem; white-space: nowrap; user-select: none; }
+.btn:disabled { cursor: default; opacity: 0.45; }
+.btn.filled { background: var(--primary); color: var(--on-primary); }
+.btn.tonal { background: var(--secondary-container); color: var(--on-secondary-container); }
+.btn.outlined { background: transparent; border: 1px solid var(--outline); color: var(--primary); }
+.btn.text { background: transparent; color: var(--primary); padding: 0 12px; }
+.btn.big { min-height: 56px; border-radius: 18px; font-size: 1rem; font-weight: 700; }
+.btn.icon { padding: 0; width: 46px; min-height: 46px; border-radius: 23px; }
+.btn:not(:disabled):hover { filter: brightness(1.06); }
+.btn:focus-visible, .chip:focus-visible, [role="button"]:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.icon-svg { width: 24px; height: 24px; flex: none; fill: currentColor; }
+
+.chip { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 10px 0 14px; border-radius: 10px;
+  border: 1px solid var(--outline); background: transparent; cursor: pointer; font-size: 0.875rem; font-weight: 500; }
+.badge { display: inline-block; padding: 1px 7px; border-radius: 8px; font-size: 0.8125rem; font-weight: 500; white-space: nowrap; }
+.section-header { padding: 16px 16px 6px; color: var(--primary); font-size: 0.875rem; font-weight: 500; }
+.felt { background: var(--felt); color: var(--on-felt); border-radius: 10px; }

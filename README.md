@@ -31,6 +31,7 @@ The players and tools follow the real rule that fouls are not allowed. The scori
 | `protocol/` | Battle rooms and their messages (Kotlin), shared by the server and the app. |
 | `server/` | The battle server (Kotlin, Ktor) and its Docker deployment. |
 | `android/` | The Android app: [android/README.md](android/README.md). |
+| `web/` | The web page (Svelte, the engine as WebAssembly): practice, analysis, records, settings; [web/README.md](web/README.md). |
 
 ## Building
 

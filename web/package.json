@@ -1,0 +1,24 @@
+{
+  "name": "thirteen-web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Thirteen (\u5341\u4e09\u5f35) in the browser: practice against the network and analyze hands, the engine as WebAssembly.",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "strings": "node scripts/strings.mjs",
+    "dev": "node scripts/strings.mjs && vite",
+    "build": "node scripts/strings.mjs && svelte-check && vite build",
+    "preview": "vite preview",
+    "check": "svelte-check",
+    "test": "node tests/engine-native.mjs public/engine/engine.js public/models/run2_net10.onnx"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "@tsconfig/svelte": "5.0.8",
+    "svelte": "5.57.3",
+    "svelte-check": "4.7.8",
+    "typescript": "6.0.3",
+    "vite": "8.3.6"
+  }
+}
