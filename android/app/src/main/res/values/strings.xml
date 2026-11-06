@@ -34,8 +34,8 @@
   <string name="reset_scores_short">Reset scores</string>
   <string name="delete">Delete</string>
   <string name="reset">Reset</string>
-  <string name="clear_records_confirm">Delete all %1$d recorded hands? Export first if you need them.</string>
-  <string name="reset_confirm">Reset the running scores and the hand count? Records are kept.</string>
+  <string name="clear_records_confirm">Delete all %1$d recorded hands? The running scores and the hand count start over too, with a new practice hand. Export first if you need them.</string>
+  <string name="reset_confirm">Reset the running scores and the hand count? Practice starts over with a new hand; records are kept.</string>
   <string name="mc_samples">Monte Carlo samples (opponents: indep)</string>
   <string name="networks">Networks</string>
   <string name="load_weights">Load .onnx weights</string>

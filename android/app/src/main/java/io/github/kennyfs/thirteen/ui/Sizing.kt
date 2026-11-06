@@ -52,11 +52,19 @@ fun ThreeRows(rows: List<List<Int>>, categories: List<Int>?, modifier: Modifier 
 
 val HAND_GAP = 4.dp
 val SUIT_GAP = 12.dp
+/** Between the hand's lines; the closer gap when the suits' lines fit only so. */
+val HAND_LINE_GAP = 6.dp
+val HAND_LINE_GAP_TIGHT = 2.dp
 val ROW_PAD = 6.dp
 /** Between the rows and the buttons of the wide page. */
 val ROWS_GAP = 10.dp
-/** Between the rows one above another of the wide page. */
+/** Between the rows one above another of the tall page with the labels beside. */
 val ROW_STACK_GAP = 6.dp
+/**
+ * The wide page's vertical gaps (between its rows, inside a row above and below the cards, around the felt's inside and
+ * above the hand): small, as the height is what limits its cards. A picked card's lift keeps its room.
+ */
+val WIDE_GAP = 2.dp
 /** The height of the wide page's buttons. */
 val BAR_HEIGHT = 44.dp
 
@@ -67,16 +75,17 @@ class ArrangeFit(val card: Dp, val above: Boolean, val perLine: Int)
 fun arrangeFit(areaW: Dp, areaH: Dp, wide: Boolean, u: Dp, maxCard: Dp = MAX_PLAY): ArrangeFit {
   fun room(sp: Int) = u * (sp / 14f)
   if (wide) {
-    // Felt padded 8 and 12 outside (6 under) and 6 inside. The three rows one above another, each with its name at its
-    // left, the buttons at their right, then the hand in a line of 13 as wide as the felt.
+    // Felt padded 8 and 12 outside (WIDE_GAP under) and 6 inside at the sides (WIDE_GAP above and under). The three rows
+    // one above another, each with its name at its left, the buttons at their right, then the hand in a line of 13 as
+    // wide as the felt.
     val w = areaW - 20.dp - 12.dp
-    val h = areaH - 6.dp - 12.dp
+    val h = areaH - WIDE_GAP * 3
     val labels = maxOf(72.dp, room(64)) + 8.dp
     val buttons = maxOf(200.dp, room(190))
     val byRowsWidth = (w - buttons - ROWS_GAP - labels - ROW_PAD * 2 - CARD_GAP * 4) / 5
     val byHandWidth = (w - HAND_GAP * 12 - (SUIT_GAP - HAND_GAP) * 3) / 13
     // The rows' padding and gaps, the gap above the hand; three rows' cards, then the hand's and a picked card's lift.
-    val fixed = ROW_PAD * 6 + ROW_STACK_GAP * 2 + 6.dp
+    val fixed = WIDE_GAP * 6 + WIDE_GAP * 2 + WIDE_GAP
     var byHeight = (h - fixed) / (1.4f * 4 + 0.22f)
     // A label taller than the card makes its row taller.
     val label = room(40) + 2.dp

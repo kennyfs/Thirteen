@@ -22,7 +22,8 @@ C++ (`cpp/`, through `cpp/command/guiengine.h` and JNI) with ONNX Runtime for An
   `rules`, the full rules spec as `thirteen record` writes it, and `result`, the player's score of the hand, which
   the fitting ignores. A record can be
   sent to Analyze. Export writes the file where you choose, Share hands it to the system's share sheet (Quick Share, a
-  drive, a chat); `thirteen humanfeatures -i FILE` reads it.
+  drive, a chat); `thirteen humanfeatures -i FILE` reads it. Resetting the scores, or clearing the records (which resets them too), deals practice a new hand, the
+  first.
 - **Rules**: a preset of `docs/rules.md` section 11 (family, family_mid2, taiwan, pagat), then any value changed.
   Strict rows and the ranking of A-2-3-4-5 change the play (which arrangements foul, how hands rank) and are kept
   apart from the points. A game takes the rules when it is dealt; the running scores start over when they change.

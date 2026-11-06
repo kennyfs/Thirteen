@@ -240,9 +240,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
   }
 
+  /** The totals and the hand count start over, and so does practice: a new hand, the first. */
   fun resetSession() {
     settings.resetSession()
     session = settings.session()
+    deal()
   }
 
   /** Analyzes a record's hand on the Analyze screen. */
@@ -289,10 +291,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     recordCount = records.count()
   }
 
+  /** Deletes the records and the battles; the totals and practice start over too ([resetSession]). */
   fun clearRecords() {
     records.clear()
     battles.clear()
     recordCount = 0
+    resetSession()
   }
 
   fun exportRecords(resolver: ContentResolver, uri: Uri) = launchCatching { records.exportTo(resolver, uri) }

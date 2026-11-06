@@ -34,8 +34,8 @@
   <string name="reset_scores_short">分數歸零</string>
   <string name="delete">刪除</string>
   <string name="reset">重設</string>
-  <string name="clear_records_confirm">刪除全部 %1$d 局紀錄？需要的話請先匯出。</string>
-  <string name="reset_confirm">重設累計分數與局數？紀錄會保留。</string>
+  <string name="clear_records_confirm">刪除全部 %1$d 局紀錄？累計分數與局數也會歸零，練習重新發牌。需要的話請先匯出。</string>
+  <string name="reset_confirm">重設累計分數與局數？練習會重新發牌，紀錄會保留。</string>
   <string name="mc_samples">蒙地卡羅樣本數（對手模型：indep）</string>
   <string name="networks">神經網路</string>
   <string name="load_weights">載入 .onnx 權重</string>

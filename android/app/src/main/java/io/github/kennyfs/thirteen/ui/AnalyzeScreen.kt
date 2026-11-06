@@ -511,8 +511,9 @@ private fun ProbTile(name: String, p: Double, tone: Int, diff: Double, modifier:
     )
   }
   Column(
+    // From the top: a line's tiles are one height, and their names and figures line up whichever have a difference.
     modifier.clip(RoundedCornerShape(8.dp)).background(colors.surfaceContainerHighest).padding(horizontal = 6.dp, vertical = 3.dp),
-    verticalArrangement = Arrangement.Center,
+    verticalArrangement = Arrangement.Top,
   ) {
     Text(name, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
     Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
