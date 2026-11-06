@@ -39,6 +39,8 @@ until [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 
 for s in window_animation_scale transition_animation_scale animator_duration_scale; do "$ADB" shell settings put global $s 0; done
 # ScreenshotTest waits for the app's light background.
 "$ADB" shell cmd uimode night no
+# The app is full screen when sideways: the system's one-time "Viewing full screen" hint would cover it.
+"$ADB" shell settings put secure immersive_mode_confirmations confirmed
 
 status=0
 if [ "${ALL:-0}" = 1 ]; then

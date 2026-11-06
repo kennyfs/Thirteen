@@ -8,7 +8,7 @@ screenshots (1920 x 1080) come from `STORE=1 ../device-tests.sh`, in `../build/s
 
 ## zh-TW
 
-**Title:** 十三支：AI 擺牌與連線對戰
+**Title:** 十三支：AI 分析與連線對戰
 
 **Short description:**
 
@@ -37,6 +37,7 @@ screenshots (1920 x 1080) come from `STORE=1 ../device-tests.sh`, in `../build/s
 • 對局紀錄存在手機上，可以匯出
 • 練習和分析完全在手機上離線運算
 • 沒有廣告、沒有內購、不需要帳號
+• 也有網頁版，電腦也能玩，還能和 app 的玩家連線對戰：https://thirteen.1li.tw
 • 開放原始碼（GPLv3）：https://github.com/kennyfs/Thirteen
 
 本 app 不涉及任何金錢或下注。
@@ -74,6 +75,7 @@ Also
 • Records stay on the phone and can be exported
 • Practice and analysis run offline, on the phone
 • No ads, no purchases, no account
+• Also in a browser, on a computer too, and in the same rooms as the app: https://thirteen.1li.tw
 • Open source (GPLv3): https://github.com/kennyfs/Thirteen
 
 No money or betting is involved.
