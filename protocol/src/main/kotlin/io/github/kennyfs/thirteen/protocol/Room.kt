@@ -42,8 +42,6 @@ class Room(
   private val onClosed: (Room) -> Unit,
   /** A room on a phone: its backup gets a Backup with each change, to carry on the room should the phone go away. */
   private val backups: Boolean = false,
-  /** Only clients checked by Play Integrity may join. */
-  val verified: Boolean = false,
   /** How many times the room has moved to another phone. */
   private val epoch: Int = 0,
 ) {
@@ -238,7 +236,7 @@ class Room(
           checkReady()
         }
       }
-      is Hello, is Create, is Join, is Resume, is Attest -> peer.send(Error(ErrorCode.NOT_ALLOWED))
+      is Hello, is Create, is Join, is Resume -> peer.send(Error(ErrorCode.NOT_ALLOWED))
     }
   }
 
@@ -388,7 +386,7 @@ class Room(
   private fun snapshot() = RoomSnapshot(
     id, pin, settings, rules, phase, hand, host, nextId,
     players.map { SnapshotPlayer(it.id, it.name, it.tokenHash, it.bot, it.left, it.total, it.ready, it.rows, it.timedOut) },
-    cards, remaining(), engineCalls, epoch + 1, verified,
+    cards, remaining(), engineCalls, epoch + 1,
   )
 
   /** Takes up a snapshot's state: the room carried on from another phone, which is gone (its player away). */
@@ -439,7 +437,7 @@ class Room(
     fun restore(
       s: RoomSnapshot, closed: List<HandOutcome>, engine: GameEngine, scope: CoroutineScope, random: SecureRandom, now: () -> Long,
       maxPlayers: Int, onClosed: (Room) -> Unit,
-    ): Room = Room(s.id, s.pin, s.settings, s.rules, engine, scope, random, now, maxPlayers, onClosed, backups = true, verified = s.verified, epoch = s.epoch)
+    ): Room = Room(s.id, s.pin, s.settings, s.rules, engine, scope, random, now, maxPlayers, onClosed, backups = true, epoch = s.epoch)
       .also { it.restore(s, closed) }
   }
 }

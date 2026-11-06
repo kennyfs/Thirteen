@@ -145,16 +145,11 @@ data class Ready(val hand: Int) : ClientMsg
 @Serializable @SerialName("leave")
 data object Leave : ClientMsg
 
-/** A Play Integrity token for the nonce of Welcome: the client is the app from Google Play, on a genuine device. */
-@Serializable @SerialName("attest")
-data class Attest(val token: String) : ClientMsg
-
 @Serializable
 sealed interface ServerMsg
 
-/** `nonce`: the server checks clients (Play Integrity); a client that can sends Attest for it before anything else. */
 @Serializable @SerialName("welcome")
-data class Welcome(val version: Int, val nonce: String? = null) : ServerMsg
+data class Welcome(val version: Int) : ServerMsg
 
 /** In a room as player `you`; `token` (secret) resumes the seat after a dropped connection. */
 @Serializable @SerialName("joined")
@@ -188,8 +183,6 @@ data class Closed(val reason: String = "") : ServerMsg
 @Serializable
 enum class ErrorCode {
   VERSION, BAD_MESSAGE, NOT_ALLOWED, NO_ROOM, ROOM_FULL, STARTED, TOO_MANY, BUSY, BAD_SETTINGS, BAD_ROWS, RATE,
-  /** The room takes only clients checked by Play Integrity, or the check failed. */
-  UNVERIFIED,
 }
 
 /**
@@ -212,7 +205,6 @@ data class RoomSnapshot(
   val remainingMs: Long?,
   val engineCalls: Int,
   val epoch: Int,
-  val verified: Boolean = false,
 )
 
 @Serializable

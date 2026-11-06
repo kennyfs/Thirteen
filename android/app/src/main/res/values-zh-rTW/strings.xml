@@ -394,7 +394,6 @@
   <string name="favorite_battle_remove">取消收藏這場對戰</string>
   <string name="battle_record_size">%1$d／%2$d 手，%3$d 人</string>
   <string name="battle_record_left">中途離開</string>
-  <string name="battle_err_unverified">這個房間只接受經 Google 驗證（Play Integrity）、從 Google Play 安裝的 app，這個 app 無法通過驗證。</string>
   <string name="sort_rank_short">點數</string>
   <string name="sort_suit_short">花色</string>
   <string name="next_hand_short">下一局</string>

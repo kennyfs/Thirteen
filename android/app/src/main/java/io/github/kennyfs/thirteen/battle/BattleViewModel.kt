@@ -16,7 +16,6 @@ import io.github.kennyfs.thirteen.Settings
 import io.github.kennyfs.thirteen.protocol.BattleRecord
 import io.github.kennyfs.thirteen.protocol.Backup
 import io.github.kennyfs.thirteen.protocol.RoomSnapshot
-import io.github.kennyfs.thirteen.protocol.Attest
 import io.github.kennyfs.thirteen.protocol.ChangeSettings
 import io.github.kennyfs.thirteen.protocol.ClientMsg
 import io.github.kennyfs.thirteen.protocol.Closed
@@ -315,16 +314,7 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   override fun onMessage(link: Link, msg: ServerMsg) {
     if (link !== this.link) return
     when (msg) {
-      is Welcome -> {
-        val next = pending
-        val nonce = msg.nonce
-        if (nonce == null || !Integrity.enabled) next?.let(link::send)
-        // The server checks clients: the token first (if one comes), then the room.
-        else viewModelScope.launch {
-          Integrity.token(getApplication(), nonce)?.let { link.send(Attest(it)) }
-          if (link === this@BattleViewModel.link) next?.let(link::send)
-        }
-      }
+      is Welcome -> pending?.let(link::send)
       is Joined -> {
         joined = msg
         me = msg.you
@@ -370,7 +360,7 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
         busy = false
         submitting = false
         error = errorText(msg)
-        if (joined == null && msg.code in setOf(ErrorCode.VERSION, ErrorCode.NO_ROOM, ErrorCode.ROOM_FULL, ErrorCode.STARTED, ErrorCode.TOO_MANY, ErrorCode.BUSY, ErrorCode.RATE, ErrorCode.UNVERIFIED)) {
+        if (joined == null && msg.code in setOf(ErrorCode.VERSION, ErrorCode.NO_ROOM, ErrorCode.ROOM_FULL, ErrorCode.STARTED, ErrorCode.TOO_MANY, ErrorCode.BUSY, ErrorCode.RATE)) {
           link.close()
           this.link = null
         }
@@ -533,7 +523,6 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     ErrorCode.BAD_SETTINGS -> str(R.string.battle_err_settings)
     ErrorCode.BAD_ROWS -> str(if (e.message == "fouled") R.string.fouled else R.string.battle_err_rows)
     ErrorCode.NOT_ALLOWED, ErrorCode.BAD_MESSAGE -> str(R.string.battle_err_not_allowed)
-    ErrorCode.UNVERIFIED -> str(R.string.battle_err_unverified)
   }
 
   // ---- Results ----

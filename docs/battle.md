@@ -91,16 +91,12 @@ reproducible build, pin the base images by digest as well.
 for the best arrangement during a puzzle; the time limit makes that slower, nothing can make it impossible. A
 modified app can claim any version: the app's version and signature reported by a client prove nothing.
 
-**Play Integrity.** A server with `PLAY_INTEGRITY_KEY` (a Google Cloud service account key, JSON, whose project is
-linked to the app in the Play Console and has the Play Integrity API on) sends a nonce in `welcome`. The app built
-for Google Play (`THIRTEEN_PLAY_PROJECT`, the Cloud project's number, set when building it) answers with `attest`, a
-token from Google for that nonce, before creating or joining a room; the server has Google decode it
-(playintegrity.googleapis.com) and takes the client as checked when the token is for that nonce and this package,
-at most 5 minutes old, the app is the one Google Play has (`PLAY_RECOGNIZED`) and the device passes
-`MEETS_DEVICE_INTEGRITY`. A room created by a checked client takes only checked clients (`error` UNVERIFIED for the
-others); a room of an unchecked one takes anyone, so betas and test builds, which do not ask (no project number), play
-among themselves. The server must reach Google for this (compose.yml keeps it off the internet otherwise). Nearby
-rooms are not checked: a phone cannot decode the tokens.
+**No check of the app.** Nothing checks that a client is the unmodified app, and nothing will. Play Integrity
+(Google vouching for the app from Google Play on a genuine device) was considered, for nearby play: but a phone cannot
+decode the tokens (only a server reaching Google can), so it cannot protect a nearby room, where cheating is
+possible. Online it is not needed: the server deals, keeps the hands and scores, and each client gets only its own
+cards, so a modified client gains nothing the protocol does not give it. And it would shut out the web page, which
+cannot take it, from playing with the app. So any client that speaks the protocol (the app, the web page) plays.
 
 **Nearby play.** The host's phone runs the room (the same code), and computes the networks' seats. The other
 players get the same protections against each other, but the host's phone has every hand: a modified app on the

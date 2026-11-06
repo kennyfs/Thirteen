@@ -396,7 +396,6 @@
   <string name="favorite_battle_remove">Drop the saved battle</string>
   <string name="battle_record_size">%1$d of %2$d hands, %3$d players</string>
   <string name="battle_record_left">left early</string>
-  <string name="battle_err_unverified">This room takes only the app from Google Play, checked by Google (Play Integrity), and this copy could not be checked.</string>
   <string name="sort_rank_short">Rank</string>
   <string name="sort_suit_short">Suit</string>
   <string name="next_hand_short">Next</string>

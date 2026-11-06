@@ -46,8 +46,8 @@ class RoomTest {
 
   private val engine = FakeEngine()
 
-  private fun TestScope.hub(limits: HubLimits = HubLimits(), attestor: Attestor? = null) =
-    Hub(engine, backgroundScope as CoroutineScope, limits, { testScheduler.currentTime }, attestor = attestor)
+  private fun TestScope.hub(limits: HubLimits = HubLimits()) =
+    Hub(engine, backgroundScope as CoroutineScope, limits, { testScheduler.currentTime })
 
   private suspend fun TestScope.client(hub: Hub, name: String, address: String = name): Client =
     Client(hub, address).also { it.send(Hello(PROTOCOL_VERSION, name)); runCurrent() }
@@ -328,39 +328,6 @@ class RoomTest {
     val (a, b) = room(hub, RoomSettings(Mode.PUZZLE), "A", "B")
     assertEquals(-1, b.last<State>()!!.room.backup)
     assertTrue(a.all<Backup>().isEmpty() && b.all<Backup>().isEmpty())
-  }
-
-  @Test
-  fun aRoomOfCheckedClientsTakesNoOthers() = runTest {
-    val hub = hub(attestor = { token, nonce -> token == "good:$nonce" })
-    val a = Client(hub, "A")
-    a.send(Hello(PROTOCOL_VERSION, "A"))
-    runCurrent()
-    a.send(Attest("good:" + a.last<Welcome>()!!.nonce))
-    a.send(Create(RoomSettings(Mode.PUZZLE)))
-    runCurrent()
-    val pin = a.last<State>()!!.room.pin
-    // No token: refused. A wrong one: refused, and the nonce is used up.
-    val b = client(hub, "B")
-    b.send(Join(pin))
-    runCurrent()
-    assertEquals(ErrorCode.UNVERIFIED, b.errors().last())
-    val c = client(hub, "C")
-    c.send(Attest("bad"))
-    c.send(Attest("good:" + c.last<Welcome>()!!.nonce))
-    c.send(Join(pin))
-    runCurrent()
-    assertEquals(listOf(ErrorCode.NOT_ALLOWED, ErrorCode.UNVERIFIED), c.errors())
-    val d = Client(hub, "D")
-    d.send(Hello(PROTOCOL_VERSION, "D"))
-    runCurrent()
-    d.send(Attest("good:" + d.last<Welcome>()!!.nonce))
-    d.send(Join(pin))
-    runCurrent()
-    assertNotNull(d.last<Joined>())
-    // An unchecked client's room takes anyone.
-    val (e, f) = room(hub, RoomSettings(Mode.PUZZLE), "E", "F")
-    assertNotNull(f.last<Joined>())
   }
 
   @Test

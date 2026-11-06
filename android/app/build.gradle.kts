@@ -45,9 +45,6 @@ android {
       } ?: "0.0.${git("rev-list", "--count", "HEAD") ?: "0"}"
     // A build for testing beside the store's (signed with another key) takes another id, e.g. THIRTEEN_ID_SUFFIX=.test.
     System.getenv("THIRTEEN_ID_SUFFIX")?.let { applicationIdSuffix = it }
-    // The Google Cloud project for Play Integrity, for the build uploaded to Google Play only: a build from elsewhere
-    // (a beta, a test build) cannot pass the check, so it does not try (0).
-    buildConfigField("long", "PLAY_PROJECT", (System.getenv("THIRTEEN_PLAY_PROJECT")?.toLongOrNull() ?: 0L).toString() + "L")
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     externalNativeBuild {
       cmake {
@@ -98,7 +95,6 @@ android {
   }
   buildFeatures {
     compose = true
-    buildConfig = true
   }
   androidResources {
     // The app's own languages: the libraries bring strings in dozens more, which only make the APK larger.
@@ -147,7 +143,6 @@ dependencies {
   implementation(project(":protocol"))
   implementation("com.squareup.okhttp3:okhttp:5.5.1")
   implementation("com.google.android.gms:play-services-nearby:19.5.1")
-  implementation("com.google.android.play:integrity:1.6.0")
 
   testImplementation("junit:junit:4.13.2")
   androidTestImplementation(composeBom)
