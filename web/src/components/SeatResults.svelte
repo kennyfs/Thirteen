@@ -14,8 +14,10 @@
   interface Props {
     rows: number[][][]; score: Score; wheel: number; names: string[]; notes: (string | null)[]; totals: number[];
     onplayer?: ((seat: number) => void) | null;
+    /** The largest card of the lines (a computer's pages allow larger). */
+    max?: number;
   }
-  let { rows, score, wheel, names, notes, totals, onplayer = null }: Props = $props();
+  let { rows, score, wheel, names, notes, totals, onplayer = null, max = MAX_PLAY }: Props = $props();
   const tap = (s: number) => { if (onplayer) onplayer(s); else if (sideBySide) expanded = expanded === s ? null : s; };
 
   let w = $state(0);
@@ -28,7 +30,7 @@
   const lineCard = $derived(Math.max(14, Math.min(
     (w - nameWidth - ARROWS - 16 - COLUMN_GAP * 3 - SMALL_GAP * 10 - 12) / 13,
     ((h - SEAT_GAP * (seats - 1)) / seats - textRoom(18) - 10) / 1.4,
-    MAX_PLAY,
+    max,
   )));
   // Narrow: the rows side by side fill the width.
   const GRID_PAD = 6, GRID_COLUMN_GAP = 6, GRID_CARD_GAP = 1;

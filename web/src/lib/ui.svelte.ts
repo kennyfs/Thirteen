@@ -1,7 +1,7 @@
 // What the screens share about the window: whether it is wide (a rail at the side) or tall (a bar under), whether it
 // is a computer's (`desk`: a mouse, and room for a side panel), the room the screens have, `u` (what a 14px text takes
 // now), and the card sizes worked out once for them (sizing.ts).
-import { ASIDE, cardSizes, deskCardSizes, type CardSizes } from './sizing';
+import { cardSizes, deskCardSizes, type CardSizes } from './sizing';
 
 export const NAV_BAR = 80;
 export const NAV_RAIL = 88;
@@ -27,8 +27,9 @@ export function measure(textScale: number) {
   ui.h = h;
   ui.wide = wide;
   ui.u = u;
-  // A computer's: a mouse (or a touchpad) that hovers, and a window with room for the practice page's side panel.
-  ui.desk = matchMedia('(hover: hover) and (pointer: fine)').matches && wide && w >= 900 + ASIDE * 0.5 && h >= 540;
+  // A computer's (its own pages, Desk*.svelte): a mouse (or a touchpad) that hovers, and a window of 1024 x 600 or more.
+  // A phone's or a tablet's pages otherwise, a computer's window made narrow too.
+  ui.desk = matchMedia('(hover: hover) and (pointer: fine)').matches && wide && W >= 1024 && H >= 600;
   ui.sizes = ui.desk ? deskCardSizes(w, h, u) : cardSizes(w, h, u);
 }
 

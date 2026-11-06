@@ -22,9 +22,8 @@
   import RowCards from './RowCards.svelte';
   import SeatResults from './SeatResults.svelte';
   import ThreeRows from './ThreeRows.svelte';
-  import Toggle from './Toggle.svelte';
-  import { ROW_SIZES } from '../lib/cards';
   import TitleBar from './TitleBar.svelte';
+  import DeskBattle from './desk/DeskBattle.svelte';
 
   let { app }: { app: App } = $props();
   const b = $derived(app.battle);
@@ -86,26 +85,6 @@
   }
   const timedOut = () => t('battle_timed_out').trim();
 
-  // ---- A computer's side panel while setting a hand (as practice's, Play.svelte) ----
-  let help = $state(false);
-  const deskHint = $derived.by(() => {
-    const vm = b.arranger;
-    const picked = vm.selected.size;
-    const rest = vm.unplaced.length;
-    if (vm.armed !== null) return t('hint_armed', ta('row_names')[vm.armed], ROW_SIZES[vm.armed] - vm.rows[vm.armed].length - picked);
-    if (picked > 0) return t('hint_selected', picked);
-    if (rest === 13) return t('hint_start_desk');
-    if (rest > 0) return t('hint_left', rest);
-    const ev = vm.rowsEval;
-    if (!ev) return '';
-    if (ev.valid === true) {
-      const sum = ev.royalties.reduce((x, y) => x + y, 0);
-      return sum > 0 ? t('ready_royalty', signed(sum).slice(1)) : t('ready_hint');
-    }
-    return ev.keys[0] <= ev.keys[1] && ev.keys[1] <= ev.keys[2] ? t('fouled_strict') : t('fouled');
-  });
-  const deskFouled = $derived(b.arranger.unplaced.length === 0 && b.arranger.rowsEval?.valid === false);
-
   // ---- The entry ----
   let editServer = $state(false);
 
@@ -158,9 +137,9 @@
     else analysisMode = !analysisMode;
   }
 
-  // A computer's keys on a result: Enter goes on, A analyzes.
+  // The keys of a computer's pages are DeskBattle's.
   function onKey(e: KeyboardEvent) {
-    if (page !== 'review' && page !== 'last') return;
+    if (ui.desk || (page !== 'review' && page !== 'last')) return;
     const el = e.target as HTMLElement | null;
     if (el?.closest('input, textarea, select, [contenteditable]') || document.querySelector('dialog[open]')) return;
     if (e.altKey || e.ctrlKey || e.metaKey) return;
@@ -213,14 +192,14 @@
         <div class="head-actions">
           {#if o && (!puzzle || o.plays.some((p) => p.player === b.me))}
             <button class="btn big" class:outlined={!analysisMode || puzzle} class:tonal={analysisMode && !puzzle} onclick={analyzeButton}>
-              <Icon name="analytics" size={20} />{t('battle_analyze')}{#if ui.desk}<kbd>A</kbd>{/if}
+              <Icon name="analytics" size={20} />{t('battle_analyze')}
             </button>
           {/if}
           {#if page === 'last'}
-            <button class="btn filled big" onclick={() => b.toSummary()}>{t('battle_to_summary')}{#if ui.desk}<kbd>Enter</kbd>{/if}</button>
+            <button class="btn filled big" onclick={() => b.toSummary()}>{t('battle_to_summary')}</button>
           {:else}
             <button class="btn filled big" disabled={me?.ready === true} onclick={() => b.ready()}>
-              {ui.w < 600 ? t('battle_next_short') : t('battle_next')}{#if ui.desk}<kbd>Enter</kbd>{/if}
+              {ui.w < 600 ? t('battle_next_short') : t('battle_next')}
             </button>
           {/if}
         </div>
@@ -312,6 +291,9 @@
   {/if}
 {/snippet}
 
+{#if ui.desk}
+<DeskBattle {app} {page} {reviewing} {left} {analysisMode} onanalyze={analyzeButton} />
+{:else}
 <div class="battle">
   {#if page === 'entry'}
     <TitleBar title={t('nav_battle')} />
@@ -409,40 +391,6 @@
       {/if}
     </div>
 
-  {:else if page === 'playing' && room && ui.desk}
-    <div class="desk">
-      <div class="desk-main">
-        {#if b.deal}
-          <Arranging vm={b.arranger} {wheel} busy={b.submitting} confirmLabel={t('battle_submit')} onconfirm={() => b.submit()} bare bind:help />
-        {:else}<div class="center">{@render spinner(40)}</div>{/if}
-      </div>
-      <aside class="side">
-        <div class="side-head">
-          <span class="title-large">{t('battle_hand_of', room.hand + 1, room.settings.hands)}</span>
-          {#if left !== null}<span class="clock title-medium" class:bad={left < 15000}><Icon name="timer" size={22} />{clock(left)}</span>{/if}
-        </div>
-        <div class="body-large dim">{t('battle_set_count', room.players.filter((p) => !p.bot && p.submitted).length, room.players.filter((p) => !p.bot).length)}{#if puzzle && room.hand > 0}
-          · {t('battle_your_rank', standings(room).findIndex((p) => p.id === b.me) + 1)}{/if}</div>
-        <p class="hint body-large" class:bad={deskFouled} aria-live="polite">{deskHint}</p>
-        <Toggle options={[[false, t('sort_rank')], [true, t('sort_suit')]] as [boolean, string][]} selected={b.arranger.sortBySuit} onselect={(v) => (b.arranger.sortBySuit = v)} />
-        <div class="tools">
-          <button class="btn outlined" disabled={!b.arranger.canUndo} title={t('key_hint', t('undo'), 'Z')} onclick={() => b.arranger.undo()}><Icon name="undo" />{t('undo')}</button>
-          <button class="btn outlined" disabled={!b.arranger.canClear} title={t('key_hint', t('take_all'), 'Delete')} onclick={() => b.arranger.clearRows()}><Icon name="clearAll" />{t('take_all')}</button>
-          <button class="btn outlined icon" aria-label={t('help')} title={t('key_hint', t('help'), '?')} onclick={() => (help = true)}><Icon name="help" /></button>
-        </div>
-        <span class="grow"></span>
-        <button class="btn filled big" disabled={b.submitting || b.arranger.rowsEval?.valid !== true} onclick={() => b.submit()}>
-          {b.submitting ? '…' : t('battle_submit')}<kbd>Enter</kbd></button>
-        <p class="keys body-small dim">{t('keys_arrange')}</p>
-      </aside>
-    </div>
-    {#if help}
-      <Dialog title={t('arrange_help_title')} onclose={() => (help = false)}>
-        <p class="body-large help-text">{t('arrange_help_desk')}</p>
-        {#snippet actions()}<button class="btn text" onclick={() => (help = false)}>{t('ok')}</button>{/snippet}
-      </Dialog>
-    {/if}
-
   {:else if page === 'playing' && room}
     {@render header(room.hand, true, null, null, false)}
     {#if b.deal}
@@ -535,6 +483,7 @@
     {/if}
   {/if}
 </div>
+{/if}
 
 {#if confirmLeave && room && b.inRoom}
   <Dialog title={t('battle_leave_title')} onclose={() => (confirmLeave = false)}>
@@ -608,8 +557,6 @@
   .hint { color: var(--primary); }
   .head-actions { display: flex; gap: 8px; flex: none; }
   .head-actions .btn { padding: 0 14px; }
-  kbd { font-family: inherit; font-size: 0.72rem; font-weight: 500; line-height: 1; padding: 3px 5px; border-radius: 5px; margin-left: 6px;
-    opacity: 0.75; border: 1px solid currentColor; }
   .wait { display: flex; flex-direction: column; gap: 16px; padding: 0 12px 12px; }
   .wait.wide { flex-direction: row; align-items: flex-start; }
   .wait.wide > :global(*) { flex: 1; min-width: 0; }
@@ -631,19 +578,6 @@
   .name.grow { flex: 1; }
   .num { flex: none; text-align: right; display: flex; flex-direction: column; align-items: flex-end; white-space: nowrap; }
   .tap-note { margin: 0; padding: 2px 16px; }
-
-  /* A computer's page while setting a hand: the table beside a side panel (as practice's) */
-  .desk { flex: 1; display: flex; min-height: 0; }
-  .desk-main { flex: 1; min-width: 0; display: flex; flex-direction: column; padding-top: 12px; }
-  .side { flex: none; width: 320px; display: flex; flex-direction: column; gap: 12px; padding: 12px 16px 16px 4px; min-height: 0; overflow: auto; }
-  .side-head { display: flex; align-items: center; gap: 12px; min-height: 40px; flex-wrap: wrap; }
-  .side .hint { margin: 0; min-height: 2.9em; color: inherit; }
-  .side .hint.bad { color: var(--bad); }
-  .tools { display: flex; gap: 8px; }
-  .tools .btn:not(.icon) { flex: 1; min-width: 0; }
-  .side .big { width: 100%; justify-content: center; }
-  .keys { margin: 0; }
-  .help-text { white-space: pre-line; margin: 0; }
 
   /* The final standings */
   .summary { padding: 0 12px 16px; max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 4px; }

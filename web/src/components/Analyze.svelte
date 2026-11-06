@@ -14,6 +14,7 @@
   import Menu from './Menu.svelte';
   import RecordLine from './RecordLine.svelte';
   import TitleBar from './TitleBar.svelte';
+  import DeskAnalyze from './desk/DeskAnalyze.svelte';
 
   let { app, onrules }: { app: App; onrules: () => void } = $props();
   let pickRecord = $state(false);
@@ -65,6 +66,8 @@
 
 {#if nav.sub === 'rules'}
 <Rules {app} onback={() => nav.back()} />
+{:else if ui.desk}
+<DeskAnalyze {app} {onrules} />
 {:else}
 <div class="page" bind:clientWidth={pageW} bind:clientHeight={pageH}>
   {#if app.analysis && app.anaPage === 1}

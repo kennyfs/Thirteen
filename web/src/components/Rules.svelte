@@ -9,6 +9,8 @@
   import * as R from '../lib/rules';
   import Switch from './Switch.svelte';
   import TitleBar from './TitleBar.svelte';
+  import { ui } from '../lib/ui.svelte';
+  import DeskRules from './desk/DeskRules.svelte';
 
   let { app, onback = null }: { app: App; onback?: (() => void) | null } = $props();
   onDestroy(() => app.rulesClosed());
@@ -32,6 +34,9 @@
   </div>
 {/snippet}
 
+{#if ui.desk}
+<DeskRules {app} {onback} />
+{:else}
 <div class="page">
   <TitleBar title={t('nav_rules')} {onback} />
   <div class="scroll"><div class="readable">
@@ -69,6 +74,7 @@
     {/if}
   </div></div>
 </div>
+{/if}
 
 <style>
   .page { height: 100%; display: flex; flex-direction: column; min-height: 0; }

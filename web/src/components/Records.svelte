@@ -13,6 +13,7 @@
   import RecordList from './RecordList.svelte';
   import ScoreChart from './ScoreChart.svelte';
   import TitleBar from './TitleBar.svelte';
+  import DeskRecords from './desk/DeskRecords.svelte';
 
   let { app }: { app: App } = $props();
   let shown = $state(20);
@@ -108,20 +109,16 @@
       </div>
 {/snippet}
 
+{#if ui.desk}
+<DeskRecords {app} />
+{:else}
 <div class="page">
   <TitleBar title={t('records_title')} />
-  {#if ui.desk}
-    <!-- A computer's: the chart, the saved hands and the file at the left, the records at the right, each scrolled on its own. -->
-    <div class="desk">
-      <div class="scroll">{@render chart()}{@render favorites()}{@render share()}</div>
-      <div class="scroll">{#if practice.length}{@render records()}{:else}<div class="section-header">{t('records_list')}</div><p class="pad body-large dim">{t('records_none')}</p>{/if}</div>
-    </div>
-  {:else}
-    <div class="scroll">
-      <div class="readable">{@render chart()}{@render records()}{@render favorites()}{@render share()}</div>
-    </div>
-  {/if}
+  <div class="scroll">
+    <div class="readable">{@render chart()}{@render records()}{@render favorites()}{@render share()}</div>
+  </div>
 </div>
+{/if}
 
 {#if acting}
   {@const r = acting}
@@ -155,8 +152,6 @@
   .page { height: 100%; display: flex; flex-direction: column; min-height: 0; }
   .scroll { flex: 1; overflow: auto; padding-bottom: 24px; }
   .readable { max-width: 840px; margin: 0 auto; }
-  .desk { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(360px, 1fr) minmax(0, 1.3fr); gap: 8px; padding: 0 8px; }
-  .desk .scroll { min-height: 0; }
   .pad { padding: 0 16px; }
   .col { display: flex; flex-direction: column; gap: 12px; }
   .col p, .pad > p { margin: 0; }

@@ -112,6 +112,8 @@ export class App {
   /** The finished hand's pages: 0 the result, 1 the analysis of the player's hand. */
   get resultTab(): number { return nav.screen === 'PLAY' && nav.sub === 'analysis' ? 1 : 0; }
   gameAnalysis = $state<Analysis | null>(null);
+  /** The result whose analysis is being computed. */
+  gameAnalyzing = $state<object | null>(null);
   session = $state(this.readSession());
   gameRules = $state('');
   gameValues = $state<Values>({});
@@ -206,12 +208,18 @@ export class App {
   /** Shows the analysis of the player's hand, computing it the first time. */
   showGameAnalysis() {
     nav.open('analysis', 'PLAY');
+    this.computeGameAnalysis();
+  }
+
+  /** Computes the analysis of the player's hand, without showing its page (a computer's result shows a summary). */
+  computeGameAnalysis() {
     const r = this.result;
-    if (!r || this.gameAnalysis) return;
+    if (!r || this.gameAnalysis || this.gameAnalyzing === r) return;
     this.analyzing = true;
+    this.gameAnalyzing = r;
     this.catching(engine.analyze([...this.hand].sort((a, b) => a - b), this.gameRules, this.model(this.anaModel).path, [r.rows[0]])
       .then((a) => { if (this.result === r) this.gameAnalysis = a; })
-      .finally(() => { this.analyzing = false; }));
+      .finally(() => { this.analyzing = false; if (this.gameAnalyzing === r) this.gameAnalyzing = null; }));
   }
 
   /** The totals and the hand count start over, and so does practice: a new hand, the first. */

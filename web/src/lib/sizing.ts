@@ -101,5 +101,38 @@ export function deskFit(w: number, h: number): number {
 /** The sizes on a computer, for the window area `w` x `h`: the practice page's table is beside its side panel. */
 export function deskCardSizes(w: number, h: number, u: number): CardSizes {
   const s = cardSizes(w - ASIDE, h, u);
-  return { ...s, play: deskFit(w - ASIDE, h) };
+  return { ...s, play: deskArrangeFit(w - ASIDE - 24, h - 24, u).card };
+}
+
+// ---- A computer's own pages (Desk*.svelte) ----
+
+/** The largest card on a computer's table: large on a large screen, yet the rows and the hand still in sight at once. */
+export const MAX_DESK_PLAY = 150;
+/** The gap between the rows and the hand on a computer's table, and the table's padding. */
+export const DESK_HAND_GAP = 24;
+export const DESK_PAD = 20;
+
+/** The label at the left of a row on a computer's table: its name and key, and its state ("2/5", "同花順到 K"). */
+export const deskRowLabel = (u: number) => Math.max(116, u * 8.2);
+
+export interface DeskArrangeFit { card: number; perLine: number }
+
+/**
+ * A computer's table `w` x `h`: the rows one above another, the hand under them in one line or in two (7 and 6, as the
+ * app's), whichever gives the larger cards; one line when about as large.
+ */
+export function deskArrangeFit(w: number, h: number, u: number): DeskArrangeFit {
+  const innerW = w - DESK_PAD * 2;
+  const innerH = h - DESK_PAD * 2;
+  const byRows = (innerW - deskRowLabel(u) - 12 - ROW_PAD * 2 - CARD_GAP * 4) / 5;
+  let best: DeskArrangeFit = { card: 0, perLine: 13 };
+  for (const perLine of [13, 7]) {
+    const lines = Math.ceil(13 / perLine);
+    const byHand = (innerW - HAND_GAP * (perLine - 1) - (perLine === 13 ? (SUIT_GAP - HAND_GAP) * 3 : 0)) / perLine;
+    const fixed = ROW_PAD * 6 + ROW_STACK_GAP * 2 + DESK_HAND_GAP + HAND_LINE_GAP * (lines - 1);
+    const byHeight = (innerH - fixed) / (1.4 * (3 + lines) + 0.22);
+    const card = Math.max(24, Math.floor(Math.min(byRows, byHand, byHeight, MAX_DESK_PLAY)));
+    if (card > best.card + 4) best = { card, perLine };
+  }
+  return best;
 }

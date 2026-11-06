@@ -1,6 +1,8 @@
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vite';
 
+// (No @types/node here: the one variable read.)
+declare const process: { env: Record<string, string | undefined> };
 const battle = process.env.BATTLE_SERVER ?? 'ws://127.0.0.1:8090';
 
 // A static site: relative paths, so it works from any directory (or a file server's subpath).

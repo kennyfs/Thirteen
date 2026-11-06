@@ -67,7 +67,8 @@ with sync_playwright() as p:
     print('pin', pin, 'nav hidden', host.evaluate('document.querySelector(".shell > nav").hidden'))
     enter(guest, '客人')
     guest.fill('input[inputmode="numeric"]', pin)
-    guest.get_by_role('button', name='加入', exact=True).click()
+    if kind == 'phone':
+        guest.get_by_role('button', name='加入', exact=True).click()  # (a computer's page joins at the sixth digit)
     wait(host, 'B.room.players.length === 2')
     shot(host, 'lobby-host')
     shot(guest, 'lobby-guest')
@@ -107,7 +108,7 @@ with sync_playwright() as p:
     print('nav after last', host.evaluate('document.querySelector(".shell > nav").hidden'))
     host.locator('.hand-line').first.click()
     shot(host, 'detail')
-    host.locator('.result-table button.line').nth(1).click()
+    host.locator('.result-table button.line, table.hands tr.pick').nth(1).click()
     wait(host, 'B.review.detailAnalysis !== null')
     shot(host, 'detail-analysis')
     host.go_back(); host.wait_for_timeout(300); host.go_back()

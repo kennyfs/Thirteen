@@ -1,6 +1,7 @@
 // The page's words: the Android app's strings (scripts/strings.mjs), in the browser's language (Traditional Chinese
 // for any Chinese, else English) unless the settings choose one.
 import all from '../generated/strings.json';
+import { DESK } from './desk-strings';
 
 export type Lang = 'en' | 'zh';
 type Table = Record<string, string | string[]>;
@@ -33,7 +34,7 @@ const WEB: Record<Lang, Table> = {
     arrange_help_desk: '• 把手牌拖進一墩，或在兩墩之間拖動，拖回手牌就收回；拖動已選的牌時，其他選了的牌會一起移動。\n• 也可以點選手牌，再點要放進的那一墩（或按 1、2、3）。\n• 點墩上的牌可收回。\n• 三墩放滿、而且頭墩 ≤ 中墩 ≤ 尾墩（沒有倒水），就可以按「出牌」（Enter）。\n• 「依點數／依花色」（S）切換手牌的排列方式，方便找對子、順子或同花。',
   },
 };
-const tables: Record<Lang, Table> = { en: { ...app.en, ...WEB.en }, zh: { ...app.zh, ...WEB.zh } };
+const tables: Record<Lang, Table> = { en: { ...app.en, ...WEB.en, ...DESK.en }, zh: { ...app.zh, ...WEB.zh, ...DESK.zh } };
 
 export function browserLang(): Lang {
   return (navigator.languages ?? [navigator.language]).some((l) => l.toLowerCase().startsWith('zh')) ? 'zh' : 'en';

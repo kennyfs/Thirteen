@@ -83,7 +83,9 @@
   .scroll { flex: 1; overflow: auto; padding-bottom: 24px; }
   .readable { max-width: 720px; margin: 0 auto; }
   .desk { height: 100%; display: flex; min-height: 0; }
-  .desk-list { flex: 0 1 440px; min-width: 340px; border-right: 1px solid var(--outline-variant, var(--surface-container-highest)); }
+  .desk-list { flex: 0 0 360px; border-right: 1px solid var(--outline-variant, var(--surface-container-highest)); }
   .desk-pane { flex: 1; min-width: 0; }
+  /* The pages beside the list start at its edge, not in the middle of the room. */
+  .desk-pane :global(.readable) { margin: 0; max-width: 960px; padding: 0 12px; }
   .block { padding: 8px 16px; display: flex; flex-direction: column; gap: 8px; }
 </style>
