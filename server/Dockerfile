@@ -75,7 +75,7 @@ COPY --from=web-page /src/web/dist /srv
 
 # A JRE of only the modules the server uses (jdeps finds them in its jars), about 150 MB less than the whole one.
 FROM ubuntu:26.04 AS jre
-RUN apt-get update && apt-get install -y --no-install-recommends openjdk-21-jdk-headless \
+RUN apt-get update && apt-get install -y --no-install-recommends openjdk-21-jdk-headless binutils \
   && rm -rf /var/lib/apt/lists/*
 COPY --from=server /src/server/build/install/thirteen-server/lib /server-lib
 # jdeps may print warnings (split packages) before the list: the list is its last line, checked.
