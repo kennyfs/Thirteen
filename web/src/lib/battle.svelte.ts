@@ -71,6 +71,26 @@ export function rankOf(r: RoomView, p: PlayerView): number {
   return 1 + r.players.filter((x) => (isPuzzle(r) ? x.total < p.total - 1e-9 : x.total > p.total + 1e-9)).length;
 }
 
+/**
+ * A battle in the records (the app's BattleRecord): kept as it goes on, from its first closed hand, so that its results
+ * can be looked at again from the records.
+ */
+export interface BattleRecord {
+  id: string; startedAt: number; via: string; settings: RoomSettings; rules: string; me: number; players: PlayerView[];
+  outcomes: HandOutcome[]; left?: boolean;
+}
+
+/** The room as a battle record's last state showed it, for the result pages. */
+export function recordView(b: BattleRecord): RoomView {
+  return { pin: '', settings: b.settings, rules: b.rules, phase: 'OVER', hand: b.outcomes[b.outcomes.length - 1]?.index ?? -1, host: -1, players: b.players };
+}
+
+/** The player's place in a battle record, or null. */
+export function recordPlace(b: BattleRecord): number | null {
+  const mine = b.players.find((p) => p.id === b.me);
+  return mine ? rankOf(recordView(b), mine) : null;
+}
+
 export const fmtLoss = (x: number) => x.toFixed(3);
 
 /** A hand's value for player `i` of it: a puzzle's loss ("0.144", nothing lost "0"), or a table's points. */
@@ -232,6 +252,10 @@ export class Battle {
   private pending: ClientMsg | null = null;
   private reconnecting = false;
   private battleId: string | null = null;
+  private battleStart = 0;
+  /** A battle of the records shown (openRecord), by its id: no room behind it. */
+  opened = $state<string | null>(null);
+  openedAt = $state(0);
 
   constructor(private onError: (m: string) => void, private ruleSpec: () => RuleSpec, private onRecord: () => void) {
     let d = store.get('battle.default_name', '');
@@ -338,6 +362,7 @@ export class Battle {
 
   /** Leaves the room (for good) and the results. */
   leave() {
+    this.saveBattle(true);
     this.send({ t: 'leave' });
     const ws = this.ws;
     this.ws = null;
@@ -354,7 +379,25 @@ export class Battle {
   /** The last hand's table was seen; the final standings come next. */
   toSummary() { this.lastSeen = true; }
 
+  /** Shows a battle of the records: its standings, hands and analyses, as when it ended. */
+  openRecord(rec: BattleRecord): boolean {
+    if (this.inRoom || this.busy) return false;
+    this.clear();
+    this.room = recordView(rec);
+    this.me = rec.me;
+    this.review.me = rec.me;
+    this.review.rules = rec.rules;
+    this.review.names = Object.fromEntries(rec.players.map((p) => [p.id, p.name]));
+    this.review.add(rec.outcomes);
+    this.finished = true;
+    this.lastSeen = true;
+    this.opened = rec.id;
+    this.openedAt = rec.startedAt;
+    return true;
+  }
+
   private clear() {
+    this.opened = null;
     saveSeat(null);
     this.reconnecting = false;
     const ws = this.ws;
@@ -398,6 +441,7 @@ export class Battle {
         this.review.names = Object.fromEntries(msg.room.players.map((p) => [p.id, p.name]));
         if (msg.room.phase !== 'LOBBY' && !this.battleId) {
           this.battleId = crypto.randomUUID();
+          this.battleStart = Date.now();
           if (this.joined) saveSeat({ url: this.resumeUrl ?? '', ...this.joined, battle: this.battleId });
         }
         if (msg.room.phase === 'OVER') saveSeat(null);
@@ -490,6 +534,22 @@ export class Battle {
 
   private addOutcomes(list: HandOutcome[]) {
     for (const o of this.review.add(list)) this.record(o);
+    this.saveBattle();
+  }
+
+  /** The battle as it stands, to the records, once it has a closed hand. */
+  private saveBattle(left = false) {
+    const r = this.room;
+    if (!this.battleId || !r || this.outcomes.length === 0) return;
+    const battles = new store.RecordStore('battles');
+    // After a reload the start is the one kept.
+    if (!this.battleStart) this.battleStart = battles.all().find((b) => b.id === this.battleId)?.startedAt ?? Date.now();
+    const rec: BattleRecord = {
+      id: this.battleId, startedAt: this.battleStart, via: 'online', settings: $state.snapshot(r.settings), rules: r.rules,
+      me: this.me, players: $state.snapshot(r.players), outcomes: $state.snapshot(this.outcomes), left,
+    };
+    battles.put(rec);
+    this.onRecord();
   }
 
   /** The player's play of a closed hand goes to the records, labelled "battle" (a table game) or "puzzle". */

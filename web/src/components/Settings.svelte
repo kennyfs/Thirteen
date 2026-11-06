@@ -2,6 +2,7 @@
 <script lang="ts">
   import { TEXT_SCALE, type App, type ColorStyle, type DarkMode, type TextSize } from '../lib/app.svelte';
   import { t, ta, type Lang } from '../lib/i18n.svelte';
+  import { DESK_KEYS } from '../lib/desk-keys';
   import { nav } from '../lib/nav.svelte';
   import Menu from './Menu.svelte';
   import Networks from './Networks.svelte';
@@ -44,6 +45,20 @@
         {#snippet trailing()}<Menu label={app.lang === 'zh' ? '繁體中文' : 'English'} options={[['zh', '繁體中文'], ['en', 'English']] as [Lang, string][]}
           selected={app.lang} onselect={(v) => app.chooseLang(v)} />{/snippet}
       </SettingRow>
+
+      {#if desk}
+        <div class="block">
+          <div class="body-large">{t('desk_keys')}</div>
+          <div class="radios" role="radiogroup" aria-label={t('desk_keys')}>
+            {#each DESK_KEYS as k, i (k)}
+              <button class="radio-row" role="radio" aria-checked={app.deskKeys === k} onclick={() => app.chooseDeskKeys(k)}>
+                <span class="radio" class:on={app.deskKeys === k}></span><span class="body-medium">{ta('desk_keys_names')[i]}</span>
+              </button>
+            {/each}
+          </div>
+          <div class="body-small dim">{t('desk_keys_note')}</div>
+        </div>
+      {/if}
 
       <div class="section-header">{t('settings_game')}</div>
       <SettingRow title={t('nav_rules')} value={Object.keys(app.ruleValues).length ? app.rulesName(app.ruleValues) : null} onclick={() => nav.open('rules')} selected={desk && (nav.sub ?? 'rules') === 'rules'} />
@@ -88,4 +103,8 @@
   /* The pages beside the list start at its edge, not in the middle of the room. */
   .desk-pane :global(.readable) { margin: 0; max-width: 960px; padding: 0 12px; }
   .block { padding: 8px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .radios { display: flex; flex-direction: column; }
+  .radio-row { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 0; background: none; border: none; color: inherit; cursor: pointer; font: inherit; text-align: left; }
+  .radio { flex: none; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--on-surface-variant); box-sizing: border-box; }
+  .radio.on { border-color: var(--primary); background: radial-gradient(var(--primary) 0 4px, transparent 4.5px); }
 </style>

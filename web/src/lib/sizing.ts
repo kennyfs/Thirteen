@@ -118,21 +118,16 @@ export const deskRowLabel = (u: number) => Math.max(116, u * 8.2);
 export interface DeskArrangeFit { card: number; perLine: number }
 
 /**
- * A computer's table `w` x `h`: the rows one above another, the hand under them in one line or in two (7 and 6, as the
- * app's), whichever gives the larger cards; one line when about as large.
+ * A computer's table `w` x `h`: the rows one above another, the hand under them in `perLine` cards a line (13: one
+ * line, 7: 7 and 6), `below` px under each card for its key.
  */
-export function deskArrangeFit(w: number, h: number, u: number): DeskArrangeFit {
+export function deskArrangeFit(w: number, h: number, u: number, perLine = 13, below = 0): DeskArrangeFit {
   const innerW = w - DESK_PAD * 2;
   const innerH = h - DESK_PAD * 2;
   const byRows = (innerW - deskRowLabel(u) - 12 - ROW_PAD * 2 - CARD_GAP * 4) / 5;
-  let best: DeskArrangeFit = { card: 0, perLine: 13 };
-  for (const perLine of [13, 7]) {
-    const lines = Math.ceil(13 / perLine);
-    const byHand = (innerW - HAND_GAP * (perLine - 1) - (perLine === 13 ? (SUIT_GAP - HAND_GAP) * 3 : 0)) / perLine;
-    const fixed = ROW_PAD * 6 + ROW_STACK_GAP * 2 + DESK_HAND_GAP + HAND_LINE_GAP * (lines - 1);
-    const byHeight = (innerH - fixed) / (1.4 * (3 + lines) + 0.22);
-    const card = Math.max(24, Math.floor(Math.min(byRows, byHand, byHeight, MAX_DESK_PLAY)));
-    if (card > best.card + 4) best = { card, perLine };
-  }
-  return best;
+  const lines = Math.ceil(13 / perLine);
+  const byHand = (innerW - HAND_GAP * (perLine - 1) - (perLine === 13 ? (SUIT_GAP - HAND_GAP) * 3 : 0)) / perLine;
+  const fixed = ROW_PAD * 6 + ROW_STACK_GAP * 2 + DESK_HAND_GAP + (HAND_LINE_GAP + below) * lines;
+  const byHeight = (innerH - fixed) / (1.4 * (3 + lines) + 0.22);
+  return { card: Math.max(24, Math.floor(Math.min(byRows, byHand, byHeight, MAX_DESK_PLAY))), perLine };
 }

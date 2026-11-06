@@ -10,17 +10,20 @@
   import { t, ta } from '../../lib/i18n.svelte';
   import { nav } from '../../lib/nav.svelte';
   import { MAX_DESK_PLAY } from '../../lib/sizing';
-  import { fmtQ, signed } from '../../lib/ui.svelte';
+  import { signed } from '../../lib/ui.svelte';
   import Dialog from '../Dialog.svelte';
   import Icon from '../Icon.svelte';
   import SeatResults from '../SeatResults.svelte';
   import TitleBar from '../TitleBar.svelte';
   import Toggle from '../Toggle.svelte';
-  import CompareTable from './CompareTable.svelte';
+  import ProbTiles from './ProbTiles.svelte';
+  import { remarks as remarksOf } from '../../lib/commentary';
+  import { remarkText } from '../../lib/remarks';
   import DeskArranging from './DeskArranging.svelte';
   import DeskCandidates from './DeskCandidates.svelte';
   import Kbd from './Kbd.svelte';
   import KeyList from './KeyList.svelte';
+  import { keyList, keyMap, startHint } from '../../lib/desk-keys';
 
   let { app, onrules }: { app: App; onrules: () => void } = $props();
   const seatName = (i: number) => (i === 0 ? t('you') : t('seat_pos', i));
@@ -31,13 +34,14 @@
 
   let help = $state(false);
   const vm = $derived(app.play);
+  const km = $derived(keyMap(app.deskKeys));
   const canConfirm = $derived(!app.waiting && vm.rowsEval?.valid === true);
   const hint = $derived.by(() => {
     const picked = vm.selected.size;
     const left = vm.unplaced.length;
     if (vm.armed !== null) return t('hint_armed', ta('row_names')[vm.armed], ROW_SIZES[vm.armed] - vm.rows[vm.armed].length - picked);
     if (picked > 0) return t('hint_selected', picked);
-    if (left === 13) return t('hint_start_desk');
+    if (left === 13) return startHint(app.deskKeys);
     if (left > 0) return t('hint_left', left);
     const ev = vm.rowsEval;
     if (!ev) return '';
@@ -50,12 +54,13 @@
   const fouled = $derived(vm.unplaced.length === 0 && vm.rowsEval?.valid === false);
   const analysisPage = $derived(!!app.result && app.resultTab === 1);
   const favorite = () => app.lastRecord && app.toggleFavorite(app.lastRecord);
-  /** A: the summary first (analyzed here), then all the candidates, then back. */
+  /** A: all the candidates, and back. */
   function analysisKey() {
     if (analysisPage) nav.back();
-    else if (app.gameAnalysis) app.showGameAnalysis();
-    else app.computeGameAnalysis();
+    else app.showGameAnalysis();
   }
+  // Each result is analyzed at once: the remarks and the figures are in the panel.
+  $effect(() => { if (app.result && !app.gameAnalysis) app.computeGameAnalysis(); });
 
   // The player's rows among the candidates, once analyzed.
   const cmp = $derived.by(() => {
@@ -65,6 +70,10 @@
     const i = mineIndex(a, r.rows[0]);
     return { a, i, rank: i === null ? null : ranks(a)[i] };
   });
+
+  const rem = $derived(cmp ? remarksOf(cmp.a, app.result?.rows[0] ?? null) : []);
+  const mineRemark = $derived(rem.find((r) => r.kind === 'same' || r.kind === 'mistake') ?? null);
+  const restRemarks = $derived(rem.filter((r) => r !== mineRemark).map(remarkText).join(t('remark_sep')));
 
   // The result's keys (the arranging table's are DeskArranging's).
   function onKey(e: KeyboardEvent) {
@@ -111,24 +120,29 @@
 {/snippet}
 
 {#snippet summary()}
-  <section class="card">
-    <div class="title-small">{t('cmp_title')}</div>
-    {#if cmp}
-      {@const best = cmp.a.cands[0]}
-      {@const mine = cmp.i !== null ? cmp.a.cands[cmp.i] : null}
-      {#if cmp.i === 0}<p class="body-medium good bold">{t('cmp_same')}</p>
-      {:else if mine && cmp.rank !== null && mine.q !== null && best.q !== null}<p class="body-medium">{t('cmp_behind', cmp.rank, fmtQ(best.q - mine.q).slice(1))}</p>
+  {#if cmp}
+    {@const best = cmp.a.cands[0]}
+    {@const mine = cmp.i !== null ? cmp.a.cands[cmp.i] : null}
+    {#if cmp.a.dragon}<div class="body-large good">{t('dragon')}</div>{/if}
+    {#if rem.length}
+      <section class="card remarks">
+        <div class="title-small">{t('remarks_title')}</div>
+        {#if mineRemark}<p class="title-medium bold" class:mistake={mineRemark.kind === 'mistake'}>{remarkText(mineRemark)}</p>{/if}
+        {#if restRemarks}<p class="body-large">{restRemarks}</p>{/if}
+      </section>
+    {/if}
+    <section class="card">
+      <div class="yours-head">
+        <span class="badge strong">{cmp.i === 0 ? `${t('best')} · ${t('yours')}` : cmp.rank !== null && mine && !mine.extra ? t('yours_rank', t('yours'), cmp.rank) : t('yours')}</span>
+      </div>
+      {#if mine}<ProbTiles a={cmp.a} x={mine} best={cmp.i === 0 ? null : best} />
       {:else}<p class="body-medium">{t('cmp_extra')}</p>{/if}
-      {#if mine}<CompareTable a={cmp.a} x={mine} base={cmp.i === 0 ? null : best} xLabel={t('yours')} baseLabel={t('best')} compact />{/if}
       {#if legacy}<p class="body-small bad">{legacy}</p>{/if}
       <button class="btn tonal" onclick={() => app.showGameAnalysis()}><Icon name="analytics" />{t('all_candidates')}<Kbd k="A" inline /></button>
-    {:else if app.gameAnalyzing}
-      <div class="thinking body-medium dim"><span class="spinner small"></span>{t('analyzing')}</div>
-    {:else}
-      <p class="body-medium dim">{t('cmp_pending')}</p>
-      <button class="btn tonal" onclick={() => app.computeGameAnalysis()}><Icon name="analytics" />{t('analyze_my_hand')}<Kbd k="A" inline /></button>
-    {/if}
-  </section>
+    </section>
+  {:else}
+    <section class="card"><div class="thinking body-medium dim"><span class="spinner small"></span>{t('analyzing')}</div></section>
+  {/if}
 {/snippet}
 
 {#if analysisPage}
@@ -153,12 +167,12 @@
             notes={[null, ...app.seats.map((s) => app.seatName(s))]} totals={app.session.totals} max={MAX_DESK_PLAY} />
         </div>
       {:else if app.ready}
-        <DeskArranging vm={app.play} {wheel} busy={app.waiting} onconfirm={() => app.confirm()} bind:help />
+        <DeskArranging vm={app.play} {wheel} busy={app.waiting} onconfirm={() => app.confirm()} keys={app.deskKeys} bind:help />
       {:else}
         <div class="loading"><div class="spinner"></div></div>
       {/if}
     </div>
-    <aside class="side">
+    <aside class="side" class:wide={!!app.result}>
       <div class="side-head">
         <span class="title-large">{app.replaying ? t('replay_title') : t('hand_n', app.session.hands + (app.result ? 0 : 1))}</span>
         {#if Object.keys(app.gameValues).length}
@@ -169,14 +183,14 @@
       {@render scoreboard()}
       {#if !app.result}
         <p class="hint title-medium" class:bad={fouled} aria-live="polite">{hint}</p>
-        <div class="sortline"><Toggle options={[[false, t('sort_rank')], [true, t('sort_suit')]] as [boolean, string][]} selected={vm.sortBySuit} onselect={(v) => (vm.sortBySuit = v)} /><Kbd k="S" /></div>
+        <div class="sortline"><Toggle options={[[false, t('sort_rank')], [true, t('sort_suit')]] as [boolean, string][]} selected={vm.sortBySuit} onselect={(v) => (vm.sortBySuit = v)} /><Kbd k={km.sortLabel} /></div>
         <div class="tools">
-          <button class="btn outlined" disabled={!vm.canUndo} onclick={() => vm.undo()}><Icon name="undo" />{t('undo')}<Kbd k="Z" inline /></button>
+          <button class="btn outlined" disabled={!vm.canUndo} onclick={() => vm.undo()}><Icon name="undo" />{t('undo')}<Kbd k={km.undoLabel} inline /></button>
           <button class="btn outlined" disabled={!vm.canClear} onclick={() => vm.clearRows()}><Icon name="clearAll" />{t('take_all')}<Kbd k="Del" inline /></button>
         </div>
         <button class="btn filled big" disabled={!canConfirm} onclick={() => app.confirm()}>{app.waiting ? '…' : t('confirm')}<Kbd k="Enter" inline /></button>
         <span class="grow"></span>
-        <KeyList keys={[[['1', '2', '3'], t('k_rows')], [['←', '→', 'Space'], t('k_pick')], [['Esc'], t('k_unpick')], [['?'], t('k_help')]]} mouse={t('mouse_tips')} />
+        <KeyList keys={keyList(app.deskKeys)} mouse={t('mouse_tips')} />
       {:else}
         <button class="btn filled big" onclick={() => app.dealNow()}>{t('next_hand')}<Kbd k="Enter" inline /></button>
         {@render keepers()}
@@ -188,7 +202,7 @@
 
 {#if help}
   <Dialog title={t('arrange_help_title')} onclose={() => (help = false)}>
-    <p class="body-large help-text">{t('arrange_help_desk')}</p>
+    <p class="body-large help-text">{t('arrange_help_desk', keyMap(app.deskKeys).rowLabels.join(t('list_sep')))}</p>
     <p class="body-medium dim help-text">{t('mouse_tips')}</p>
     {#snippet actions()}<button class="btn text" onclick={() => (help = false)}>{t('ok')}</button>{/snippet}
   </Dialog>
@@ -218,6 +232,10 @@
   .grow { flex: 1; }
   .card { background: var(--surface-container-low); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
   .card p { margin: 0; }
+  .remarks { background: var(--secondary-container); color: var(--on-secondary-container); }
+  .remarks .mistake { background: var(--error-container); color: var(--on-error-container); border-radius: 8px; padding: 2px 8px; align-self: flex-start; }
+  .yours-head { display: flex; align-items: center; gap: 8px; }
+  .side.wide { width: 400px; }
   .thinking { display: flex; align-items: center; gap: 10px; min-height: 40px; }
   .star { color: var(--highlight); display: contents; }
   .keys { display: inline-flex; align-items: center; gap: 4px; margin-right: 8px; }

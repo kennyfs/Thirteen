@@ -1,7 +1,8 @@
 // The page's state: practice against three computer players (always c = 0) under the chosen rules, the analysis of
 // single hands, the records and the settings. A port of the app's AppViewModel.kt; the battles are in battle.svelte.ts.
 import { Arranger } from './arranger.svelte';
-import { Battle } from './battle.svelte';
+import { Battle, type BattleRecord } from './battle.svelte';
+import { DESK_KEYS, type DeskKeys } from './desk-keys';
 import { parseCards, sameArrangement, shuffled, type Rows } from './cards';
 import * as engine from './engine';
 import type { Analysis, Score } from './engine';
@@ -39,6 +40,9 @@ export class App {
   chooseColorStyle(v: ColorStyle) { this.colorStyle = v; store.set('look.colors', v); }
   chooseDarkMode(v: DarkMode) { this.darkMode = v; store.set('look.dark', v); }
   chooseTextSize(v: TextSize) { this.textSize = v; store.set('look.text', v); }
+  /** A computer's table: its keys (desk-keys.ts). */
+  deskKeys = $state<DeskKeys>(DESK_KEYS.includes(store.get('desk.keys', 'pick') as DeskKeys) ? store.get('desk.keys', 'pick') as DeskKeys : 'pick');
+  chooseDeskKeys(v: DeskKeys) { this.deskKeys = v; store.set('desk.keys', v); }
   chooseLang(v: Lang) { this.lang = v; setLang(v); store.set('lang', v); }
 
   private catching(p: Promise<unknown>) { p.catch((e) => { this.error = e?.message ?? String(e); }); }
@@ -123,6 +127,10 @@ export class App {
   favorites = new store.RecordStore('favorites');
   recordCount = $state(this.records.count());
   favoriteIds = $state(this.favorites.ids());
+  /** Battles (battle.svelte.ts's BattleRecord), and the saved ones. */
+  battles = new store.RecordStore('battles');
+  favoriteBattles = new store.RecordStore('favorite_battles');
+  favoriteBattleIds = $state(this.favoriteBattles.ids());
   /** Battles online (battle.svelte.ts): their hands go to the records too. */
   battle = new Battle((m) => { this.error = m; }, () => this.ruleSpec, () => { this.recordCount = this.records.count(); });
   lastRecord = $state<Rec | null>(null);
@@ -231,8 +239,38 @@ export class App {
   /** Deletes the records; the totals and practice start over too. */
   clearRecords() {
     this.records.clear();
+    this.battles.clear();
     this.recordCount = 0;
     this.resetSession();
+  }
+
+  /** A battle of the records, on the battle's result pages; Done comes back to the records. */
+  openBattleRecord(b: Rec) {
+    if (this.battle.openRecord(b as BattleRecord)) nav.go('BATTLE');
+    else this.error = t('battle_open_busy');
+  }
+
+  /** Done with a battle's results: a battle of the records goes back to them. */
+  battleDone() {
+    const opened = this.battle.opened;
+    this.battle.dismiss();
+    if (opened) nav.go('RECORDS');
+  }
+
+  /** Saves the battle of the records shown, or drops it. */
+  toggleOpenedBattle() {
+    const b = this.battles.all().find((x) => x.id === this.battle.opened) ?? this.favoriteBattles.all().find((x) => x.id === this.battle.opened);
+    if (b) this.toggleFavoriteBattle(b);
+  }
+
+  toggleFavoriteBattle(b: Rec) {
+    this.favoriteBattles.toggle(b);
+    this.favoriteBattleIds = this.favoriteBattles.ids();
+  }
+
+  /** The player's own hand `index` of battle `id`, as a record. */
+  battleHandRecord(id: string, index: number): Rec | null {
+    return this.records.all().find((r) => r.battle === id && r.battle_hand === index) ?? null;
   }
 
   toggleFavorite(rec: Rec) {

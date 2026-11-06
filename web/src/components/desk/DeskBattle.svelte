@@ -14,7 +14,7 @@
   import { t, ta } from '../../lib/i18n.svelte';
   import * as R from '../../lib/rules';
   import { MAX_DESK_PLAY } from '../../lib/sizing';
-  import { signed } from '../../lib/ui.svelte';
+  import { localTime, signed } from '../../lib/ui.svelte';
   import Dialog from '../Dialog.svelte';
   import Icon from '../Icon.svelte';
   import Menu from '../Menu.svelte';
@@ -27,6 +27,7 @@
   import DeskRows from './DeskRows.svelte';
   import Kbd from './Kbd.svelte';
   import KeyList from './KeyList.svelte';
+  import { keyList, keyMap, startHint } from '../../lib/desk-keys';
 
   interface Props {
     app: App; page: string; reviewing: HandOutcome | null; left: number | null;
@@ -104,13 +105,14 @@
   // ---- Setting a hand ----
   let help = $state(false);
   const vm = $derived(b.arranger);
+  const km = $derived(keyMap(app.deskKeys));
   const canSubmit = $derived(!b.submitting && vm.rowsEval?.valid === true);
   const hint = $derived.by(() => {
     const picked = vm.selected.size;
     const rest = vm.unplaced.length;
     if (vm.armed !== null) return t('hint_armed', ta('row_names')[vm.armed], ROW_SIZES[vm.armed] - vm.rows[vm.armed].length - picked);
     if (picked > 0) return t('hint_selected', picked);
-    if (rest === 13) return t('hint_start_desk');
+    if (rest === 13) return startHint(app.deskKeys);
     if (rest > 0) return t('hint_left', rest);
     const ev = vm.rowsEval;
     if (!ev) return '';
@@ -355,7 +357,7 @@
     <div class="desk">
       <div class="main">
         {#if b.deal}
-          <DeskArranging {vm} {wheel} busy={b.submitting} onconfirm={() => b.submit()} bind:help />
+          <DeskArranging {vm} {wheel} busy={b.submitting} onconfirm={() => b.submit()} keys={app.deskKeys} bind:help />
         {:else}<div class="center">{@render spinner(40)}</div>{/if}
       </div>
       <aside class="side">
@@ -366,19 +368,19 @@
         <div class="body-medium dim">{t('players_done', humans.filter((p) => p.submitted).length, humans.length)}{#if myRank > 0} · {t('battle_your_rank', myRank)}{/if}</div>
         {@render who()}
         <p class="hint title-medium" class:bad={fouled} aria-live="polite">{hint}</p>
-        <div class="sortline"><Toggle options={[[false, t('sort_rank')], [true, t('sort_suit')]] as [boolean, string][]} selected={vm.sortBySuit} onselect={(v) => (vm.sortBySuit = v)} /><Kbd k="S" /></div>
+        <div class="sortline"><Toggle options={[[false, t('sort_rank')], [true, t('sort_suit')]] as [boolean, string][]} selected={vm.sortBySuit} onselect={(v) => (vm.sortBySuit = v)} /><Kbd k={km.sortLabel} /></div>
         <div class="tools">
-          <button class="btn outlined" disabled={!vm.canUndo} onclick={() => vm.undo()}><Icon name="undo" />{t('undo')}<Kbd k="Z" inline /></button>
+          <button class="btn outlined" disabled={!vm.canUndo} onclick={() => vm.undo()}><Icon name="undo" />{t('undo')}<Kbd k={km.undoLabel} inline /></button>
           <button class="btn outlined" disabled={!vm.canClear} onclick={() => vm.clearRows()}><Icon name="clearAll" />{t('take_all')}<Kbd k="Del" inline /></button>
         </div>
         <button class="btn filled big" disabled={!canSubmit} onclick={() => b.submit()}>{b.submitting ? '…' : t('battle_submit')}<Kbd k="Enter" inline /></button>
         <span class="grow"></span>
-        <KeyList keys={[[['1', '2', '3'], t('k_rows')], [['←', '→', 'Space'], t('k_pick')], [['Esc'], t('k_unpick')], [['?'], t('k_help')]]} mouse={t('mouse_tips')} />
+        <KeyList keys={keyList(app.deskKeys)} mouse={t('mouse_tips')} />
       </aside>
     </div>
     {#if help}
       <Dialog title={t('arrange_help_title')} onclose={() => (help = false)}>
-        <p class="body-large help-text">{t('arrange_help_desk')}</p>
+        <p class="body-large help-text">{t('arrange_help_desk', keyMap(app.deskKeys).rowLabels.join(t('list_sep')))}</p>
         <p class="body-medium dim help-text">{t('mouse_tips')}</p>
         {#snippet actions()}<button class="btn text" onclick={() => (help = false)}>{t('ok')}</button>{/snippet}
       </Dialog>
@@ -405,8 +407,14 @@
     {@render handTable(o, analysisMode && !puzzle && o ? (p) => b.analyzeHand(o.index, p) : null)}
 
   {:else if page === 'summary' && room}
-    <TitleBar title={t('battle_over') + ' · ' + modeName(room.settings.mode)}>
-      <button class="btn filled" onclick={() => b.dismiss()}>{t('battle_done')}</button>
+    <TitleBar title={(b.opened ? localTime(new Date(b.openedAt).toISOString()) : t('battle_over')) + ' · ' + modeName(room.settings.mode)}>
+      {#if b.opened}
+        {@const saved = app.favoriteBattleIds.has(b.opened)}
+        <button class="btn icon text" aria-label={t(saved ? 'favorite_battle_remove' : 'favorite_battle_add')} onclick={() => app.toggleOpenedBattle()}>
+          <span class:star={saved}><Icon name={saved ? 'star' : 'starBorder'} /></span>
+        </button>
+      {/if}
+      <button class="btn filled" onclick={() => app.battleDone()}>{t('battle_done')}</button>
     </TitleBar>
     <div class="scroll">
       <div class="summary">
@@ -571,4 +579,5 @@
   .place.p2 { background: color-mix(in srgb, #b8c4cc 40%, var(--surface-container)); }
   .place.p3 { background: color-mix(in srgb, #d49a6a 35%, var(--surface-container)); }
   .place.me { outline: 2px solid var(--primary); outline-offset: -2px; }
+  .star { color: var(--highlight); display: contents; }
 </style>

@@ -13,7 +13,7 @@
   import { nav } from '../lib/nav.svelte';
   import * as R from '../lib/rules';
   import { lineCard } from '../lib/sizing';
-  import { signed, textRoom, ui } from '../lib/ui.svelte';
+  import { localTime, signed, textRoom, ui } from '../lib/ui.svelte';
   import Arranging from './Arranging.svelte';
   import CandidateList from './CandidateList.svelte';
   import Dialog from './Dialog.svelte';
@@ -37,7 +37,7 @@
     if (r.detail !== null && room) return r.analyzed !== null && !r.fromReview ? () => r.closeAnalysis() : () => r.closeDetail();
     if (!room) return null;
     if (over && !b.lastSeen && b.outcomes.length > 0) return () => b.toSummary();
-    if (over) return () => b.dismiss();
+    if (over) return () => app.battleDone();
     return () => (confirmLeave = true);
   });
   // What Back does is read when it is pressed: two quick ones go up two pages.
@@ -419,8 +419,14 @@
     {@render handTable(o, analysisMode && !puzzle && o ? (p) => b.analyzeHand(o.index, p) : null)}
 
   {:else if page === 'summary' && room}
-    <TitleBar title={t('battle_over') + ' · ' + modeName(room.settings.mode)}>
-      <button class="btn filled" onclick={() => b.dismiss()}>{t('battle_done')}</button>
+    <TitleBar title={(b.opened ? localTime(new Date(b.openedAt).toISOString()) : t('battle_over')) + ' · ' + modeName(room.settings.mode)}>
+      {#if b.opened}
+        {@const saved = app.favoriteBattleIds.has(b.opened)}
+        <button class="btn icon text" aria-label={t(saved ? 'favorite_battle_remove' : 'favorite_battle_add')} onclick={() => app.toggleOpenedBattle()}>
+          <span class:star={saved}><Icon name={saved ? 'star' : 'starBorder'} /></span>
+        </button>
+      {/if}
+      <button class="btn filled" onclick={() => app.battleDone()}>{t('battle_done')}</button>
     </TitleBar>
     <div class="scroll">
       <div class="summary" bind:clientWidth={listW}>
@@ -588,4 +594,5 @@
     background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; width: 100%; }
   .hand-line:hover:not(:disabled) { background: var(--surface-container); }
   .hand-line:disabled { cursor: default; }
+  .star { color: var(--highlight); display: contents; }
 </style>

@@ -1,6 +1,7 @@
 """Checks a computer's pages with the mouse and the keys: the practice table (a double click, Shift and a click, a right
-click, dragging, 1 2 3, Z, Delete, Enter), the result (A twice, F, Escape), the analysis (R, Delete, the arrows, Space,
-Enter, ↓ in the candidates, Escape) and the records (a click on the chart, ↓). Prints what it found, and the errors.
+click, a sweep, 1 2 3, Z, Delete, Enter; a key a card in 7 + 6 and in one line), the result (analyzed at once, A, F,
+Escape), the analysis (R, Delete, the arrows, Space, Enter, ↓ in the candidates, the mouse between candidates, Escape)
+and the records (the kinds, a click on the chart). Prints what it found, and the errors.
 
   python scripts/desktest.py URL OUT_DIR   e.g. http://localhost:4173/ /tmp/desk
 """
@@ -55,15 +56,19 @@ with sync_playwright() as p:
     page.keyboard.press('Delete')
     page.wait_for_timeout(200)
     check('Delete takes all back', rows() == [0, 0, 0], rows())
-    # Dragging a card into the back row.
-    box = tray(5).bounding_box()
-    target = page.locator('[data-row="2"]').bounding_box()
-    page.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+    # A sweep over four cards picks them; a click on the back row puts them in.
+    a, z = tray(2).bounding_box(), tray(5).bounding_box()
+    page.mouse.move(a['x'] + 8, a['y'] + a['height'] / 2)
     page.mouse.down()
-    page.mouse.move(target['x'] + target['width'] * 0.6, target['y'] + target['height'] / 2, steps=8)
+    page.mouse.move(z['x'] + 8, z['y'] + z['height'] / 2, steps=10)
     page.mouse.up()
     page.wait_for_timeout(200)
-    check('drag into the back', rows() == [0, 0, 1], rows())
+    check('a sweep picks four', page.evaluate(f'{P}.selected.size') == 4, page.evaluate(f'{P}.selected.size'))
+    page.locator('[data-row="2"]').click(position={'x': 20, 'y': 20})
+    page.wait_for_timeout(200)
+    check('a click on the back puts them in', rows() == [0, 0, 4], rows())
+    page.keyboard.press('Delete')
+    page.wait_for_timeout(200)
     page.screenshot(path=str(out / '1-table.png'))
     # The engine's rows, and Enter plays.
     page.evaluate(f"""async () => {{ const {{ app, engine }} = window.thirteen;
@@ -72,20 +77,28 @@ with sync_playwright() as p:
     page.keyboard.press('Enter')
     page.wait_for_function('window.thirteen.app.result !== null', timeout=60000)
     check('Enter plays', True)
-    page.keyboard.press('a')
     page.wait_for_function('window.thirteen.app.gameAnalysis !== null', timeout=60000)
     page.wait_for_timeout(300)
-    check('A analyzes in the panel, on the result', page.evaluate('window.thirteen.app.resultTab') == 0)
+    check('the result is analyzed at once', page.locator('.side .remarks').count() == 1 and page.evaluate('window.thirteen.app.resultTab') == 0)
     page.screenshot(path=str(out / '2-result.png'))
     page.keyboard.press('f')
     page.wait_for_timeout(200)
     check('F saves', page.evaluate('window.thirteen.app.favoriteIds.size') == 1)
     page.keyboard.press('a')
     page.wait_for_timeout(300)
-    check('A again: the candidates', page.evaluate('window.thirteen.app.resultTab') == 1)
+    check('A: the candidates', page.evaluate('window.thirteen.app.resultTab') == 1)
     page.keyboard.press('ArrowDown')
     page.wait_for_timeout(200)
+    # The mouse on the third candidate, then in the gap under it: the third still shown at the right.
+    c = page.locator('.dc .cand').nth(3).bounding_box()
+    page.mouse.move(c['x'] + 60, c['y'] + 10)
+    page.wait_for_timeout(150)
+    shown = page.locator('.dc .pair .side').last.inner_text()
+    page.mouse.move(c['x'] + 60, c['y'] + c['height'] + 1)
+    page.wait_for_timeout(150)
+    check('the gap between candidates keeps the one shown', page.locator('.dc .pair .side').last.inner_text() == shown)
     page.screenshot(path=str(out / '3-candidates.png'))
+    page.mouse.move(5, 5)
     page.keyboard.press('Escape')
     page.wait_for_timeout(300)
     check('Escape: back to the result', page.evaluate('window.thirteen.app.resultTab') == 0)
@@ -119,14 +132,42 @@ with sync_playwright() as p:
     page.wait_for_timeout(300)
     check('Escape: back to the cards', page.evaluate('window.thirteen.app.anaPage') == 0)
 
-    # The records: a click on the chart picks a hand, ↓ the next.
+    # The records: a click on the chart opens the hand's actions; the kinds.
     page.evaluate("() => { location.hash = '#/records'; }")
     page.wait_for_timeout(500)
     chart = page.locator('.chart svg').bounding_box()
     page.mouse.click(chart['x'] + chart['width'] - 20, chart['y'] + chart['height'] / 2)
     page.wait_for_timeout(300)
-    check('a click on the chart picks a hand', page.locator('.records tr.on').count() == 1)
+    check('a click on the chart opens the hand', page.locator('dialog[open] .action').count() == 2)
     page.screenshot(path=str(out / '5-records.png'))
+    page.keyboard.press('Escape')
+    page.wait_for_timeout(200)
+    page.locator('.kinds button').nth(1).click()
+    page.wait_for_timeout(200)
+    check('the table games: none yet', page.locator('.records .main .tile').count() == 0, page.locator('.records .main .tile').count())
+    page.screenshot(path=str(out / '5b-records-games.png'))
+
+    # A key a card: 7 + 6, then one line.
+    for mode, pick, row in [('keys76', ['a', 's', 'z'], '1'), ('keys13', ['q', 'w', ']'], '1')]:
+        page.evaluate(f"() => {{ window.thirteen.app.chooseDeskKeys('{mode}'); location.hash = '#/play'; }}")
+        page.wait_for_timeout(300)
+        page.evaluate('window.thirteen.app.dealNow()')
+        page.wait_for_function(f'{P}.unplaced.length === 13')
+        page.wait_for_timeout(300)
+        for k in pick:
+            page.keyboard.press(k)
+        check(f'{mode}: keys pick three', page.evaluate(f'{P}.selected.size') == 3, page.evaluate(f'{P}.selected.size'))
+        page.keyboard.press(row)
+        page.wait_for_timeout(200)
+        check(f'{mode}: 1 into the front, the places kept', rows() == [3, 0, 0] and page.locator('.tray .gone').count() == 3, rows())
+        was = page.evaluate(f'{P}.sortBySuit')
+        page.keyboard.press('Space')
+        page.wait_for_timeout(100)
+        page.keyboard.press('Backspace')
+        page.wait_for_timeout(200)
+        check(f'{mode}: Space sorts, Backspace undoes', page.evaluate(f'{P}.sortBySuit') != was and rows() == [0, 0, 0], rows())
+        page.screenshot(path=str(out / f'7-{mode}.png'))
+    page.evaluate("() => window.thirteen.app.chooseDeskKeys('pick')")
 
     # A narrow window on a computer: the tablet's pages.
     page.set_viewport_size({'width': 900, 'height': 900})

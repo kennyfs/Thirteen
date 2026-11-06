@@ -42,6 +42,13 @@ export class RecordStore {
 
   clear() { set(this.key, ''); }
 
+  /** Puts `rec` in, in the place of the one with its id if there is one (a battle as it goes on). */
+  put(rec: Rec) {
+    const all = this.all();
+    const i = all.findIndex((r) => r.id === rec.id);
+    this.write(i < 0 ? [...all, rec] : all.map((r, k) => (k === i ? rec : r)));
+  }
+
   ids(): Set<string> { return new Set(this.all().map((r) => r.id)); }
 
   /** Saves the record, or drops it if it is saved; returns whether it is saved now. */

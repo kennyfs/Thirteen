@@ -1,4 +1,7 @@
-<!-- The records: the score chart and the list of practice hands, the saved hands, saving them to a file, and clearing. -->
+<!--
+  The records, by kind (practice, table games, puzzle contests) as the app's: the score chart and the list (a battle's
+  hands under the battle, which opens its results), the saved battles and hands, saving them to a file, and clearing.
+-->
 <script lang="ts">
   import type { App } from '../lib/app.svelte';
   import { parseCards } from '../lib/cards';
@@ -14,6 +17,10 @@
   import ScoreChart from './ScoreChart.svelte';
   import TitleBar from './TitleBar.svelte';
   import DeskRecords from './desk/DeskRecords.svelte';
+  import BattleLine from './BattleLine.svelte';
+  import Toggle from './Toggle.svelte';
+  import type { BattleRecord } from '../lib/battle.svelte';
+  import { chartGroups, entries, KIND_NAMES, kindOf, noC, RECORD_KINDS, type RecordKind } from '../lib/records';
 
   let { app }: { app: App } = $props();
   let shown = $state(20);
@@ -24,20 +31,15 @@
 
   // Newest first; re-read whenever the count changes. Hands played again by an older app version are in none.
   const recs = $derived.by(() => { void app.recordCount; return app.records.all().filter((r) => r.label !== 'replay').reverse(); });
-  const practice = $derived(recs.filter((r) => r.label !== 'battle' && r.label !== 'puzzle'));
+  let kind = $state<RecordKind>('PRACTICE');
+  const ofKind = $derived(recs.filter((r) => kindOf(r) === kind));
+  const battles = $derived.by(() => { void app.recordCount; return app.battles.all() as BattleRecord[]; });
+  const list_ = $derived(entries(kind, recs, battles));
+  const savedBattles = $derived.by(() => { void app.favoriteBattleIds; return app.favoriteBattles.all() as BattleRecord[]; });
   const saved = $derived.by(() => { void app.favoriteIds; return app.favorites.all().reverse(); });
 
   // The chart: the totals over the records of one set of rules (without the dealer's cost), oldest first.
-  const noC = (s: string) => (s || 'family').split(',').filter((p) => !p.startsWith('c=')).join(',');
-  const groups = $derived.by(() => {
-    const g = new Map<string, Rec[]>();
-    for (const r of [...practice].reverse()) if (typeof r.result === 'number') {
-      const k = noC(r.rules);
-      if (!g.has(k)) g.set(k, []);
-      g.get(k)!.push(r);
-    }
-    return g;
-  });
+  const groups = $derived(chartGroups(ofKind));
   const key = $derived.by(() => {
     if (groups.has(chosen)) return chosen;
     const cur = noC(app.gameRules);
@@ -72,6 +74,7 @@
             </div>
           {/if}
           <div class="title-medium">{t('chart_summary', list.length, signed(totals[totals.length - 1]), signed(totals[totals.length - 1] / list.length))}</div>
+          {#if kind === 'PUZZLE'}<p class="body-medium dim">{t('chart_puzzle_note')}</p>{/if}
           <ScoreChart {totals} firstDate={localTime(list[0].timestamp).slice(0, 10)} lastDate={localTime(list[list.length - 1].timestamp).slice(0, 10)}
             description={t('chart_desc', list.length, signed(totals[totals.length - 1]))} />
         {/if}
@@ -79,11 +82,26 @@
 
 {/snippet}
 {#snippet records()}
-      {#if practice.length}
-        <div class="section-header">{t('records_list')}</div>
+      {#if list_.length}
+        <div class="section-header">{t(kind === 'PRACTICE' ? 'records_list' : 'records_battles')}</div>
         <div class="pad">
-          <RecordList recs={practice.slice(0, shown)} {app} onpick={(r) => (acting = r)} />
-          {#if practice.length > shown}<button class="btn text" onclick={() => (shown += 50)}>{t('show_more')}</button>{/if}
+          {#if kind === 'PRACTICE'}
+            <RecordList recs={ofKind.slice(0, shown)} {app} onpick={(r) => (acting = r)} />
+          {:else}
+            {#each list_.slice(0, shown) as e, i (i)}
+              <div class="item">
+                {#if 'battle' in e}<BattleLine b={e.battle} {app} onclick={() => app.openBattleRecord(e.battle)} />
+                {:else}<RecordLine r={e.hand} {app} max={ui.sizes.record} onclick={() => (acting = e.hand)} />{/if}
+              </div>
+            {/each}
+          {/if}
+          {#if list_.length > shown}<button class="btn text" onclick={() => (shown += 50)}>{t('show_more')}</button>{/if}
+        </div>
+      {/if}
+      {#if savedBattles.length}
+        <div class="section-header">{t('favorite_battles_title')}</div>
+        <div class="pad">
+          {#each savedBattles as sb (sb.id)}<div class="item"><BattleLine b={sb} {app} onclick={() => app.openBattleRecord(sb)} /></div>{/each}
         </div>
       {/if}
 
@@ -115,7 +133,9 @@
 <div class="page">
   <TitleBar title={t('records_title')} />
   <div class="scroll">
-    <div class="readable">{@render chart()}{@render records()}{@render favorites()}{@render share()}</div>
+    <div class="readable">
+      <div class="kinds"><Toggle options={RECORD_KINDS.map((k, i) => [k, t(KIND_NAMES[i])] as [RecordKind, string])} selected={kind} onselect={(k) => { kind = k; shown = 20; chosen = ''; }} /></div>
+      {@render chart()}{@render records()}{@render favorites()}{@render share()}</div>
   </div>
 </div>
 {/if}
@@ -159,4 +179,6 @@
   .danger { display: flex; gap: 4px; padding: 8px; }
   .action { width: 100%; justify-content: flex-start; min-height: 52px; font-size: 1rem; }
   .msg { margin: 0; }
+  .kinds { padding: 4px 16px; }
+  .item { border-bottom: 1px solid var(--outline-variant); }
 </style>
