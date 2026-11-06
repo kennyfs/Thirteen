@@ -166,6 +166,9 @@ class NearbyHost(context: Context, private val hub: Hub, private val scope: Coro
   }
 
   init {
+    // The client is the app's one: a room left a moment ago may still advertise (8001, already advertising).
+    current = this
+    client.stopAdvertising()
     client.startAdvertising(name, SERVICE_ID, lifecycle, AdvertisingOptions.Builder().setStrategy(STRATEGY).build())
       .addOnFailureListener { onError(it.message ?: it.toString()) }
   }
@@ -182,14 +185,25 @@ class NearbyHost(context: Context, private val hub: Hub, private val scope: Coro
     main.post { client.sendPayload(endpointId, Payload.fromBytes(bytes)) }
   }
 
-  /** Stops advertising the room, keeping its connections. */
-  fun stopAdvertising() = client.stopAdvertising()
+  /** Stops advertising the room, keeping its connections; not another room's, hosted since. */
+  fun stopAdvertising() {
+    if (current === this) client.stopAdvertising()
+  }
 
+  /** Stops the room: its advertising (if no other room has started since) and its own connections, not another's. */
   fun stop() {
-    client.stopAdvertising()
-    client.stopAllEndpoints()
-    for (c in conns.values) hub.closed(c)
+    stopAdvertising()
+    if (current === this) current = null
+    for ((endpointId, c) in conns) {
+      client.disconnectFromEndpoint(endpointId)
+      hub.closed(c)
+    }
     conns.clear()
+  }
+
+  private companion object {
+    /** The room advertising now, of the ones this app has hosted. */
+    var current: NearbyHost? = null
   }
 }
 
@@ -215,6 +229,8 @@ class NearbyFinder(context: Context, private val onChange: (Map<String, String>)
   private val found = LinkedHashMap<String, String>()
 
   init {
+    // A search left a moment ago may still run (8002, already discovering).
+    client.stopDiscovery()
     client.startDiscovery(SERVICE_ID, object : EndpointDiscoveryCallback() {
       override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
         if (info.serviceId != SERVICE_ID) return

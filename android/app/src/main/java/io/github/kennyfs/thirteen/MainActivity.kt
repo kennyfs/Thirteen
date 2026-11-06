@@ -214,16 +214,16 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
         )
       }
     },
-    layoutType = if (battle.inRoom) NavigationSuiteType.None else type,
+    layoutType = if (battle.immersive) NavigationSuiteType.None else type,
   ) {
     // The bar or rail looks after its own side; the content keeps clear of the rest.
-    val sides = if (battle.inRoom) WindowInsetsSides.Top + WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
+    val sides = if (battle.immersive) WindowInsetsSides.Top + WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
     else if (type == NavigationSuiteType.NavigationBar) WindowInsetsSides.Top + WindowInsetsSides.Horizontal
     else WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom
     BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(sides))) {
       // The two sizes of card, for the room the pages have.
       val sizes = cardSizes(maxWidth, maxHeight, textRoom(14))
-      LaunchedEffect(sizes.play, sizes.other) { Log.i("CardSizes", "$maxWidth x $maxHeight: play ${sizes.play}, other ${sizes.other}") }
+      LaunchedEffect(sizes.play, sizes.other, sizes.battle) { Log.i("CardSizes", "$maxWidth x $maxHeight: play ${sizes.play}, battle ${sizes.battle}, other ${sizes.other}") }
       CompositionLocalProvider(LocalCardSizes provides sizes) {
       // A new screen from the bar or rail shows at once; a page opened in a screen slides in, briefly.
       key(tab) {

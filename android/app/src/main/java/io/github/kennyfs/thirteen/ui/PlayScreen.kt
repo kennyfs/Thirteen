@@ -186,17 +186,17 @@ private fun readiness(vm: Arranger): Pair<String, Boolean> {
  * Setting a hand into three rows on the table, for practice and battles. On a wide window the buttons in a bar on top,
  * the three rows side by side under it and the hand in a line along the bottom, both as wide as the table; on a tall
  * one the rows one above another, the hand in a line or two under them, and the buttons in a bar under the table. The
- * rows' cards and the hand's are one size, the largest the room allows up to `LocalCardSizes.play`, which is what the
- * window gives the page with the most above the table (practice's), so a battle's cards are the same.
+ * rows' cards and the hand's are one size, the largest the room allows up to `maxCard` (practice's or a battle's size
+ * of [CardSizes]), so that the hands of a game are the same size whatever their headers hold.
  */
 @Composable
 fun Arranging(
   vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, modifier: Modifier = Modifier, confirmShort: String = confirmLabel,
-  onConfirm: () -> Unit,
+  maxCard: Dp = LocalCardSizes.current.play, onConfirm: () -> Unit,
 ) {
   BoxWithConstraints(modifier.fillMaxSize()) {
     val wide = maxWidth > maxHeight * 1.15f
-    val fit = arrangeFit(maxWidth, maxHeight, wide, textRoom(14), LocalCardSizes.current.play)
+    val fit = arrangeFit(maxWidth, maxHeight, wide, textRoom(14), maxCard)
     if (wide) ArrangeWide(vm, wheel, busy, confirmLabel, confirmShort, fit.card, onConfirm)
     else ArrangeTall(vm, wheel, busy, confirmLabel, confirmShort, fit, onConfirm)
   }

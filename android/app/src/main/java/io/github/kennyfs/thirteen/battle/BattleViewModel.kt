@@ -100,6 +100,8 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   var finished by mutableStateOf(false); private set
   /** In a room still going (the lobby too): the app keeps to the battle until the player leaves it. */
   val inRoom: Boolean get() = room != null && !finished && room?.phase != Phase.OVER
+  /** The screens are out of reach (no bar or rail): in the room, and until the last hand's result is seen. */
+  val immersive: Boolean get() = inRoom || (room != null && !lastSeen && outcomes.isNotEmpty() && (finished || room?.phase == Phase.OVER))
   /** This phone hosts the room (nearby). */
   var hosting by mutableStateOf(false); private set
   /** Rooms advertised nearby, endpoint id to name, while searching. */
@@ -258,6 +260,8 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     if (h != null) {
       host = null
       link = null
+      // No one is to find it any more, and another room may be hosted at once; its connections go a moment later.
+      h.stopAdvertising()
       viewModelScope.launch {
         delay(1500)
         l?.close()
@@ -534,9 +538,8 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
 
   // ---- Results ----
 
-  /** Analyzes a player's hand of the hand just closed, from its result. */
-  fun analyzeHand(player: Int) {
-    val index = room?.hand ?: return
+  /** Analyzes a player's hand of hand `index` (the one just closed), from its result. */
+  fun analyzeHand(index: Int, player: Int) {
     review.analyzeFromResult(index, player)
   }
 

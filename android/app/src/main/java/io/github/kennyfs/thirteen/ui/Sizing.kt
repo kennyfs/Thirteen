@@ -12,12 +12,13 @@ import kotlin.math.ceil
 import kotlin.math.floor
 
 /**
- * The sizes of card, the same everywhere on a screen of a given size, so the cards do not change size from page to page:
- * `play` for arranging (a practice hand or a battle's), which the fingers pick, so as large as the room allows;
+ * The sizes of card, the same on the pages that follow one another, so the cards do not change size from page to page:
+ * `play` for arranging a practice hand, which the fingers pick, so as large as the room allows; `battle` for arranging
+ * a battle's hand (and the rows waiting for the others), which has a header of its own;
  * `other` for what is only looked at, 13 cards in three rows side by side: results, the analysis and what pops up; and
  * `record` for the records' lists, which have nothing beside their cards. Worked out once for the window by [cardSizes].
  */
-class CardSizes(val play: Dp, val other: Dp, val record: Dp = other)
+class CardSizes(val play: Dp, val other: Dp, val record: Dp = other, val battle: Dp = play)
 
 val LocalCardSizes = compositionLocalOf { CardSizes(44.dp, 26.dp) }
 
@@ -118,6 +119,10 @@ fun cardSizes(w: Dp, h: Dp, u: Dp): CardSizes {
   val scoreLines = if ((room(16) * 4.6f + 8.dp) * 4f > w - 28.dp) 2 else 1
   val header = if (wide) 54.dp else 6.dp + maxOf(48.dp, room(26)) + (room(20) + 6.dp) * scoreLines
   val play = arrangeFit(w, h - header, wide, u).card
+  // A battle's header: the hand, the time left and how many have set it, in a line of titleLarge (28 high) padded 4
+  // above and under, or two when they do not fit side by side.
+  val battleLines = if (room(16) * 15 + 60.dp > w - 28.dp) 2 else 1
+  val battle = arrangeFit(w, h - (room(28) + 2.dp) * battleLines - 8.dp, wide, u).card
   val other = if (wide) {
     // The result page's four players in the height left by its header (48), the felt's padding and the gaps: each a line
     // of hand names and the cards.
@@ -127,5 +132,5 @@ fun cardSizes(w: Dp, h: Dp, u: Dp): CardSizes {
   } else minOf(lineCard(w - PAGE_PAD * 2), MAX_OTHER)
   // The records: a line each on a wide window, two a line with the rows one under another on a narrow one.
   val record = if (w >= 560.dp + PAGE_PAD * 2) lineCard(w - PAGE_PAD * 2) else (((w - PAGE_PAD * 2 - 12.dp) / 2 - 8.dp - LINE_GAP * 4) / 5).down()
-  return CardSizes(play, other.coerceAtLeast(14.dp), minOf(record, MAX_RECORD).coerceAtLeast(14.dp))
+  return CardSizes(play, other.coerceAtLeast(14.dp), minOf(record, MAX_RECORD).coerceAtLeast(14.dp), battle)
 }
