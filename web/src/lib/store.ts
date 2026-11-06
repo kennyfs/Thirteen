@@ -30,11 +30,11 @@ export class RecordStore {
 
   private write(recs: Rec[]) { set(this.key, recs.map((r) => JSON.stringify(r) + '\n').join('')); }
 
-  /** The record of a confirmed hand, as the app writes it (label "web"). */
-  add(hand: number[], rows: Rows, rules: string, timeMs: number, result: number): Rec {
+  /** The record of a confirmed hand, as the app writes it (label "web", unless `extra` says otherwise). */
+  add(hand: number[], rows: Rows, rules: string, timeMs: number, result: number, extra: Rec = {}): Rec {
     const rec: Rec = {
       version: 1, id: crypto.randomUUID(), hand: cardsString(hand), front: cardsString(rows[0]), middle: cardsString(rows[1]),
-      back: cardsString(rows[2]), c: 0, rules, time_ms: timeMs, timestamp: new Date().toISOString(), label: 'web', result,
+      back: cardsString(rows[2]), c: 0, rules, time_ms: timeMs, timestamp: new Date().toISOString(), label: 'web', result, ...extra,
     };
     this.write([...this.all(), rec]);
     return rec;

@@ -5,8 +5,8 @@
 // the analysis of the finished hand, the candidates, the settings' pages. Each screen and each page opened adds an
 // entry, so Back (a phone's back gesture too) walks back through them; only from the first one does it leave the page.
 
-export type Screen = 'PLAY' | 'ANALYZE' | 'RECORDS' | 'SETTINGS';
-export const SCREENS: Screen[] = ['PLAY', 'ANALYZE', 'RECORDS', 'SETTINGS'];
+export type Screen = 'PLAY' | 'BATTLE' | 'ANALYZE' | 'RECORDS' | 'SETTINGS';
+export const SCREENS: Screen[] = ['PLAY', 'BATTLE', 'ANALYZE', 'RECORDS', 'SETTINGS'];
 
 interface Route { screen: Screen; sub: string | null }
 
@@ -28,7 +28,42 @@ class Nav {
     history.replaceState({ depth: 0 }, '', path({ screen, sub: null }));
     if (sub && !['analysis', 'candidates'].includes(sub)) history.pushState({ depth: 1 }, '', path({ screen, sub }));
     this.route = parse(location.hash);
-    addEventListener('popstate', () => { this.route = parse(location.hash); });
+    addEventListener('popstate', () => {
+      this.route = parse(location.hash);
+      const was = this.atGuard;
+      this.atGuard = (history.state as { guard?: boolean } | null)?.guard === true;
+      // Back from the guard's entry: its page's own Back, and the entry again while it still has one.
+      const fn = this.guardFn;
+      if (was && !this.atGuard && fn && this.route.screen === this.guardScreen) {
+        fn();
+        if (this.guardFn) this.pushGuard();
+      }
+    });
+  }
+
+  // ---- A screen's own pages, not in the address (a battle's): Back goes through them first ----
+
+  private guardFn: (() => void) | null = null;
+  private guardScreen: Screen | null = null;
+  private atGuard = false;
+
+  private pushGuard() {
+    history.pushState({ depth: 1, guard: true }, '', location.hash);
+    this.atGuard = true;
+  }
+
+  /**
+   * While `fn` is set, Back (the browser's, a phone's gesture) on this screen calls it rather than leaving the screen:
+   * an entry is kept above the screen's for it. Null: Back leaves again.
+   */
+  guard(fn: (() => void) | null) {
+    this.guardFn = fn;
+    this.guardScreen = fn ? this.route.screen : null;
+    if (fn && !this.atGuard) this.pushGuard();
+    else if (!fn && this.atGuard) {
+      this.atGuard = false;
+      history.back();
+    }
   }
 
   get screen(): Screen { return this.route.screen; }
@@ -39,6 +74,7 @@ class Nav {
     if (screen === this.route.screen) return this.back();
     const r = { screen, sub: null };
     history.pushState({ depth: 0 }, '', path(r));
+    this.atGuard = false;
     this.route = r;
   }
 

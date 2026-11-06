@@ -3,13 +3,14 @@
   The colors and the text size go on <html>, so that everything, dialogs too, follows them.
 -->
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { App, TEXT_SCALE, type Screen } from './lib/app.svelte';
   import { nav } from './lib/nav.svelte';
   import * as engine from './lib/engine';
   import { t } from './lib/i18n.svelte';
   import { measure, ui } from './lib/ui.svelte';
   import Analyze from './components/Analyze.svelte';
+  import Battle from './components/Battle.svelte';
   import Dialog from './components/Dialog.svelte';
   import Icon, { type IconName } from './components/Icon.svelte';
   import Play from './components/Play.svelte';
@@ -21,7 +22,8 @@
   if (new URLSearchParams(location.search).has('test')) Object.assign(window, { thirteen: { app, engine } });
   // As the app's: an outlined icon, filled when the screen is shown.
   const tabs: [Screen, string, IconName, IconName][] = [
-    ['PLAY', 'nav_play', 'styleOutlined', 'style'], ['ANALYZE', 'nav_analyze', 'assessmentOutlined', 'assessment'],
+    ['PLAY', 'nav_play', 'styleOutlined', 'style'], ['BATTLE', 'nav_battle', 'groupsOutlined', 'groups'],
+    ['ANALYZE', 'nav_analyze', 'assessmentOutlined', 'assessment'],
     ['RECORDS', 'nav_records', 'historyOutlined', 'historyFilled'], ['SETTINGS', 'nav_settings', 'settingsOutlined', 'settingsFilled'],
   ];
   let systemDark = $state(matchMedia('(prefers-color-scheme: dark)').matches);
@@ -73,10 +75,14 @@
     nav.go(s);
   }
   const openRules = () => nav.open('rules');
+  // In a room the other screens are out of reach, as in the app: no bar or rail, and the battle shown (after a reload too).
+  const immersive = $derived(app.battle.immersive);
+  $effect(() => { if (immersive && app.screen !== 'BATTLE') nav.go('BATTLE'); });
+  $effect(() => { void immersive; tick().then(() => measure(TEXT_SCALE[app.textSize])); });
 </script>
 
 <div class="shell" class:wide={ui.wide}>
-  <nav aria-label={t('app_name')}>
+  <nav aria-label={t('app_name')} hidden={immersive}>
     {#each tabs as [s, label, icon, chosen] (s)}
       <button class:on={app.screen === s} aria-current={app.screen === s ? 'page' : undefined} onclick={() => go(s)}>
         <span class="pill"><Icon name={app.screen === s ? chosen : icon} /></span><span class="label">{t(label)}</span>
@@ -88,6 +94,8 @@
       <div class="loading"><span class="spinner"></span></div>
     {:else if app.screen === 'PLAY'}
       <Play {app} onrules={openRules} />
+    {:else if app.screen === 'BATTLE'}
+      <Battle {app} />
     {:else if app.screen === 'ANALYZE'}
       <Analyze {app} onrules={openRules} />
     {:else if app.screen === 'RECORDS'}
@@ -111,6 +119,7 @@
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
   .shell.wide { flex-direction: row; }
   main { flex: 1; min-height: 0; min-width: 0; position: relative; }
+  nav[hidden] { display: none; }
   nav { flex: none; display: flex; justify-content: space-around; height: 80px; background: var(--surface-container); }
   .wide nav { flex-direction: column; justify-content: flex-start; gap: 12px; height: auto; width: 88px; padding-top: 12px; background: var(--surface); }
   nav button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: none; background: none;

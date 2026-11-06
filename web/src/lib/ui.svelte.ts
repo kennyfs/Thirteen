@@ -18,8 +18,10 @@ export function measure(textScale: number) {
   const H = window.innerHeight - px(pad?.paddingTop) - px(pad?.paddingBottom);
   // A rail whenever the window is wider than tall: there the height is what the cards need.
   const wide = W > H;
-  const w = wide ? W - NAV_RAIL : W;
-  const h = wide ? H : H - NAV_BAR;
+  // No bar or rail in a battle's room (App.svelte).
+  const bare = !!document.querySelector('.shell > nav[hidden]');
+  const w = wide && !bare ? W - NAV_RAIL : W;
+  const h = wide || bare ? H : H - NAV_BAR;
   const u = 14 * (root / 16);
   ui.w = w;
   ui.h = h;

@@ -1,6 +1,7 @@
 <!--
   Everyone's rows on the table, the player first. Wide: a line per player filling the height, the scoops as arcs at
-  the right. Narrow: a block per player, the rows side by side (a tap shows them one above another).
+  the right. Narrow: a block per player, the rows side by side (a tap shows them one above another). With `onplayer`, a
+  tap on a player calls it instead (a battle's analysis of their hand).
 -->
 <script lang="ts">
   import { rowLabel, ROW_SIZES } from '../lib/cards';
@@ -10,8 +11,12 @@
   import { signed, textRoom, ui } from '../lib/ui.svelte';
   import RowCards from './RowCards.svelte';
 
-  interface Props { rows: number[][][]; score: Score; wheel: number; names: string[]; notes: (string | null)[]; totals: number[] }
-  let { rows, score, wheel, names, notes, totals }: Props = $props();
+  interface Props {
+    rows: number[][][]; score: Score; wheel: number; names: string[]; notes: (string | null)[]; totals: number[];
+    onplayer?: ((seat: number) => void) | null;
+  }
+  let { rows, score, wheel, names, notes, totals, onplayer = null }: Props = $props();
+  const tap = (s: number) => { if (onplayer) onplayer(s); else if (sideBySide) expanded = expanded === s ? null : s; };
 
   let w = $state(0);
   let h = $state(0);
@@ -97,7 +102,11 @@
         <div class="lines" style:gap="{SEAT_GAP}px">
           {#each rows as seat, s (s)}
             {@const info = score.info[s]}
-            <div class="line" class:me={s === 0} class:homerun={score.homeRun[s]} bind:clientHeight={() => lineH, (v) => { if (s === 0) lineH = v; }}
+            <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+            <div class="line" class:me={s === 0} class:homerun={score.homeRun[s]} class:pick={!!onplayer}
+              role={onplayer ? 'button' : undefined} tabindex={onplayer ? 0 : undefined}
+              onclick={() => onplayer?.(s)} onkeydown={(e) => { if (e.key === 'Enter') onplayer?.(s); }}
+              bind:clientHeight={() => lineH, (v) => { if (s === 0) lineH = v; }}
               style:gap="{COLUMN_GAP}px">
               <div class="name" style:width="{nameWidth}px">
                 <div class="nameline"><span class="title-medium bold ellipsis">{names[s]}</span><span class="title-medium bold {pointsClass(score.result[s])}">{signed(score.result[s])}</span></div>
@@ -137,8 +146,7 @@
           {@const by = rows.map((_, j) => j).filter((j) => score.scoops[j][s])}
           {@const open = sideBySide && expanded === s}
           <div class="block" class:me={s === 0} class:homerun={score.homeRun[s]} role="button" tabindex="0" style:padding="6px {GRID_PAD}px"
-            onclick={() => { if (sideBySide) expanded = expanded === s ? null : s; }}
-            onkeydown={(e) => { if (e.key === 'Enter' && sideBySide) expanded = expanded === s ? null : s; }}>
+            onclick={() => tap(s)} onkeydown={(e) => { if (e.key === 'Enter') tap(s); }}>
             <div class="head">
               <div class="who">
                 <div class="nameline"><span class="title-medium bold nowrap">{names[s]}</span>{#if notes[s]}<span class="body-small fdim ellipsis">{notes[s]}</span>{/if}</div>
@@ -195,6 +203,8 @@
   .lines { flex: 1; display: flex; flex-direction: column; min-width: 0; }
   .line { display: flex; align-items: center; padding: 2px 8px; border-radius: 12px; }
   .line.me { background: color-mix(in srgb, var(--on-felt) 12%, transparent); }
+  .line.pick { cursor: pointer; outline: 1.5px dashed color-mix(in srgb, var(--on-felt) 45%, transparent); outline-offset: -1.5px; }
+  .line.pick:hover { background: color-mix(in srgb, var(--on-felt) 18%, transparent); }
   .homerun { outline: 2px solid var(--highlight); outline-offset: -2px; }
   .name { display: flex; flex-direction: column; min-width: 0; flex: none; }
   .nameline { display: flex; align-items: baseline; gap: 8px; min-width: 0; }

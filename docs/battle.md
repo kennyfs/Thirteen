@@ -26,6 +26,7 @@ it. One who leaves is away for the rest of the game: their seat times out (the n
 | `protocol/` | The messages (`Messages.kt`), checks of everything a client sends (`Validation.kt`), a room (`Room.kt`), the rooms of a server (`Hub.kt`), and what a room asks of the engine (`GameEngine.kt`). Pure Kotlin, shared by the server and the app; `RoomTest` covers the rules of play and the limits. |
 | `server/` | Ktor over WebSockets (`/ws`, plus `/health`), with a pool of `thirteen gui` processes as the engine. `server/Dockerfile`, `server/compose.yml` and `server/Caddyfile` deploy it. |
 | `android/.../battle/` | The client: links to a server (OkHttp WebSocket) or to a phone nearby (Nearby Connections), and a room hosted on this phone (the same Hub and Room, with the app's engine). |
+| `web/src/lib/battle.svelte.ts` | The web page's client (online rooms only: a browser cannot reach phones nearby), a port of the app's; `web/src/components/Battle.svelte` its pages. A reload in a room takes the seat back (the room and token kept in the tab's sessionStorage). |
 
 Messages are JSON, one per WebSocket frame or Nearby payload, with their type in `t`: a client says `hello` (with
 the protocol version, which must be the room's own: everyone in a room runs the same protocol, and a client of another

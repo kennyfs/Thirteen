@@ -1,6 +1,7 @@
 // The page's state: practice against three computer players (always c = 0) under the chosen rules, the analysis of
-// single hands, the records and the settings. A port of the app's AppViewModel.kt (no battles).
+// single hands, the records and the settings. A port of the app's AppViewModel.kt; the battles are in battle.svelte.ts.
 import { Arranger } from './arranger.svelte';
+import { Battle } from './battle.svelte';
 import { parseCards, sameArrangement, shuffled, type Rows } from './cards';
 import * as engine from './engine';
 import type { Analysis, Score } from './engine';
@@ -120,6 +121,8 @@ export class App {
   favorites = new store.RecordStore('favorites');
   recordCount = $state(this.records.count());
   favoriteIds = $state(this.favorites.ids());
+  /** Battles online (battle.svelte.ts): their hands go to the records too. */
+  battle = new Battle((m) => { this.error = m; }, () => this.ruleSpec, () => { this.recordCount = this.records.count(); });
   lastRecord = $state<Rec | null>(null);
   ready = $state(false);
 

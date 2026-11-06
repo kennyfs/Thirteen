@@ -1,7 +1,8 @@
 <!--
   The candidates, best Q first, with the player's arrangement (when known) pinned on top. Each shows its cards; opened,
   its rows, Q and the chances, colored where they differ notably from the best one's. On a wide window the list is on
-  the left and the opened one on the right.
+  the left and the opened one on the right. `tags` names others who played a candidate, by its index (a battle's other
+  players); `mineLabel` pins `mine` as someone else's (their name), without the remarks on it.
 -->
 <script lang="ts">
   import { rowLabel, sameArrangement, type Rows } from '../lib/cards';
@@ -15,7 +16,8 @@
   import RowCards from './RowCards.svelte';
   import ThreeRows from './ThreeRows.svelte';
 
-  let { a, mine, legacyNote = null }: { a: Analysis; mine: Rows | null; legacyNote?: string | null } = $props();
+  interface Props { a: Analysis; mine: Rows | null; legacyNote?: string | null; tags?: Record<number, string>; mineLabel?: string | null }
+  let { a, mine, legacyNote = null, tags = {}, mineLabel = null }: Props = $props();
 
   // The chances shown (prob_names), without the dealer (4): the page plays with c = 0.
   const SHOWN = [0, 1, 2, 3, 5, 6, 7];
@@ -32,7 +34,7 @@
   const pinned = $derived(mineAt !== null && mineAt !== 0);
   const ranks = $derived.by(() => { let n = 0; return a.cands.map((c) => (c.extra ? n : ++n)); });
   const wheel = $derived(a.rules.wheel ?? 0);
-  const rem = $derived(remarksOf(a, mine));
+  const rem = $derived(remarksOf(a, mine).filter((r) => mineLabel === null || (r.kind !== 'same' && r.kind !== 'mistake')));
   const texts = $derived(a.cands.map((cd) => cd.info.keys.map((k) => rowLabel(k, ta('row_labels'), wheel))));
   let showAll = $state(false);
   const shown = $derived(showAll ? a.cands.map((_, i) => i) : a.cands.map((_, i) => i).slice(0, 30));
@@ -66,7 +68,7 @@
   }
 
   function badge(i: number, pin: boolean): { label: string; strong: boolean } {
-    const yours = t('yours');
+    const yours = mineLabel ?? t('yours');
     if (pin) return { label: a.cands[i].extra ? yours : t('yours_rank', yours, ranks[i]), strong: true };
     if (i === 0 && mineAt === 0) return { label: `${t('best')} · ${yours}`, strong: true };
     if (a.cands[i].extra) return { label: '−', strong: false };
@@ -148,10 +150,11 @@
   {@const showDetail = open && !wide}
   {@const shape = shapeName(cd)}
   {@const best = i === 0 ? null : a.cands[0]}
-  <div class="cand" class:open class:mine={i === mineAt} role="button" tabindex="0"
+  <div class="cand" class:open class:mine={i === mineAt} class:tagged={!!tags[i]} role="button" tabindex="0"
     onclick={() => toggle(pin ? PINNED : i)} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(pin ? PINNED : i); } }}>
     <div class="cand-head">
       <span class="badge" class:strong={b.strong}>{b.label}</span>
+      {#if tags[i]}<span class="tag body-small ellipsis">{tags[i]}</span>{/if}
       <span class="middle body-medium ellipsis" class:shape={shape !== null}>{showDetail ? shape ?? '' : shape ? `${shape} · ${texts[i].join(' · ')}` : texts[i].join(' · ')}</span>
       {#if cd.q !== null}
         {#if !showDetail && best?.q != null && best.q - cd.q >= qGap}<span class="body-medium bad nowrap">({fmtQ(cd.q - best.q)})</span>{/if}
@@ -217,6 +220,8 @@
   .cand-head { display: flex; align-items: center; gap: 6px; min-width: 0; }
   .badge { background: var(--surface-container-highest); color: var(--on-surface); }
   .badge.strong { background: var(--primary); color: var(--on-primary); }
+  .tag { flex: 0 1 auto; max-width: 40%; padding: 1px 6px; border-radius: 6px; background: var(--tertiary-container); color: var(--on-tertiary-container); }
+  .cand.tagged:not(.mine) { background: color-mix(in srgb, var(--tertiary-container) 45%, transparent); }
   .middle { flex: 1; color: var(--on-surface-variant); }
   .middle.shape { color: var(--primary); font-weight: 500; }
   .opened { display: flex; gap: 8px; }
