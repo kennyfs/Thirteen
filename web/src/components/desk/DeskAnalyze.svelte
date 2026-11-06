@@ -23,15 +23,8 @@
   let info = $state(false);
   let pageW = $state(0);
   let pageH = $state(0);
+  let legacyH = $state(0);
 
-  const GAP = 6;
-  // One size for the picked cards and the 52: the picked line, then four lines of the 52 (1.3 as tall as wide), in the
-  // height left by the header, the picked cards' header and the keys; at most 13 a line in the width.
-  const card = $derived(Math.max(30, Math.min(
-    (pageW - 32 - 24 - GAP * 12) / 13,
-    (pageH - 56 - 52 - 40 - 34 - 24 - GAP * 3) / (1.4 + 1.3 * 4),
-    104,
-  )));
   const sorted = $derived([...app.anaHand].sort((a, b) => b - a));
   const model = $derived(app.model(app.anaModel));
   const rulesOptions = $derived.by(() => {
@@ -42,6 +35,15 @@
   const modelLabel = (m: { name: string; builtIn: boolean }) => (m.builtIn ? t('built_in', m.name) : m.name);
   const legacy = $derived(app.legacyModels.has(model.path) && app.legacyMismatch(app.anaRuleValues) ? t('legacy_warning', modelLabel(model)) : null);
   const resultLegacy = $derived(app.analysis && app.analysis.legacyModel && app.legacyMismatch(app.analysis.rules) ? t('legacy_warning', modelLabel(model)) : null);
+  const GAP = 6;
+  // One size for the picked cards and the 52: the picked line, then four lines of the 52 (1.3 as tall as wide), in the
+  // height left by the header, the picked cards' header, a warning on the network and the keys; at most 13 a line in
+  // the width.
+  const card = $derived(Math.max(30, Math.min(
+    (pageW - 32 - 24 - GAP * 12) / 13,
+    (pageH - 56 - 52 - 40 - 34 - 24 - GAP * 3 - (legacy ? legacyH + 10 : 0)) / (1.4 + 1.3 * 4),
+    104,
+  )));
   const records = $derived.by(() => { void app.recordCount; return app.records.all().reverse(); });
   const favorites = $derived.by(() => { void app.favoriteIds; return app.favorites.all().reverse(); });
   const candidates = $derived(!!app.analysis && app.anaPage === 1);
@@ -112,7 +114,7 @@
           <div class="slot" style:width="{card}px" style:height="{card * 1.4}px" style:border-radius="{card * 0.14}px"></div>
         {/each}
       </div>
-      {#if legacy}<div class="body-medium bad">{legacy}</div>{/if}
+      {#if legacy}<div class="body-medium bad" bind:offsetHeight={legacyH}>{legacy}</div>{/if}
     </section>
     <div class="deck" style:gap="{GAP}px">
       {#each [3, 2, 1, 0] as s (s)}

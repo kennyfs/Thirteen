@@ -1,7 +1,8 @@
 """Checks a computer's pages with the mouse and the keys: the practice table (a double click, Shift and a click, a right
 click, a sweep, 1 2 3, Z, Delete, Enter; a key a card in 7 + 6 and in one line), the result (analyzed at once, A, F,
-Escape), the analysis (R, Delete, the arrows, Space, Enter, ↓ in the candidates, the mouse between candidates, Escape)
-and the records (the kinds, a click on the chart). Prints what it found, and the errors.
+Escape), the analysis (R, Delete, the arrows, Space, Enter, ↓ ↑ in the candidates, the mouse between candidates, Escape),
+the records (the kinds, a click on the chart) and a narrow window (the tablet's page, a mouse sweep picks). Prints what
+it found, and the errors.
 
   python scripts/desktest.py URL OUT_DIR   e.g. http://localhost:4173/ /tmp/desk
 """
@@ -70,9 +71,13 @@ with sync_playwright() as p:
     page.keyboard.press('Delete')
     page.wait_for_timeout(200)
     page.screenshot(path=str(out / '1-table.png'))
-    # The engine's rows, and Enter plays.
+    # Plain rows (the lowest cards in front, the highest at the back), so that the best is likely another; the
+    # engine's if they foul. Enter plays.
     page.evaluate(f"""async () => {{ const {{ app, engine }} = window.thirteen;
-      const r = await engine.arrange('indep', app.play.hand, app.gameRules); app.play.reset(app.play.hand, app.gameRules, r); }}""")
+      const h = [...app.play.hand].sort((a, b) => a - b);
+      app.play.reset(app.play.hand, app.gameRules, [h.slice(0, 3), h.slice(3, 8), h.slice(8)]);
+      if (app.play.rowsEval?.valid !== true) {{
+        const r = await engine.arrange('indep', app.play.hand, app.gameRules); app.play.reset(app.play.hand, app.gameRules, r); }} }}""")
     page.wait_for_function(f'{P}.rowsEval && {P}.rowsEval.valid === true')
     page.keyboard.press('Enter')
     page.wait_for_function('window.thirteen.app.result !== null', timeout=60000)
@@ -87,6 +92,20 @@ with sync_playwright() as p:
     page.keyboard.press('a')
     page.wait_for_timeout(300)
     check('A: the candidates', page.evaluate('window.thirteen.app.resultTab') == 1)
+    # The player's, when not the best, is on top and again in its place: ↓ goes along the whole list, ↑ back up.
+    n = page.locator('.dc .cand').count()
+    if page.locator('.dc .list hr').count() == 1:
+        check('the player\'s twice in the list', page.locator('.dc .cand.mine').count() == 2)
+        for _ in range(n + 2):
+            page.keyboard.press('ArrowDown')
+        page.wait_for_timeout(200)
+        check('↓ reaches the last candidate', 'on' in page.locator('.dc .cand').last.get_attribute('class'))
+        for _ in range(n + 2):
+            page.keyboard.press('ArrowUp')
+        page.wait_for_timeout(200)
+        check('↑ back to the first', 'on' in page.locator('.dc .cand').first.get_attribute('class'))
+    else:
+        print('note: the player\'s was the best, nothing pinned')
     page.keyboard.press('ArrowDown')
     page.wait_for_timeout(200)
     # The mouse on the third candidate, then in the gap under it: the third still shown at the right.
@@ -159,7 +178,12 @@ with sync_playwright() as p:
         check(f'{mode}: keys pick three', page.evaluate(f'{P}.selected.size') == 3, page.evaluate(f'{P}.selected.size'))
         page.keyboard.press(row)
         page.wait_for_timeout(200)
-        check(f'{mode}: 1 into the front, the places kept', rows() == [3, 0, 0] and page.locator('.tray .gone').count() == 3, rows())
+        check(f'{mode}: 1 into the front, the hand closed up', rows() == [3, 0, 0] and page.locator('.tray [data-card]').count() == 10, rows())
+        first = page.evaluate(f'{P}.unplaced[0]')
+        page.keyboard.press(pick[0])
+        check(f'{mode}: the first key is the first card left', page.evaluate(f'[...{P}.selected]') == [first], page.evaluate(f'[...{P}.selected]'))
+        page.screenshot(path=str(out / f'7-{mode}-closed.png'))
+        page.keyboard.press('Escape')
         was = page.evaluate(f'{P}.sortBySuit')
         page.keyboard.press('Space')
         page.wait_for_timeout(100)
@@ -175,5 +199,17 @@ with sync_playwright() as p:
     page.wait_for_timeout(500)
     check('a narrow window has the tablet page', page.locator('.desk').count() == 0 and page.locator('.page').count() > 0)
     page.screenshot(path=str(out / '6-narrow.png'))
+    # There a mouse sweeps as a finger does: it picks the cards it passes (no dragging).
+    page.evaluate('window.thirteen.app.dealNow()')
+    page.wait_for_function(f'{P}.unplaced.length === 13')
+    page.wait_for_timeout(300)
+    a, z = tray(1).bounding_box(), tray(4).bounding_box()
+    page.mouse.move(a['x'] + 8, a['y'] + a['height'] / 2)
+    page.mouse.down()
+    page.mouse.move(z['x'] + 8, z['y'] + z['height'] / 2, steps=10)
+    page.mouse.up()
+    page.wait_for_timeout(200)
+    check('a narrow window: a mouse sweep picks four', page.evaluate(f'{P}.selected.size') == 4, page.evaluate(f'{P}.selected.size'))
+    page.screenshot(path=str(out / '6b-narrow-sweep.png'))
     print('errors', errors)
     browser.close()

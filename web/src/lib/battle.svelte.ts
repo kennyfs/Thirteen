@@ -304,6 +304,7 @@ export class Battle {
   create(mode: Mode) { this.start({ t: 'create', settings: this.defaults(mode) }); }
 
   join() {
+    if (this.busy || this.inRoom) return;
     if (!/^\d{6}$/.test(this.pin)) return this.onError(t('battle_pin_bad'));
     this.start({ t: 'join', pin: this.pin });
   }

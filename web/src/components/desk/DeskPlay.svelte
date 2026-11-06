@@ -7,7 +7,7 @@
   import type { App } from '../../lib/app.svelte';
   import { ROW_SIZES } from '../../lib/cards';
   import { mineIndex, ranks } from '../../lib/compare';
-  import { t, ta } from '../../lib/i18n.svelte';
+  import { t, ta, td } from '../../lib/i18n.svelte';
   import { nav } from '../../lib/nav.svelte';
   import { MAX_DESK_PLAY } from '../../lib/sizing';
   import { signed } from '../../lib/ui.svelte';
@@ -39,10 +39,10 @@
   const hint = $derived.by(() => {
     const picked = vm.selected.size;
     const left = vm.unplaced.length;
-    if (vm.armed !== null) return t('hint_armed', ta('row_names')[vm.armed], ROW_SIZES[vm.armed] - vm.rows[vm.armed].length - picked);
-    if (picked > 0) return t('hint_selected', picked);
+    if (vm.armed !== null) return td('hint_armed', ta('row_names')[vm.armed], ROW_SIZES[vm.armed] - vm.rows[vm.armed].length - picked);
+    if (picked > 0) return td('hint_selected', picked);
     if (left === 13) return startHint(app.deskKeys);
-    if (left > 0) return t('hint_left', left);
+    if (left > 0) return td('hint_left', left);
     const ev = vm.rowsEval;
     if (!ev) return '';
     if (ev.valid === true) {

@@ -7,6 +7,7 @@
   `mine` as someone else's, without the remarks on it.
 -->
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { rowLabel, type Rows } from '../../lib/cards';
   import { remarks as remarksOf, shapeOf } from '../../lib/commentary';
   import { mineIndex, moved, ranks as ranksOf } from '../../lib/compare';
@@ -36,16 +37,18 @@
   const yours = $derived(mineLabel ?? t('yours'));
   let showAll = $state(false);
   const shown = $derived(a.cands.map((_, i) => i).slice(0, showAll ? a.cands.length : 30));
-  /** The list's order: the pinned one, then the shown. */
+  /** The list's order, as the phone's: the pinned one, then all shown, the player's again in its place. */
   const order = $derived(pinned ? [mineAt!, ...shown] : shown);
 
-  let current = $state(0);
+  // The one chosen, by its place in the list (the player's is there twice), so that ↑ ↓ go along the list.
+  let at = $state(0);
+  const current = $derived(order[Math.min(at, order.length - 1)]);
   let hovered = $state<number | null>(null);
   let lastA: Analysis | null = null;
   $effect.pre(() => {
     if (a !== lastA) {
       lastA = a;
-      current = pinned ? mineAt! : 0;
+      at = 0;
       hovered = null;
       showAll = false;
     }
@@ -67,32 +70,43 @@
     if (document.querySelector('dialog[open]') || (e.target as HTMLElement | null)?.closest('input, textarea, select')) return;
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
     e.preventDefault();
-    const i = order.indexOf(current);
-    current = order[Math.max(0, Math.min(order.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))];
+    at = Math.max(0, Math.min(order.length - 1, at + (e.key === 'ArrowDown' ? 1 : -1)));
     hovered = null;
-    document.querySelector(`.dc [data-cand="${current}"]`)?.scrollIntoView({ block: 'nearest' });
+    document.querySelector(`.dc [data-at="${at}"]`)?.scrollIntoView({ block: 'nearest' });
   }
 
-  // The detail's cards: the two arrangements side by side in the width, three rows in about half the height.
+  // The detail's cards: the two arrangements side by side in the width, and in the height what the rest leaves (the
+  // head, the rows' names, the figures: measured, as the cards' three rows less), so that all is seen at once.
   let detailW = $state(0);
   let detailH = $state(0);
+  let headH = $state(0);
+  let pairH = $state(0);
+  let pairEl = $state<HTMLElement | null>(null);
+  let rest = $state(0);
+  $effect(() => {
+    // On a change of the pair's height, both measured now, so that they go together.
+    const cardEl = pairH > 0 ? pairEl?.querySelector('.card') : null;
+    if (!pairEl || !cardEl) return;
+    const r = pairEl.getBoundingClientRect().height - 3 * cardEl.getBoundingClientRect().height;
+    if (Math.abs(r - untrack(() => rest)) > 1) rest = r;
+  });
   const stackCard = $derived(Math.max(24, Math.min(
     Math.floor(((detailW - 32 - 24 - 12) / 2 - CARD_GAP * 4) / 5),
-    Math.floor((detailH * 0.52 - 3 * 26 - 16) / (3 * 1.4)),
+    rest > 0 ? Math.floor((detailH - 28 - headH - 10 - rest - 2) / (3 * 1.4)) : 110,
     110,
   )));
 </script>
 
 <svelte:window onkeydown={onKey} />
 
-{#snippet item(i: number)}
+{#snippet item(i: number, place: number)}
   {@const cd = a.cands[i]}
   {@const b = label(i)}
   {@const sh = shape(cd)}
   {@const best = a.cands[0]}
-  <div class="cand" class:on={current === i} class:hover={hovered === i && current !== i} class:mine={i === mineAt} class:tagged={!!tags[i]}
-    role="button" tabindex="-1" data-cand={i}
-    onclick={() => { current = i; hovered = null; }} onkeydown={() => {}} onmouseenter={() => (hovered = i)}>
+  <div class="cand" class:on={at === place} class:hover={hovered === i && at !== place} class:mine={i === mineAt} class:tagged={!!tags[i]}
+    role="option" aria-selected={at === place} tabindex="-1" data-at={place}
+    onclick={() => { at = place; hovered = null; }} onkeydown={() => {}} onmouseenter={() => (hovered = i)}>
     <div class="cand-head">
       <span class="badge" class:strong={b.strong}>{b.text}</span>
       {#if tags[i]}<span class="tag body-small ellipsis">{tags[i]}</span>{/if}
@@ -123,10 +137,9 @@
   {/if}
   <div class="body">
     <!-- The one under the mouse stays shown over the gaps between candidates, until the mouse leaves the list. -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="list" onmouseleave={() => (hovered = null)}>
-      {#if pinned}{@render item(mineAt!)}<hr />{/if}
-      {#each shown as i (i)}{#if !(pinned && i === mineAt)}{@render item(i)}{/if}{/each}
+    <div class="list" role="listbox" tabindex="-1" aria-label={t('candidates')} onmouseleave={() => (hovered = null)}>
+      {#if pinned}{@render item(mineAt!, 0)}<hr />{/if}
+      {#each shown as i, k (i)}{@render item(i, k + (pinned ? 1 : 0))}{/each}
       {#if !showAll && a.cands.length > 30}
         <button class="btn text more" onclick={() => (showAll = true)}>{t('show_all', a.cands.length)}</button>
       {/if}
@@ -148,12 +161,12 @@
             <ProbTiles {a} x={cd} best={at === 0 ? null : best} />
           </div>
         {/snippet}
-        <div class="detail-head">
+        <div class="detail-head" bind:clientHeight={headH}>
           <span class="body-small dim">{rightAt !== null ? t('cmp_moved', label(leftAt).text) : ''}</span>
           <span class="grow"></span>
           <span class="body-small dim keys"><Kbd k="↑" /><Kbd k="↓" />{t('k_move')}</span>
         </div>
-        <div class="pair">
+        <div class="pair" bind:clientHeight={pairH} bind:this={pairEl}>
           {@render column(leftAt, rightAt)}
           {#if rightAt !== null}{@render column(rightAt, leftAt)}{/if}
         </div>

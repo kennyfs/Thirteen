@@ -2,8 +2,8 @@
 //  - 'pick': ← → along the hand and Space picks, 1 2 3 into a row, S sorts, Z undoes;
 //  - 'keys76': a key a card, the hand in two lines as the keys (A S D F G H J over Z X C V B N), 1 2 3 into a row;
 //  - 'keys13': a key a card, the hand in one line as the letters' top row (Q W E … [ ] \), 1 2 3 into a row.
-// With a key a card the letters are the cards', so Space sorts and Backspace undoes; a card played leaves its place
-// empty, so that the keys stay on their cards. Keys are matched by where they are (KeyboardEvent.code), not by the
+// With a key a card the letters are the cards', so Space sorts and Backspace undoes; the cards left close up after a
+// card is played, the keys with them, so that the first key is always the first card left. Keys are matched by where they are (KeyboardEvent.code), not by the
 // letter, so that a keyboard layout or an input method changes nothing.
 import { t } from './i18n.svelte';
 

@@ -8,10 +8,11 @@
   import type { App } from '../../lib/app.svelte';
   import {
     fmtLoss, HAND_CHOICES, NAME_LENGTH, rankOf, standings, TIME_LIMITS,
-    type HandOutcome, type Mode, type PlayerView,
+    type HandOutcome, type PlayerView,
   } from '../../lib/battle.svelte';
   import { ROW_SIZES } from '../../lib/cards';
-  import { t, ta } from '../../lib/i18n.svelte';
+  import { t, ta, td } from '../../lib/i18n.svelte';
+  import { clock, handClass as handClassOf, handValue, modeName, playerNotes, settingsLine, timedOut, timeText, totalText as totalTextOf } from '../../lib/battle-text';
   import * as R from '../../lib/rules';
   import { MAX_DESK_PLAY } from '../../lib/sizing';
   import { localTime, signed } from '../../lib/ui.svelte';
@@ -24,7 +25,6 @@
   import Toggle from '../Toggle.svelte';
   import DeskArranging from './DeskArranging.svelte';
   import DeskCandidates from './DeskCandidates.svelte';
-  import DeskRows from './DeskRows.svelte';
   import Kbd from './Kbd.svelte';
   import KeyList from './KeyList.svelte';
   import { keyList, keyMap, startHint } from '../../lib/desk-keys';
@@ -37,35 +37,14 @@
   const b = $derived(app.battle);
   const r = $derived(b.review);
   const room = $derived(b.room);
-  const clock = (ms: number) => { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
-  const modeName = (m: Mode) => t(m === 'PUZZLE' ? 'battle_puzzle' : 'battle_game');
   const puzzle = $derived(room?.settings.mode === 'PUZZLE');
   const values = $derived(room ? R.values(room.rules) : {});
   const wheel = $derived(values.wheel ?? 0);
   const me = $derived(room?.players.find((p) => p.id === b.me) ?? null);
+  const totalText = (p: PlayerView) => totalTextOf(p, puzzle);
+  const notes = (p: PlayerView) => playerNotes(p, room ?? null, b.me);
+  const handClass = (o: HandOutcome, i: number) => handClassOf(o, i, values);
   const humans = $derived(room ? room.players.filter((p) => !p.bot) : []);
-  const totalText = (p: PlayerView) => (puzzle ? t('battle_total_loss', fmtLoss(p.total)) : signed(p.total));
-  function notes(p: PlayerView): string {
-    const out: string[] = [];
-    if (p.id === b.me) out.push(t('you'));
-    if (room && p.id === room.host) out.push(t('battle_host'));
-    if (!p.bot && !p.connected) out.push(t('battle_away'));
-    return out.join('、');
-  }
-  const timeText = (s: number) => (s === 0 ? t('battle_no_limit') : t('battle_seconds', s));
-  function handValue(o: HandOutcome, i: number): string {
-    const loss = o.losses?.[i];
-    if (loss != null) return loss < 0.0005 ? '0' : fmtLoss(loss);
-    const x = o.score?.result[i];
-    return x == null ? '' : signed(x);
-  }
-  function handClass(o: HandOutcome, i: number): string {
-    const loss = o.losses?.[i];
-    if (loss != null) return loss < 0.0005 ? 'good' : loss >= 0.5 * R.notableQGap(values) ? 'bad' : '';
-    const x = o.score?.result[i] ?? 0;
-    return x > 0 ? 'good' : x < 0 ? 'bad' : '';
-  }
-  const timedOut = () => t('battle_timed_out').trim();
 
   // ---- The entry: six digits typed join at once ----
   let editServer = $state(false);
@@ -110,10 +89,10 @@
   const hint = $derived.by(() => {
     const picked = vm.selected.size;
     const rest = vm.unplaced.length;
-    if (vm.armed !== null) return t('hint_armed', ta('row_names')[vm.armed], ROW_SIZES[vm.armed] - vm.rows[vm.armed].length - picked);
-    if (picked > 0) return t('hint_selected', picked);
+    if (vm.armed !== null) return td('hint_armed', ta('row_names')[vm.armed], ROW_SIZES[vm.armed] - vm.rows[vm.armed].length - picked);
+    if (picked > 0) return td('hint_selected', picked);
     if (rest === 13) return startHint(app.deskKeys);
-    if (rest > 0) return t('hint_left', rest);
+    if (rest > 0) return td('hint_left', rest);
     const ev = vm.rowsEval;
     if (!ev) return '';
     if (ev.valid === true) {
@@ -143,7 +122,7 @@
 
 <svelte:window onkeydown={onKey} />
 
-{#snippet spinner(size = 28)}<span class="spin" style:width="{size}px" style:height="{size}px"></span>{/snippet}
+{#snippet spinner(size = 28, color: string | null = null)}<span class="spin" style:width="{size}px" style:height="{size}px" style:color={color}></span>{/snippet}
 
 {#snippet clockChip()}
   {#if left !== null}
@@ -182,7 +161,7 @@
         {#if i >= 0}{@const x = o.score.result[i]}<span class="headline-small nowrap" class:good={x > 0} class:bad={x < 0}>{t('battle_this_hand', signed(x))}</span>{/if}
       {/if}
       {#if myRank > 0 && page !== 'playing'}<span class="body-large nowrap">{t('battle_your_rank', myRank)}</span>{/if}
-      {#if analysisMode && !puzzle}<span class="body-large hl">{t('battle_tap_player')}</span>{/if}
+      {#if analysisMode && !puzzle}<span class="body-large hl">{td('battle_tap_player')}</span>{/if}
       {#if room.phase === 'REVIEW' && page === 'review'}
         <span class="body-large dim nowrap">{t('battle_ready_count', humans.filter((p) => p.ready).length, humans.length)}</span>
       {/if}
@@ -387,18 +366,23 @@
     {/if}
 
   {:else if page === 'waiting' && room}
-    {@render bar(room.hand, true, null, false)}
-    <div class="wait">
-      <div class="felt mine">
-        <div class="waiting">{@render spinner(24)}<span class="title-medium">{t('battle_waiting')}</span></div>
-        <div class="on-felt">
-          <DeskRows rows={vm.rows} keys={vm.rowsEval?.keys ?? null} categories={vm.rowsEval?.categories ?? null} width={84} {wheel} />
-        </div>
+    <!-- The table as it was when the hand was handed in, the same size, the hand's place saying what is awaited. -->
+    <div class="desk">
+      <div class="main">
+        <DeskArranging {vm} {wheel} busy onconfirm={() => {}} keys={app.deskKeys} locked>
+          {#snippet waiting()}
+            <span class="waiting on-felt-text">{@render spinner(28, 'var(--on-felt)')}<span class="headline-small">{t('battle_waiting')}</span></span>
+          {/snippet}
+        </DeskArranging>
       </div>
-      <section class="card">
-        <h2 class="section">{t('players_done', humans.filter((p) => p.submitted).length, humans.length)}</h2>
+      <aside class="side">
+        <div class="side-head">
+          <span class="title-large">{t('battle_hand_of', room.hand + 1, room.settings.hands)}</span>
+          {@render clockChip()}
+        </div>
+        <div class="body-medium dim">{t('players_done', humans.filter((p) => p.submitted).length, humans.length)}{#if myRank > 0} · {t('battle_your_rank', myRank)}{/if}</div>
         {@render who()}
-      </section>
+      </aside>
     </div>
 
   {:else if (page === 'review' || page === 'last') && room}
@@ -428,9 +412,9 @@
             </div>
           {/each}
         </div>
-        <p class="body-medium dim">{[t('battle_hands_n', room.settings.hands), app.rulesName(values), t('battle_time') + ' ' + timeText(room.settings.timeLimit)].join('，')}</p>
+        <p class="body-medium dim">{settingsLine(room, app.rulesName(values))}</p>
         <section class="card">
-          <h2 class="section">{t('battle_hand_list')}</h2>
+          <h2 class="section">{td('battle_hand_list')}</h2>
           <table class="hands">
             <thead><tr><th class="num"></th><th>{t('your_rows')}</th><th class="num">{t(puzzle ? 'battle_col_hand_loss' : 'battle_col_hand')}</th><th class="num">{t('battle_col_hand_rank')}</th></tr></thead>
             <tbody>
@@ -454,7 +438,7 @@
     {@const o = r.outcomes.find((x) => x.index === r.detail) ?? null}
     {#if o}
       <TitleBar title={t('battle_hand_of', o.index + 1, room.settings.hands)} onback={() => r.closeDetail()}>
-        <span class="body-medium hl">{t('battle_tap_player')}</span>
+        <span class="body-medium hl">{td('battle_tap_player')}</span>
         <span class="body-small dim keys"><Kbd k="Esc" />{t('k_back')}</span>
       </TitleBar>
       {@render handTable(o, (p) => r.openAnalysis(p))}
@@ -551,9 +535,7 @@
   .state { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
   .total { min-width: 3.5em; text-align: right; }
   .bar { display: flex; align-items: center; gap: 14px; padding: 8px 16px; min-height: 64px; flex: none; flex-wrap: wrap; }
-  .wait { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 420px; gap: 16px; padding: 0 16px 16px; align-items: start; }
-  .mine { display: flex; flex-direction: column; gap: 14px; padding: 20px 24px; border-radius: 16px; align-items: center; }
-  .on-felt :global(.name) { color: var(--on-felt-dim); }
+  .on-felt-text { color: var(--on-felt); }
 
   /* A hand's result */
   .seat-table { flex: 1; min-height: 0; margin: 0 16px 16px; padding: 12px; display: flex; flex-direction: column; }

@@ -1,26 +1,28 @@
 <!--
   A computer's table for setting a hand: the rows one above another, the hand under them in one line (or, with a key a
-  card in 7 + 6, in two as the keys), the cards as large as the table allows (deskArrangeFit). The buttons are the
+  card in 7 + 6, in two as the keys; the cards left closing up, the keys with them), the cards as large as the table allows (deskArrangeFit). The buttons are the
   page's side panel's (DeskPlay, the battle's). Each row's label has its key, its state and its hand once full.
 
   The mouse does what a finger does on the phone's: a click picks a card, and a sweep with the button held picks (or,
   from a picked card, unpicks) each card it passes; a click on a row puts the picked cards into it (or picks the row
   for the next ones), a click on a placed card or a sweep over the rows takes cards back. Besides: Shift and a click
   picks the run from the last card picked, a double click puts a card into the first row with room, a right click on a
-  row takes it all back. The keys are desk-keys.ts's, by the settings' choice.
+  row takes it all back (elsewhere on the table it unpicks). The keys are desk-keys.ts's, by the settings' choice.
+  `locked` (a battle's hand handed in): the same table, nothing to do on it, `waiting` where the hand was.
 -->
 <script lang="ts">
   import type { Arranger } from '../../lib/arranger.svelte';
-  import { ROW_SIZES, rank, rowLabel, rowLayout, sortHand, suit } from '../../lib/cards';
+  import { ROW_SIZES, rank, rowLabel, rowLayout, suit } from '../../lib/cards';
   import { keyMap, type DeskKeys } from '../../lib/desk-keys';
   import { t, ta } from '../../lib/i18n.svelte';
   import { cardHeight, deskArrangeFit, deskRowLabel, CARD_GAP, DESK_HAND_GAP, DESK_PAD, HAND_GAP, HAND_LINE_GAP, ROW_PAD, ROW_STACK_GAP, SUIT_GAP } from '../../lib/sizing';
   import { signed, textRoom, ui } from '../../lib/ui.svelte';
   import Card from '../Card.svelte';
   import Kbd from './Kbd.svelte';
+  import type { Snippet } from 'svelte';
 
-  interface Props { vm: Arranger; wheel: number; busy: boolean; onconfirm: () => void; keys?: DeskKeys; help?: boolean }
-  let { vm, wheel, busy, onconfirm, keys = 'pick', help = $bindable(false) }: Props = $props();
+  interface Props { vm: Arranger; wheel: number; busy: boolean; onconfirm: () => void; keys?: DeskKeys; help?: boolean; locked?: boolean; waiting?: Snippet }
+  let { vm, wheel, busy, onconfirm, keys = 'pick', help = $bindable(false), locked = false, waiting }: Props = $props();
 
   const km = $derived(keyMap(keys));
   const below = $derived(km.cards ? textRoom(13) + 10 : 0);
@@ -36,24 +38,16 @@
     return m;
   });
   const SAME_RANK_CATEGORY = [0, 0, 2, 4, 8];
-  // With a key a card, the whole hand's places, the played cards' empty (null), so that each key stays on its card;
-  // else the hand left, closed up.
-  const order = $derived(sortHand(vm.hand, vm.sortBySuit));
-  const slots = $derived.by((): (number | null)[] => {
-    if (!km.cards) return hand;
-    const left = new Set(hand);
-    return order.map((c) => (left.has(c) ? c : null));
-  });
-  const lines = $derived(km.perLine >= 13 ? [slots] : [slots.slice(0, km.perLine), slots.slice(km.perLine)]);
+  // The hand left, closed up: with a key a card the keys follow, so the first card left is always the first key's.
+  const lines = $derived(km.perLine >= 13 ? [hand] : [hand.slice(0, km.perLine), hand.slice(km.perLine)].filter((l) => l.length));
   const lineCount = $derived(Math.ceil(13 / km.perLine));
   const canConfirm = $derived(!busy && vm.rowsEval?.valid === true);
   const rowNames = $derived(ta('row_names'));
 
   /** The suit gap before place `i` of a line: in one line sorted by suit, between suits. */
-  function suitGap(line: (number | null)[], i: number): boolean {
+  function suitGap(i: number): boolean {
     if (km.perLine < 13 || !vm.sortBySuit) return false;
-    const seq = km.cards ? order : hand;
-    return suit(seq[i - 1]) !== suit(seq[i]);
+    return suit(hand[i - 1]) !== suit(hand[i]);
   }
 
   function rowState(r: number) {
@@ -93,7 +87,7 @@
     return Number(el.dataset.card);
   }
   function down(e: PointerEvent, kind: 'hand' | 'rows') {
-    if (e.button !== 0 || e.shiftKey) return;
+    if (e.button !== 0 || e.shiftKey || locked) return;
     sweep = { kind, x: e.clientX, y: e.clientY, moved: false, on: true, touched: new Set(), id: e.pointerId };
   }
   function touch(x: number, y: number) {
@@ -152,21 +146,29 @@
     const r = [0, 1, 2].find((i) => vm.rows[i].length < ROW_SIZES[i]);
     if (r !== undefined) vm.move([c], r);
   }
-  function clickPlaced(c: number) { if (!suppressClick) vm.unplace(c); }
+  function clickPlaced(c: number) { if (!suppressClick && !locked) vm.unplace(c); }
   function rowClick(e: MouseEvent, r: number) {
-    if (suppressClick || (e.target as HTMLElement).closest('[data-card]')) return;
+    if (suppressClick || locked || (e.target as HTMLElement).closest('[data-card]')) return;
     vm.tapRow(r);
   }
   function rowMenu(e: MouseEvent, r: number) {
     e.preventDefault();
+    if (locked) return;
     const el = (e.target as HTMLElement).closest('[data-card]') as HTMLElement | null;
     if (el) vm.unplace(Number(el.dataset.card));
     else vm.clearRow(r);
   }
-  function rowKey(e: KeyboardEvent, r: number) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); vm.tapRow(r); } }
+  /** A right click elsewhere on the table: no browser menu, the picked cards unpicked. */
+  function tableMenu(e: MouseEvent) {
+    if (e.defaultPrevented) return;
+    e.preventDefault();
+    if (!locked) { vm.selected = new Set(); vm.armed = null; }
+  }
+  function rowKey(e: KeyboardEvent, r: number) { if (locked) return; if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); vm.tapRow(r); } }
 
   // ---- Keys, by where they are on the keyboard (e.code) ----
   function onKey(e: KeyboardEvent) {
+    if (locked) return;
     const el = e.target as HTMLElement | null;
     if (el && (el.closest('input, textarea, select, [contenteditable]') || document.querySelector('dialog[open]'))) return;
     if (e.altKey) return;
@@ -178,8 +180,8 @@
     }
     const slot = km.cards ? km.cards.indexOf(code) : -1;
     if (slot >= 0) {
-      const c = slots[slot];
-      if (c !== null && c !== undefined) vm.toggle(c);
+      const c = hand[slot];
+      if (c !== undefined) vm.toggle(c);
       return done();
     }
     const row = km.rows.indexOf(code);
@@ -206,15 +208,16 @@
 
 <div class="area" bind:clientWidth={areaW} bind:clientHeight={areaH}>
   {#if areaW > 0}
-    <div class="felt table" style:padding="{DESK_PAD}px" style:gap="{DESK_HAND_GAP}px">
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="felt table" class:locked style:padding="{DESK_PAD}px" style:gap="{DESK_HAND_GAP}px" oncontextmenu={tableMenu}>
       <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div class="rows" style:gap="{ROW_STACK_GAP}px" onpointerdown={(e) => down(e, 'rows')} onpointermove={move} onpointerup={up} onpointercancel={up}>
         {#each [0, 1, 2] as r (r)}
           {@const st = rowState(r)}
           {@const ev = vm.rowsEval}
           {@const category = vm.rows[r].length === ROW_SIZES[r] && ev ? ev.categories[r] : 0}
-          <div class="slot-row" class:target={st.target} class:can={vm.selected.size > 0 && st.target}
-            role="button" tabindex="0" data-row={r} aria-label="{rowNames[r]} {st.text}" style:padding="{ROW_PAD}px"
+          <div class="slot-row" class:target={st.target && !locked} class:can={vm.selected.size > 0 && st.target}
+            role="button" tabindex={locked ? -1 : 0} data-row={r} aria-label="{rowNames[r]} {st.text}" style:padding="{ROW_PAD}px"
             onclick={(e) => rowClick(e, r)} onkeydown={(e) => rowKey(e, r)} oncontextmenu={(e) => rowMenu(e, r)}>
             <div class="row-label" style:width="{label}px">
               <span class="name"><Kbd k={km.rowLabels[r]} /><span class="title-medium bold nowrap">{rowNames[r]}</span></span>
@@ -239,23 +242,21 @@
         {#if hand.length > 0}
           {#each lines as line, li (li)}
             <div class="hand-line">
-              {#each line as c, i (km.cards ? `s${li * km.perLine + i}` : c)}
+              {#each line as c, i (c)}
                 {@const keyLabel = km.cardLabels?.[li * km.perLine + i]}
-                {#if i > 0}<span style:width="{suitGap(line, li * km.perLine + i) ? SUIT_GAP : HAND_GAP}px" class="gap"></span>{/if}
-                <div class="place" class:keyed={!!km.cards}>
-                  {#if c !== null}
-                    <!-- svelte-ignore a11y_no_static_element_interactions -->
-                    <span class="hold" ondblclick={() => doubleCard(c)} onclickcapture={(e) => (shift = e.shiftKey)}>
-                      <Card card={c} width={card} tint={SAME_RANK_CATEGORY[counts.get(rank(c)) ?? 0]} light selected={vm.selected.has(c)} onclick={() => clickCard(c)} />
-                    </span>
-                  {:else}
-                    <div class="gone" style:width="{card}px" style:height="{card * 1.4}px" style:border-radius="{card * 0.14}px"></div>
-                  {/if}
-                  {#if keyLabel}<span class="cardkey" class:off={c === null} class:on={c !== null && vm.selected.has(c)} style:height="{below}px"><Kbd k={keyLabel} /></span>{/if}
+                {#if i > 0}<span style:width="{suitGap(li * km.perLine + i) ? SUIT_GAP : HAND_GAP}px" class="gap"></span>{/if}
+                <div class="place">
+                  <!-- svelte-ignore a11y_no_static_element_interactions -->
+                  <span class="hold" ondblclick={() => doubleCard(c)} onclickcapture={(e) => (shift = e.shiftKey)}>
+                    <Card card={c} width={card} tint={SAME_RANK_CATEGORY[counts.get(rank(c)) ?? 0]} light selected={vm.selected.has(c)} onclick={() => clickCard(c)} />
+                  </span>
+                  {#if keyLabel}<span class="cardkey" class:on={vm.selected.has(c)} style:height="{below}px"><Kbd k={keyLabel} /></span>{/if}
                 </div>
               {/each}
             </div>
           {/each}
+        {:else if locked && waiting}
+          <div class="ready">{@render waiting()}</div>
         {:else}
           <div class="ready headline-small" class:bad={readiness.bad} aria-live="polite">{readiness.text}</div>
         {/if}
@@ -283,15 +284,15 @@
   .hand-line { display: flex; align-items: flex-end; }
   .place { display: flex; flex-direction: column; align-items: center; }
   .hold { display: contents; }
-  .gone { flex: none; border: 1.5px dashed color-mix(in srgb, var(--on-felt) 22%, transparent); }
   .cardkey { display: flex; align-items: flex-end; justify-content: center; color: var(--on-felt); }
   .cardkey :global(kbd) { font-size: 0.8rem; padding: 3px 6px; }
   .cardkey.on { color: var(--highlight); }
-  .cardkey.off { opacity: 0.3; }
   .gap { flex: none; display: block; }
   .ready { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--on-felt); }
   .ready.bad { color: var(--felt-bad); }
   .tray :global(button.card:not(.selected):hover) { transform: translateY(-4px); box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25); }
   .rows :global(button.card:hover) { filter: brightness(0.94); }
   .slot-row.can:hover { outline-style: solid; }
+  .locked .slot-row { cursor: default; }
+  .locked .rows :global(button.card) { pointer-events: none; }
 </style>

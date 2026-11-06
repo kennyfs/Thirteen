@@ -154,8 +154,8 @@
                 <div class="nameline"><span class="title-medium bold nowrap">{names[s]}</span>{#if notes[s]}<span class="body-small fdim ellipsis">{notes[s]}</span>{/if}</div>
                 <div class="subline body-small">
                   <span class="fdim nowrap">{sub(s)}</span>
-                  {#if scooped.length}<span class="bold ellipsis" class:fgood={s === 0}>{ta('prob_names')[0]} → {scooped.map((j) => names[j]).join('、')}</span>{/if}
-                  {#if by.length}<span class="bold ellipsis" class:fbad={s === 0} class:fdim={s !== 0}>{t('scooped_by', by.map((j) => names[j]).join('、'))}</span>{/if}
+                  {#if scooped.length}<span class="bold ellipsis" class:fgood={s === 0}>{ta('prob_names')[0]} → {scooped.map((j) => names[j]).join(t('list_sep'))}</span>{/if}
+                  {#if by.length}<span class="bold ellipsis" class:fbad={s === 0} class:fdim={s !== 0}>{t('scooped_by', by.map((j) => names[j]).join(t('list_sep')))}</span>{/if}
                 </div>
               </div>
               {#if score.homeRun[s]}<span class="label-large hl">{t('home_run')}</span>{/if}

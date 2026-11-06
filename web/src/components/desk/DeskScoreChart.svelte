@@ -66,7 +66,7 @@
 </div>
 
 <style>
-  .chart { position: relative; width: 100%; height: 100%; min-height: 160px; }
+  .chart { position: relative; width: 100%; height: 100%; min-height: 120px; }
   svg { display: block; cursor: crosshair; }
   .grid { stroke: var(--outline-variant); stroke-width: 1; }
   .grid.zero { stroke: var(--outline); stroke-dasharray: 8 6; stroke-width: 1.5; }

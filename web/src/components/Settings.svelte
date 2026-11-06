@@ -19,7 +19,7 @@
   const name = (s: { kind: string; model: string }) => (s.kind === 'NET' ? app.model(s.model).name : ta('kinds')[['NET', 'MC', 'INDEP'].indexOf(s.kind)]);
   const opponents = $derived.by(() => {
     const s = app.seatChoices;
-    return s.every((x) => x.kind === s[0].kind && x.model === s[0].model) ? t('opponents_all', name(s[0])) : s.map(name).join('、');
+    return s.every((x) => x.kind === s[0].kind && x.model === s[0].model) ? t('opponents_all', name(s[0])) : s.map(name).join(t('list_sep'));
   });
   const back = () => nav.back();
 </script>

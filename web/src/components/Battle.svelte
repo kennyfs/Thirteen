@@ -7,9 +7,10 @@
   import type { App } from '../lib/app.svelte';
   import {
     fmtLoss, HAND_CHOICES, NAME_LENGTH, rankOf, standings, TIME_LIMITS,
-    type HandOutcome, type Mode, type PlayerView, type RoomView,
+    type HandOutcome, type PlayerView,
   } from '../lib/battle.svelte';
   import { t, ta } from '../lib/i18n.svelte';
+  import { clock, handClass as handClassOf, handValue, modeName, playerNotes, settingsLine, timedOut, timeText, totalText as totalTextOf } from '../lib/battle-text';
   import { nav } from '../lib/nav.svelte';
   import * as R from '../lib/rules';
   import { lineCard } from '../lib/sizing';
@@ -52,38 +53,15 @@
     return () => clearInterval(id);
   });
   const left = $derived(room?.remainingMs != null ? Math.max(0, room.remainingMs - (now - b.roomAt)) : null);
-  const clock = (ms: number) => { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 
   // ---- What the pages share ----
-  const modeName = (m: Mode) => t(m === 'PUZZLE' ? 'battle_puzzle' : 'battle_game');
   const puzzle = $derived(room?.settings.mode === 'PUZZLE');
   const values = $derived(room ? R.values(room.rules) : {});
   const wheel = $derived(values.wheel ?? 0);
   const me = $derived(room?.players.find((p) => p.id === b.me) ?? null);
-  const totalText = (p: PlayerView) => (puzzle ? t('battle_total_loss', fmtLoss(p.total)) : signed(p.total));
-  function notes(p: PlayerView): string {
-    const out: string[] = [];
-    if (p.id === b.me) out.push(t('you'));
-    if (room && p.id === room.host) out.push(t('battle_host'));
-    // A network's seat is already named "AI n".
-    if (!p.bot && !p.connected) out.push(t('battle_away'));
-    return out.join('、');
-  }
-  const timeText = (s: number) => (s === 0 ? t('battle_no_limit') : t('battle_seconds', s));
-  /** A hand's value: a puzzle's loss ("0.144", nothing lost "0"), or a table's points ("+3"). */
-  function handValue(o: HandOutcome, i: number): string {
-    const loss = o.losses?.[i];
-    if (loss != null) return loss < 0.0005 ? '0' : fmtLoss(loss);
-    const x = o.score?.result[i];
-    return x == null ? '' : signed(x);
-  }
-  function handClass(o: HandOutcome, i: number): string {
-    const loss = o.losses?.[i];
-    if (loss != null) return loss < 0.0005 ? 'good' : loss >= 0.5 * R.notableQGap(values) ? 'bad' : '';
-    const x = o.score?.result[i] ?? 0;
-    return x > 0 ? 'good' : x < 0 ? 'bad' : '';
-  }
-  const timedOut = () => t('battle_timed_out').trim();
+  const totalText = (p: PlayerView) => totalTextOf(p, puzzle);
+  const notes = (p: PlayerView) => playerNotes(p, room ?? null, b.me);
+  const handClass = (o: HandOutcome, i: number) => handClassOf(o, i, values);
 
   // ---- The entry ----
   let editServer = $state(false);
@@ -438,7 +416,7 @@
             <span class="title-medium nowrap">{totalText(p)}</span>
           </div>
         {/each}
-        <p class="body-medium dim">{[t('battle_hands_n', room.settings.hands), app.rulesName(values), t('battle_time') + ' ' + timeText(room.settings.timeLimit)].join('，')}</p>
+        <p class="body-medium dim">{settingsLine(room, app.rulesName(values))}</p>
         <div class="list-head">
           <span class="title-small grow">{t('battle_hand_list')}</span>
           <span class="label-large num" style:width="{numW}px">{t(puzzle ? 'battle_col_hand_loss' : 'battle_col_hand')}</span>

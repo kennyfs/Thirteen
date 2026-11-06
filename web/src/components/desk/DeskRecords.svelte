@@ -9,7 +9,7 @@
   import type { App } from '../../lib/app.svelte';
   import type { BattleRecord } from '../../lib/battle.svelte';
   import { guessCategory, parseCards, type Rows } from '../../lib/cards';
-  import { t } from '../../lib/i18n.svelte';
+  import { t, td } from '../../lib/i18n.svelte';
   import { chartGroups, entries, KIND_NAMES, kindOf, noC, RECORD_KINDS, type RecordKind } from '../../lib/records';
   import * as R from '../../lib/rules';
   import { CARD_GAP } from '../../lib/sizing';
@@ -139,7 +139,7 @@
         {#each savedBattles as b (b.id)}<div class="bline"><BattleLine {b} {app} onclick={() => app.openBattleRecord(b)} /></div>{/each}
       {/if}
       <div class="section-header">{t('favorites_title')}</div>
-      {#if saved.length === 0}<p class="body-medium dim pad">{t('favorites_empty')}</p>
+      {#if saved.length === 0}<p class="body-medium dim pad">{td('favorites_empty')}</p>
       {:else}<div class="saved">{#each saved as r (r.id)}{@render tile(r)}{/each}</div>{/if}
       <p class="body-small dim pad info">{t('records_info')}</p>
     </aside>
@@ -188,7 +188,7 @@
   .card p { margin: 0; }
   .chart-card { display: flex; flex-direction: column; gap: 6px; flex: none; }
   .chart-head { display: flex; align-items: center; gap: 8px; min-height: 40px; flex-wrap: wrap; }
-  .chart-box { height: 220px; }
+  .chart-box { height: clamp(130px, 100vh - 620px, 220px); }
   .grow { flex: 1; min-width: 0; }
   .section-header { padding-left: 4px; }
   .tiles { display: grid; gap: 10px; align-items: start; }

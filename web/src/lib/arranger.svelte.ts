@@ -67,7 +67,7 @@ export class Arranger {
   }
 
   /**
-   * Moves cards (from the hand or from rows) into a row, or back to the hand (`row` null): what dragging them does.
+   * Moves cards (from the hand or from rows) into a row, or back to the hand (`row` null): a double click's.
    * Into a row, the last open row is filled too if the cards left fit it exactly.
    */
   move(cards: number[], row: number | null) {

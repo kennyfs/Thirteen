@@ -138,8 +138,7 @@
       {@render chart()}{@render records()}{@render favorites()}{@render share()}</div>
   </div>
 </div>
-{/if}
-
+<!-- A computer's records have their own dialogs (DeskRecords). -->
 {#if acting}
   {@const r = acting}
   <Dialog wide onclose={() => (acting = null)}>
@@ -166,6 +165,7 @@
       <button class="btn text bad" onclick={() => { app.clearRecords(); confirmClear = false; }}>{t('delete')}</button>
     {/snippet}
   </Dialog>
+{/if}
 {/if}
 
 <style>
