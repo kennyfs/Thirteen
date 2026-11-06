@@ -51,7 +51,8 @@ WORKDIR /src
 COPY cpp cpp
 COPY web/engine web/engine
 COPY web/build-engine.sh web/
-RUN . /emsdk/emsdk_env.sh && ORT_WASM_DIR=/opt/ort-wasm MODEL=/run2_net10.onnx web/build-engine.sh
+# The emsdk image has its tools on PATH already.
+RUN ORT_WASM_DIR=/opt/ort-wasm MODEL=/run2_net10.onnx web/build-engine.sh
 
 # The page, built by Vite with the app's strings.
 FROM node:24-slim AS web-page
@@ -77,9 +78,9 @@ FROM ubuntu:26.04 AS jre
 RUN apt-get update && apt-get install -y --no-install-recommends openjdk-21-jdk-headless \
   && rm -rf /var/lib/apt/lists/*
 COPY --from=server /src/server/build/install/thirteen-server/lib /server-lib
-RUN modules=$(jdeps --ignore-missing-deps --print-module-deps --multi-release 21 --class-path '/server-lib/*' \
-    /server-lib/*.jar) \
-  && echo "modules: $modules" \
+# jdeps may print warnings (split packages) before the list: the list is its last line, checked.
+RUN modules=$(jdeps --ignore-missing-deps --print-module-deps --multi-release 21 /server-lib/*.jar 2>/dev/null | tail -n 1) \
+  && echo "modules: $modules" && echo "$modules" | grep -Eq '^[a-z][a-z0-9.]*(,[a-z][a-z0-9.]*)*$' \
   && jlink --add-modules "$modules,jdk.unsupported" --strip-debug --no-man-pages --no-header-files --compress zip-6 \
     --output /opt/jre
 
