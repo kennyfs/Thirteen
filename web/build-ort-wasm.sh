@@ -22,7 +22,10 @@ if [ -n "${EMSDK:-}" ]; then
 elif [ ! -f "$src/cmake/external/emsdk/emsdk" ]; then
   git -C "$src" submodule update --init --depth 1 cmake/external/emsdk
 fi
-python3 "$src/tools/ci_build/build.py" --build_dir "$work/build-wasm" --config MinSizeRel \
+# In a container the build runs as root, which build.py refuses unless told.
+root_flag=()
+if [ "$(id -u)" = 0 ]; then root_flag=(--allow_running_as_root); fi
+python3 "$src/tools/ci_build/build.py" "${root_flag[@]}" --build_dir "$work/build-wasm" --config MinSizeRel \
   --build_wasm_static_lib --emsdk_version "${EMSDK_VERSION:-6.0.13}" --enable_wasm_simd \
   --include_ops_by_config "$PWD/../android/ort-ops.config" --skip_tests --no_telemetry --disable_ml_ops --disable_rtti \
   --disable_types float4 float8 optional sparsetensor string \
