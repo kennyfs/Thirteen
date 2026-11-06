@@ -2,8 +2,8 @@
 // survives a reload, and the browser's Back (and a phone's back gesture) walks the same way as the page's own Back.
 //
 // The path is a screen and, under it, a page opened from it: the rules from practice, the analysis or the settings,
-// the analysis of the finished hand, the candidates, the settings' pages. Changing screens replaces the entry (as the
-// app, Back does not walk the screens one has looked at); opening a page under one adds an entry, and Back takes it off.
+// the analysis of the finished hand, the candidates, the settings' pages. Each screen and each page opened adds an
+// entry, so Back (a phone's back gesture too) walks back through them; only from the first one does it leave the page.
 
 export type Screen = 'PLAY' | 'ANALYZE' | 'RECORDS' | 'SETTINGS';
 export const SCREENS: Screen[] = ['PLAY', 'ANALYZE', 'RECORDS', 'SETTINGS'];
@@ -34,10 +34,11 @@ class Nav {
   get screen(): Screen { return this.route.screen; }
   get sub(): string | null { return this.route.sub; }
 
-  /** Another screen, at its top. */
+  /** Another screen, at its top; the one shown again goes back to its top. */
   go(screen: Screen) {
+    if (screen === this.route.screen) return this.back();
     const r = { screen, sub: null };
-    history.replaceState({ depth: 0 }, '', path(r));
+    history.pushState({ depth: 0 }, '', path(r));
     this.route = r;
   }
 
@@ -56,7 +57,11 @@ class Nav {
   back() {
     if (!this.route.sub) return;
     if ((history.state as { depth?: number } | null)?.depth === 1) history.back();
-    else this.go(this.route.screen);
+    else {
+      const r = { screen: this.route.screen, sub: null };
+      history.replaceState({ depth: 0 }, '', path(r));
+      this.route = r;
+    }
   }
 
   /** Leaves the page `sub` if it is the one shown (what it showed is gone). */
