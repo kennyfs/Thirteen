@@ -114,6 +114,10 @@ class ScreenshotTest {
       }
       compose.waitUntil(TIMEOUT) { vm.hand == HANDS[0] }
       shot(c, "0-arrange-start")
+      // Sorted by suit: a line a suit where they fit.
+      instrumentation.runOnMainSync { vm.play.sortBySuit = true }
+      shot(c, "0b-arrange-suit")
+      instrumentation.runOnMainSync { vm.play.sortBySuit = false }
       // The front row placed and two cards picked.
       instrumentation.runOnMainSync {
         MINE[0].forEach(vm::toggle)
