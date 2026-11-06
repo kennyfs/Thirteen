@@ -2,7 +2,6 @@
 # from outside. Put the network in server/models/ (the release's run2_net10.onnx), set DOMAIN, then from the repository
 # root:
 #   DOMAIN=thirteen.example.com docker compose -f server/compose.yml up -d --build
-# The first build takes about an hour (the web page's ONNX Runtime, for WebAssembly); later ones keep that layer.
 name: thirteen
 
 services:

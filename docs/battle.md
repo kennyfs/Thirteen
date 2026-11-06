@@ -123,9 +123,10 @@ DOMAIN=thirteen.example.com docker compose -f server/compose.yml up -d --build
 
 This builds two images: the game server (`runtime`) and Caddy with the web page (`site`: the engine as WebAssembly
 with a reduced ONNX Runtime, the page built by Vite). The page is then at `https://thirteen.example.com/` and plays on
-the server there. Its first build takes about an hour, for ONNX Runtime; that layer is kept until the version of ONNX
-Runtime (the app's) or `web/build-ort-wasm.sh` changes. The page's network is the release's with its weights as
-float16 (`python/fp16_weights.py`), checked to be the app's.
+the server there. The page's two slow-to-make pieces come prebuilt from the v2.1.0 release, checked against their
+SHA-256: the reduced ONNX Runtime for WebAssembly (`web/build-ort-wasm.sh`, about an hour; make and upload a new one
+when the version of ONNX Runtime or `android/ort-ops.config` changes) and the network with its weights as float16
+(`python/fp16_weights.py`), the app's. The server's JRE has only the modules it uses (`jlink`).
 
 The app starts with the project's server, `thirteen.1li.tw`. In the app, the server's address is that name (`thirteen.example.com`; the app adds `wss://` and `/ws`). A server
 on the same machine as an emulator, without TLS, is `ws://10.0.2.2:PORT` (only localhost, 127.0.0.1 and 10.0.2.2 may

@@ -4,8 +4,6 @@
 # (the server) takes the network from a volume; bundled has it inside, for Kubernetes; site is Caddy with the page:
 #   docker build -f server/Dockerfile --target bundled -t IMAGE .
 #   docker build -f server/Dockerfile --target site -t IMAGE .
-# The first build of site takes about an hour (ONNX Runtime for WebAssembly); its layer is kept until the version of
-# ONNX Runtime or the build script changes.
 
 # The engine, without -march=native so the image runs on any x86-64 host.
 FROM ubuntu:26.04 AS engine
@@ -34,42 +32,25 @@ RUN gradle -p server --no-daemon :protocol:test installDist
 
 # ---- The web page ----
 
-# The version of ONNX Runtime, the app's: alone, so that other changes to the app's build keep the next stage's layer.
-FROM ubuntu:26.04 AS ort-version
-COPY android/app/build.gradle.kts /build.gradle.kts
-RUN sed -n 's/^val ortVersion = "\(.*\)"/\1/p' /build.gradle.kts > /ort-version && test -s /ort-version
-
-# The app's reduced ONNX Runtime (its operators, android/ort-ops.config) as a WebAssembly static library, in the
-# emsdk's own image. Several GB of source and build, removed in the same layer. build.py reads the operator list
-# with the flatbuffers module.
-FROM emscripten/emsdk:6.0.13 AS web-ort
-RUN apt-get update && apt-get install -y --no-install-recommends git ninja-build python3-venv \
+# The engine (cpp/ and GuiEngine) as WebAssembly, with the network beside it. The two pieces that change rarely and
+# take long to make come prebuilt from the v2.1.0 release, checked against their SHA-256:
+# - the app's reduced ONNX Runtime 1.31.1 (android/ort-ops.config) as a WebAssembly static library, made by
+#   web/build-ort-wasm.sh (rebuild it there and upload a new one when the version or the operators change);
+# - the built-in network as the app has it, the v1.0.0 release's with its weights as float16 (python/fp16_weights.py).
+FROM emscripten/emsdk:6.0.13 AS web-engine
+RUN apt-get update && apt-get install -y --no-install-recommends ninja-build python3-venv curl ca-certificates \
   && rm -rf /var/lib/apt/lists/* \
-  && python3 -m venv /opt/tools && /opt/tools/bin/pip install --no-cache-dir cmake==4.4.4 flatbuffers==25.12.19
+  && python3 -m venv /opt/tools && /opt/tools/bin/pip install --no-cache-dir cmake==4.4.4
 ENV PATH=/opt/tools/bin:$PATH
-WORKDIR /src
-COPY --from=ort-version /ort-version /ort-version
-COPY android/ort-ops.config android/ort-ops.config
-COPY web/build-ort-wasm.sh web/
-RUN ORT_VERSION=$(cat /ort-version) EMSDK=/emsdk ORT_WORK=/tmp/ort-work ORT_WASM_DIR=/opt/ort-wasm web/build-ort-wasm.sh \
-  && rm -rf /tmp/ort-work
-
-# The built-in network as the app has it: the v1.0.0 release's, its weights as float16 (python/fp16_weights.py), the
-# same bytes as the app's asset (checked).
-FROM python:3.13-slim AS web-model
-RUN pip install --no-cache-dir onnx==1.23.2 numpy==2.5.4
-COPY python/fp16_weights.py /fp16_weights.py
-RUN python -c "import urllib.request; urllib.request.urlretrieve('https://github.com/kennyfs/Thirteen/releases/download/v1.0.0/run2_net10.onnx', '/fp32.onnx')" \
-  && echo "56b56733ae86e3038c1ebb2ee274e3b1c19cf49b66e494e334e15580a052b7e8  /fp32.onnx" | sha256sum -c - \
-  && python /fp16_weights.py /fp32.onnx /run2_net10.onnx \
+RUN curl -fsSL -o /ort-wasm.tar.gz https://github.com/kennyfs/Thirteen/releases/download/v2.1.0/ort-wasm-1.31.1.tar.gz \
+  && echo "b8c7a39adb38f83137eebd39e84ffbbad434cc7218e7f53067e59e94977e67ce  /ort-wasm.tar.gz" | sha256sum -c - \
+  && mkdir /opt/ort-wasm && tar -xzf /ort-wasm.tar.gz -C /opt/ort-wasm && rm /ort-wasm.tar.gz \
+  && curl -fsSL -o /run2_net10.onnx https://github.com/kennyfs/Thirteen/releases/download/v2.1.0/run2_net10-fp16.onnx \
   && echo "a80f66c0f9500523f48867f95ae71cd49e285070bf17ee0b5033991f312dd86d  /run2_net10.onnx" | sha256sum -c -
-
-# The engine (cpp/ and GuiEngine) as WebAssembly, with the network beside it.
-FROM web-ort AS web-engine
+WORKDIR /src
 COPY cpp cpp
 COPY web/engine web/engine
 COPY web/build-engine.sh web/
-COPY --from=web-model /run2_net10.onnx /run2_net10.onnx
 RUN . /emsdk/emsdk_env.sh && ORT_WASM_DIR=/opt/ort-wasm MODEL=/run2_net10.onnx web/build-engine.sh
 
 # The page, built by Vite with the app's strings.
@@ -91,16 +72,28 @@ COPY --from=web-page /src/web/dist /srv
 
 # ---- The battle server ----
 
-# The engine needs the C++ runtime of the system it was built on: the same Ubuntu, with a JRE.
-FROM ubuntu:26.04 AS runtime
-RUN apt-get update && apt-get install -y --no-install-recommends openjdk-21-jre-headless \
+# A JRE of only the modules the server uses (jdeps finds them in its jars), about 150 MB less than the whole one.
+FROM ubuntu:26.04 AS jre
+RUN apt-get update && apt-get install -y --no-install-recommends openjdk-21-jdk-headless \
   && rm -rf /var/lib/apt/lists/*
+COPY --from=server /src/server/build/install/thirteen-server/lib /server-lib
+RUN modules=$(jdeps --ignore-missing-deps --print-module-deps --multi-release 21 --class-path '/server-lib/*' \
+    /server-lib/*.jar) \
+  && echo "modules: $modules" \
+  && jlink --add-modules "$modules,jdk.unsupported" --strip-debug --no-man-pages --no-header-files --compress zip-6 \
+    --output /opt/jre
+
+# The engine needs the C++ runtime of the system it was built on: the same Ubuntu, with the JRE above.
+FROM ubuntu:26.04 AS runtime
+COPY --from=jre /opt/jre /opt/jre
 RUN useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin thirteen
 # The engine finds ONNX Runtime by the path it was built with (its rpath).
 COPY --from=engine /src/cpp/external/onnxruntime/lib /src/cpp/external/onnxruntime/lib
 COPY --from=engine /src/cpp/build/thirteen /opt/thirteen/thirteen
 COPY --from=server /src/server/build/install/thirteen-server /opt/thirteen/server
-ENV THIRTEEN_BINARY=/opt/thirteen/thirteen \
+ENV JAVA_HOME=/opt/jre \
+    PATH=/opt/jre/bin:$PATH \
+    THIRTEEN_BINARY=/opt/thirteen/thirteen \
     THIRTEEN_MODEL=/models/run2_net10.onnx \
     JAVA_OPTS="-Xmx128m -Xss512k -XX:+UseSerialGC -XX:ReservedCodeCacheSize=32m -XX:MaxMetaspaceSize=64m -XX:TieredStopAtLevel=1 -XX:+ExitOnOutOfMemoryError"
 USER thirteen
