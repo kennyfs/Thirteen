@@ -24,7 +24,7 @@ it. One who leaves is away for the rest of the game: their seat times out (the n
 | Part | What |
 |---|---|
 | `protocol/` | The messages (`Messages.kt`), checks of everything a client sends (`Validation.kt`), a room (`Room.kt`), the rooms of a server (`Hub.kt`), and what a room asks of the engine (`GameEngine.kt`). Pure Kotlin, shared by the server and the app; `RoomTest` covers the rules of play and the limits. |
-| `server/` | Ktor over WebSockets (`/ws`, plus `/health`), with a pool of `thirteen gui` processes as the engine. `server/Dockerfile`, `server/compose.yml` and `server/Caddyfile` deploy it. |
+| `server/` | Ktor over WebSockets (`/ws`, plus `/health`), with a pool of `thirteen gui` processes as the engine. `server/Dockerfile`, `server/compose.yml` and `server/Caddyfile` deploy it, with the web page beside it. |
 | `android/.../battle/` | The client: links to a server (OkHttp WebSocket) or to a phone nearby (Nearby Connections), and a room hosted on this phone (the same Hub and Room, with the app's engine). |
 | `web/src/lib/battle.svelte.ts` | The web page's client (online rooms only: a browser cannot reach phones nearby), a port of the app's; `web/src/components/Battle.svelte` its pages. A reload in a room takes the seat back (the room and token kept in the tab's sessionStorage). |
 
@@ -81,7 +81,8 @@ puzzles): the JVM (heap at most 128 MiB) about 110 MiB, and each engine process 
 engine queue takes is refused, not queued, so it does not grow much further; the compose file limits it to 384 MiB.
 
 **Deployment.** Caddy gets the TLS certificate and is the only thing exposed (ports 80 and 443); it passes `/ws` and
-`/health` and answers 404 to everything else. The game server is on an internal network with no way out, runs as
+`/health` on to the game server and serves the web page (`web/`, built into its image, the Dockerfile's `site`) at
+every other path, so the page and the server it plays on share one address. The game server is on an internal network with no way out, runs as
 an unprivileged user on a read-only file system with all capabilities dropped and `no-new-privileges`, with limits
 on CPU, memory and processes. The model is mounted read-only and checked against its SHA-256 at start (the server
 refuses to start otherwise). The server keeps no records: rooms live in memory and are gone when they end; it logs
@@ -119,6 +120,12 @@ The image builds from the repository root. Put the network (`run2_net10.onnx` fr
 ```bash
 DOMAIN=thirteen.example.com docker compose -f server/compose.yml up -d --build
 ```
+
+This builds two images: the game server (`runtime`) and Caddy with the web page (`site`: the engine as WebAssembly
+with a reduced ONNX Runtime, the page built by Vite). The page is then at `https://thirteen.example.com/` and plays on
+the server there. Its first build takes about an hour, for ONNX Runtime; that layer is kept until the version of ONNX
+Runtime (the app's) or `web/build-ort-wasm.sh` changes. The page's network is the release's with its weights as
+float16 (`python/fp16_weights.py`), checked to be the app's.
 
 The app starts with the project's server, `thirteen.1li.tw`. In the app, the server's address is that name (`thirteen.example.com`; the app adds `wss://` and `/ws`). A server
 on the same machine as an emulator, without TLS, is `ws://10.0.2.2:PORT` (only localhost, 127.0.0.1 and 10.0.2.2 may

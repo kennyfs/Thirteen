@@ -1,9 +1,22 @@
-# The server image needs cpp/, scripts/, protocol/ and server/ only.
+# The server image needs cpp/, scripts/, protocol/ and server/; the site web/ too, with the app's strings, the version
+# and operators of its ONNX Runtime, and the script that makes its network.
 *
 !cpp
 !scripts
 !protocol
 !server
+!web
+!python/fp16_weights.py
+!android/app/build.gradle.kts
+!android/ort-ops.config
+!android/app/src/main/res/values/strings.xml
+!android/app/src/main/res/values-zh-rTW/strings.xml
+web/node_modules
+web/dist
+web/build
+web/public/engine
+web/public/models
+web/src/generated
 cpp/build*
 cpp/external/onnxruntime
 server/build

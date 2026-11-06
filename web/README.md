@@ -1,6 +1,6 @@
 # Thirteen on the web
 
-The app's practice, analysis, records and settings (no battles) as a static web page. The engine is the repository's
+The app's practice, analysis, records, settings and online battles (not nearby ones) as a static web page. The engine is the repository's
 C++ (`cpp/`, through `GuiEngine`) built as WebAssembly with a reduced ONNX Runtime, and it runs in a Web Worker in the
 browser, so nothing is sent anywhere. The front end is Svelte 5 and TypeScript, built with Vite. It works on a phone (a
 bar of screens at the bottom) and on a desktop (a rail at the side), with the same layouts and card sizes as the app
@@ -31,6 +31,9 @@ source /path/to/emsdk/emsdk_env.sh && ./build-engine.sh
 npm run build      # the site, into dist/
 npm run preview    # serves dist/ at http://localhost:4173/
 ```
+
+In Docker, `server/Dockerfile`'s target `site` builds all of this and serves it with Caddy, beside the battle server
+(docs/battle.md, Running a server).
 
 `npm run dev` serves the page with hot reload instead. `dist/` is a static site with relative paths: any web server
 serves it, from any directory. The server should send `.wasm` as `application/wasm`.

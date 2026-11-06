@@ -4,10 +4,11 @@
 # lib/libonnxruntime_webassembly.a, for build-engine.sh. The source and the build, several GB, go to $ORT_WORK (default
 # build/ort-work); an existing source checkout there (src-<version>, as android/build-ort.sh leaves it) is used.
 # Needs python3 (3.10+), cmake, ninja and the emsdk: ONNX Runtime's own (cmake/external/emsdk, fetched by git) or
-# $EMSDK, an emsdk of version $EMSDK_VERSION (default 6.0.13), which is linked there.
+# $EMSDK, an emsdk of version $EMSDK_VERSION (default 6.0.13), which is linked there. The version of ONNX Runtime is
+# the app's (android/app/build.gradle.kts), or $ORT_VERSION.
 set -euo pipefail
 cd "$(dirname "$0")"
-version=$(sed -n 's/^val ortVersion = "\(.*\)"/\1/p' ../android/app/build.gradle.kts)
+version=${ORT_VERSION:-$(sed -n 's/^val ortVersion = "\(.*\)"/\1/p' ../android/app/build.gradle.kts)}
 work=$(realpath -m "${ORT_WORK:-build/ort-work}")
 out=$(realpath -m "${ORT_WASM_DIR:-build/ort-wasm}")
 src="$work/src-$version"

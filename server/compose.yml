@@ -1,6 +1,8 @@
-# The battle server behind Caddy, which gets the TLS certificate and is the only thing reachable from outside.
-# Put the network in server/models/ (the release's run2_net10.onnx), set DOMAIN, then from the repository root:
+# The battle server behind Caddy, which gets the TLS certificate, serves the web page and is the only thing reachable
+# from outside. Put the network in server/models/ (the release's run2_net10.onnx), set DOMAIN, then from the repository
+# root:
 #   DOMAIN=thirteen.example.com docker compose -f server/compose.yml up -d --build
+# The first build takes about an hour (the web page's ONNX Runtime, for WebAssembly); later ones keep that layer.
 name: thirteen
 
 services:
@@ -38,8 +40,12 @@ services:
       timeout: 5s
       retries: 3
 
+  # Caddy with the web page and the Caddyfile inside (the Dockerfile's target site).
   caddy:
-    image: caddy:2.8
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+      target: site
     restart: unless-stopped
     depends_on: [thirteen]
     environment:
@@ -49,7 +55,6 @@ services:
       - "443:443"
       - "443:443/udp"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     networks: [internal, public]
