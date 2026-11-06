@@ -328,6 +328,10 @@
   <string name="records_list">全部紀錄（新的在前）</string>
   <string name="about_source">開放原始碼（GPLv3），在 GitHub 上</string>
   <string name="privacy_policy">隱私權政策</string>
+  <string name="about_web">網頁版</string>
+  <string name="about_web_note">用瀏覽器玩，電腦也可以：%1$s</string>
+  <string name="about_play">Android app</string>
+  <string name="about_play_note">在 Google Play 上，可以和朋友對戰</string>
   <string name="rules_changed">（已修改）</string>
   <string-array name="preset_names">
     <item>簡單規則</item>

@@ -8,7 +8,9 @@
   import Card from './Card.svelte';
   import CandidateList from './CandidateList.svelte';
   import Dialog from './Dialog.svelte';
+  import { nav } from '../lib/nav.svelte';
   import Icon from './Icon.svelte';
+  import Rules from './Rules.svelte';
   import Menu from './Menu.svelte';
   import RecordLine from './RecordLine.svelte';
   import TitleBar from './TitleBar.svelte';
@@ -61,9 +63,12 @@
   </button>
 {/snippet}
 
+{#if nav.sub === 'rules'}
+<Rules {app} onback={() => nav.back()} />
+{:else}
 <div class="page" bind:clientWidth={pageW} bind:clientHeight={pageH}>
   {#if app.analysis && app.anaPage === 1}
-    <TitleBar title={t('candidates')} onback={() => (app.anaPage = 0)}>
+    <TitleBar title={t('candidates')} onback={() => nav.back()}>
       {#if pageW >= 560}<div class="mini">{#each sorted as c (c)}<Card card={c} width={22} />{/each}</div>{/if}
       <button class="btn icon text" aria-label={t('info')} onclick={() => (info = true)}><Icon name="info" /></button>
     </TitleBar>
@@ -106,6 +111,7 @@
     {#if !wide}<div class="gorow">{@render go(true)}</div>{/if}
   {/if}
 </div>
+{/if}
 
 {#if pickRecord}
   <Dialog title={t('from_records')} onclose={() => (pickRecord = false)}>

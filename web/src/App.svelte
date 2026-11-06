@@ -5,6 +5,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { App, TEXT_SCALE, type Screen } from './lib/app.svelte';
+  import { nav } from './lib/nav.svelte';
   import * as engine from './lib/engine';
   import { t } from './lib/i18n.svelte';
   import { measure, ui } from './lib/ui.svelte';
@@ -40,15 +41,36 @@
     const onResize = () => measure(TEXT_SCALE[app.textSize]);
     mq.addEventListener('change', onDark);
     addEventListener('resize', onResize);
-    return () => { mq.removeEventListener('change', onDark); removeEventListener('resize', onResize); };
+    // A phone held sideways loses much of its height to the browser's bars: the page goes full screen at the first tap
+    // (a browser allows it only on one), and back when the phone is upright again. Not on a tablet, and not where the
+    // browser cannot (an iPhone's Safari: there, Add to Home Screen opens the page without the bars, manifest.webmanifest).
+    const phone = () => matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
+    const sideways = () => innerWidth > innerHeight;
+    let ours = false;
+    const onTap = () => {
+      if (!phone() || !sideways() || document.fullscreenElement || !document.documentElement.requestFullscreen) return;
+      if (matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches) return;
+      document.documentElement.requestFullscreen({ navigationUI: 'hide' }).then(() => { ours = true; }, () => {});
+    };
+    const onTurn = () => {
+      if (ours && !sideways() && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      if (!document.fullscreenElement) ours = false;
+    };
+    addEventListener('click', onTap, true);
+    addEventListener('resize', onTurn);
+    return () => {
+      mq.removeEventListener('change', onDark);
+      removeEventListener('resize', onResize);
+      removeEventListener('click', onTap, true);
+      removeEventListener('resize', onTurn);
+    };
   });
 
   function go(s: Screen) {
-    if (s === app.screen && s === 'SETTINGS') app.settingsPage = null;
-    if (s === app.screen && s === 'ANALYZE') app.anaPage = 0;
-    app.screen = s;
+    // The screen shown again: back to its top.
+    nav.go(s);
   }
-  const openRules = () => { app.screen = 'SETTINGS'; app.settingsPage = 'RULES'; };
+  const openRules = () => nav.open('rules');
 </script>
 
 <div class="shell" class:wide={ui.wide}>
@@ -82,7 +104,9 @@
 {/if}
 
 <style>
-  .shell { height: 100dvh; display: flex; flex-direction: column-reverse; }
+  /* Clear of a notch and the rounded corners, which a page in full screen (or from the home screen) reaches. */
+  .shell { height: 100dvh; display: flex; flex-direction: column-reverse;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
   .shell.wide { flex-direction: row; }
   main { flex: 1; min-height: 0; min-width: 0; position: relative; }
   nav { flex: none; display: flex; justify-content: space-around; height: 80px; background: var(--surface-container); }

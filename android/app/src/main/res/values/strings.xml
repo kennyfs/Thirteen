@@ -330,6 +330,10 @@
   <string name="records_list">All records, newest first</string>
   <string name="about_source">Open source (GPLv3), on GitHub</string>
   <string name="privacy_policy">Privacy policy</string>
+  <string name="about_web">Web version</string>
+  <string name="about_web_note">Play in a browser, on a computer too: %1$s</string>
+  <string name="about_play">The Android app</string>
+  <string name="about_play_note">On Google Play, with battles against friends</string>
   <string name="rules_changed"> (changed)</string>
   <string-array name="preset_names">
     <item>Simple</item>

@@ -9,8 +9,12 @@ export const ui = $state({ w: 0, h: 0, wide: false, u: 14, sizes: { play: 44, ot
 
 export function measure(textScale: number) {
   const root = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16 * textScale;
-  const W = window.innerWidth;
-  const H = window.innerHeight;
+  // Less what the notch and the corners keep (the shell's padding, env(safe-area-inset-*)).
+  const shell = document.querySelector('.shell');
+  const pad = shell ? getComputedStyle(shell) : null;
+  const px = (v: string | undefined) => parseFloat(v ?? '') || 0;
+  const W = window.innerWidth - px(pad?.paddingLeft) - px(pad?.paddingRight);
+  const H = window.innerHeight - px(pad?.paddingTop) - px(pad?.paddingBottom);
   // A rail whenever the window is wider than tall: there the height is what the cards need.
   const wide = W > H;
   const w = wide ? W - NAV_RAIL : W;

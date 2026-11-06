@@ -112,6 +112,9 @@ fun SettingsScreen(vm: AppViewModel, open: (SettingsPage) -> Unit) {
         SettingRow(stringResource(R.string.app_name) + " " + version, stringResource(R.string.about_source)) {
           context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/kennyfs/Thirteen")))
         }
+        SettingRow(stringResource(R.string.about_web), stringResource(R.string.about_web_note, WEB_HOST)) {
+          context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://$WEB_HOST/")))
+        }
         SettingRow(stringResource(R.string.privacy_policy)) {
           context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/kennyfs/Thirteen/blob/main/docs/privacy.md")))
         }
@@ -202,3 +205,6 @@ fun NetworksPage(vm: AppViewModel, onBack: () -> Unit) {
     )
   }
 }
+
+/** Where the web version is. */
+private const val WEB_HOST = "thirteen.1li.tw"

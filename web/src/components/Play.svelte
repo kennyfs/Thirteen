@@ -5,7 +5,9 @@
   import { signed, ui } from '../lib/ui.svelte';
   import Arranging from './Arranging.svelte';
   import CandidateList from './CandidateList.svelte';
+  import { nav } from '../lib/nav.svelte';
   import Icon from './Icon.svelte';
+  import Rules from './Rules.svelte';
   import SeatResults from './SeatResults.svelte';
   import TitleBar from './TitleBar.svelte';
 
@@ -37,9 +39,12 @@
   <button class="btn filled" class:big={!compact} class:grow={!compact} onclick={() => app.dealNow()}>{t('next_hand')}</button>
 {/snippet}
 
+{#if nav.sub === 'rules'}
+  <Rules {app} onback={() => nav.back()} />
+{:else}
 <div class="page">
   {#if app.result && app.resultTab === 1}
-    <TitleBar title={t('analyze_my_hand')} onback={() => (app.resultTab = 0)}>
+    <TitleBar title={t('analyze_my_hand')} onback={() => nav.back()}>
       <button class="btn filled" onclick={() => app.dealNow()}>{t('next_hand')}</button>
     </TitleBar>
     {#if app.gameAnalysis}<CandidateList a={app.gameAnalysis} mine={app.result.rows[0]} legacyNote={legacy} />
@@ -87,6 +92,7 @@
     {/if}
   {/if}
 </div>
+{/if}
 
 <style>
   .page { height: 100%; display: flex; flex-direction: column; min-height: 0; }

@@ -5,6 +5,7 @@ import { parseCards, sameArrangement, shuffled, type Rows } from './cards';
 import * as engine from './engine';
 import type { Analysis, Score } from './engine';
 import { t, ta, setLang, browserLang, type Lang } from './i18n.svelte';
+import { nav, type Screen } from './nav.svelte';
 import * as R from './rules';
 import type { RuleSpec, Values } from './rules';
 import * as store from './store';
@@ -18,16 +19,15 @@ export type ColorStyle = 'TABLE' | 'MINIMAL';
 export type DarkMode = 'SYSTEM' | 'LIGHT' | 'DARK';
 export type TextSize = 'SMALL' | 'NORMAL' | 'LARGE';
 export const TEXT_SCALE: Record<TextSize, number> = { SMALL: 0.88, NORMAL: 1, LARGE: 1.15 };
-export type Screen = 'PLAY' | 'ANALYZE' | 'RECORDS' | 'SETTINGS';
+export type { Screen };
 
 const BUILT_IN_MODEL: Model = { name: 'run2_net10', path: engine.BUILT_IN, builtIn: true };
 const LOADED = '/models/loaded/';
 
 export class App {
   error = $state<string | null>(null);
-  screen = $state<Screen>('PLAY');
-  /** A page opened in the settings: the rules, the opponents or the networks. */
-  settingsPage = $state<'RULES' | 'OPPONENTS' | 'NETWORKS' | null>(null);
+  /** The screen and the page opened under it are in the address (nav.svelte.ts). */
+  get screen(): Screen { return nav.screen; }
 
   // ---- Look ----
   colorStyle = $state<ColorStyle>(store.get('look.colors', 'TABLE') as ColorStyle);
@@ -109,7 +109,7 @@ export class App {
   /** The finished hand: everyone's arrangement (0 is the player) and the score. */
   result = $state<{ rows: Rows[]; score: Score } | null>(null);
   /** The finished hand's pages: 0 the result, 1 the analysis of the player's hand. */
-  resultTab = $state(0);
+  get resultTab(): number { return nav.screen === 'PLAY' && nav.sub === 'analysis' ? 1 : 0; }
   gameAnalysis = $state<Analysis | null>(null);
   session = $state(this.readSession());
   gameRules = $state('');
@@ -148,7 +148,7 @@ export class App {
     this.replaying = again;
     this.lastRecord = null;
     this.result = null;
-    this.resultTab = 0;
+    nav.leave('analysis');
     this.gameAnalysis = null;
     const hands = fixed ?? (await engine.deal());
     this.hand = hands[0];
@@ -202,7 +202,7 @@ export class App {
 
   /** Shows the analysis of the player's hand, computing it the first time. */
   showGameAnalysis() {
-    this.resultTab = 1;
+    nav.open('analysis', 'PLAY');
     const r = this.result;
     if (!r || this.gameAnalysis) return;
     this.analyzing = true;
@@ -234,13 +234,13 @@ export class App {
     const mine = cards ?? this.hand;
     const rest = cards ? chunk(shuffled([...Array(52).keys()].filter((c) => !mine.includes(c))), 13) : this.others;
     this.catching(this.deal([mine, ...rest], true));
-    this.screen = 'PLAY';
+    nav.go('PLAY');
   }
 
   // ---- Analyze ----
   anaHand = $state<Set<number>>(new Set());
   /** 0 the hand, 1 the candidates. */
-  anaPage = $state(0);
+  get anaPage(): number { return nav.screen === 'ANALYZE' && nav.sub === 'candidates' ? 1 : 0; }
   anaModel = $state(store.get('analyze.model', engine.BUILT_IN));
   anaMine = $state<Rows | null>(null);
   /** The rules of the hand analyzed when it comes from a game or record (full spec); else the rules page's. */
@@ -255,7 +255,7 @@ export class App {
     this.anaMine = mine;
     this.anaRules = rules;
     this.analysis = null;
-    this.anaPage = 0;
+    nav.leave('candidates');
   }
 
   toggleAnalyzeCard(c: number) {
@@ -276,7 +276,7 @@ export class App {
     this.setAnalyzeHand(new Set(parseCards(rec.hand)), ['front', 'middle', 'back'].map((k) => parseCards(rec[k])), rec.rules || 'family');
   }
 
-  analyzeRecordOnScreen(rec: Rec) { this.analyzeRecord(rec); this.screen = 'ANALYZE'; }
+  analyzeRecordOnScreen(rec: Rec) { this.analyzeRecord(rec); nav.go('ANALYZE'); }
 
   chooseAnalyzeModel(path: string) { this.anaModel = path; store.set('analyze.model', path); }
 
@@ -285,7 +285,7 @@ export class App {
     this.analyzing = true;
     this.catching(engine.analyze([...this.anaHand].sort((a, b) => a - b), this.anaRules ?? R.specString(this.ruleSpec), this.model(this.anaModel).path,
       this.anaMine ? [$state.snapshot(this.anaMine) as Rows] : [])
-      .then((a) => { this.analysis = a; this.anaPage = 1; })
+      .then((a) => { this.analysis = a; nav.open('candidates', 'ANALYZE'); })
       .finally(() => { this.analyzing = false; }));
   }
 

@@ -2,6 +2,7 @@
 <script lang="ts">
   import { TEXT_SCALE, type App, type ColorStyle, type DarkMode, type TextSize } from '../lib/app.svelte';
   import { t, ta, type Lang } from '../lib/i18n.svelte';
+  import { nav } from '../lib/nav.svelte';
   import Menu from './Menu.svelte';
   import Networks from './Networks.svelte';
   import Opponents from './Opponents.svelte';
@@ -18,14 +19,14 @@
     const s = app.seatChoices;
     return s.every((x) => x.kind === s[0].kind && x.model === s[0].model) ? t('opponents_all', name(s[0])) : s.map(name).join('、');
   });
-  const back = () => (app.settingsPage = null);
+  const back = () => nav.back();
 </script>
 
-{#if app.settingsPage === 'RULES'}
+{#if nav.sub === 'rules'}
   <Rules {app} onback={back} />
-{:else if app.settingsPage === 'OPPONENTS'}
+{:else if nav.sub === 'opponents'}
   <Opponents {app} onback={back} />
-{:else if app.settingsPage === 'NETWORKS'}
+{:else if nav.sub === 'networks'}
   <Networks {app} onback={back} />
 {:else}
   <div class="page">
@@ -50,12 +51,13 @@
       </SettingRow>
 
       <div class="section-header">{t('settings_game')}</div>
-      <SettingRow title={t('nav_rules')} value={Object.keys(app.ruleValues).length ? app.rulesName(app.ruleValues) : null} onclick={() => (app.settingsPage = 'RULES')} />
-      <SettingRow title={t('opponents_title')} value={opponents} onclick={() => (app.settingsPage = 'OPPONENTS')} />
-      <SettingRow title={t('networks')} value={t('networks_summary', app.models.length)} onclick={() => (app.settingsPage = 'NETWORKS')} />
+      <SettingRow title={t('nav_rules')} value={Object.keys(app.ruleValues).length ? app.rulesName(app.ruleValues) : null} onclick={() => nav.open('rules')} />
+      <SettingRow title={t('opponents_title')} value={opponents} onclick={() => nav.open('opponents')} />
+      <SettingRow title={t('networks')} value={t('networks_summary', app.models.length)} onclick={() => nav.open('networks')} />
 
       <div class="section-header">{t('settings_about')}</div>
       <SettingRow title={t('app_name')} value={t('about_source')} href="https://github.com/kennyfs/Thirteen" />
+      <SettingRow title={t('about_play')} value={t('about_play_note')} href="https://play.google.com/store/apps/details?id=io.github.kennyfs.thirteen" />
       <SettingRow title={t('privacy_policy')} href="https://github.com/kennyfs/Thirteen/blob/main/docs/privacy.md" />
     </div></div>
   </div>
