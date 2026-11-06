@@ -25,7 +25,7 @@ for abi in ${ORT_ABIS:-arm64-v8a x86_64}; do
     --android --android_sdk_path "$ANDROID_HOME" --android_ndk_path "$ANDROID_HOME/ndk/$ndk" --android_abi "$abi" \
     --android_api "$api" --build_shared_lib --include_ops_by_config "$PWD/ort-ops.config" --enable_lto --skip_tests \
     --no_telemetry --disable_ml_ops --disable_rtti --disable_types float4 float8 optional sparsetensor string \
-    --parallel --cmake_generator Ninja --skip_submodule_sync --compile_no_warning_as_error \
+    --parallel "${JOBS:-$(nproc)}" --cmake_generator Ninja --skip_submodule_sync --compile_no_warning_as_error \
     --cmake_extra_defines CMAKE_POLICY_VERSION_MINIMUM=3.5 FETCHCONTENT_TRY_FIND_PACKAGE_MODE=NEVER
   mkdir -p "$out/jni/$abi"
   cp "$work/build-$abi/MinSizeRel/libonnxruntime.so" "$out/jni/$abi/"

@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 ort=$(realpath -m "${ORT_WASM_DIR:-build/ort-wasm}")
 build=$(realpath -m "${ENGINE_BUILD:-build/engine}")
 emcmake cmake -S engine -B "$build" -G Ninja -DCMAKE_BUILD_TYPE=Release -DORT_WASM_DIR="$ort"
-cmake --build "$build" --parallel
+cmake --build "$build" --parallel "${JOBS:-$(nproc)}"
 mkdir -p public/engine public/models
 cp "$build/engine.js" "$build/engine.wasm" public/engine/
 cp "${MODEL:-../android/app/src/main/assets/run2_net10.onnx}" public/models/run2_net10.onnx
