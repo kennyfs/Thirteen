@@ -21,7 +21,7 @@
   if (new URLSearchParams(location.search).has('test')) Object.assign(window, { thirteen: { app, engine } });
   // As the app's: an outlined icon, filled when the screen is shown.
   const tabs: [Screen, string, IconName, IconName][] = [
-    ['PLAY', 'nav_play', 'styleOutlined', 'style'], ['ANALYZE', 'nav_analyze', 'insightsOutlined', 'insights'],
+    ['PLAY', 'nav_play', 'styleOutlined', 'style'], ['ANALYZE', 'nav_analyze', 'assessmentOutlined', 'assessment'],
     ['RECORDS', 'nav_records', 'historyOutlined', 'historyFilled'], ['SETTINGS', 'nav_settings', 'settingsOutlined', 'settingsFilled'],
   ];
   let systemDark = $state(matchMedia('(prefers-color-scheme: dark)').matches);
@@ -79,7 +79,7 @@
   <nav aria-label={t('app_name')}>
     {#each tabs as [s, label, icon, chosen] (s)}
       <button class:on={app.screen === s} aria-current={app.screen === s ? 'page' : undefined} onclick={() => go(s)}>
-        <span class="pill"><Icon name={app.screen === s ? chosen : icon} flip={s === 'PLAY'} /></span><span class="label">{t(label)}</span>
+        <span class="pill"><Icon name={app.screen === s ? chosen : icon} /></span><span class="label">{t(label)}</span>
       </button>
     {/each}
   </nav>

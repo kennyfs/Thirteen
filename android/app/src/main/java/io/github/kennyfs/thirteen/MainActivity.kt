@@ -29,11 +29,11 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Style
 import androidx.compose.material.icons.outlined.Groups
-import androidx.compose.material.icons.outlined.Insights
+import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Style
 import androidx.compose.material3.AlertDialog
@@ -89,7 +89,7 @@ import io.github.kennyfs.thirteen.ui.theme.isDark
 enum class Screen(val label: Int, val icon: ImageVector, val selectedIcon: ImageVector) {
   PLAY(R.string.nav_play, Icons.Outlined.Style, Icons.Filled.Style),
   BATTLE(R.string.nav_battle, Icons.Outlined.Groups, Icons.Filled.Groups),
-  ANALYZE(R.string.nav_analyze, Icons.Outlined.Insights, Icons.Filled.Insights),
+  ANALYZE(R.string.nav_analyze, Icons.Outlined.Assessment, Icons.Filled.Assessment),
   RECORDS(R.string.nav_records, Icons.Outlined.History, Icons.Filled.History),
   SETTINGS(R.string.nav_settings, Icons.Outlined.Settings, Icons.Filled.Settings),
 }

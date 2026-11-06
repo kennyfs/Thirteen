@@ -220,10 +220,10 @@ private fun EntryPage(vm: BattleViewModel) {
       }
       val choices = @Composable {
         Column(verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 10.dp)) {
-          val t = LocalTable.current
-          ChoiceTile(stringResource(R.string.battle_new_puzzle), stringResource(R.string.battle_puzzle_info), t.felt, t.onFelt, compact = compact, enabled = !vm.busy) { create(Mode.PUZZLE) }
+          val (fill, onFill) = tileColors()
+          ChoiceTile(stringResource(R.string.battle_new_puzzle), stringResource(R.string.battle_puzzle_info), fill, onFill, compact = compact, enabled = !vm.busy) { create(Mode.PUZZLE) }
           ChoiceTile(
-            stringResource(R.string.battle_new_game), stringResource(R.string.battle_game_info), t.felt, t.onFelt, compact = compact,
+            stringResource(R.string.battle_new_game), stringResource(R.string.battle_game_info), fill, onFill, compact = compact,
             enabled = !vm.busy,
           ) { create(Mode.GAME) }
           JoinTile(vm, compact = compact) { nearby(it) }
@@ -239,6 +239,17 @@ private fun EntryPage(vm: BattleViewModel) {
       }
     }
   }
+}
+
+/**
+ * What a large choice is filled with: the felt, or with the minimal colors (whose felt is the page's own surface, so a
+ * tile of it would not look like a button) a container.
+ */
+@Composable
+private fun tileColors(): Pair<Color, Color> {
+  val t = LocalTable.current
+  val colors = MaterialTheme.colorScheme
+  return if (t.felt == colors.surface) colors.secondaryContainer to colors.onSecondaryContainer else t.felt to t.onFelt
 }
 
 /** A large choice: a title in large type and a line about it. */
@@ -371,18 +382,19 @@ private fun LobbyPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) {
     BoxWithConstraints(Modifier.weight(1f)) {
       val wide = maxWidth >= 720.dp
       val code = @Composable {
-        val t = LocalTable.current
+        val (fill, onFill) = tileColors()
+        val dim = onFill.copy(alpha = 0.8f)
         Column(
-          Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(t.felt).padding(horizontal = 18.dp, vertical = 14.dp),
+          Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(fill).padding(horizontal = 18.dp, vertical = 14.dp),
           horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-          Text(stringResource(R.string.battle_room_number), style = MaterialTheme.typography.bodyLarge, color = t.onFeltDim)
+          Text(stringResource(R.string.battle_room_number), style = MaterialTheme.typography.bodyLarge, color = dim)
           Text(
             room.pin.chunked(3).joinToString(" "), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold,
-            color = t.onFelt, letterSpacing = 4.sp,
+            color = onFill, letterSpacing = 4.sp,
           )
-          Text(stringResource(R.string.battle_room_number_info), style = MaterialTheme.typography.bodyMedium, color = t.onFeltDim, textAlign = TextAlign.Center)
-          if (vm.hosting) Text(stringResource(R.string.battle_nearby_host_note), style = MaterialTheme.typography.bodySmall, color = t.onFeltDim, textAlign = TextAlign.Center)
+          Text(stringResource(R.string.battle_room_number_info), style = MaterialTheme.typography.bodyMedium, color = dim, textAlign = TextAlign.Center)
+          if (vm.hosting) Text(stringResource(R.string.battle_nearby_host_note), style = MaterialTheme.typography.bodySmall, color = dim, textAlign = TextAlign.Center)
         }
       }
       val players = @Composable {
