@@ -2,8 +2,9 @@
 <script lang="ts">
   import { TEXT_SCALE, type App, type ColorStyle, type DarkMode, type TextSize } from '../lib/app.svelte';
   import { t, ta, type Lang } from '../lib/i18n.svelte';
-  import { DESK_KEYS } from '../lib/desk-keys';
+  import { DESK_INPUTS, DESK_LINES } from '../lib/desk-keys';
   import { nav } from '../lib/nav.svelte';
+  import { tour } from '../lib/tour.svelte';
   import Menu from './Menu.svelte';
   import Networks from './Networks.svelte';
   import Opponents from './Opponents.svelte';
@@ -50,9 +51,17 @@
         <div class="block">
           <div class="body-large">{t('desk_keys')}</div>
           <div class="radios" role="radiogroup" aria-label={t('desk_keys')}>
-            {#each DESK_KEYS as k, i (k)}
-              <button class="radio-row" role="radio" aria-checked={app.deskKeys === k} onclick={() => app.chooseDeskKeys(k)}>
-                <span class="radio" class:on={app.deskKeys === k}></span><span class="body-medium">{ta('desk_keys_names')[i]}</span>
+            {#each DESK_INPUTS as k, i (k)}
+              <button class="radio-row" role="radio" aria-checked={app.deskKeys.input === k} onclick={() => app.chooseDeskKeys(k)}>
+                <span class="radio" class:on={app.deskKeys.input === k}></span><span class="body-medium">{ta('desk_keys_names')[i]}</span>
+              </button>
+            {/each}
+          </div>
+          <div class="body-large">{t('desk_lines')}</div>
+          <div class="radios" role="radiogroup" aria-label={t('desk_lines')}>
+            {#each DESK_LINES as n, i (n)}
+              <button class="radio-row" role="radio" aria-checked={app.deskKeys.lines === n} onclick={() => app.chooseDeskLines(n)}>
+                <span class="radio" class:on={app.deskKeys.lines === n}></span><span class="body-medium">{ta('desk_lines_names')[i]}</span>
               </button>
             {/each}
           </div>
@@ -64,6 +73,10 @@
       <SettingRow title={t('nav_rules')} value={Object.keys(app.ruleValues).length ? app.rulesName(app.ruleValues) : null} onclick={() => nav.open('rules')} selected={desk && (nav.sub ?? 'rules') === 'rules'} />
       <SettingRow title={t('opponents_title')} value={opponents} onclick={() => nav.open('opponents')} selected={desk && nav.sub === 'opponents'} />
       <SettingRow title={t('networks')} value={t('networks_summary', app.models.length)} onclick={() => nav.open('networks')} selected={desk && nav.sub === 'networks'} />
+
+      <div class="section-header">{t('help')}</div>
+      <SettingRow title={t('tut_title')} value={t('tut_note')} onclick={() => nav.open('tutorial')} />
+      <SettingRow title={t('tour_title')} value={t('tour_note')} onclick={() => tour.start()} />
 
       <div class="section-header">{t('settings_about')}</div>
       <SettingRow title={t('app_name')} value={t('about_source')} href="https://github.com/kennyfs/Thirteen" />

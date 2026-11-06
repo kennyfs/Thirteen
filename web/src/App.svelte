@@ -16,6 +16,10 @@
   import Play from './components/Play.svelte';
   import Records from './components/Records.svelte';
   import Settings from './components/Settings.svelte';
+  import Tour from './components/Tour.svelte';
+  import Tutorial from './components/Tutorial.svelte';
+  import Welcome from './components/Welcome.svelte';
+  import { tour, welcomeDone, welcomeDue } from './lib/tour.svelte';
 
   const app = new App();
   // For the page's screenshot script (scripts/shots.py): the state and the engine, only when asked.
@@ -75,6 +79,14 @@
     nav.go(s);
   }
   const openRules = () => nav.open('rules');
+  // The first visit: the welcome card (the tutorial, the tour, or play), once.
+  let welcome = $state(welcomeDue());
+  function welcomed(then?: () => void) {
+    welcome = false;
+    welcomeDone();
+    then?.();
+  }
+  const openTutorial = () => nav.open('tutorial', 'PLAY');
   // In a room the other screens are out of reach, as in the app: no bar or rail, and the battle shown (after a reload too).
   const immersive = $derived(app.battle.immersive);
   $effect(() => { if (immersive && app.screen !== 'BATTLE') nav.go('BATTLE'); });
@@ -84,7 +96,7 @@
 <div class="shell" class:wide={ui.wide}>
   <nav aria-label={t('app_name')} hidden={immersive}>
     {#each tabs as [s, label, icon, chosen] (s)}
-      <button class:on={app.screen === s} aria-current={app.screen === s ? 'page' : undefined} onclick={() => go(s)}>
+      <button class:on={app.screen === s} aria-current={app.screen === s ? 'page' : undefined} data-tour="nav-{s}" onclick={() => go(s)}>
         <span class="pill"><Icon name={app.screen === s ? chosen : icon} /></span><span class="label">{t(label)}</span>
       </button>
     {/each}
@@ -92,6 +104,8 @@
   <main>
     {#if !app.ready}
       <div class="loading"><span class="spinner"></span></div>
+    {:else if nav.sub === 'tutorial'}
+      <Tutorial {app} />
     {:else if app.screen === 'PLAY'}
       <Play {app} onrules={openRules} />
     {:else if app.screen === 'BATTLE'}
@@ -105,6 +119,11 @@
     {/if}
   </main>
 </div>
+
+{#if welcome && app.ready && !immersive}
+  <Welcome onlearn={() => welcomed(openTutorial)} ontour={() => welcomed(() => tour.start())} onclose={() => welcomed()} />
+{/if}
+{#if tour.on && app.ready}<Tour ontutorial={openTutorial} />{/if}
 
 {#if app.error}
   <Dialog onclose={() => (app.error = null)}>

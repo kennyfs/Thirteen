@@ -4,6 +4,7 @@
   import { t } from '../lib/i18n.svelte';
   import * as R from '../lib/rules';
   import { BIG_BUTTON } from '../lib/sizing';
+  import { sweep } from '../lib/sweep';
   import { ui } from '../lib/ui.svelte';
   import Card from './Card.svelte';
   import CandidateList from './CandidateList.svelte';
@@ -85,7 +86,7 @@
     </div>
     <div class="grid" bind:clientWidth={gridW} bind:clientHeight={gridH}>
       {#if gridW > 0}
-        <div class="suits" style:gap="{suitGap}px">
+        <div class="suits" style:gap="{suitGap}px" use:sweep={{ isOn: (c) => app.anaHand.has(c), set: (c, on) => app.setAnalyzeCard(c, on) }}>
           {#each [3, 2, 1, 0] as s (s)}
             <div class="suit" style:gap="{gap}px">
               {#each wide ? [[12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]] : [[12, 11, 10, 9, 8, 7, 6], [5, 4, 3, 2, 1, 0]] as line, li (li)}

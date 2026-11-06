@@ -7,7 +7,8 @@
   from a picked card, unpicks) each card it passes; a click on a row puts the picked cards into it (or picks the row
   for the next ones), a click on a placed card or a sweep over the rows takes cards back. Besides: Shift and a click
   picks the run from the last card picked, a double click puts a card into the first row with room, a right click on a
-  row takes it all back (elsewhere on the table it unpicks). The keys are desk-keys.ts's, by the settings' choice.
+  row takes it all back (elsewhere on the table it unpicks). The keys are desk-keys.ts's, by the settings' choice; with
+  the cursor's, a mark under the hand shows the cursor and whether a sweep is on.
   `locked` (a battle's hand handed in): the same table, nothing to do on it, `waiting` where the hand was.
 -->
 <script lang="ts">
@@ -22,10 +23,10 @@
   import type { Snippet } from 'svelte';
 
   interface Props { vm: Arranger; wheel: number; busy: boolean; onconfirm: () => void; keys?: DeskKeys; help?: boolean; locked?: boolean; waiting?: Snippet }
-  let { vm, wheel, busy, onconfirm, keys = 'pick', help = $bindable(false), locked = false, waiting }: Props = $props();
+  let { vm, wheel, busy, onconfirm, keys = { input: 'pick', lines: 13 }, help = $bindable(false), locked = false, waiting }: Props = $props();
 
   const km = $derived(keyMap(keys));
-  const below = $derived(km.cards ? textRoom(13) + 10 : 0);
+  const below = $derived(km.cards || km.cursor ? textRoom(13) + 10 : 0);
   let areaW = $state(0);
   let areaH = $state(0);
   const fit = $derived(deskArrangeFit(areaW, areaH, ui.u, km.perLine, below));
@@ -166,6 +167,29 @@
   }
   function rowKey(e: KeyboardEvent, r: number) { if (locked) return; if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); vm.tapRow(r); } }
 
+  // ---- The cursor (the 'cursor' keys): a place in the hand left, and the sweep it carries (true picks, false unpicks) ----
+  let cursorAt = $state(0);
+  let paint = $state<boolean | null>(null);
+  const cursor = $derived(Math.max(0, Math.min(cursorAt, hand.length - 1)));
+  // A play, an undo or a clear ends the sweep: the hand has changed under it.
+  $effect(() => { void vm.rows; paint = null; });
+  function cursorMove(step: number) {
+    if (hand.length === 0) return;
+    cursorAt = Math.max(0, Math.min(hand.length - 1, cursor + step));
+    if (paint !== null) vm.select([hand[cursorAt]], paint);
+  }
+  function cursorStart() {
+    const c = hand[cursor];
+    if (c === undefined) return;
+    paint = !vm.selected.has(c);
+    vm.select([c], paint);
+  }
+  function cursorStop() {
+    if (paint === null) return;
+    paint = null;
+    vm.selectionDone();
+  }
+
   // ---- Keys, by where they are on the keyboard (e.code) ----
   function onKey(e: KeyboardEvent) {
     if (locked) return;
@@ -185,18 +209,28 @@
       return done();
     }
     const row = km.rows.indexOf(code);
-    if (row >= 0) { vm.tapRow(row); return done(); }
+    // Shift and a row's key takes the row back.
+    if (row >= 0 && e.shiftKey) { vm.clearRow(row); return done(); }
+    if (row >= 0) { paint = null; vm.tapRow(row); return done(); }
+    if (km.cursor) {
+      if (km.cursor.left.includes(code)) { cursorMove(-1); return done(); }
+      if (km.cursor.right.includes(code)) { cursorMove(1); return done(); }
+      if (km.perLine < 13 && (code === 'ArrowUp' || code === 'ArrowDown')) { cursorMove(code === 'ArrowUp' ? -km.perLine : km.perLine); return done(); }
+      if (code === km.cursor.on) { cursorStart(); return done(); }
+      if (code === km.cursor.off) { cursorStop(); return done(); }
+    }
     if (code === km.sort) { vm.sortBySuit = !vm.sortBySuit; return done(); }
     if (km.undo.includes(code)) { vm.undo(); return done(); }
     if (code === 'Delete' || (!km.cards && code === 'Backspace')) { vm.clearRows(); return done(); }
-    if (e.key === 'Escape' && (vm.selected.size > 0 || vm.armed !== null)) { vm.selected = new Set(); vm.armed = null; return done(); }
+    if (e.key === 'Escape' && (vm.selected.size > 0 || vm.armed !== null || paint !== null)) { vm.selected = new Set(); vm.armed = null; paint = null; return done(); }
     if (e.key === '?') { help = true; return done(); }
     if (e.key === 'Enter' && canConfirm && !(el?.closest('button'))) { onconfirm(); return done(); }
-    if (!km.cards && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+    const vertical = km.perLine < 13 && (e.key === 'ArrowUp' || e.key === 'ArrowDown');
+    if (!km.cards && (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || vertical)) {
       const cards = [...document.querySelectorAll<HTMLElement>('.tray [data-card]')];
       if (cards.length === 0) return;
       const i = cards.indexOf(document.activeElement as HTMLElement);
-      const step = e.key === 'ArrowRight' ? 1 : -1;
+      const step = vertical ? (e.key === 'ArrowDown' ? km.perLine : -km.perLine) : e.key === 'ArrowRight' ? 1 : -1;
       const next = i < 0 ? (step > 0 ? 0 : cards.length - 1) : Math.max(0, Math.min(cards.length - 1, i + step));
       cards[next].focus();
       return done();
@@ -236,7 +270,7 @@
         {/each}
       </div>
       <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <div class="tray" style:padding-top="{card * 0.22}px" style:gap="{HAND_LINE_GAP}px"
+      <div class="tray" data-tour="hand" style:padding-top="{card * 0.22}px" style:gap="{HAND_LINE_GAP}px"
         style:min-height="{(cardHeight(card) + below) * lineCount + HAND_LINE_GAP * (lineCount - 1) + card * 0.22}px"
         onpointerdown={(e) => down(e, 'hand')} onpointermove={move} onpointerup={up} onpointercancel={up}>
         {#if hand.length > 0}
@@ -250,7 +284,12 @@
                   <span class="hold" ondblclick={() => doubleCard(c)} onclickcapture={(e) => (shift = e.shiftKey)}>
                     <Card card={c} width={card} tint={SAME_RANK_CATEGORY[counts.get(rank(c)) ?? 0]} light selected={vm.selected.has(c)} onclick={() => clickCard(c)} />
                   </span>
-                  {#if keyLabel}<span class="cardkey" class:on={vm.selected.has(c)} style:height="{below}px"><Kbd k={keyLabel} /></span>{/if}
+                  {#if keyLabel}<span class="cardkey" class:on={vm.selected.has(c)} style:height="{below}px"><Kbd k={keyLabel} /></span>
+                  {:else if km.cursor}
+                    {@const here = li * km.perLine + i === cursor}
+                    <span class="cursor" class:here class:painting={here && paint !== null} style:height="{below}px" style:width="{card}px"
+                      aria-hidden={!here}>{#if here}<span class="caret">▲</span>{#if paint !== null}<span class="label-small">{paint ? '+' : '−'}</span>{/if}{/if}</span>
+                  {/if}
                 </div>
               {/each}
             </div>
@@ -287,6 +326,10 @@
   .cardkey { display: flex; align-items: flex-end; justify-content: center; color: var(--on-felt); }
   .cardkey :global(kbd) { font-size: 0.8rem; padding: 3px 6px; }
   .cardkey.on { color: var(--highlight); }
+  .cursor { display: flex; align-items: flex-end; justify-content: center; gap: 2px; color: var(--on-felt); font-weight: 700; line-height: 1; }
+  .cursor.here { border-bottom: 3px solid var(--on-felt); }
+  .cursor.painting { color: var(--highlight); border-bottom-color: var(--highlight); }
+  .caret { font-size: 0.9rem; }
   .gap { flex: none; display: block; }
   .ready { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--on-felt); }
   .ready.bad { color: var(--felt-bad); }

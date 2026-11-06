@@ -1,6 +1,7 @@
 <!--
   A computer's analysis: the cards picked in large on top (a click puts one back) with where to take a hand from and
-  Analyze beside them, all 52 under them; then the candidates (DeskCandidates). Keys: the arrows go along the 52 cards
+  Analyze beside them, all 52 under them (a click picks one, a sweep with the button held picks or unpicks each
+  card it passes); then the candidates (DeskCandidates). Keys: the arrows go along the 52 cards
   and Space picks, R deals a random hand, Delete clears, Enter analyzes; Esc goes back from the candidates.
 -->
 <script lang="ts">
@@ -8,6 +9,7 @@
   import { t } from '../../lib/i18n.svelte';
   import { nav } from '../../lib/nav.svelte';
   import * as R from '../../lib/rules';
+  import { sweep } from '../../lib/sweep';
   import { ui } from '../../lib/ui.svelte';
   import Card from '../Card.svelte';
   import Dialog from '../Dialog.svelte';
@@ -116,7 +118,7 @@
       </div>
       {#if legacy}<div class="body-medium bad" bind:offsetHeight={legacyH}>{legacy}</div>{/if}
     </section>
-    <div class="deck" style:gap="{GAP}px">
+    <div class="deck" style:gap="{GAP}px" use:sweep={{ isOn: (c) => app.anaHand.has(c), set: (c, on) => app.setAnalyzeCard(c, on) }}>
       {#each [3, 2, 1, 0] as s (s)}
         <div class="line" style:gap="{GAP}px">
           {#each [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] as r (r)}

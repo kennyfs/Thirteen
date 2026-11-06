@@ -2,7 +2,7 @@
 // single hands, the records and the settings. A port of the app's AppViewModel.kt; the battles are in battle.svelte.ts.
 import { Arranger } from './arranger.svelte';
 import { Battle, type BattleRecord } from './battle.svelte';
-import { DESK_KEYS, type DeskKeys } from './desk-keys';
+import { parseDeskKeys, type DeskInput, type DeskKeys, type DeskLines } from './desk-keys';
 import { parseCards, sameArrangement, shuffled, type Rows } from './cards';
 import * as engine from './engine';
 import type { Analysis, Score } from './engine';
@@ -14,6 +14,11 @@ import * as store from './store';
 import type { Rec } from './store';
 
 export interface Model { name: string; path: string; builtIn: boolean }
+/** A finished hand as its result pages show it: the one just played, or the one before it (App.prev). */
+export interface Finished {
+  hand: number[]; others: number[][]; rules: string; values: Values; seats: Seat[]; result: { rows: Rows[]; score: Score };
+  record: Rec | null; replaying: boolean; handNo: number; totals: number[]; analysis: Analysis | null;
+}
 export type Kind = 'NET' | 'MC' | 'INDEP';
 export const KINDS: Kind[] = ['NET', 'MC', 'INDEP'];
 export interface Seat { kind: Kind; model: string }
@@ -41,8 +46,16 @@ export class App {
   chooseDarkMode(v: DarkMode) { this.darkMode = v; store.set('look.dark', v); }
   chooseTextSize(v: TextSize) { this.textSize = v; store.set('look.text', v); }
   /** A computer's table: its keys (desk-keys.ts). */
-  deskKeys = $state<DeskKeys>(DESK_KEYS.includes(store.get('desk.keys', 'pick') as DeskKeys) ? store.get('desk.keys', 'pick') as DeskKeys : 'pick');
-  chooseDeskKeys(v: DeskKeys) { this.deskKeys = v; store.set('desk.keys', v); }
+  /** How the cards are picked and how the hand is laid out, chosen apart (desk-keys.ts). */
+  deskKeys = $state<DeskKeys>(parseDeskKeys(store.get('desk.keys', 'pick'), store.get('desk.lines', '13')));
+  /** An input ('pick', 'cursor', 'keys'), or as before the layout was its own, 'keys76' or 'keys13' (both at once). */
+  chooseDeskKeys(v: DeskInput | 'keys76' | 'keys13') {
+    const k = v === 'keys76' || v === 'keys13' ? parseDeskKeys(v, '') : { input: v, lines: this.deskKeys.lines };
+    this.deskKeys = k;
+    store.set('desk.keys', k.input);
+    store.set('desk.lines', String(k.lines));
+  }
+  chooseDeskLines(v: DeskLines) { this.deskKeys = { ...this.deskKeys, lines: v }; store.set('desk.lines', String(v)); }
   chooseLang(v: Lang) { this.lang = v; setLang(v); store.set('lang', v); }
 
   private catching(p: Promise<unknown>) { p.catch((e) => { this.error = e?.message ?? String(e); }); }
@@ -135,6 +148,14 @@ export class App {
   battle = new Battle((m) => { this.error = m; }, () => this.ruleSpec, () => { this.recordCount = this.records.count(); });
   lastRecord = $state<Rec | null>(null);
   ready = $state(false);
+  /**
+   * The hand finished before the one in play, kept when the next is dealt: its result and analysis are a button (a
+   * computer's L) away from the table, at #/play/last and #/play/lastanalysis, and Back comes back to the hand in play.
+   */
+  prev = $state.raw<Finished | null>(null);
+  prevAnalyzing = $state(false);
+  /** Whether the page shows the previous hand's result (1) or its analysis (2) rather than the hand in play. */
+  get peek(): number { return nav.screen !== 'PLAY' || !this.prev ? 0 : nav.sub === 'last' ? 1 : nav.sub === 'lastanalysis' ? 2 : 0; }
 
   private hand: number[] = [];
   private others: number[][] = [];
@@ -158,6 +179,10 @@ export class App {
 
   /** Deals a new hand (`fixed`: the four hands, the player's first). */
   async deal(fixed?: number[][], again = false) {
+    const done = this.current;
+    if (done) this.prev = done;
+    nav.leave('last');
+    nav.leave('lastanalysis');
     this.replaying = again;
     this.lastRecord = null;
     this.result = null;
@@ -213,6 +238,43 @@ export class App {
     })());
   }
 
+  /** The hand just finished, as its result pages show it; null while a hand is in play. */
+  get current(): Finished | null {
+    const r = this.result;
+    if (!r) return null;
+    return {
+      hand: this.hand, others: this.others, rules: this.gameRules, values: this.gameValues, seats: this.seats, result: r,
+      record: this.lastRecord, replaying: this.replaying, handNo: this.session.hands, totals: this.session.totals, analysis: this.gameAnalysis,
+    };
+  }
+
+  /** The previous hand: its result, then (again) its analysis, then back to the hand in play. A computer's L. */
+  stepPrev() {
+    const p = this.peek;
+    if (!this.prev || this.result) return;
+    if (p === 0) nav.open('last', 'PLAY');
+    else if (p === 1) this.showPrevAnalysis();
+    else nav.back();
+  }
+
+  showPrevAnalysis() {
+    nav.open('lastanalysis', 'PLAY');
+    this.computePrevAnalysis();
+  }
+
+  /** Computes the previous hand's analysis (a computer's result panel shows a summary of it). */
+  computePrevAnalysis() {
+    const p = this.prev;
+    if (!p || p.analysis || this.prevAnalyzing) return;
+    this.prevAnalyzing = true;
+    this.catching(engine.analyze([...p.hand].sort((a, b) => a - b), p.rules, this.model(this.anaModel).path, [p.result.rows[0]])
+      .then((a) => { if (this.prev === p) this.prev = { ...p, analysis: a }; })
+      .finally(() => { this.prevAnalyzing = false; }));
+  }
+
+  /** Saves the previous hand's record, or drops it. */
+  togglePrevFavorite() { if (this.prev?.record) this.toggleFavorite(this.prev.record); }
+
   /** Shows the analysis of the player's hand, computing it the first time. */
   showGameAnalysis() {
     nav.open('analysis', 'PLAY');
@@ -226,7 +288,10 @@ export class App {
     this.analyzing = true;
     this.gameAnalyzing = r;
     this.catching(engine.analyze([...this.hand].sort((a, b) => a - b), this.gameRules, this.model(this.anaModel).path, [r.rows[0]])
-      .then((a) => { if (this.result === r) this.gameAnalysis = a; })
+      .then((a) => {
+        if (this.result === r) this.gameAnalysis = a;
+        else if (this.prev?.result === r && !this.prev.analysis) this.prev = { ...this.prev, analysis: a };
+      })
       .finally(() => { this.analyzing = false; if (this.gameAnalyzing === r) this.gameAnalyzing = null; }));
   }
 
@@ -307,9 +372,13 @@ export class App {
     nav.leave('candidates');
   }
 
-  toggleAnalyzeCard(c: number) {
+  toggleAnalyzeCard(c: number) { this.setAnalyzeCard(c, !this.anaHand.has(c)); }
+
+  /** Picks or unpicks one card (a sweep's): no more than 13. */
+  setAnalyzeCard(c: number, on: boolean) {
+    if (this.anaHand.has(c) === on || (on && this.anaHand.size >= 13)) return;
     const s = new Set(this.anaHand);
-    if (s.has(c)) s.delete(c); else if (s.size < 13) s.add(c); else return;
+    if (on) s.add(c); else s.delete(c);
     this.setAnalyzeHand(s, null, this.anaRules);
   }
 

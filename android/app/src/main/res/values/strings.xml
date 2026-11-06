@@ -401,4 +401,86 @@
   <string name="next_hand_short">Next</string>
   <string name="battle_next_short">Next</string>
   <string name="battle_submit_short">Submit</string>
+  <!-- The welcome card, the tutorial (its tips from tips-summary.md's statistics) and the tour. -->
+  <string name="back_to_hand">Back to this hand</string>
+  <string name="welcome_title">Welcome to Thirteen</string>
+  <string name="welcome_body">New to Thirteen (Chinese poker)? The tutorial teaches the rules in a few minutes; the tour shows what this app can do. You can find both in Settings later.</string>
+  <string name="welcome_learn">Learn to play</string>
+  <string name="welcome_tour">Tour the app</string>
+  <string name="welcome_skip">Just play</string>
+  <string name="tut_title">How to play</string>
+  <string name="tut_note">The rules in a few pages, a hand to try, and tips from the AI</string>
+  <string name="tour_title">Tour the app</string>
+  <string name="tour_note">What each screen does</string>
+  <string name="tut_next">Next</string>
+  <string name="tut_prev">Back</string>
+  <string name="tut_close">Close</string>
+  <string name="tut_page">%1$d / %2$d</string>
+  <string name="tut_done">Start playing</string>
+  <string name="tut_goal_title">Three rows</string>
+  <string name="tut_goal_text">Four players each get 13 cards and split them into three rows: 3 cards in the front, 5 in the middle and 5 in the back. Then everyone shows their rows at once and compares them, row by row, with each opponent. That is all: the whole game is how you set your 13 cards.</string>
+  <string name="tut_goal_example">For example (front, middle, back):</string>
+  <string name="tut_ranks_title">Which row is bigger</string>
+  <string name="tut_ranks_text">From the biggest down. A bigger kind always wins; within a kind the higher cards win, A highest and 2 lowest. Suits never rank: they only make flushes.</string>
+  <string name="tut_ranks_front">The front has only 3 cards, so it is three of a kind, a pair or high card: three in a row or of one suit are nothing special there.</string>
+  <string name="tut_wheel">A-2-3-4-5 under the rules now chosen: %1$s.</string>
+  <string name="tut_foul_title">Don\'t foul</string>
+  <string name="tut_foul_text">The back must be at least as big as the middle, and the middle at least as big as the front. Rows in any other order are a foul (倒水), which this app will not let you play.</string>
+  <string name="tut_foul_strict">Under the rules now chosen, equal rows foul too (strict rows).</string>
+  <string name="tut_foul_bad">A foul: the front\'s pair beats the middle\'s high card.</string>
+  <string name="tut_foul_good">The same cards set right: the pair in the middle.</string>
+  <string name="tut_score_title">Points</string>
+  <string name="tut_score_rules">Under the rules now chosen (%1$s), between you and each opponent:</string>
+  <string name="tut_score_rows">Each row you win: %1$s from them (a tie is nothing).</string>
+  <string name="tut_score_norows">Winning one or two rows earns nothing: only all three count.</string>
+  <string name="tut_score_scoop">Beat them in all three rows, a scoop (打槍): %1$s more from them.</string>
+  <string name="tut_score_scoop_only">Beat them in all three rows, a scoop (打槍): %1$s from them.</string>
+  <string name="tut_score_home">Scoop all three opponents at once, a home run (全壘打): %1$s more from each.</string>
+  <string name="tut_score_special">Special rows earn points from each opponent, whatever the rows do: %1$s.</string>
+  <string name="tut_score_special_win">Special rows earn points from each opponent whose row they beat: %1$s.</string>
+  <string name="tut_score_dragon">2 to A, all 13 ranks (a dragon, 一條龍): %1$s from each.</string>
+  <string name="tut_score_change">Tables score Thirteen in many ways, so every one of these numbers can be changed in Settings › Rules, with presets for the common ones.</string>
+  <string name="tut_try_title">Try a hand</string>
+  <string name="tut_try_text">Set this hand: tap cards to pick them, then tap a row. It is not scored or recorded.</string>
+  <string name="tut_try_check">Ask the AI</string>
+  <string name="tut_try_best">Yours is the AI\'s best arrangement!</string>
+  <string name="tut_try_rank">Yours ranks #%1$d of %2$d, %3$s points below the best.</string>
+  <string name="tut_try_extra">Another arrangement beats yours in every row.</string>
+  <string name="tut_try_best_rows">The AI\'s best:</string>
+  <string name="tut_try_why">The aces go in front and the smallest pair fills the full house: a pair of aces in front wins far more often than a king alone, and a full house is ranked by its three of a kind, whatever its pair.</string>
+  <string name="tut_try_again">Try again</string>
+  <string name="tut_tips_title">Tips from the AI</string>
+  <string name="tut_tips_text">From the AI\'s analysis of 10,000 random hands under the simple rules:</string>
+  <string name="tut_end_title">Ready</string>
+  <string name="tut_end_text">Practice against three AI players, as many hands as you like; after each, see how the AI would have set it. Help on the table explains the buttons.</string>
+  <string name="tour_skip">Skip tour</string>
+  <string name="tour_next">Next</string>
+  <string name="tour_prev">Back</string>
+  <string name="tour_done">Done</string>
+  <string name="tour_play_title">Practice</string>
+  <string name="tour_play">Play hands against three AI players. Tap cards (or swipe across several) to pick them, then tap a row to put them in.</string>
+  <string name="tour_confirm_title">Play the hand</string>
+  <string name="tour_confirm">With all three rows full and no foul, play: you see everyone\'s rows and the points, then the AI\'s analysis of your hand. Last hand brings the one before back while you set the next.</string>
+  <string name="tour_rules_title">Your rules</string>
+  <string name="tour_rules">Tables play Thirteen many ways, so every number is yours to set: points per row, scoops, home runs, special rows, the dragon, even whether A-2-3-4-5 is a straight. The AI plays and analyzes under the rules you choose.</string>
+  <string name="tour_analyze_title">AI analysis</string>
+  <string name="tour_analyze">Pick any 13 cards and the AI values every sensible arrangement. It is not a list of if-else rules but a neural network trained by playing against itself: it estimates what each arrangement scores on average against the opponents.</string>
+  <string name="tour_battle_title">Battles</string>
+  <string name="tour_battle">Play friends in a room: a table game, or a puzzle contest where everyone sets the same cards and the AI judges who set them best.</string>
+  <string name="tour_records_title">Records</string>
+  <string name="tour_records">Every hand you play, a chart of your score and the hands you saved; open any one to analyze it again.</string>
+  <string name="tour_settings_title">Settings</string>
+  <string name="tour_settings">The rules, your opponents, the look and the text size. The tutorial and this tour are here too.</string>
+  <string name="tour_end_title">That\'s the tour</string>
+  <string name="tour_end">New to Thirteen? The tutorial teaches the rules in a few pages.</string>
+  <string-array name="tut_tips">
+    <item>Don\'t just put your strongest five in the back. Strongest back, next middle, the rest in front is the best way only about one hand in eight, and costs about half a point a hand.</item>
+    <item>Make the front count: the best arrangement has a pair or better in front six hands in ten. Without a pair, put an ace there (or a king).</item>
+    <item>Splitting a pair is fine: with two or three pairs, the best arrangement splits one more often than not.</item>
+    <item>A full house takes your smallest pair (nine times in ten): keep the bigger pairs for the other rows.</item>
+    <item>A flush is not always worth it: two hands in three hold five of a suit, but only half of those are best set with the flush.</item>
+    <item>Don\'t agonize: under the simple rules the best and the second best usually differ by about 0.01 points. Rules that count rows (Taiwan) are less forgiving.</item>
+    <item>Most hands lose a little: even set best, only four in ten are worth more than nothing. The points come from the few big hands.</item>
+    <item>After each hand, Analyze my hand shows how yours compares with the best: the quickest way to learn.</item>
+  </string-array>
 </resources>

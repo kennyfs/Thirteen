@@ -12,6 +12,7 @@
   import type { Arranger } from '../lib/arranger.svelte';
   import { ROW_SIZES, rank, rowLabel, rowLayout, suit } from '../lib/cards';
   import { t, ta } from '../lib/i18n.svelte';
+  import { nav } from '../lib/nav.svelte';
   import {
     arrangeFit, cardHeight, deskFit, BIG_BUTTON, CARD_GAP, DESK_LABEL, HAND_GAP, HAND_LINE_GAP, HAND_LINE_GAP_TIGHT, ROW_PAD,
     ROW_STACK_GAP, ROWS_GAP, SUIT_GAP,
@@ -243,7 +244,7 @@
 {/snippet}
 
 {#snippet tray()}
-  <div class="tray" role="group" style:padding-top="{card * 0.22}px" style:gap="{suitLines?.gap ?? HAND_LINE_GAP}px" class:left={!!suitLines}
+  <div class="tray" role="group" data-tour="hand" style:padding-top="{card * 0.22}px" style:gap="{suitLines?.gap ?? HAND_LINE_GAP}px" class:left={!!suitLines}
     onpointerdown={(e) => down(e, 'hand')} onpointermove={move} onpointerup={up} onpointercancel={up}>
     {#each handLines as line, li (li)}
       <div class="hand-line">
@@ -282,7 +283,7 @@
               <button class="tool" disabled={!vm.canClear} onclick={() => vm.clearRows()}><Icon name="clearAll" /><span>{t('take_all')}</span></button>
               <button class="tool" onclick={() => (help = true)}><Icon name="help" /><span>{t('help')}</span></button>
             </div>
-            <button class="wb confirm title-large" disabled={!canConfirm} onclick={onconfirm}>{busy ? '…' : confirmLabel}</button>
+            <button class="wb confirm title-large" data-tour="confirm" disabled={!canConfirm} onclick={onconfirm}>{busy ? '…' : confirmLabel}</button>
           </div>
         </div>
         {@render tray()}
@@ -299,7 +300,7 @@
         <button class="btn outlined icon" aria-label={t('undo')} disabled={!vm.canUndo} onclick={() => vm.undo()}><Icon name="undo" /></button>
         <button class="btn outlined icon" aria-label={t('take_all')} disabled={!vm.canClear} onclick={() => vm.clearRows()}><Icon name="clearAll" /></button>
         <button class="btn outlined icon" aria-label={t('help')} onclick={() => (help = true)}><Icon name="help" /></button>
-        <button class="btn filled big go" disabled={!canConfirm} onclick={onconfirm}>{busy ? '…' : confirmLabel}</button>
+        <button class="btn filled big go" data-tour="confirm" disabled={!canConfirm} onclick={onconfirm}>{busy ? '…' : confirmLabel}</button>
       </div>
     {/if}
   {/if}
@@ -308,7 +309,10 @@
 {#if help && !bare}
   <Dialog title={t('arrange_help_title')} onclose={() => (help = false)}>
     <p class="body-large help-text">{t('arrange_help')}</p>
-    {#snippet actions()}<button class="btn text" onclick={() => (help = false)}>{t('ok')}</button>{/snippet}
+    {#snippet actions()}
+      <button class="btn text" onclick={() => { help = false; nav.open('tutorial'); }}>{t('tut_title')}</button>
+      <button class="btn text" onclick={() => (help = false)}>{t('ok')}</button>
+    {/snippet}
   </Dialog>
 {/if}
 

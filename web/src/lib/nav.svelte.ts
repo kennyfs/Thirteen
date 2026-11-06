@@ -26,7 +26,7 @@ class Nav {
     // a page showing what is gone with the reload (a finished hand's analysis, the candidates).
     const { screen, sub } = this.route;
     history.replaceState({ depth: 0 }, '', path({ screen, sub: null }));
-    if (sub && !['analysis', 'candidates'].includes(sub)) history.pushState({ depth: 1 }, '', path({ screen, sub }));
+    if (sub && !['analysis', 'candidates', 'last', 'lastanalysis'].includes(sub)) history.pushState({ depth: 1 }, '', path({ screen, sub }));
     this.route = parse(location.hash);
     addEventListener('popstate', () => {
       this.route = parse(location.hash);
@@ -74,6 +74,14 @@ class Nav {
     if (screen === this.route.screen) return this.back();
     const r = { screen, sub: null };
     history.pushState({ depth: 0 }, '', path(r));
+    this.atGuard = false;
+    this.route = r;
+  }
+
+  /** A screen's top in place of the page shown, at once: no step back through the history (which would come later). */
+  replace(screen: Screen) {
+    const r = { screen, sub: null };
+    history.replaceState({ depth: 0 }, '', path(r));
     this.atGuard = false;
     this.route = r;
   }

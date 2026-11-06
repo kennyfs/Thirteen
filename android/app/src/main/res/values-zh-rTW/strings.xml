@@ -399,4 +399,86 @@
   <string name="next_hand_short">下一局</string>
   <string name="battle_next_short">下一手</string>
   <string name="battle_submit_short">交出</string>
+  <!-- The welcome card, the tutorial (its tips from tips-summary.md's statistics) and the tour. -->
+  <string name="back_to_hand">回到這一局</string>
+  <string name="welcome_title">歡迎來玩十三支</string>
+  <string name="welcome_body">第一次玩十三支嗎？教學幾分鐘就能學會規則；導覽會介紹這個 app 的各項功能。之後也都能在「設定」裡找到。</string>
+  <string name="welcome_learn">看教學</string>
+  <string name="welcome_tour">導覽功能</string>
+  <string name="welcome_skip">直接開始</string>
+  <string name="tut_title">怎麼玩</string>
+  <string name="tut_note">幾頁學會規則、實際擺一手，還有 AI 統計出的訣竅</string>
+  <string name="tour_title">功能導覽</string>
+  <string name="tour_note">介紹每個畫面的功能</string>
+  <string name="tut_next">下一頁</string>
+  <string name="tut_prev">上一頁</string>
+  <string name="tut_close">關閉</string>
+  <string name="tut_page">%1$d / %2$d</string>
+  <string name="tut_done">開始玩</string>
+  <string name="tut_goal_title">分成三墩</string>
+  <string name="tut_goal_text">四個人各拿 13 張牌，分成三墩：頭墩 3 張、中墩 5 張、尾墩 5 張。大家同時亮牌，和每一位對手逐墩比大小。之後就沒有其他動作了：輸贏全看你怎麼擺這 13 張牌。</string>
+  <string name="tut_goal_example">例如（頭墩、中墩、尾墩）：</string>
+  <string name="tut_ranks_title">牌型大小</string>
+  <string name="tut_ranks_text">由大到小排列。牌型大的一定贏；同一種牌型比點數，A 最大、2 最小。花色不分大小，只用來湊同花。</string>
+  <string name="tut_ranks_front">頭墩只有 3 張，所以只有三條、一對、散牌三種：三張連號或同花色在頭墩不算什麼。</string>
+  <string name="tut_wheel">A-2-3-4-5 在目前的規則下：%1$s。</string>
+  <string name="tut_foul_title">不能倒水</string>
+  <string name="tut_foul_text">尾墩要大於或等於中墩，中墩要大於或等於頭墩。順序反了就是「倒水」，app 不會讓你出倒水的牌。</string>
+  <string name="tut_foul_strict">目前的規則是嚴格墩：兩墩一樣大也算倒水。</string>
+  <string name="tut_foul_bad">倒水：頭墩的一對比中墩的散牌大。</string>
+  <string name="tut_foul_good">同樣的牌換個擺法：一對放中墩就沒問題。</string>
+  <string name="tut_score_title">計分</string>
+  <string name="tut_score_rules">目前選的規則（%1$s），你和每一位對手之間：</string>
+  <string name="tut_score_rows">每贏一墩：對方付你 %1$s 分（平手不算）。</string>
+  <string name="tut_score_norows">只贏一、兩墩不算分，要三墩全贏才算。</string>
+  <string name="tut_score_scoop">三墩都贏過同一位對手叫「打槍」：對方再多付 %1$s 分。</string>
+  <string name="tut_score_scoop_only">三墩都贏過同一位對手叫「打槍」：對方付你 %1$s 分。</string>
+  <string name="tut_score_home">一次打槍三家叫「全壘打」：每家再多付 %1$s 分。</string>
+  <string name="tut_score_special">特殊墩不論輸贏，每家都要付分：%1$s。</string>
+  <string name="tut_score_special_win">特殊墩贏過對方那一墩才收分：%1$s。</string>
+  <string name="tut_score_dragon">13 張剛好 2 到 A 各一張叫「一條龍」：每家付 %1$s 分。</string>
+  <string name="tut_score_change">十三支各地算法不同，所以這些數字都能在「設定 › 規則」修改，也有常見玩法的預設。</string>
+  <string name="tut_try_title">實際擺一手</string>
+  <string name="tut_try_text">試著擺這手牌：點牌選取，再點要放進的那一墩。這手不計分、不留紀錄。</string>
+  <string name="tut_try_check">讓 AI 評分</string>
+  <string name="tut_try_best">你的擺法就是 AI 的最佳擺法！</string>
+  <string name="tut_try_rank">你的擺法在 %2$d 種中排第 %1$d，比最佳少 %3$s 分。</string>
+  <string name="tut_try_extra">有別的擺法每一墩都比你的大。</string>
+  <string name="tut_try_best_rows">AI 的最佳擺法：</string>
+  <string name="tut_try_why">一對 A 放頭墩，用最小的一對 6 湊葫蘆：頭墩有一對 A 比只放一張 K 容易贏得多，而葫蘆只比三條的大小，配哪一對都一樣。</string>
+  <string name="tut_try_again">重擺</string>
+  <string name="tut_tips_title">AI 統計出的訣竅</string>
+  <string name="tut_tips_text">從 AI 分析一萬手隨機牌（簡單規則）得到的結果：</string>
+  <string name="tut_end_title">準備好了</string>
+  <string name="tut_end_text">和三位 AI 對手練習，想玩幾局都可以；每局結束都能看 AI 會怎麼擺。牌桌上的「說明」會解釋各個按鈕。</string>
+  <string name="tour_skip">跳過導覽</string>
+  <string name="tour_next">下一步</string>
+  <string name="tour_prev">上一步</string>
+  <string name="tour_done">完成</string>
+  <string name="tour_play_title">練習</string>
+  <string name="tour_play">和三位 AI 對手練習。點牌（或手指滑過多張）選取，再點一墩放進去。</string>
+  <string name="tour_confirm_title">出牌</string>
+  <string name="tour_confirm">三墩放滿、沒有倒水就能出牌：可以看到每家的牌和得分，還有 AI 對你這手的分析。擺下一局時，按「上一局」可以回頭看上一局的結果。</string>
+  <string name="tour_rules_title">規則由你定</string>
+  <string name="tour_rules">十三支各地玩法不同，所以每個數字都能自己設定：每墩幾分、打槍、全壘打、特殊墩、一條龍，連 A-2-3-4-5 算不算順子都能改。AI 會照你選的規則出牌和分析。</string>
+  <string name="tour_analyze_title">AI 分析</string>
+  <string name="tour_analyze">選任意 13 張牌，AI 會評估每一種合理的擺法。它不是一堆 if-else 規則，而是靠自我對弈訓練出來的神經網路，會估算每種擺法對上對手的平均得分。</string>
+  <string name="tour_battle_title">對戰</string>
+  <string name="tour_battle">和朋友開房對戰：同桌對局，或是大家拿同一手牌、由 AI 評比誰擺得最好的解題比賽。</string>
+  <string name="tour_records_title">紀錄</string>
+  <string name="tour_records">每一局的紀錄、分數走勢圖和收藏的牌，點開任何一局都能重新分析。</string>
+  <string name="tour_settings_title">設定</string>
+  <string name="tour_settings">規則、對手、外觀與字體大小都在這裡，教學和這個導覽也在這裡。</string>
+  <string name="tour_end_title">導覽結束</string>
+  <string name="tour_end">第一次玩十三支？教學幾頁就能學會規則。</string>
+  <string-array name="tut_tips">
+    <item>別只是把最強的五張放尾墩。「最強放尾墩、次強放中墩、剩下放頭墩」只有大約八手才有一手是最佳擺法，平均每手少將近半分。</item>
+    <item>頭墩很重要：最佳擺法有六成頭墩是一對以上。湊不出對子時，頭墩最好放 A（其次是 K）。</item>
+    <item>拆對子沒關係：有兩、三對的手牌，最佳擺法超過一半會拆開某個對子。</item>
+    <item>湊葫蘆用最小的那一對（九成如此），大對子留給其他墩。</item>
+    <item>同花不一定要用：三手牌有兩手湊得出同花，但其中只有一半用同花才是最佳。</item>
+    <item>不用太糾結：簡單規則下，第一和第二好的擺法通常只差約 0.01 分；計墩的規則（台灣計墩）差距就大得多。</item>
+    <item>大部分手牌期望值是負的：就算擺到最好，也只有四成手牌期望為正，分數主要來自少數大牌。</item>
+    <item>每局結束可以按「分析我的牌」，看看你的擺法和最佳差多少，這是進步最快的方法。</item>
+  </string-array>
 </resources>

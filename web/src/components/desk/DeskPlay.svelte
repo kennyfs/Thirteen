@@ -27,9 +27,12 @@
 
   let { app, onrules }: { app: App; onrules: () => void } = $props();
   const seatName = (i: number) => (i === 0 ? t('you') : t('seat_pos', i));
-  const wheel = $derived(app.gameValues.wheel ?? 0);
-  const saved = $derived(!!app.lastRecord && app.favoriteIds.has(app.lastRecord.id));
-  const legacy = $derived(app.gameAnalysis && app.gameAnalysis.legacyModel && app.legacyMismatch(app.gameAnalysis.rules)
+  // The finished hand shown: the one just played, or (peek, L) the one before the hand in play.
+  const peek = $derived(app.peek);
+  const f = $derived(peek ? app.prev : app.current);
+  const wheel = $derived((f?.values ?? app.gameValues).wheel ?? 0);
+  const saved = $derived(!!f?.record && app.favoriteIds.has(f.record.id));
+  const legacy = $derived(f?.analysis && f.analysis.legacyModel && app.legacyMismatch(f.analysis.rules)
     ? t('legacy_warning', app.model(app.anaModel).name) : null);
 
   let help = $state(false);
@@ -52,36 +55,49 @@
     return ev.keys[0] <= ev.keys[1] && ev.keys[1] <= ev.keys[2] ? t('fouled_strict') : t('fouled');
   });
   const fouled = $derived(vm.unplaced.length === 0 && vm.rowsEval?.valid === false);
-  const analysisPage = $derived(!!app.result && app.resultTab === 1);
-  const favorite = () => app.lastRecord && app.toggleFavorite(app.lastRecord);
+  const analysisPage = $derived(!!f && (peek ? peek === 2 : app.resultTab === 1));
+  const favorite = () => { if (f?.record) app.toggleFavorite(f.record); };
+  const showAnalysis = () => (peek ? app.showPrevAnalysis() : app.showGameAnalysis());
   /** A: all the candidates, and back. */
   function analysisKey() {
     if (analysisPage) nav.back();
-    else app.showGameAnalysis();
+    else showAnalysis();
   }
   // Each result is analyzed at once: the remarks and the figures are in the panel.
   $effect(() => { if (app.result && !app.gameAnalysis) app.computeGameAnalysis(); });
+  $effect(() => { if (peek) app.computePrevAnalysis(); });
 
   // The player's rows among the candidates, once analyzed.
   const cmp = $derived.by(() => {
-    const a = app.gameAnalysis;
-    const r = app.result;
+    const a = f?.analysis;
+    const r = f?.result;
     if (!a || !r) return null;
     const i = mineIndex(a, r.rows[0]);
     return { a, i, rank: i === null ? null : ranks(a)[i] };
   });
 
-  const rem = $derived(cmp ? remarksOf(cmp.a, app.result?.rows[0] ?? null) : []);
+  const rem = $derived(cmp ? remarksOf(cmp.a, f?.result.rows[0] ?? null) : []);
   const mineRemark = $derived(rem.find((r) => r.kind === 'same' || r.kind === 'mistake') ?? null);
   const restRemarks = $derived(rem.filter((r) => r !== mineRemark).map(remarkText).join(t('remark_sep')));
 
   // The result's keys (the arranging table's are DeskArranging's).
   function onKey(e: KeyboardEvent) {
-    if (!app.result || nav.sub === 'rules') return;
+    if (nav.sub === 'rules') return;
     const el = e.target as HTMLElement | null;
     if (el?.closest('input, textarea, select, [contenteditable]') || document.querySelector('dialog[open]')) return;
     if (e.altKey || e.ctrlKey || e.metaKey) return;
+    // L: the previous hand's result, its analysis, and back to the hand in play (by where the key is, as the table's).
+    if (e.code === 'KeyL' && !app.result && app.prev) { app.stepPrev(); e.preventDefault(); return; }
+    if (!f) return;
     const k = e.key.toLowerCase();
+    if (peek) {
+      if (k === 'escape' || (k === 'enter' && !el?.closest('button'))) nav.leave(peek === 2 ? 'lastanalysis' : 'last');
+      else if (k === 'a') analysisKey();
+      else if (k === 'f') favorite();
+      else return;
+      e.preventDefault();
+      return;
+    }
     if ((k === 'enter' && !el?.closest('button')) || k === 'n') app.dealNow();
     else if (k === 'a') analysisKey();
     else if (k === 'escape' && analysisPage) nav.back();
@@ -95,14 +111,15 @@
 <svelte:window onkeydown={onKey} />
 
 {#snippet scoreboard()}
-  {@const r = app.result}
+  {@const r = f?.result}
+  {@const seats = f?.seats ?? app.seats}
   <div class="board">
     {#if r}<div class="seat cols body-small dim"><span class="who"></span><span class="delta">{t('col_hand')}</span><span class="total">{t('col_total')}</span></div>{/if}
-    {#each app.session.totals as x, i (i)}
+    {#each f?.totals ?? app.session.totals as x, i (i)}
       {@const d = r ? r.score.result[i] : null}
       <div class="seat" class:me={i === 0}>
         <span class="who"><span class="title-small nowrap">{seatName(i)}</span>
-          {#if i > 0 && app.seats[i - 1]}<span class="body-small dim ellipsis">{app.seatName(app.seats[i - 1])}</span>{/if}</span>
+          {#if i > 0 && seats[i - 1]}<span class="body-small dim ellipsis">{app.seatName(seats[i - 1])}</span>{/if}</span>
         {#if d !== null}<span class="title-medium bold delta" class:good={d > 0} class:bad={d < 0}>{signed(d)}</span>{/if}
         <span class="body-large total" class:good={i === 0 && x > 0} class:bad={i === 0 && x < 0}>{signed(x)}</span>
       </div>
@@ -112,11 +129,19 @@
 
 {#snippet keepers()}
   <div class="tools">
-    <button class="btn outlined" disabled={!app.lastRecord} onclick={favorite}>
+    <button class="btn outlined" disabled={!f?.record} onclick={favorite}>
       <span class:star={saved}><Icon name={saved ? 'star' : 'starBorder'} /></span>{t(saved ? 'favorite_saved' : 'favorite_short')}<Kbd k="F" inline />
     </button>
-    <button class="btn outlined" onclick={() => app.replay()}><Icon name="replay" />{t('replay_short')}<Kbd k="R" inline /></button>
+    {#if !peek}<button class="btn outlined" onclick={() => app.replay()}><Icon name="replay" />{t('replay_short')}<Kbd k="R" inline /></button>{/if}
   </div>
+{/snippet}
+
+{#snippet onward()}
+  {#if peek}
+    <button class="btn filled big" onclick={() => nav.leave(peek === 2 ? 'lastanalysis' : 'last')}>{t('back_to_hand')}<Kbd k="Enter" inline /></button>
+  {:else}
+    <button class="btn filled big" onclick={() => app.dealNow()}>{t('next_hand')}<Kbd k="Enter" inline /></button>
+  {/if}
 {/snippet}
 
 {#snippet summary()}
@@ -138,7 +163,7 @@
       {#if mine}<ProbTiles a={cmp.a} x={mine} best={cmp.i === 0 ? null : best} />
       {:else}<p class="body-medium">{t('cmp_extra')}</p>{/if}
       {#if legacy}<p class="body-small bad">{legacy}</p>{/if}
-      <button class="btn tonal" onclick={() => app.showGameAnalysis()}><Icon name="analytics" />{t('all_candidates')}<Kbd k="A" inline /></button>
+      <button class="btn tonal" onclick={showAnalysis}><Icon name="analytics" />{t('all_candidates')}<Kbd k="A" inline /></button>
     </section>
   {:else}
     <section class="card"><div class="thinking body-medium dim"><span class="spinner small"></span>{t('analyzing')}</div></section>
@@ -147,24 +172,28 @@
 
 {#if analysisPage}
   <div class="page">
-    <TitleBar title={t('analyze_my_hand')} onback={() => nav.back()}>
+    <TitleBar title={peek ? `${t('analyze_my_hand')} · ${t('last_hand')}` : t('analyze_my_hand')} onback={() => nav.back()}>
       <span class="body-small dim keys"><Kbd k="Esc" />{t('k_back')}</span>
-      <button class="btn outlined" disabled={!app.lastRecord} onclick={favorite}>
+      <button class="btn outlined" disabled={!f?.record} onclick={favorite}>
         <span class:star={saved}><Icon name={saved ? 'star' : 'starBorder'} /></span>{t(saved ? 'favorite_saved' : 'favorite_short')}<Kbd k="F" inline />
       </button>
-      <button class="btn outlined" onclick={() => app.replay()}><Icon name="replay" />{t('replay_short')}<Kbd k="R" inline /></button>
-      <button class="btn filled" onclick={() => app.dealNow()}>{t('next_hand')}<Kbd k="Enter" inline /></button>
+      {#if peek}
+        <button class="btn filled" onclick={() => nav.leave('lastanalysis')}>{t('back_to_hand')}<Kbd k="Enter" inline /></button>
+      {:else}
+        <button class="btn outlined" onclick={() => app.replay()}><Icon name="replay" />{t('replay_short')}<Kbd k="R" inline /></button>
+        <button class="btn filled" onclick={() => app.dealNow()}>{t('next_hand')}<Kbd k="Enter" inline /></button>
+      {/if}
     </TitleBar>
-    {#if app.gameAnalysis && app.result}<DeskCandidates a={app.gameAnalysis} mine={app.result.rows[0]} legacyNote={legacy} />
+    {#if f?.analysis}<DeskCandidates a={f.analysis} mine={f.result.rows[0]} legacyNote={legacy} />
     {:else}<div class="loading"><div class="spinner"></div><div class="body-large dim">{t('analyzing')}</div></div>{/if}
   </div>
 {:else}
   <div class="desk">
     <div class="main">
-      {#if app.result}
+      {#if f}
         <div class="felt result">
-          <SeatResults rows={app.result.rows} score={app.result.score} {wheel} names={[0, 1, 2, 3].map(seatName)}
-            notes={[null, ...app.seats.map((s) => app.seatName(s))]} totals={app.session.totals} max={MAX_DESK_PLAY} />
+          <SeatResults rows={f.result.rows} score={f.result.score} {wheel} names={[0, 1, 2, 3].map(seatName)}
+            notes={[null, ...f.seats.map((s) => app.seatName(s))]} totals={f.totals} max={MAX_DESK_PLAY} />
         </div>
       {:else if app.ready}
         <DeskArranging vm={app.play} {wheel} busy={app.waiting} onconfirm={() => app.confirm()} keys={app.deskKeys} bind:help />
@@ -172,27 +201,29 @@
         <div class="loading"><div class="spinner"></div></div>
       {/if}
     </div>
-    <aside class="side" class:wide={!!app.result}>
+    <aside class="side" class:wide={!!f}>
       <div class="side-head">
-        <span class="title-large">{app.replaying ? t('replay_title') : t('hand_n', app.session.hands + (app.result ? 0 : 1))}</span>
-        {#if Object.keys(app.gameValues).length}
-          <button class="chip" onclick={onrules}>{app.rulesName(app.gameValues)}<Icon name="dropDown" /></button>
+        {#if peek}<span class="chip static">{t('last_hand')}</span>{/if}
+        <span class="title-large">{(f ?? app).replaying ? t('replay_title') : t('hand_n', f ? f.handNo : app.session.hands + 1)}</span>
+        {#if !peek && Object.keys(app.gameValues).length}
+          <button class="chip" data-tour="rules" onclick={onrules}>{app.rulesName(app.gameValues)}<Icon name="dropDown" /></button>
         {/if}
       </div>
-      {#if app.replaying}<div class="body-medium dim">{t('replay_note')}</div>{/if}
+      {#if (f ?? app).replaying}<div class="body-medium dim">{t('replay_note')}</div>{/if}
       {@render scoreboard()}
-      {#if !app.result}
+      {#if !f}
         <p class="hint title-medium" class:bad={fouled} aria-live="polite">{hint}</p>
         <div class="sortline"><Toggle options={[[false, t('sort_rank')], [true, t('sort_suit')]] as [boolean, string][]} selected={vm.sortBySuit} onselect={(v) => (vm.sortBySuit = v)} /><Kbd k={km.sortLabel} /></div>
         <div class="tools">
           <button class="btn outlined" disabled={!vm.canUndo} onclick={() => vm.undo()}><Icon name="undo" />{t('undo')}<Kbd k={km.undoLabel} inline /></button>
           <button class="btn outlined" disabled={!vm.canClear} onclick={() => vm.clearRows()}><Icon name="clearAll" />{t('take_all')}<Kbd k="Del" inline /></button>
+          {#if app.prev}<button class="btn outlined" data-tour="last" onclick={() => app.stepPrev()}><Icon name="history" />{t('last_hand')}<Kbd k="L" inline /></button>{/if}
         </div>
-        <button class="btn filled big" disabled={!canConfirm} onclick={() => app.confirm()}>{app.waiting ? '…' : t('confirm')}<Kbd k="Enter" inline /></button>
+        <button class="btn filled big" data-tour="confirm" disabled={!canConfirm} onclick={() => app.confirm()}>{app.waiting ? '…' : t('confirm')}<Kbd k="Enter" inline /></button>
         <span class="grow"></span>
         <KeyList keys={keyList(app.deskKeys)} mouse={t('mouse_tips')} />
       {:else}
-        <button class="btn filled big" onclick={() => app.dealNow()}>{t('next_hand')}<Kbd k="Enter" inline /></button>
+        {@render onward()}
         {@render keepers()}
         {@render summary()}
       {/if}
@@ -204,7 +235,10 @@
   <Dialog title={t('arrange_help_title')} onclose={() => (help = false)}>
     <p class="body-large help-text">{t('arrange_help_desk', keyMap(app.deskKeys).rowLabels.join(t('list_sep')))}</p>
     <p class="body-medium dim help-text">{t('mouse_tips')}</p>
-    {#snippet actions()}<button class="btn text" onclick={() => (help = false)}>{t('ok')}</button>{/snippet}
+    {#snippet actions()}
+      <button class="btn text" onclick={() => { help = false; nav.open('tutorial'); }}>{t('tut_title')}</button>
+      <button class="btn text" onclick={() => (help = false)}>{t('ok')}</button>
+    {/snippet}
   </Dialog>
 {/if}
 
@@ -238,6 +272,7 @@
   .side.wide { width: 400px; }
   .thinking { display: flex; align-items: center; gap: 10px; min-height: 40px; }
   .star { color: var(--highlight); display: contents; }
+  .chip.static { cursor: default; background: var(--secondary-container); color: var(--on-secondary-container); border: none; }
   .keys { display: inline-flex; align-items: center; gap: 4px; margin-right: 8px; }
   .loading { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 32px; }
   .spinner { width: 48px; height: 48px; border-radius: 50%; border: 5px solid var(--surface-container-highest); border-top-color: var(--primary); animation: spin 0.9s linear infinite; }
