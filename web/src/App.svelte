@@ -79,7 +79,7 @@
   <nav aria-label={t('app_name')}>
     {#each tabs as [s, label, icon, chosen] (s)}
       <button class:on={app.screen === s} aria-current={app.screen === s ? 'page' : undefined} onclick={() => go(s)}>
-        <span class="pill"><Icon name={app.screen === s ? chosen : icon} /></span><span class="label">{t(label)}</span>
+        <span class="pill"><Icon name={app.screen === s ? chosen : icon} flip={s === 'PLAY'} /></span><span class="label">{t(label)}</span>
       </button>
     {/each}
   </nav>

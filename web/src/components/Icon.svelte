@@ -37,9 +37,10 @@
 </script>
 
 <script lang="ts">
-  let { name, size = 24, label }: { name: IconName; size?: number; label?: string } = $props();
+  // `flip`: upside down, as the app shows practice's (its cards held at the bottom left).
+  let { name, size = 24, label, flip = false }: { name: IconName; size?: number; label?: string; flip?: boolean } = $props();
 </script>
 
 <svg class="icon-svg" viewBox="0 0 24 24" width={size} height={size} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'}>
-  <path d={ICONS[name]} />
+  <path d={ICONS[name]} transform={flip ? 'matrix(1 0 0 -1 0 24)' : undefined} />
 </svg>
