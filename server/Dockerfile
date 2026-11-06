@@ -68,6 +68,9 @@ RUN npm run build
 
 # Caddy with the page in /srv and its Caddyfile.
 FROM caddy:2.8 AS site
+# Without the binary's file capability (to bind ports below 1024), which a container without capabilities cannot run:
+# a copy has none. In Kubernetes the page is served on :8080.
+RUN cp /usr/bin/caddy /usr/bin/caddy.new && mv /usr/bin/caddy.new /usr/bin/caddy
 COPY server/Caddyfile /etc/caddy/Caddyfile
 COPY --from=web-page /src/web/dist /srv
 
