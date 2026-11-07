@@ -155,7 +155,7 @@
     <item>Two trips</item>
   </string-array>
   <string name="remark_same_best">Yours is the best arrangement.</string>
-  <string name="remark_same_close">Yours is within the network\'s error of the best: as good.</string>
+  <string name="remark_same_close">Yours is within the neural network\'s error of the best: as good.</string>
   <string name="remark_mistake">Yours: %1$s</string>
   <string name="remark_sep">" "</string>
   <string name="remark_missed">you missed the %1$s.</string>

@@ -155,7 +155,7 @@
     <item>雙三條</item>
   </string-array>
   <string name="remark_same_best">你的擺法就是首選。</string>
-  <string name="remark_same_close">你的擺法與首選的差距在網絡誤差內，可算一樣好。</string>
+  <string name="remark_same_close">你的擺法與首選的差距在神經網絡誤差內，可算一樣好。</string>
   <string name="remark_mistake">你的擺法：%1$s</string>
   <string name="remark_sep"></string>
   <string name="remark_missed">漏看了%1$s。</string>
