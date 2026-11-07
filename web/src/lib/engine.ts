@@ -1,6 +1,8 @@
 // The engine (cpp/command/guiengine.h, as WebAssembly in a worker): one JSON request, one JSON answer, run one at a
 // time in the order they are made. A port of the app's Engine.kt.
+import files from 'virtual:engine-files';
 import type { Rows } from './cards';
+import { keepOnly, storedBytes } from './stored';
 import { values, type Values } from './rules';
 
 export class EngineError extends Error {}
@@ -18,9 +20,13 @@ export interface Analysis {
   cands: Candidate[]; numValid: number; dragon: boolean; oppBonus: number | null; rules: Values; legacyModel: boolean;
 }
 
-/** Where the built-in network is in the engine's file system, and where the page fetches it from. */
+/** Where the built-in network is in the engine's file system. */
 export const BUILT_IN = '/models/run2_net10.onnx';
-export const BUILT_IN_URL = 'models/run2_net10.onnx';
+// The engine's files and the network, in /assets under hashed names (vite.config.ts), as absolute URLs: the keys
+// of Cache Storage too.
+const url = (u: string) => new URL(u, document.baseURI).href;
+const ENGINE = { js: url(files.js), wasm: url(files.wasm), wasmSize: files.wasmSize };
+const MODEL = url(files.model);
 
 let worker: Worker | null = null;
 let next = 0;
@@ -28,8 +34,9 @@ const waiting = new Map<number, { resolve: (s: string) => void; reject: (e: Erro
 
 function start(): Worker {
   if (worker) return worker;
-  // The worker is bundled elsewhere than the page: its name tells it where the page's engine/ is.
-  worker = new Worker(new URL('./engine-worker.ts', import.meta.url), { type: 'module', name: new URL('./', document.baseURI).href });
+  // The worker is bundled elsewhere than the page: its name tells it where the engine's files are.
+  worker = new Worker(new URL('./engine-worker.ts', import.meta.url), { type: 'module', name: JSON.stringify(ENGINE) });
+  void keepOnly([ENGINE.wasm, MODEL]);
   worker.onmessage = (e: MessageEvent) => {
     const w = waiting.get(e.data.id);
     if (!w) return;
@@ -62,10 +69,10 @@ let builtIn: Promise<void> | null = null;
 
 /** Fetches the built-in network into the engine once. */
 export function loadBuiltIn(): Promise<void> {
-  builtIn ??= fetch(new URL(BUILT_IN_URL, document.baseURI)).then(async (r) => {
-    if (!r.ok) throw new EngineError(`${BUILT_IN_URL}: ${r.status}`);
-    await putFile(BUILT_IN, await r.arrayBuffer());
-  });
+  builtIn ??= storedBytes(MODEL, files.modelSize).then(
+    (b) => putFile(BUILT_IN, b),
+    (e) => { throw new EngineError(String((e as Error)?.message ?? e)); },
+  );
   return builtIn;
 }
 

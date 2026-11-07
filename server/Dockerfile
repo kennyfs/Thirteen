@@ -62,8 +62,7 @@ RUN npm ci
 COPY android/app/src/main/res/values/strings.xml /src/android/app/src/main/res/values/strings.xml
 COPY android/app/src/main/res/values-zh-rTW/strings.xml /src/android/app/src/main/res/values-zh-rTW/strings.xml
 COPY web/ ./
-COPY --from=web-engine /src/web/public/engine public/engine
-COPY --from=web-engine /src/web/public/models public/models
+COPY --from=web-engine /src/web/engine-files engine-files
 RUN npm run build
 
 # Caddy with the page in /srv and its Caddyfile.

@@ -12,10 +12,28 @@ interface Engine {
   _free(p: number): void;
 }
 
-const base = self.name || new URL('../', self.location.href).href;
-const ready: Promise<Engine> = import(/* @vite-ignore */ base + 'engine/engine.js').then((m) =>
-  m.default({ locateFile: (f: string) => base + 'engine/' + f }),
-);
+import { storedBytes } from './stored';
+
+/** Where the engine is (the page's virtual:engine-files, made absolute), in the worker's name. */
+const where: { js: string; wasm: string; wasmSize: number } = JSON.parse(self.name);
+// The glue (engine.js) and its WebAssembly, of one build: their names carry their hashes. The WebAssembly is compiled
+// from bytes kept in Cache Storage (stored.ts), so a browser without a disk cache does not fetch it on every load.
+// Emscripten's hook has no way to fail: a failure ends `ready` here instead.
+let fail: (e: unknown) => void = () => {};
+const ready: Promise<Engine> = Promise.race([
+  new Promise<never>((_, reject) => { fail = reject; }),
+  import(/* @vite-ignore */ where.js).then((m) =>
+    m.default({
+      locateFile: (f: string) => (f.endsWith('.wasm') ? where.wasm : new URL(f, where.js).href),
+      instantiateWasm(imports: WebAssembly.Imports, done: (i: WebAssembly.Instance) => void) {
+        storedBytes(where.wasm, where.wasmSize)
+          .then((b) => WebAssembly.instantiate(b, imports))
+          .then((r) => done(r.instance), fail);
+        return {};
+      },
+    }),
+  ),
+]);
 
 self.onmessage = async (e: MessageEvent) => {
   const { id } = e.data;

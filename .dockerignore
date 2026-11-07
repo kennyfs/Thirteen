@@ -11,8 +11,7 @@
 web/node_modules
 web/dist
 web/build
-web/public/engine
-web/public/models
+web/engine-files
 web/src/generated
 cpp/build*
 cpp/external/onnxruntime

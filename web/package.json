@@ -11,7 +11,7 @@
     "build": "node scripts/strings.mjs && svelte-check && vite build",
     "preview": "vite preview",
     "check": "svelte-check",
-    "test": "node tests/engine-native.mjs public/engine/engine.js public/models/run2_net10.onnx"
+    "test": "node tests/engine-native.mjs engine-files/engine.js engine-files/run2_net10.onnx"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "7.3.1",

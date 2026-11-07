@@ -1,8 +1,7 @@
 node_modules/
 dist/
 # Built by build-engine.sh and copied from the app's assets.
-public/engine/
-public/models/run2_net10.onnx
+engine-files/
 # Made from the app's strings.xml by scripts/strings.mjs.
 src/generated/
 build/

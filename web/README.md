@@ -10,10 +10,11 @@ bar of screens at the bottom) and on a desktop (a rail at the side), with the sa
 |---|---|
 | `engine/` | `engine.cpp` (`engine_handle`: a request line in, an answer line out) and its CMake build for emscripten. |
 | `build-ort-wasm.sh` | Builds the reduced ONNX Runtime (the app's version and operators, `android/ort-ops.config`) as a WebAssembly static library. |
-| `build-engine.sh` | Builds the engine into `public/engine/` and copies the built-in network into `public/models/`. |
+| `build-engine.sh` | Builds the engine into `engine-files/` (`engine.js`, `engine.wasm`) and copies the built-in network there (`run2_net10.onnx`). |
 | `scripts/strings.mjs` | The app's strings (`android/.../res/values*/strings.xml`) to `src/generated/strings.json`; run by `npm run dev` and `npm run build`. |
 | `scripts/shots.py` | Screenshots in headless Firefox (playwright) at phone and desktop sizes. |
 | `scripts/desktest.py`, `scripts/tutest.py` | A computer's mouse and keys; the welcome card, tutorial, tour, last hand, sweeps and the cursor keys (playwright). |
+| `scripts/cachetest.py` | The engine and the network from Cache Storage, in Firefox and Chromium (playwright). |
 | `src/lib/` | The state (`app.svelte.ts` ports `AppViewModel.kt`), arranging, rules, cards, the engine's client and worker, storage. |
 | `src/components/` | The screens and their parts. |
 | `tests/engine-native.mjs` | Checks the WebAssembly engine's answers against the native `thirteen gui`. |
@@ -27,7 +28,7 @@ cd web
 npm ci
 # Once (an hour or so): ONNX Runtime for WebAssembly, into build/ort-wasm.
 EMSDK=/path/to/emsdk ./build-ort-wasm.sh
-# The engine, into public/engine (and the network into public/models).
+# The engine and the network, into engine-files/.
 source /path/to/emsdk/emsdk_env.sh && ./build-engine.sh
 npm run build      # the site, into dist/
 npm run preview    # serves dist/ at http://localhost:4173/
@@ -42,6 +43,12 @@ serves it, from any directory. The server should send `.wasm` as `application/wa
 `npm test -- path/to/thirteen` compares the engine with a native build of `thirteen` (`cpp/`).
 
 ## What is kept
+
+The page's build puts the engine (`engine.js`, `engine.wasm`) and the network in `assets/` under names with their
+hashes (`vite.config.ts`, `virtual:engine-files`), as all of Vite's files: a server can keep them for good, and the glue
+and the WebAssembly are always of one build. The page keeps the WebAssembly and the network in Cache Storage too, under
+those names, and reads them from there before the network (`src/lib/stored.ts`), dropping an older build's: a browser
+that keeps only a memory cache (Librewolf, or Firefox without its disk cache) does not download them on every load.
 
 Everything stays in the browser: the settings, the running scores, the records and saved hands in `localStorage`
 (the records as JSONL, the app's format, labelled `web`), and networks loaded from `.onnx` files in IndexedDB. The
