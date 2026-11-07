@@ -9,17 +9,22 @@
   import { lostShown, pct, pctDiff, ROYALTY_LOST, tone } from '../../lib/compare';
   import type { Analysis, Candidate } from '../../lib/engine';
   import { t, ta } from '../../lib/i18n.svelte';
-  import { fmtQ } from '../../lib/ui.svelte';
+  import { fitRem, fmtQ, SHRINK_MIN, textWidth } from '../../lib/ui.svelte';
 
   interface Props { a: Analysis; x: Candidate; best: Candidate | null }
   let { a, x, best }: Props = $props();
-  const GROUPS = [[0, 1], [2, 3], [5, 6, 7]];
   const names = $derived(ta('prob_names'));
   const lost = $derived(lostShown(a));
   const cls = (v: number) => (v > 0 ? 'good' : v < 0 ? 'bad' : '');
+  // A name's room in a line of `n` tiles: a long one (Vietnamese's "Thắng chi giữa") shrinks a little to fit, and
+  // the rows' three go two and one where they would not (as the app's ProbGrid).
+  let w = $state(0);
+  const room = (n: number) => (w - 6 * (n - 1)) / n - 20;
+  const groups = $derived(!w || [5, 6, 7].every((k) => textWidth(names[k], 13) * SHRINK_MIN <= room(3))
+    ? [[0, 1], [2, 3], [5, 6, 7]] : [[0, 1], [2, 3], [5, 6], [7]]);
 </script>
 
-<div class="tiles">
+<div class="tiles" bind:clientWidth={w}>
   {#if x.q !== null}
     {@const d = best?.q != null ? x.q - best.q : 0}
     <div class="tile q">
@@ -31,12 +36,12 @@
     </div>
   {/if}
   {#if x.probs}
-    {#each GROUPS as g, gi (gi)}<div class="line">{#each g as k (k)}
+    {#each groups as g, gi (gi)}<div class="line">{#each g as k (k)}
       {@const v = x.probs[k]}
       {@const b = best?.probs?.[k] ?? null}
       {@const tn = b === null ? 0 : tone(k, v, b)}
       <div class="tile">
-        <span class="body-small dim ellipsis">{names[k]}</span>
+        <span class="body-small dim ellipsis" style:font-size={w ? fitRem(names[k], 13, room(g.length)) : null}>{names[k]}</span>
         <span class="fig">
           <span class="title-medium {cls(tn)}" class:bold={tn !== 0}>{pct(v)}</span>
           {#if tn !== 0 && b !== null}<span class="body-small bold nowrap {cls(tn)}">{pctDiff(v - b)}</span>{/if}
@@ -45,7 +50,7 @@
     {/each}</div>{/each}
     {#each Array(Math.ceil(lost.length / 2)) as _, li (li)}<div class="line">{#each lost.slice(li * 2, li * 2 + 2) as i (i)}
       <div class="tile">
-        <span class="body-small dim ellipsis">{names[ROYALTY_LOST + i]}</span>
+        <span class="body-small dim ellipsis" style:font-size={w ? fitRem(names[ROYALTY_LOST + i], 13, room(2)) : null}>{names[ROYALTY_LOST + i]}</span>
         <span class="fig"><span class="title-medium">{pct(x.probs[ROYALTY_LOST + i])}</span></span>
       </div>
     {/each}{#if lost.slice(li * 2, li * 2 + 2).length === 1}<div class="tile blank"></div>{/if}</div>{/each}

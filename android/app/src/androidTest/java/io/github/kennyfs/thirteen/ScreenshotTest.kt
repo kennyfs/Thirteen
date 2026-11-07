@@ -76,7 +76,8 @@ class ScreenshotTest {
     // The rotation is set for each config, not followed from the sensor.
     shell("settings put system accelerometer_rotation 0")
     shell("cmd overlay enable com.android.internal.systemui.navbar.gestural")
-    for (config in if (STORE) STORE_CONFIGS else if (COMPARE) COMPARE_CONFIGS else CONFIGS) if (ONLY.isEmpty() || config.name in ONLY) shoot(config)
+    for (config in if (STORE) STORE_CONFIGS else if (COMPARE) COMPARE_CONFIGS else CONFIGS)
+      if (if (ONLY.isEmpty()) config.locale in listOf("zh-TW", "en") else config.name in ONLY) shoot(config)
     assertTrue("Cards cut off at the side:\n" + cutOff.joinToString("\n"), cutOff.isEmpty())
   }
 
@@ -246,6 +247,22 @@ class ScreenshotTest {
       Config("tablet", "1600x2560", 320, 1.0f, "zh-TW", cutout = false),
       Config("tablet-land", "1600x2560", 320, 1.0f, "zh-TW", cutout = false, landscape = true),
       Config("tablet-font", "1600x2560", 320, 1.5f, "en", cutout = false, landscape = true),
+      // The other languages: Japanese at every size, the rest on the phone (ONLY=phone-ja,... device-tests.sh).
+      Config("phone-ja", "1080x2424", 420, 1.15f, "ja", cutout = true),
+      Config("phone-ja-land", "1080x2424", 420, 1.15f, "ja", cutout = true, landscape = true),
+      Config("phone-ja-font1.0", "1080x2424", 420, 1.0f, "ja", cutout = true),
+      Config("phone-ja-font1.3", "1080x2424", 420, 1.3f, "ja", cutout = true),
+      Config("phone-ja-font1.3-land", "1080x2424", 420, 1.3f, "ja", cutout = true, landscape = true),
+      Config("small-ja", "720x1600", 320, 1.0f, "ja", cutout = false),
+      Config("tablet-ja", "1600x2560", 320, 1.0f, "ja", cutout = false),
+      Config("tablet-ja-land", "1600x2560", 320, 1.0f, "ja", cutout = false, landscape = true),
+      Config("phone-hk", "1080x2424", 420, 1.15f, "zh-HK", cutout = true),
+      Config("phone-hk-land", "1080x2424", 420, 1.15f, "zh-HK", cutout = true, landscape = true),
+      Config("phone-cn", "1080x2424", 420, 1.15f, "zh-CN", cutout = true),
+      Config("phone-vi", "1080x2424", 420, 1.15f, "vi", cutout = true),
+      Config("phone-vi-land", "1080x2424", 420, 1.15f, "vi", cutout = true, landscape = true),
+      Config("phone-id", "1080x2424", 420, 1.15f, "in", cutout = true),
+      Config("phone-id-land", "1080x2424", 420, 1.15f, "in", cutout = true, landscape = true),
     )
 
     // COMPARE=1 device-tests.sh: the screens to set beside version 1.1.1's. Named device__orientation__colors;

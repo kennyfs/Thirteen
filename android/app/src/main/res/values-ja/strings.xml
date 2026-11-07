@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 日本語。用語はチャイニーズポーカー／OFC の日本での呼び方に合わせる：トップ・ミドル・ボトム（段）、ファウル、スクープ、
+     ホームラン（3人全員をスクープ）、ドラゴン、役ボーナス。役名は日本のポーカーの呼び方（スリーカード、フォーカード）。
+     狭い場所（ボタン、チップ、表）に入る語は短く。 -->
+<resources>
+  <string name="app_name">十三支</string>
+  <string name="nav_play">練習</string>
+  <string name="nav_analyze">分析</string>
+  <string name="nav_settings">設定</string>
+  <string name="ok">OK</string>
+  <string name="cancel">キャンセル</string>
+  <string name="info">説明</string>
+  <string name="hand_n">第%1$dハンド</string>
+  <string name="you">あなた</string>
+  <string name="ready">確定できます</string>
+  <string name="fouled">ファウル（トップ ≤ ミドル ≤ ボトム）</string>
+  <string name="confirm">確定</string>
+  <string name="next_hand">次のハンド</string>
+  <string name="analyze_my_hand">手札を分析</string>
+  <string name="fouled_short">ファウル</string>
+  <string name="home_run">ホームラン</string>
+  <string name="row_room">%1$sはあと%2$d枚しか入りません</string>
+  <string name="fill_rows_first">先に3つの段をすべて埋めてください</string>
+  <string name="random">ランダム</string>
+  <string name="last_hand">前のハンド</string>
+  <string name="clear">クリア</string>
+  <string name="network">ニューラルネット</string>
+  <string name="analyze_info">Q はこのハンドの期待得点です（相手はこのニューラルネットのような3人と仮定）。リストには、ほかのどの並べ方にも全段で負けることのない並べ方だけを、Q の高い順に載せています。確率が最善の並べ方と大きく違うときは、良いほうを緑、悪いほうを赤で示します。上のコメントでは、あなたの並べ方の改善点、最善の並べ方が攻撃型か守備型か、よくある形の名前を説明します。</string>
+  <string name="dragon">このハンドはドラゴンです。</string>
+  <string name="show_all">%1$d件すべて表示</string>
+  <string name="yours">あなたの並べ方</string>
+  <string name="pick_13">13枚選んでください</string>
+  <string name="n_recorded">%1$dハンド記録済み</string>
+  <string name="export">ファイルに保存</string>
+  <string name="share">共有</string>
+  <string name="clear_records">記録を消去</string>
+  <string name="reset_scores_short">スコアをリセット</string>
+  <string name="delete">削除</string>
+  <string name="reset">リセット</string>
+  <string name="clear_records_confirm">記録した%1$dハンドをすべて削除しますか？累計スコアとハンド数もリセットされ、練習は新しいハンドから始まります。必要なら先にエクスポートしてください。</string>
+  <string name="reset_confirm">累計スコアとハンド数をリセットしますか？練習は新しいハンドから始まります。記録は残ります。</string>
+  <string name="mc_samples">モンテカルロのサンプル数（相手：indep）</string>
+  <string name="networks">ニューラルネット</string>
+  <string name="load_weights">.onnx の重みを読み込む</string>
+  <string name="built_in">%1$s（内蔵）</string>
+  <string name="not_usable">使えないニューラルネットです：%1$s</string>
+  <string name="best">最善</string>
+  <string name="pick_n">あと%1$d枚</string>
+  <string name="seat_pos">CPU %1$d</string>
+  <string name="this_hand">今回 %1$s</string>
+  <string name="analyze_go">分析する</string>
+  <string name="to_candidates">候補に戻る</string>
+  <string-array name="row_names">
+    <item>トップ</item>
+    <item>ミドル</item>
+    <item>ボトム</item>
+  </string-array>
+  <string-array name="row_labels">
+    <item></item>
+    <item>役なし</item>
+    <item>ペア</item>
+    <item>ツーペア</item>
+    <item>3カード</item>
+    <item>ストレート</item>
+    <item>フラッシュ</item>
+    <item>フルハウス</item>
+    <item>4カード</item>
+    <item>ストフラ</item>
+  </string-array>
+  <string-array name="kinds">
+    <item>ニューラルネット</item>
+    <item>モンテカルロ</item>
+    <item>段ごとの独立評価（indep）</item>
+  </string-array>
+  <string-array name="prob_names">
+    <item>スクープ</item>
+    <item>被スクープ</item>
+    <item>ホームラン</item>
+    <item>被ホームラン</item>
+    <item>ディーラー</item>
+    <item>トップ勝ち</item>
+    <item>ミドル勝ち</item>
+    <item>ボトム勝ち</item>
+    <item>トップ負け</item>
+    <item>ミドル負け</item>
+    <item>ボトム負け</item>
+    <item>被スリーカード</item>
+    <item>被フルハウス</item>
+    <item>被フォーカード</item>
+    <item>被ストフラ</item>
+    <item>被フォーカード（ボトム）</item>
+    <item>被ストフラ（ボトム）</item>
+  </string-array>
+  <string name="ready_royalty">確定できます · 役ボーナス +%1$s</string>
+  <string name="fouled_strict">ファウル：厳格ルールでは同じ強さの段も不可</string>
+  <string name="nav_rules">ルール</string>
+  <string name="custom">カスタム</string>
+  <string name="restore_preset">プリセットに戻す</string>
+  <string name="rules_next_hand">ルールを変えると、このページを離れたときに練習は新しいハンドを配り直し（今のハンドは破棄）、累計スコアもリセットされます。</string>
+  <string name="rules_play">遊び方が変わる設定</string>
+  <string name="rules_play_note">この2つで、どの並べ方がファウルになるかと役の強さが変わります。</string>
+  <string name="rules_scoring">得点：相手1人ごとに受け取る点</string>
+  <string name="rule_range">%1$s〜%2$s</string>
+  <string name="rules_royalties">役ボーナス</string>
+  <string name="strict_rows">厳格：同じ強さの段もファウル</string>
+  <string name="wheel">A-2-3-4-5</string>
+  <string name="on_win">役ボーナスは相手のその段に勝ったときだけ</string>
+  <string name="legacy_warning">%1$s はルール入力のない古い形式のため、どのルールでもシンプルルールで打ちます。</string>
+  <string name="total_so_far">累計 %1$s</string>
+  <string-array name="preset_notes">
+    <item>スクープ、ホームラン、役ボーナスだけを数えます（各1点）。</item>
+    <item>シンプルと同じですが、ミドルのフォーカードとストレートフラッシュは2点。</item>
+    <item>各段1点、スクープ3点、ホームランはさらに6点。役ボーナス：トップの3カード 3、ミドルの4カード 8・ストフラ 10、ボトムの4カード 4・ストフラ 5、ドラゴン 36。</item>
+    <item>pagat.com の Chinese poker：各段1点、スクープ3点、役ボーナスはその段に勝ったときだけ、厳格ルール。</item>
+  </string-array>
+  <string-array name="wheel_options">
+    <item>いちばん弱いストレート</item>
+    <item>2番目に強いストレート</item>
+    <item>ストレートにならない</item>
+  </string-array>
+  <string-array name="point_labels">
+    <item>各段</item>
+    <item>スクープ</item>
+    <item>ホームラン（各人からさらに）</item>
+    <item>ドラゴン</item>
+  </string-array>
+  <string-array name="royalty_labels">
+    <item>トップのスリーカード</item>
+    <item>ミドルのフルハウス</item>
+    <item>ミドルのフォーカード</item>
+    <item>ミドルのストレートフラッシュ</item>
+    <item>ボトムのフォーカード</item>
+    <item>ボトムのストレートフラッシュ</item>
+  </string-array>
+  <string-array name="category_names">
+    <item></item>
+    <item>役なし</item>
+    <item>ワンペア</item>
+    <item>ツーペア</item>
+    <item>スリーカード</item>
+    <item>ストレート</item>
+    <item>フラッシュ</item>
+    <item>フルハウス</item>
+    <item>フォーカード</item>
+    <item>ストレートフラッシュ</item>
+  </string-array>
+  <!-- Commentary.Shape の順。 -->
+  <string-array name="shape_names">
+    <item>3段ともペア</item>
+    <item>ペア4組</item>
+    <item>ペア5組</item>
+    <item>フラッシュ2つ</item>
+    <item>フラッシュ3つ</item>
+    <item>ストレート2つ</item>
+    <item>ストレート3つ</item>
+    <item>ストレートとフラッシュ</item>
+    <item>フルハウス2つ</item>
+    <item>3カード2つ</item>
+  </string-array>
+  <string name="remark_same_best">あなたの並べ方が最善です。</string>
+  <string name="remark_same_close">あなたの並べ方は最善との差がニューラルネットの誤差の範囲内で、同じくらい良い並べ方です。</string>
+  <string name="remark_mistake">あなたの並べ方：%1$s</string>
+  <string name="remark_sep"></string>
+  <string name="remark_missed">%1$sを見落としています。</string>
+  <string name="remark_swapped">%2$sより%1$sにするほうが良い結果です。</string>
+  <string name="remark_times_two">%1$s×2</string>
+  <string name="remark_broke">このハンドは%1$sを崩すほうが良い結果です。</string>
+  <string name="remark_pair_to_front">ペアをトップに置くほうが良い結果です。</string>
+  <string name="remark_pair_out_of_front">ペアはミドルとボトムに残し、トップには高いカードを置くほうが良い結果です。</string>
+  <string name="remark_stronger_front">役の組み合わせは同じですが、トップをもっと強くできます。</string>
+  <string name="remark_detail">役の組み合わせは同じで、カードの割り振りが違います。</string>
+  <string name="remark_other">別の役の組み合わせのほうが良い結果です。</string>
+  <string name="remark_vs_mine_both">最善の並べ方は、スクープする確率でもされる確率でもあなたの並べ方を上回ります。</string>
+  <string name="remark_vs_mine_attack">最善の並べ方はスクープが多い反面、スクープされることも多くなります。</string>
+  <string name="remark_vs_mine_defense">最善の並べ方はスクープされにくい反面、スクープも少なくなります。</string>
+  <string name="remark_only">このハンドの役の組み合わせは1通りだけです。</string>
+  <string name="remark_close">ほぼ同じくらい良い別の役の組み合わせもあります。</string>
+  <string name="remark_both">最善の並べ方は、スクープする確率でもされる確率でもほかの組み合わせを上回ります。</string>
+  <string name="remark_attack">最善の並べ方は攻撃型：%1$sを強くし、スクープもスクープされることも多くなります。</string>
+  <string name="remark_defense">最善の並べ方は守備型：%1$sを強くし、スクープされることもスクープも少なくなります。</string>
+  <string name="remark_rows_both">最善の並べ方は、段の勝ちでもスクープでもほかの組み合わせを上回ります。</string>
+  <string name="remark_rows">最善の並べ方はスクープより段の勝ちを狙います。</string>
+  <string name="remark_scoops_first">最善の並べ方は段の勝ちよりスクープを狙います。</string>
+  <string name="remark_strong">強いハンドです。</string>
+  <string name="remark_weak">弱いハンドです。スクープされないことを優先しましょう。</string>
+  <string name="remark_home_run">ホームランを狙えます。</string>
+  <string name="nav_battle">対戦</string>
+  <string name="battle_name">ニックネーム</string>
+  <string name="battle_online">オンライン</string>
+  <string name="battle_nearby">近くのスマホ</string>
+  <string name="battle_server">サーバー</string>
+  <string name="battle_server_hint">例：thirteen.example.com</string>
+  <string name="battle_puzzle">パズル対戦</string>
+  <string name="battle_puzzle_info">全員が同じハンドを並べます。各ハンドで、あなたの並べ方が AI の最善より劣る分だけ失点し、合計の失点が最も少ない人の勝ち。運の要素はありません。</string>
+  <string name="battle_game">テーブル対戦</string>
+  <string name="battle_game_info">最大4人。空いた席は AI が埋めます。合計得点が最も多い人の勝ち。</string>
+  <string name="battle_join">参加</string>
+  <string name="battle_pin">ルーム番号</string>
+  <string name="battle_pin_bad">PIN は6桁の数字です。</string>
+  <string name="battle_server_bad">サーバーのアドレス（ドメイン名か wss://…）を入力してください。</string>
+  <string name="battle_join_room">ルームに参加</string>
+  <string name="battle_join_room_info">教えてもらった6桁のルーム番号を入力してください。</string>
+  <string name="battle_search_again">もう一度探す</string>
+  <string name="battle_no_rooms">近くにルームはまだ見つかりません。</string>
+  <string name="battle_search">近くのルームを探す</string>
+  <string name="battle_searching">近くのルーム（タップして PIN を入力）：</string>
+  <string name="battle_nearby_failed">近くの接続に失敗しました：%1$s</string>
+  <string name="battle_permissions">近くのスマホと遊ぶには、Bluetooth と付近のデバイスの権限が必要です。</string>
+  <string name="battle_no_connection">接続できません：%1$s</string>
+  <string name="battle_lost">ルームとの接続が切れました。</string>
+  <string name="battle_closed">ルームは閉じられました。</string>
+  <string name="battle_err_version">ルーム（サーバーまたはホストのスマホ）のアプリのバージョンが違います。全員が同じバージョンを使う必要があります。アプリを更新してください。</string>
+  <string name="battle_err_no_room">その PIN のルームはありません。</string>
+  <string name="battle_err_full">ルームは満員です。</string>
+  <string name="battle_err_started">その対戦はもう始まっています。</string>
+  <string name="battle_err_rate">試行回数が多すぎます。数分待ってください。</string>
+  <string name="battle_err_busy">サーバーが混み合っています。しばらくしてから試してください。</string>
+  <string name="battle_err_settings">この設定は使えません。</string>
+  <string name="battle_err_rows">その並べ方はあなたの13枚と合いません。</string>
+  <string name="battle_err_not_allowed">今はできません。</string>
+  <string name="battle_hands">ハンド数</string>
+  <string name="battle_hands_n">%1$dハンド</string>
+  <string name="battle_time">1ハンドの制限時間</string>
+  <string name="battle_no_limit">なし</string>
+  <string name="battle_seconds">%1$d秒</string>
+  <string name="battle_leave_title">対戦から抜けますか？</string>
+  <string name="battle_leave_lobby">このルームから退出します。</string>
+  <string name="battle_leave_game">これ以降のハンドは時間切れと同じように自動で並べられ、戻ることはできません。</string>
+  <string name="battle_leave">退出</string>
+  <string name="battle_host">ホスト</string>
+  <string name="battle_away">離席中</string>
+  <string name="battle_players">プレイヤー（%1$d）</string>
+  <string name="battle_hand_of">%1$d／%2$dハンド目</string>
+  <string name="battle_set_count">%1$d／%2$d人が確定</string>
+  <string name="battle_ready_count">%1$d／%2$d人が準備完了</string>
+  <string name="battle_your_rank">あなたは%1$d位</string>
+  <string name="battle_rank">%1$d位</string>
+  <string name="battle_waiting">ほかのプレイヤーを待っています…</string>
+  <string name="battle_best_rows">AI の最善</string>
+  <string name="battle_timed_out">（時間切れ）</string>
+  <string name="battle_next">次のハンド</string>
+  <string name="battle_over">最終結果</string>
+  <string name="battle_total_loss">失点 %1$s</string>
+  <string name="battle_hand_list">各ハンド（タップで分析）</string>
+  <string name="battle_done">完了</string>
+  <string name="battle_nearby_host_note">このスマホがルームのホストです。ほかの人は近くの接続で参加し、AI の席もこのスマホで計算します。</string>
+  <string name="battle_this_hand">今回 %1$s</string>
+  <string name="battle_col_hand">今回</string>
+  <string name="battle_col_total">累計</string>
+  <string name="battle_col_hand_loss">失点</string>
+  <string name="battle_col_total_loss">累計失点</string>
+  <string name="battle_col_hand_rank">順位</string>
+  <string name="battle_hand_rank">%1$d／%2$d</string>
+  <string name="battle_to_summary">最終結果</string>
+  <string name="battle_analyze">分析</string>
+  <string name="battle_tap_player">プレイヤーをタップすると、そのハンドの分析を表示します</string>
+
+  <!-- リニューアル後の画面。 -->
+  <string name="back">戻る</string>
+  <string name="increase">増やす</string>
+  <string name="decrease">減らす</string>
+  <string name="change">変更</string>
+  <string name="show_more">もっと見る</string>
+  <string name="analyzing">ニューラルネットが考え中…</string>
+  <string name="hint_start">カードを選んでから、入れたい段をタップします。</string>
+  <string name="hint_selected">%1$d枚選択中：段をタップして入れます。</string>
+  <string name="hint_armed">%1$sに入れるカードをタップ：あと%2$d枚。</string>
+  <string name="hint_left">残り%1$d枚。置いたカードをタップすると戻せます。</string>
+  <string name="take_back_row">%1$sを戻す</string>
+  <string name="undo">元に戻す</string>
+  <string name="take_all">すべて戻す</string>
+  <string name="sort_rank">数字順</string>
+  <string name="sort_suit">スート順</string>
+  <string name="sort_by_rank_on">数字順で並んでいます。タップでスート順に</string>
+  <string name="sort_by_suit_on">スート順で並んでいます。タップで数字順に</string>
+  <string name="row_win">勝ち</string>
+  <string name="row_lose">負け</string>
+  <string name="row_tie">引き分け</string>
+  <string name="vs_you_win">あなた +%1$s</string>
+  <string name="vs_you_lose">あなた −%1$s</string>
+  <string name="vs_you_even">あなたと引分</string>
+  <string name="scooped_by">被スクープ：%1$s</string>
+  <string name="remarks_title">コメント</string>
+  <string name="candidates">候補</string>
+  <string name="expected">期待得点</string>
+  <string name="less_than_best">最善より %1$s 点低い</string>
+  <string name="more_than_yours">あなたより %1$s 点高い</string>
+  <string name="yours_rank">%1$s · %2$d位</string>
+  <string name="pick_13_hint">13枚選ぶ</string>
+  <string name="source">読み込み元</string>
+  <string name="from_records">記録から選ぶ</string>
+  <string name="this_game_rules_named">%1$s（そのハンド）</string>
+  <string name="use_current_rules_named">今のルールを使う：%1$s</string>
+  <string name="settings_look">表示</string>
+  <string name="settings_game">ゲーム</string>
+  <string name="settings_about">このアプリについて</string>
+  <string name="text_size">文字サイズ</string>
+  <string-array name="text_sizes">
+    <item>小</item>
+    <item>標準</item>
+    <item>大</item>
+  </string-array>
+  <string name="color_style">配色</string>
+  <string-array name="color_styles">
+    <item>緑のテーブル</item>
+    <item>シンプル</item>
+    <item>壁紙の色</item>
+  </string-array>
+  <string name="dark_mode">ダークモード</string>
+  <string-array name="dark_modes">
+    <item>システムに合わせる</item>
+    <item>オフ</item>
+    <item>オン</item>
+  </string-array>
+  <string name="opponents_title">CPU の相手</string>
+  <string name="opponents_all">3人とも %1$s</string>
+  <string name="opponents_info">ニューラルネットは学習したとおりに打ちます。モンテカルロは、各並べ方をほかの人にランダムに配ったハンド（段ごとの独立評価で並べる）と対戦させて試算します。段ごとの独立評価は、各段を別々に評価します。</string>
+  <string name="next_hand_note">変更は次のハンドから反映されます。</string>
+  <string-array name="kinds_short">
+    <item>ニューラルネット</item>
+    <item>モンテカルロ</item>
+    <item>独立評価</item>
+  </string-array>
+  <string name="networks_summary">%1$d個</string>
+  <string name="networks_info">python/train.py で書き出したニューラルネット（.onnx ファイル）を読み込むと、CPU の相手と分析に使えるようになります。</string>
+  <string name="built_in_note">内蔵</string>
+  <string name="legacy_note">古い形式：どのルールでもシンプルルールで打ちます</string>
+  <string name="delete_network_confirm">ニューラルネット %1$s を削除しますか？</string>
+  <string name="records_title">記録</string>
+  <string name="records_summary">%1$dハンド記録 · %2$d件保存 · スコア推移</string>
+  <string name="records_info">プレイしたハンドはすべてこのスマホに記録されます：カード、あなたの並べ方、ルール、かかった時間だけで、共有しない限りどこにも送信されません。このファイル（JSONL）を開発者と共有すると、より強い CPU の学習に役立ちます。</string>
+  <string name="records_list">すべての記録（新しい順）</string>
+  <string name="about_source">オープンソース（GPLv3）、GitHub で公開</string>
+  <string name="privacy_policy">プライバシーポリシー</string>
+  <string name="about_web">Web 版</string>
+  <string name="about_web_note">ブラウザで遊べます。パソコンでも：%1$s</string>
+  <string name="about_play">Android アプリ</string>
+  <string name="about_play_note">Google Play で配信中。友達と対戦できます</string>
+  <string name="rules_changed">（変更あり）</string>
+  <string-array name="preset_names">
+    <item>シンプル</item>
+    <item>シンプル（ミドル2倍）</item>
+    <item>台湾式（段ごとに得点）</item>
+    <item>Pagat</item>
+  </string-array>
+  <string-array name="suit_names">
+    <item>クラブ</item>
+    <item>ダイヤ</item>
+    <item>ハート</item>
+    <item>スペード</item>
+  </string-array>
+  <string name="battle_how">接続方法</string>
+  <string name="battle_server_is">サーバー：%1$s</string>
+  <string name="battle_nearby_info">同じ場所にいるスマホ同士が Bluetooth と Wi-Fi でつながります。インターネットは不要です。ルームを作ったスマホがホストになります。</string>
+  <string name="battle_new_puzzle">パズル対戦を始める</string>
+  <string name="battle_new_game">テーブル対戦を始める</string>
+  <string name="battle_room_number">ルーム番号</string>
+  <string name="battle_room_number_info">ほかの人は「ルームに参加」でこの番号を入力します。</string>
+  <string name="battle_settings">設定</string>
+  <string name="battle_rules_page_named">ルール画面のルール：%1$s</string>
+  <string name="battle_start_mode">%1$sを開始</string>
+  <string name="battle_wait_host">ホストの開始を待っています…</string>
+  <string name="battle_submit">並べ方を提出</string>
+  <string name="battle_standings">現在の順位</string>
+  <string name="battle_done_mark">提出済み</string>
+  <string name="battle_thinking">考え中</string>
+  <string name="battle_place">%1$d位</string>
+  <string name="replay_hand">このハンドを並べ直す</string>
+  <string name="favorite_add">このハンドを保存</string>
+  <string name="favorite_remove">保存から外す</string>
+  <string name="favorites_title">保存したハンド</string>
+  <string name="favorites_empty">結果画面や記録で星をタップすると、そのハンドを保存できます。すごく良いハンドも、ひどいハンドも。</string>
+  <string name="chart_title">累計スコアの推移</string>
+  <string name="chart_summary">%1$dハンド · 累計 %2$s · 1ハンド平均 %3$s</string>
+  <string name="chart_rules">ルール</string>
+  <string name="chart_empty">何ハンドか遊ぶと、ここに累計スコアのグラフが表示されます。</string>
+  <string name="chart_desc">累計スコアのグラフ：%1$dハンド、最終 %2$s</string>
+  <string name="analyze_this">このハンドを分析</string>
+  <string name="records_share_title">開発者へ</string>
+  <string name="favorite_short">保存</string>
+  <string name="favorite_saved">保存済み</string>
+  <string name="replay_short">並べ直す</string>
+  <string name="replay_title">並べ直し中</string>
+  <string name="replay_note">得点にも記録にも含まれません</string>
+  <string name="arrange_help_title">並べ方</string>
+  <string name="arrange_help">• カードをタップして選び（指でなぞると複数まとめて選べます）、入れたい段をタップします。\n• 先に段をタップしてから、そこに入れるカードをタップしても OK です。\n• 段のカードをタップすると戻せます。段を長押しするか「すべて戻す」で段ごと戻せます。\n• 3段が埋まり、トップ ≤ ミドル ≤ ボトム（ファウルなし）なら「確定」をタップします。\n• 「数字順／スート順」で手札の並びを切り替えると、ペア・ストレート・フラッシュが見つけやすくなります。</string>
+  <string name="help">ヘルプ</string>
+  <string name="nav_records">記録</string>
+  <string name="records_practice">練習</string>
+  <string name="records_game">テーブル</string>
+  <string name="records_puzzle">パズル</string>
+  <string name="chart_puzzle_note">パズル対戦のスコアは、あなたの並べ方が最善より低い期待得点の差です。0 に近いほど良い結果です。</string>
+  <string name="records_none">この種類の記録はまだありません。</string>
+  <string name="ready_hint">確定できます</string>
+  <string name="records_battles">対戦</string>
+  <string name="favorite_battles_title">保存した対戦</string>
+  <string name="favorite_battle_add">この対戦を保存</string>
+  <string name="favorite_battle_remove">保存から外す</string>
+  <string name="battle_record_size">%1$d／%2$dハンド、%3$d人</string>
+  <string name="battle_record_left">途中退出</string>
+  <string name="sort_rank_short">数字</string>
+  <string name="sort_suit_short">スート</string>
+  <string name="next_hand_short">次へ</string>
+  <string name="battle_next_short">次へ</string>
+  <string name="battle_submit_short">提出</string>
+  <!-- ようこそカード、チュートリアル（ヒントは tips-summary.md の統計から）、ツアー。 -->
+  <string name="back_to_hand">今のハンドに戻る</string>
+  <string name="welcome_title">十三支へようこそ</string>
+  <string name="welcome_body">十三支（チャイニーズポーカー）は初めてですか？チュートリアルなら数分でルールがわかります。ツアーではこのアプリでできることを紹介します。どちらもあとから「設定」で開けます。</string>
+  <string name="welcome_learn">遊び方を見る</string>
+  <string name="welcome_tour">アプリを案内</string>
+  <string name="welcome_skip">すぐに遊ぶ</string>
+  <string name="tut_title">遊び方</string>
+  <string name="tut_note">ルール・並べる練習・AI のヒント</string>
+  <string name="tour_title">アプリのツアー</string>
+  <string name="tour_note">各画面でできること</string>
+  <string name="tut_next">次へ</string>
+  <string name="tut_prev">戻る</string>
+  <string name="tut_close">閉じる</string>
+  <string name="tut_page">%1$d / %2$d</string>
+  <string name="tut_done">遊んでみる</string>
+  <string name="tut_goal_title">3つの段に分ける</string>
+  <string name="tut_goal_text">4人がそれぞれ13枚のカードを受け取り、3つの段に分けます：トップに3枚、ミドルに5枚、ボトムに5枚。全員が同時に公開し、相手1人ずつと段ごとに強さを比べます。やることはそれだけ。勝負はこの13枚をどう並べるかで決まります。</string>
+  <string name="tut_goal_example">例（トップ、ミドル、ボトム）：</string>
+  <string name="tut_ranks_title">役の強さ</string>
+  <string name="tut_ranks_text">強い順に並んでいます。役が強いほうが必ず勝ち、同じ役なら数字の大きいほうが勝ちます（A がいちばん強く、2 がいちばん弱い）。スートに強弱はなく、フラッシュを作るためだけに使います。</string>
+  <string name="tut_ranks_front">トップは3枚だけなので、スリーカード・ワンペア・役なしのどれかです。3枚の連番や同じスートは、トップでは役になりません。</string>
+  <string name="tut_wheel">今のルールでの A-2-3-4-5：%1$s。</string>
+  <string name="tut_foul_title">ファウルに注意</string>
+  <string name="tut_foul_text">ボトムはミドル以上、ミドルはトップ以上の強さにしなければなりません。この順番が崩れると「ファウル」で、このアプリではファウルの並べ方は確定できません。</string>
+  <string name="tut_foul_strict">今のルールは厳格ルール：同じ強さの段もファウルになります。</string>
+  <string name="tut_foul_bad">ファウル：トップのワンペアがミドルの役なしより強い。</string>
+  <string name="tut_foul_good">同じカードの正しい並べ方：ペアをミドルに。</string>
+  <string name="list_sep">"、"</string>
+  <!-- Between the clauses of a line ("3 hands, Simple, 60 s"). -->
+  <string name="clause_sep">、</string>
+  <string name="tut_score_title">得点</string>
+  <string name="tut_score_rules">今のルール（%1$s）では、あなたと相手1人ずつの間で：</string>
+  <string name="tut_score_rows">段に1つ勝つごとに：相手から %1$s 点（引き分けは0）。</string>
+  <string name="tut_score_norows">1段や2段勝っただけでは得点なし。3段すべて勝ったときだけ数えます。</string>
+  <string name="tut_score_scoop">同じ相手に3段すべて勝つと「スクープ」：その相手からさらに %1$s 点。</string>
+  <string name="tut_score_scoop_only">同じ相手に3段すべて勝つと「スクープ」：その相手から %1$s 点。</string>
+  <string name="tut_score_home">3人全員を一度にスクープすると「ホームラン」：各人からさらに %1$s 点。</string>
+  <string name="tut_score_special">役ボーナスは段の勝ち負けに関係なく、各相手から：%1$s。</string>
+  <string name="tut_score_special_win">役ボーナスは相手のその段に勝ったときだけ、その相手から：%1$s。</string>
+  <string name="tut_score_dragon">2 から A まで13種類の数字が1枚ずつそろうと「ドラゴン」：各人から %1$s 点。</string>
+  <string name="tut_score_change">十三支の点数の数え方は地域や仲間内でさまざまなので、これらの数字はすべて「設定 › ルール」で変えられます。よくある遊び方のプリセットもあります。</string>
+  <string name="tut_try_title">並べてみよう</string>
+  <string name="tut_try_text">このハンドを並べてみましょう：カードをタップして選び、段をタップします。得点にも記録にも含まれません。</string>
+  <string name="tut_try_check">AI に判定してもらう</string>
+  <string name="tut_try_best">AI の最善の並べ方と同じです！</string>
+  <string name="tut_try_rank">あなたの並べ方は%2$d通り中%1$d位、最善より %3$s 点低い期待得点です。</string>
+  <string name="tut_try_extra">ほかの並べ方に全段で負けています。</string>
+  <string name="tut_try_best_rows">AI の最善：</string>
+  <string name="tut_try_why">A のペアをトップに置き、いちばん小さいペアでフルハウスを作ります。トップの A のペアは K 1枚よりずっと勝ちやすく、フルハウスの強さはスリーカードの部分で決まるので、組むペアはどれでも同じです。</string>
+  <string name="tut_try_again">やり直す</string>
+  <string name="tut_tips_title">AI のヒント</string>
+  <string name="tut_tips_text">AI がランダムな10,000ハンドを分析した結果（シンプルルール）：</string>
+  <string name="tut_end_title">準備完了</string>
+  <string name="tut_end_text">3人の AI と好きなだけ練習できます。毎ハンドのあとに、AI ならどう並べたかを確認できます。テーブルの「ヘルプ」で各ボタンの説明が見られます。</string>
+  <string name="tour_skip">スキップ</string>
+  <string name="tour_next">次へ</string>
+  <string name="tour_prev">戻る</string>
+  <string name="tour_done">完了</string>
+  <string name="tour_play_title">練習</string>
+  <string name="tour_play">3人の AI と対戦して練習します。カードをタップ（指でなぞると複数）して選び、段をタップして入れます。</string>
+  <string name="tour_confirm_title">確定する</string>
+  <string name="tour_confirm">3段が埋まり、ファウルでなければ確定できます。全員の並べ方と得点、そして AI によるあなたのハンドの分析が見られます。次のハンドを並べている間も「前のハンド」で振り返れます。</string>
+  <string name="tour_rules_title">ルールは自由に</string>
+  <string name="tour_rules">十三支の遊び方は地域でさまざまなので、数字はすべて自分で決められます：段ごとの点、スクープ、ホームラン、役ボーナス、ドラゴン、A-2-3-4-5 をストレートと認めるかまで。AI は選んだルールで打ち、分析します。</string>
+  <string name="tour_analyze_title">AI 分析</string>
+  <string name="tour_analyze">好きな13枚を選ぶと、AI が考えられるすべての並べ方を評価します。if-else のルールの集まりではなく、自己対戦で学習したニューラルネットが、各並べ方の相手に対する平均得点を見積もります。</string>
+  <string name="tour_battle_title">対戦</string>
+  <string name="tour_battle">友達とルームで対戦：テーブル対戦か、全員が同じカードを並べて AI が誰がいちばんうまく並べたかを判定するパズル対戦。</string>
+  <string name="tour_records_title">記録</string>
+  <string name="tour_records">遊んだすべてのハンド、スコアのグラフ、保存したハンド。どれでも開いて分析し直せます。</string>
+  <string name="tour_settings_title">設定</string>
+  <string name="tour_settings">ルール、相手、見た目、文字サイズ。チュートリアルとこのツアーもここにあります。</string>
+  <string name="tour_end_title">ツアーはここまで</string>
+  <string name="tour_end">十三支は初めてですか？チュートリアルなら数ページでルールがわかります。</string>
+  <string-array name="tut_tips">
+    <item>いちばん強い5枚をボトムに置くだけではダメ。「最強をボトム、次をミドル、残りをトップ」が最善になるのは約8ハンドに1回だけで、1ハンドあたり平均約0.5点損します。</item>
+    <item>トップが大事：最善の並べ方の6割はトップがワンペア以上。ペアがなければ A（次点で K）を置きましょう。</item>
+    <item>ペアを崩してもかまいません：ペアが2〜3組あるハンドでは、最善の並べ方の半分以上がどれかのペアを崩しています。</item>
+    <item>フルハウスにはいちばん小さいペアを使う（9割がそう）。大きいペアはほかの段に回しましょう。</item>
+    <item>フラッシュは使うとは限りません：3ハンドに2回は同じスートが5枚以上ありますが、フラッシュを使うのが最善なのはその半分だけ。</item>
+    <item>悩みすぎないで：シンプルルールでは、最善と2番目の差はたいてい約0.01点。段ごとに数えるルール（台湾式）では差が大きくなります。</item>
+    <item>ほとんどのハンドは少し負け：最善に並べても、期待得点がプラスになるのは4割ほど。点は少数の強いハンドで稼ぎます。</item>
+    <item>毎ハンドのあとに「手札を分析」で、最善との差を確認しましょう。上達のいちばんの近道です。</item>
+  </string-array>
+</resources>

@@ -98,7 +98,8 @@ android {
   }
   androidResources {
     // The app's own languages: the libraries bring strings in dozens more, which only make the APK larger.
-    localeFilters += listOf("en", "zh-rTW")
+    // Indonesian is "in" there, Android's old code for it (values-in).
+    localeFilters += listOf("en", "zh-rTW", "ja", "zh-rHK", "zh-rCN", "vi", "in")
     // Settings opens the built-in network with openFd, which needs it stored uncompressed.
     noCompress += "onnx"
   }

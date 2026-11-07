@@ -57,6 +57,14 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
   font-size: 1rem; line-height: 1.45; overscroll-behavior: none;
 }
+/* Han characters in each language's own forms: the page's lang (i18n.svelte.ts) picks the CJK fonts. */
+:root:lang(ja) body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, "Noto Sans JP", "Noto Sans CJK JP", sans-serif; }
+:root:lang(zh-Hant-HK) body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans HK", "PingFang HK", "Microsoft JhengHei", "Noto Sans CJK HK", sans-serif; }
+/* Japanese wraps by its own rules: never before a small kana, "ー" or a closing bracket, and short texts (titles,
+   buttons, labels) between phrases rather than inside a word (where the browser can). */
+:root:lang(ja) body { line-break: strict; }
+:root:lang(ja) :is(h1, h2, h3, button, label, [class*="title"], [class*="label"]) { word-break: auto-phrase; }
+:root:lang(zh-Hans) body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; }
 #app { height: 100%; }
 button { font: inherit; color: inherit; }
 

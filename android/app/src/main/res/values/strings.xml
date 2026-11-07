@@ -430,6 +430,8 @@
   <string name="tut_foul_bad">A foul: the front\'s pair beats the middle\'s high card.</string>
   <string name="tut_foul_good">The same cards set right: the pair in the middle.</string>
   <string name="list_sep">", "</string>
+  <!-- Between the clauses of a line ("3 hands, Simple, 60 s"). -->
+  <string name="clause_sep">", "</string>
   <string name="tut_score_title">Points</string>
   <string name="tut_score_rules">Under the rules now chosen (%1$s), between you and each opponent:</string>
   <string name="tut_score_rows">Each row you win: %1$s from them (a tie is nothing).</string>

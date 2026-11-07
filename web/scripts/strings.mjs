@@ -1,5 +1,6 @@
 // The page's words are the Android app's: this reads android/app/src/main/res/values*/strings.xml into
-// src/generated/strings.json ({"en": {...}, "zh": {...}}, a name to a string or a string array), so the two say the same.
+// src/generated/strings.json ({"en": {...}, "zh": {...}, "ja": {...}, ...}, a name to a string or a string array), so
+// the two say the same. Each language is complete over English (a name it lacks is English's), as Android falls back.
 // Formats stay as Android writes them (%1$s, %2$d); src/lib/i18n.ts fills them in.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -7,6 +8,10 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const res = join(root, '..', 'android', 'app', 'src', 'main', 'res');
+
+// The page's language codes (src/lib/i18n.svelte.ts) to the app's resource directories. Indonesian is "in" there,
+// Android's old code for it.
+const DIRS = { zh: 'values-zh-rTW', ja: 'values-ja', 'zh-HK': 'values-zh-rHK', 'zh-CN': 'values-zh-rCN', vi: 'values-vi', id: 'values-in' };
 
 // As Android reads a value: entities, then backslash escapes; an unescaped " only quotes (it keeps the spaces inside
 // it) and is dropped; outside quotes, runs of white space are one space.
@@ -37,7 +42,13 @@ function read(file) {
 }
 
 const en = read(join(res, 'values', 'strings.xml'));
-const zh = { ...en, ...read(join(res, 'values-zh-rTW', 'strings.xml')) };
+const all = { en };
+for (const [lang, dir] of Object.entries(DIRS)) {
+  const own = read(join(res, dir, 'strings.xml'));
+  const missing = Object.keys(en).filter((k) => !(k in own));
+  if (missing.length) console.warn(`strings: ${lang} lacks ${missing.length} (English instead): ${missing.slice(0, 8).join(' ')}…`);
+  all[lang] = { ...en, ...own };
+}
 mkdirSync(join(root, 'src', 'generated'), { recursive: true });
-writeFileSync(join(root, 'src', 'generated', 'strings.json'), JSON.stringify({ en, zh }) + '\n');
-console.log(`strings: ${Object.keys(en).length} names`);
+writeFileSync(join(root, 'src', 'generated', 'strings.json'), JSON.stringify(all) + '\n');
+console.log(`strings: ${Object.keys(en).length} names, ${Object.keys(all).length} languages`);

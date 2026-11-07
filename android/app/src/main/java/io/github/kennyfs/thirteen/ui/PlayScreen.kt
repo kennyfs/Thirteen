@@ -445,6 +445,7 @@ private fun RowSlotTall(
   val stateText = @Composable { m: Modifier, lines: Int ->
     Text(
       state, m, style = MaterialTheme.typography.bodySmall, maxLines = lines, overflow = TextOverflow.Ellipsis,
+      autoSize = shrinking(MaterialTheme.typography.bodySmall),
       color = if (target) t.highlight else if (dim) t.onFeltDim else t.onFelt, fontWeight = if (target) FontWeight.Bold else FontWeight.Medium,
     )
   }
@@ -776,7 +777,7 @@ private fun RowName(name: String, d: Int?, valid: Boolean) {
   val t = LocalTable.current
   val style = MaterialTheme.typography.labelSmall
   if (d == null || !valid) {
-    Text(name, style = style, maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (valid) t.onFeltDim else t.bad)
+    Text(name, style = style, maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (valid) t.onFeltDim else t.bad, autoSize = shrinking(style))
     return
   }
   val (container, content) = when {
@@ -787,7 +788,7 @@ private fun RowName(name: String, d: Int?, valid: Boolean) {
   val said = stringResource(if (d > 0) R.string.row_win else if (d < 0) R.string.row_lose else R.string.row_tie)
   Text(
     name, Modifier.clip(RoundedCornerShape(5.dp)).background(container).padding(horizontal = 4.dp).semantics { contentDescription = "$name, $said" },
-    style = style, color = content, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+    style = style, color = content, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis, autoSize = shrinking(style),
   )
 }
 
@@ -914,7 +915,10 @@ private fun SeatLines(
     val other = t.onFeltDim
     if (score.scoops.any { row -> row.any { it } })
       Column(Modifier.width(ARROWS_WIDTH), horizontalAlignment = Alignment.End) {
-        Text(stringArrayResource(R.array.prob_names)[0], style = MaterialTheme.typography.labelMedium, color = t.onFeltDim)
+        Text(
+          stringArrayResource(R.array.prob_names)[0], style = MaterialTheme.typography.labelMedium, color = t.onFeltDim, maxLines = 1,
+          autoSize = shrinking(MaterialTheme.typography.labelMedium, 0.7f),
+        )
         ScoopArcs(
           score.scoops, seatHeight, good, bad, other,
           Modifier.width(ARROWS_WIDTH).height(seatHeight * seats + SEAT_GAP * (seats - 1)).padding(top = 0.dp),
@@ -995,9 +999,9 @@ private fun SeatGrid(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
               Text(seatSub(s, score, totals), style = MaterialTheme.typography.bodySmall, color = t.onFeltDim, maxLines = 1)
               if (scooped.isNotEmpty())
-                Text("$scoop → " + scooped.joinToString("、") { names[it] }, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = if (s == 0) t.good else t.onFelt, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("$scoop → " + scooped.joinToString(stringResource(R.string.list_sep)) { names[it] }, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = if (s == 0) t.good else t.onFelt, maxLines = 1, overflow = TextOverflow.Ellipsis)
               if (by.isNotEmpty())
-                Text(stringResource(R.string.scooped_by, by.joinToString("、") { names[it] }), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = if (s == 0) t.bad else t.onFeltDim, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(stringResource(R.string.scooped_by, by.joinToString(stringResource(R.string.list_sep)) { names[it] }), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = if (s == 0) t.bad else t.onFeltDim, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
           }
           if (score.homeRun[s]) Text(stringResource(R.string.home_run), style = MaterialTheme.typography.labelLarge, color = t.highlight)

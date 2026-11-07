@@ -88,7 +88,7 @@ fun TitleBar(title: String, onBack: (() -> Unit)? = null, modifier: Modifier = M
       IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) }
     Text(
       title, Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+      overflow = TextOverflow.Ellipsis, autoSize = shrinking(MaterialTheme.typography.titleLarge),
     )
     actions()
   }

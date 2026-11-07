@@ -1,0 +1,493 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tiếng Việt. Thuật ngữ theo cách người chơi Mậu Binh ở Việt Nam gọi: chi đầu (5 lá, mạnh nhất, tiếng Anh "back"),
+     chi giữa (5 lá), chi cuối (3 lá, tiếng Anh "front"); binh lủng (foul), bắt sập / bị sập (scoop), sập làng (home run),
+     sảnh rồng (dragon), chi đặc biệt (royalties: sám chi cuối, cù lũ chi giữa, tứ quý chi đầu…). Tên loại bài: mậu thầu,
+     đôi, thú, sám, sảnh, thùng, cù lũ, tứ quý, thùng phá sảnh. Chữ trên nút, nhãn, bảng giữ ngắn. -->
+<resources>
+  <string name="app_name">Mậu Binh</string>
+  <string name="nav_play">Luyện tập</string>
+  <string name="nav_analyze">Phân tích</string>
+  <string name="nav_settings">Cài đặt</string>
+  <string name="ok">OK</string>
+  <string name="cancel">Hủy</string>
+  <string name="info">Giải thích</string>
+  <string name="hand_n">Ván %1$d</string>
+  <string name="you">Bạn</string>
+  <string name="ready">Sẵn sàng</string>
+  <string name="fouled">Binh lủng: cần chi đầu ≥ chi giữa ≥ chi cuối</string>
+  <string name="confirm">Xếp xong</string>
+  <string name="next_hand">Ván tiếp</string>
+  <string name="analyze_my_hand">Phân tích ván này</string>
+  <string name="fouled_short">Binh lủng</string>
+  <string name="home_run">Sập làng</string>
+  <string name="row_room">%1$s chỉ còn chỗ cho %2$d lá</string>
+  <string name="fill_rows_first">Hãy xếp đủ cả ba chi trước</string>
+  <string name="random">Ngẫu nhiên</string>
+  <string name="last_hand">Ván trước</string>
+  <string name="clear">Xóa</string>
+  <string name="network">Mạng nơ-ron</string>
+  <string name="analyze_info">Q là kết quả kỳ vọng của ván, tính bằng điểm, khi đấu với ba người chơi giống mạng nơ-ron này. Danh sách gồm những cách xếp không bị cách nào khác thắng ở cả ba chi, Q cao nhất đứng đầu. Xác suất nào khác hẳn so với cách tốt nhất sẽ có màu xanh khi tốt hơn và màu đỏ khi kém hơn. Nhận xét phía trên cho biết cách xếp của bạn có thể tốt hơn ra sao, cách tốt nhất thiên về tấn công hay phòng thủ, và tên các kiểu bài thường gặp.</string>
+  <string name="dragon">Bài này là sảnh rồng.</string>
+  <string name="show_all">Hiện cả %1$d</string>
+  <string name="yours">Của bạn</string>
+  <string name="pick_13">Chọn 13 lá</string>
+  <string name="n_recorded">Đã ghi %1$d ván</string>
+  <string name="export">Lưu thành tệp</string>
+  <string name="share">Chia sẻ</string>
+  <string name="clear_records">Xóa lịch sử</string>
+  <string name="reset_scores_short">Đặt lại điểm</string>
+  <string name="delete">Xóa</string>
+  <string name="reset">Đặt lại</string>
+  <string name="clear_records_confirm">Xóa cả %1$d ván đã ghi? Điểm cộng dồn và số ván cũng tính lại từ đầu, với một ván luyện tập mới. Hãy xuất ra trước nếu bạn cần.</string>
+  <string name="reset_confirm">Đặt lại điểm cộng dồn và số ván? Phần luyện tập bắt đầu lại với ván mới; lịch sử vẫn được giữ.</string>
+  <string name="mc_samples">Số mẫu Monte Carlo (đối thủ: chi độc lập)</string>
+  <string name="networks">Mạng nơ-ron</string>
+  <string name="load_weights">Nạp trọng số .onnx</string>
+  <string name="built_in">%1$s (có sẵn)</string>
+  <string name="not_usable">Không dùng được mạng này: %1$s</string>
+  <string name="best">Tốt nhất</string>
+  <string name="pick_n">Chọn thêm %1$d lá</string>
+  <string name="seat_pos">Máy %1$d</string>
+  <string name="this_hand">Ván này %1$s</string>
+  <string name="analyze_go">Phân tích</string>
+  <string name="to_candidates">Về danh sách phương án</string>
+  <string-array name="row_names">
+    <item>Chi cuối</item>
+    <item>Chi giữa</item>
+    <item>Chi đầu</item>
+  </string-array>
+  <string-array name="row_labels">
+    <item></item>
+    <item>Mậu thầu</item>
+    <item>Đôi</item>
+    <item>Thú</item>
+    <item>Sám</item>
+    <item>Sảnh</item>
+    <item>Thùng</item>
+    <item>Cù lũ</item>
+    <item>Tứ quý</item>
+    <item>Thùng phá sảnh</item>
+  </string-array>
+  <string-array name="kinds">
+    <item>Mạng nơ-ron</item>
+    <item>Monte Carlo</item>
+    <item>Chi độc lập</item>
+  </string-array>
+  <string-array name="prob_names">
+    <item>Sập</item>
+    <item>Bị sập</item>
+    <item>Sập làng</item>
+    <item>Bị sập làng</item>
+    <item>Làm cái</item>
+    <item>Thắng chi cuối</item>
+    <item>Thắng chi giữa</item>
+    <item>Thắng chi đầu</item>
+    <item>Thua chi cuối</item>
+    <item>Thua chi giữa</item>
+    <item>Thua chi đầu</item>
+    <item>Thua sám chi cuối</item>
+    <item>Thua cù lũ chi giữa</item>
+    <item>Thua tứ quý chi giữa</item>
+    <item>Thua thùng phá sảnh chi giữa</item>
+    <item>Thua tứ quý chi đầu</item>
+    <item>Thua thùng phá sảnh chi đầu</item>
+  </string-array>
+  <string name="ready_royalty">Sẵn sàng · chi đặc biệt +%1$s</string>
+  <string name="fouled_strict">Binh lủng: các chi không được bằng nhau (cấm chi bằng nhau)</string>
+  <string name="nav_rules">Luật</string>
+  <string name="custom">Tùy chỉnh</string>
+  <string name="restore_preset">Về luật có sẵn</string>
+  <string name="rules_next_hand">Khi đã đổi luật, phần luyện tập sẽ chia ván mới lúc bạn rời trang này (bỏ ván đang chơi), và điểm cộng dồn tính lại từ đầu.</string>
+  <string name="rules_play">Thay đổi cách chơi</string>
+  <string name="rules_play_note">Hai mục này quyết định cách xếp nào bị binh lủng và loại bài nào lớn hơn.</string>
+  <string name="rules_scoring">Tính điểm: điểm từ mỗi đối thủ</string>
+  <string name="rule_range">%1$s đến %2$s</string>
+  <string name="rules_royalties">Chi đặc biệt</string>
+  <string name="strict_rows">Cấm chi bằng nhau: chi đầu > chi giữa > chi cuối (bằng nhau là binh lủng)</string>
+  <string name="wheel">A-2-3-4-5</string>
+  <string name="on_win">Chi đặc biệt chỉ được điểm khi thắng chi đó của đối thủ</string>
+  <string name="legacy_warning">%1$s có từ trước khi mạng nhận luật chơi: nó luôn chơi theo luật đơn giản, dù luật là gì.</string>
+  <string name="total_so_far">tổng %1$s</string>
+  <string-array name="preset_notes">
+    <item>Chỉ tính sập, sập làng và chi đặc biệt, mỗi thứ 1 điểm.</item>
+    <item>Như luật đơn giản, nhưng tứ quý hoặc thùng phá sảnh ở chi giữa được 2.</item>
+    <item>Mỗi chi 1, sập 3, sập làng thêm 6; sám chi cuối 3, chi giữa tứ quý 8 / thùng phá sảnh 10, chi đầu tứ quý 4 / thùng phá sảnh 5, sảnh rồng 36.</item>
+    <item>Chinese poker như trên pagat.com: mỗi chi 1, sập 3, chi đặc biệt chỉ được điểm khi thắng, cấm chi bằng nhau.</item>
+  </string-array>
+  <string-array name="wheel_options">
+    <item>Sảnh nhỏ nhất</item>
+    <item>Sảnh lớn thứ nhì</item>
+    <item>Không phải sảnh</item>
+  </string-array>
+  <string-array name="point_labels">
+    <item>Mỗi chi</item>
+    <item>Sập</item>
+    <item>Sập làng (thêm, mỗi người)</item>
+    <item>Sảnh rồng</item>
+  </string-array>
+  <string-array name="royalty_labels">
+    <item>Sám chi cuối</item>
+    <item>Cù lũ chi giữa</item>
+    <item>Tứ quý chi giữa</item>
+    <item>Thùng phá sảnh chi giữa</item>
+    <item>Tứ quý chi đầu</item>
+    <item>Thùng phá sảnh chi đầu</item>
+  </string-array>
+  <string-array name="category_names">
+    <item></item>
+    <item>mậu thầu</item>
+    <item>đôi</item>
+    <item>thú</item>
+    <item>sám</item>
+    <item>sảnh</item>
+    <item>thùng</item>
+    <item>cù lũ</item>
+    <item>tứ quý</item>
+    <item>thùng phá sảnh</item>
+  </string-array>
+  <!-- Theo thứ tự của Commentary.Shape. -->
+  <string-array name="shape_names">
+    <item>Ba đôi</item>
+    <item>Bốn đôi</item>
+    <item>Năm đôi</item>
+    <item>Hai thùng</item>
+    <item>Ba thùng</item>
+    <item>Hai sảnh</item>
+    <item>Ba sảnh</item>
+    <item>Sảnh và thùng</item>
+    <item>Hai cù lũ</item>
+    <item>Hai sám</item>
+  </string-array>
+  <string name="remark_same_best">Cách xếp của bạn là tốt nhất.</string>
+  <string name="remark_same_close">Cách xếp của bạn chỉ kém cách tốt nhất trong sai số của mạng nơ-ron: tốt ngang nhau.</string>
+  <string name="remark_mistake">Cách xếp của bạn: %1$s</string>
+  <string name="remark_sep">" "</string>
+  <string name="remark_missed">bỏ lỡ %1$s.</string>
+  <string name="remark_swapped">xếp %1$s tốt hơn %2$s của bạn.</string>
+  <string name="remark_times_two">%1$s ×2</string>
+  <string name="remark_broke">ván này phá %1$s của bạn ra lại tốt hơn.</string>
+  <string name="remark_pair_to_front">nên đặt một đôi ở chi cuối.</string>
+  <string name="remark_pair_out_of_front">nên để các đôi ở hai chi 5 lá và đặt lá cao ở chi cuối.</string>
+  <string name="remark_stronger_front">cùng kiểu xếp, nhưng chi cuối mạnh hơn.</string>
+  <string name="remark_detail">cùng kiểu xếp, chia lá khác.</string>
+  <string name="remark_other">một kiểu xếp khác tốt hơn.</string>
+  <string name="remark_vs_mine_both">" Cách tốt nhất bắt sập nhiều hơn và bị sập ít hơn."</string>
+  <string name="remark_vs_mine_attack">" Cách tốt nhất bắt sập nhiều hơn, nhưng cũng bị sập nhiều hơn."</string>
+  <string name="remark_vs_mine_defense">" Cách tốt nhất bị sập ít hơn, nhưng cũng bắt sập ít hơn."</string>
+  <string name="remark_only">Bài này chỉ có một kiểu xếp.</string>
+  <string name="remark_close">Có một kiểu xếp khác tốt gần bằng.</string>
+  <string name="remark_both">Cách tốt nhất hơn các kiểu khác cả về bắt sập lẫn bị sập.</string>
+  <string name="remark_attack">Cách tốt nhất thiên tấn công: %1$s mạnh hơn, bắt sập nhiều hơn và bị sập cũng nhiều hơn.</string>
+  <string name="remark_defense">Cách tốt nhất thiên phòng thủ: %1$s mạnh hơn, bị sập ít hơn và bắt sập cũng ít hơn.</string>
+  <string name="remark_rows_both">Cách tốt nhất hơn các kiểu khác cả về thắng chi lẫn bắt sập.</string>
+  <string name="remark_rows">Cách tốt nhất nhắm thắng từng chi hơn là bắt sập.</string>
+  <string name="remark_scoops_first">Cách tốt nhất nhắm bắt sập hơn là thắng từng chi.</string>
+  <string name="remark_strong">Bài mạnh.</string>
+  <string name="remark_weak">Bài yếu: tránh bị sập.</string>
+  <string name="remark_home_run">Có thể bắt sập làng.</string>
+  <string name="nav_battle">Thi đấu</string>
+  <string name="battle_name">Tên của bạn</string>
+  <string name="battle_online">Trực tuyến</string>
+  <string name="battle_nearby">Điện thoại ở gần</string>
+  <string name="battle_server">Máy chủ</string>
+  <string name="battle_server_hint">vd. thirteen.example.com</string>
+  <string name="battle_puzzle">Thi xếp bài</string>
+  <string name="battle_puzzle_info">Mọi người xếp cùng những ván bài. Mỗi ván, bạn mất số điểm mà cách xếp của bạn kém cách tốt nhất của mạng nơ-ron; ai mất ít nhất tổng cộng thì thắng. Không có may rủi.</string>
+  <string name="battle_game">Đấu điểm</string>
+  <string name="battle_game_info">Tối đa bốn người, mạng nơ-ron ngồi các ghế trống; ai nhiều điểm nhất thì thắng.</string>
+  <string name="battle_join">Vào</string>
+  <string name="battle_pin">Số phòng</string>
+  <string name="battle_pin_bad">Mã PIN gồm 6 chữ số.</string>
+  <string name="battle_server_bad">Hãy nhập địa chỉ máy chủ (tên miền, hoặc wss://…).</string>
+  <string name="battle_join_room">Vào phòng</string>
+  <string name="battle_join_room_info">Nhập số phòng 6 chữ số mà người khác gửi cho bạn.</string>
+  <string name="battle_search_again">Tìm lại</string>
+  <string name="battle_no_rooms">Chưa thấy phòng nào ở gần.</string>
+  <string name="battle_search">Tìm phòng ở gần</string>
+  <string name="battle_searching">Phòng ở gần (chạm một phòng, rồi nhập mã PIN):</string>
+  <string name="battle_nearby_failed">Kết nối ở gần thất bại: %1$s</string>
+  <string name="battle_permissions">Chơi với điện thoại ở gần cần quyền Bluetooth và quyền thiết bị ở gần.</string>
+  <string name="battle_no_connection">Không kết nối được: %1$s</string>
+  <string name="battle_lost">Mất kết nối với phòng.</string>
+  <string name="battle_closed">Phòng đã đóng.</string>
+  <string name="battle_err_version">Phòng đang chạy một phiên bản ứng dụng khác (ở máy chủ hoặc ở điện thoại làm chủ phòng). Mọi người cần cùng một phiên bản: hãy cập nhật ứng dụng.</string>
+  <string name="battle_err_no_room">Không có phòng nào với mã PIN đó.</string>
+  <string name="battle_err_full">Phòng đã đầy.</string>
+  <string name="battle_err_started">Trận đó đã bắt đầu rồi.</string>
+  <string name="battle_err_rate">Thử quá nhiều lần: hãy đợi vài phút.</string>
+  <string name="battle_err_busy">Máy chủ đang bận: hãy thử lại sau.</string>
+  <string name="battle_err_settings">Không cho phép các cài đặt này.</string>
+  <string name="battle_err_rows">Các chi đó không dùng đúng 13 lá của bạn.</string>
+  <string name="battle_err_not_allowed">Lúc này không làm được.</string>
+  <string name="battle_hands">Số ván</string>
+  <string name="battle_hands_n">Số ván: %1$d</string>
+  <string name="battle_time">Thời gian mỗi ván</string>
+  <string name="battle_no_limit">không giới hạn</string>
+  <string name="battle_seconds">%1$d giây</string>
+  <!-- Mức đề 1 đến 5: bài mạnh ngang bài ngẫu nhiên, nhưng dễ xếp hơn hoặc khó xếp hơn. -->
+  <string name="battle_leave_title">Rời trận đấu?</string>
+  <string name="battle_leave_lobby">Bạn sẽ rời phòng.</string>
+  <string name="battle_leave_game">Từ giờ, mỗi ván của bạn sẽ được xếp tự động như khi hết giờ, và bạn không thể quay lại.</string>
+  <string name="battle_leave">Rời đi</string>
+  <string name="battle_host">chủ phòng</string>
+  <string name="battle_away">vắng mặt</string>
+  <string name="battle_players">Người chơi (%1$d)</string>
+  <string name="battle_hand_of">Ván %1$d / %2$d</string>
+  <string name="battle_set_count">%1$d / %2$d đã xếp</string>
+  <string name="battle_ready_count">%1$d / %2$d sẵn sàng</string>
+  <string name="battle_your_rank">bạn hạng %1$d</string>
+  <string name="battle_rank">#%1$d</string>
+  <string name="battle_waiting">Đang chờ người khác…</string>
+  <string name="battle_best_rows">Tốt nhất theo AI</string>
+  <string name="battle_timed_out">\u0020(hết giờ)</string>
+  <string name="battle_next">Ván tiếp</string>
+  <string name="battle_over">Kết quả chung cuộc</string>
+  <string name="battle_total_loss">mất %1$s</string>
+  <string name="battle_hand_list">Các ván (chạm một ván để xem phân tích)</string>
+  <string name="battle_done">Xong</string>
+  <string name="battle_nearby_host_note">Điện thoại này làm chủ phòng: người khác vào phòng qua kết nối ở gần, và nó tính bài cho các ghế của mạng nơ-ron.</string>
+  <string name="battle_this_hand">Ván này %1$s</string>
+  <string name="battle_col_hand">Ván này</string>
+  <string name="battle_col_total">Tổng</string>
+  <string name="battle_col_hand_loss">Mất</string>
+  <string name="battle_col_total_loss">Tổng mất</string>
+  <string name="battle_col_hand_rank">Hạng</string>
+  <string name="battle_hand_rank">%1$d / %2$d</string>
+  <string name="battle_to_summary">Kết quả chung cuộc</string>
+  <string name="battle_analyze">Phân tích</string>
+  <string name="battle_tap_player">Chạm một người chơi để xem phân tích ván của họ</string>
+
+  <!-- Các màn hình thiết kế lại. -->
+  <string name="back">Quay lại</string>
+  <string name="increase">Tăng</string>
+  <string name="decrease">Giảm</string>
+  <string name="change">Đổi</string>
+  <string name="show_more">Xem thêm</string>
+  <string name="analyzing">Mạng nơ-ron đang suy nghĩ…</string>
+  <string name="hint_start">Chọn lá bài, rồi chạm một chi để đặt vào.</string>
+  <string name="hint_selected">Đã chọn %1$d lá: chạm một chi để đặt vào.</string>
+  <string name="hint_armed">Chạm các lá cho %1$s: còn %2$d lá.</string>
+  <string name="hint_left">Còn %1$d lá. Chạm lá đã đặt để lấy lại.</string>
+  <string name="take_back_row">Lấy lại %1$s</string>
+  <string name="undo">Hoàn tác</string>
+  <string name="take_all">Lấy lại hết</string>
+  <string name="sort_rank">Theo số</string>
+  <string name="sort_suit">Theo chất</string>
+  <string name="sort_by_rank_on">Đang xếp theo số; chạm để xếp theo chất</string>
+  <string name="sort_by_suit_on">Đang xếp theo chất; chạm để xếp theo số</string>
+  <string name="row_win">Bạn thắng</string>
+  <string name="row_lose">Bạn thua</string>
+  <string name="row_tie">Hòa</string>
+  <string name="vs_you_win">Bạn thắng họ %1$s</string>
+  <string name="vs_you_lose">Bạn thua họ %1$s</string>
+  <string name="vs_you_even">Hòa với bạn</string>
+  <string name="scooped_by">Bị %1$s bắt sập</string>
+  <string name="remarks_title">Nhận xét</string>
+  <string name="candidates">Phương án</string>
+  <string name="expected">Điểm kỳ vọng</string>
+  <string name="less_than_best">Kém tốt nhất %1$s</string>
+  <string name="more_than_yours">Hơn của bạn %1$s</string>
+  <string name="yours_rank">%1$s · #%2$d</string>
+  <string name="pick_13_hint">Chọn 13 lá</string>
+  <string name="source">Lấy từ…</string>
+  <string name="from_records">Một ván đã ghi</string>
+  <string name="this_game_rules_named">%1$s (của ván đó)</string>
+  <string name="use_current_rules_named">Dùng luật hiện tại: %1$s</string>
+  <string name="settings_look">Hiển thị</string>
+  <string name="settings_game">Trò chơi</string>
+  <string name="settings_about">Giới thiệu</string>
+  <string name="text_size">Cỡ chữ</string>
+  <string-array name="text_sizes">
+    <item>Nhỏ</item>
+    <item>Vừa</item>
+    <item>Lớn</item>
+  </string-array>
+  <string name="color_style">Màu sắc</string>
+  <string-array name="color_styles">
+    <item>Bàn xanh</item>
+    <item>Đơn giản</item>
+    <item>Màu hình nền</item>
+  </string-array>
+  <string name="dark_mode">Giao diện tối</string>
+  <string-array name="dark_modes">
+    <item>Theo hệ thống</item>
+    <item>Tắt</item>
+    <item>Bật</item>
+  </string-array>
+  <string name="opponents_title">Đối thủ máy</string>
+  <string name="opponents_all">Cả ba: %1$s</string>
+  <string name="opponents_info">Mạng nơ-ron chơi theo những gì nó đã học. Monte Carlo thử từng cách xếp với các tay bài ngẫu nhiên của người khác, mỗi tay được xếp theo chi độc lập. Chi độc lập đánh giá riêng từng chi.</string>
+  <string name="next_hand_note">Thay đổi có hiệu lực từ ván sau.</string>
+  <string-array name="kinds_short">
+    <item>Mạng nơ-ron</item>
+    <item>Monte Carlo</item>
+    <item>Độc lập</item>
+  </string-array>
+  <string name="networks_summary">Có %1$d mạng</string>
+  <string name="networks_info">Mạng nơ-ron xuất từ python/train.py (tệp .onnx) có thể được nạp vào, rồi chọn cho đối thủ máy và cho phần phân tích.</string>
+  <string name="built_in_note">Có sẵn</string>
+  <string name="legacy_note">Mạng cũ: chơi mọi luật như luật đơn giản</string>
+  <string name="delete_network_confirm">Xóa mạng %1$s?</string>
+  <string name="records_title">Lịch sử</string>
+  <string name="records_summary">Đã ghi %1$d ván · %2$d đã lưu · biểu đồ điểm</string>
+  <string name="records_info">Mọi ván bạn chơi đều được ghi trên điện thoại này: các lá bài, các chi bạn xếp, luật chơi và thời gian bạn dùng. Không có gì khác, và không gửi đi đâu trừ khi bạn chia sẻ. Chia sẻ tệp (JSONL) với nhà phát triển giúp huấn luyện đối thủ máy giỏi hơn.</string>
+  <string name="records_list">Tất cả ván đã ghi, mới nhất trước</string>
+  <string name="about_source">Mã nguồn mở (GPLv3), trên GitHub</string>
+  <string name="privacy_policy">Chính sách quyền riêng tư</string>
+  <string name="about_web">Bản web</string>
+  <string name="about_web_note">Chơi trên trình duyệt, cả trên máy tính: %1$s</string>
+  <string name="about_play">Ứng dụng Android</string>
+  <string name="about_play_note">Trên Google Play, có thi đấu với bạn bè</string>
+  <string name="rules_changed">" (đã đổi)"</string>
+  <string-array name="preset_names">
+    <item>Đơn giản</item>
+    <item>Đơn giản, chi giữa ×2</item>
+    <item>Kiểu Đài Loan</item>
+    <item>Pagat</item>
+  </string-array>
+  <string-array name="suit_names">
+    <item>Chuồn</item>
+    <item>Rô</item>
+    <item>Cơ</item>
+    <item>Bích</item>
+  </string-array>
+  <string name="battle_how">Cách kết nối</string>
+  <string name="battle_server_is">Máy chủ: %1$s</string>
+  <string name="battle_nearby_info">Các điện thoại trong cùng một phòng, qua Bluetooth và Wi-Fi; không cần internet. Điện thoại mở phòng sẽ điều hành phòng.</string>
+  <string name="battle_new_puzzle">Mở cuộc thi xếp bài</string>
+  <string name="battle_new_game">Mở trận đấu điểm</string>
+  <string name="battle_room_number">Số phòng</string>
+  <string name="battle_room_number_info">Người khác nhập số này ở mục “Vào phòng”.</string>
+  <string name="battle_settings">Cài đặt</string>
+  <string name="battle_rules_page_named">Theo trang Luật: %1$s</string>
+  <string name="battle_start_mode">Bắt đầu %1$s</string>
+  <string name="battle_wait_host">Đang chờ chủ phòng bắt đầu…</string>
+  <string name="battle_submit">Nộp bài</string>
+  <string name="battle_standings">Bảng xếp hạng</string>
+  <string name="battle_done_mark">Xong</string>
+  <string name="battle_thinking">Đang nghĩ</string>
+  <string name="battle_place">#%1$d</string>
+  <string name="replay_hand">Xếp lại ván này</string>
+  <string name="favorite_add">Lưu ván này</string>
+  <string name="favorite_remove">Bỏ khỏi ván đã lưu</string>
+  <string name="favorites_title">Ván đã lưu</string>
+  <string name="favorites_empty">Chạm ngôi sao ở kết quả hoặc ở một ván đã ghi để giữ ván đó lại: một ván bài đẹp, hay một ván tệ hại.</string>
+  <string name="chart_title">Tổng điểm theo thời gian</string>
+  <string name="chart_summary">%1$d ván · tổng %2$s · trung bình %3$s mỗi ván</string>
+  <string name="chart_rules">Luật</string>
+  <string name="chart_empty">Chơi vài ván, tổng điểm của bạn sẽ được vẽ ở đây.</string>
+  <string name="chart_desc">Biểu đồ tổng điểm của bạn sau mỗi ván trong %1$d ván, kết thúc ở %2$s</string>
+  <string name="analyze_this">Phân tích ván này</string>
+  <string name="records_share_title">Gửi nhà phát triển</string>
+  <string name="favorite_short">Lưu</string>
+  <string name="favorite_saved">Đã lưu</string>
+  <string name="replay_short">Xếp lại</string>
+  <string name="replay_title">Xếp lại một ván</string>
+  <string name="replay_note">Không tính điểm, không ghi lại</string>
+  <string name="arrange_help_title">Cách xếp bài</string>
+  <string name="arrange_help">• Chạm lá bài để chọn (hoặc vuốt qua nhiều lá), rồi chạm chi để đặt vào.\n• Hoặc chạm một chi trước, rồi chạm các lá cho chi đó.\n• Chạm một lá trong chi để lấy lại; nhấn giữ một chi hoặc dùng Lấy lại hết để lấy lại cả chi.\n• Khi cả ba chi đã đủ và chi đầu ≥ chi giữa ≥ chi cuối (không binh lủng), chạm nút Xếp xong.\n• Theo số / Theo chất sắp lại bài trên tay, để dễ thấy đôi, sảnh hay thùng.</string>
+  <string name="help">Trợ giúp</string>
+  <string name="nav_records">Lịch sử</string>
+  <string name="records_practice">Luyện tập</string>
+  <string name="records_game">Đấu điểm</string>
+  <string name="records_puzzle">Thi xếp bài</string>
+  <string name="chart_puzzle_note">Thi xếp bài tính số điểm kỳ vọng mà cách xếp của bạn kém cách tốt nhất; càng gần 0 càng tốt.</string>
+  <string name="records_none">Chưa có ván nào loại này.</string>
+  <string name="ready_hint">Đã sẵn sàng</string>
+  <string name="records_battles">Thi đấu</string>
+  <string name="favorite_battles_title">Trận đã lưu</string>
+  <string name="favorite_battle_add">Lưu trận này</string>
+  <string name="favorite_battle_remove">Bỏ trận đã lưu</string>
+  <string name="battle_record_size">%1$d / %2$d ván, %3$d người</string>
+  <string name="battle_record_left">rời sớm</string>
+  <string name="sort_rank_short">Số</string>
+  <string name="sort_suit_short">Chất</string>
+  <string name="next_hand_short">Tiếp</string>
+  <string name="battle_next_short">Tiếp</string>
+  <string name="battle_submit_short">Nộp</string>
+  <!-- Thẻ chào mừng, phần hướng dẫn (mẹo lấy từ số liệu của tips-summary.md) và phần tham quan. -->
+  <string name="back_to_hand">Về ván này</string>
+  <string name="welcome_title">Chào mừng đến với Mậu Binh</string>
+  <string name="welcome_body">Mới chơi Mậu Binh? Phần hướng dẫn dạy luật chơi trong vài phút; phần tham quan giới thiệu những gì ứng dụng này làm được. Sau này bạn vẫn mở lại được cả hai trong Cài đặt.</string>
+  <string name="welcome_learn">Học cách chơi</string>
+  <string name="welcome_tour">Tham quan ứng dụng</string>
+  <string name="welcome_skip">Chơi luôn</string>
+  <string name="tut_title">Cách chơi</string>
+  <string name="tut_note">Luật chơi trong vài trang, một ván để thử và mẹo từ AI</string>
+  <string name="tour_title">Tham quan ứng dụng</string>
+  <string name="tour_note">Mỗi màn hình dùng để làm gì</string>
+  <string name="tut_next">Tiếp</string>
+  <string name="tut_prev">Quay lại</string>
+  <string name="tut_close">Đóng</string>
+  <string name="tut_page">%1$d / %2$d</string>
+  <string name="tut_done">Bắt đầu chơi</string>
+  <string name="tut_goal_title">Ba chi</string>
+  <string name="tut_goal_text">Bốn người chơi, mỗi người nhận 13 lá và chia thành ba chi: chi đầu 5 lá, chi giữa 5 lá và chi cuối 3 lá. Rồi mọi người cùng lật bài và so từng chi với từng đối thủ. Chỉ vậy thôi: cả ván bài nằm ở cách bạn xếp 13 lá.</string>
+  <string name="tut_goal_example">Ví dụ (chi cuối, chi giữa, chi đầu):</string>
+  <string name="tut_ranks_title">Chi nào lớn hơn</string>
+  <string name="tut_ranks_text">Từ lớn xuống nhỏ. Loại bài lớn hơn luôn thắng; cùng loại thì lá cao hơn thắng, A cao nhất và 2 thấp nhất. Chất không phân lớn nhỏ: chỉ dùng để tạo thùng.</string>
+  <string name="tut_ranks_front">Chi cuối chỉ có 3 lá, nên chỉ có thể là sám, đôi hoặc mậu thầu: ba lá liên tiếp hay cùng chất ở đó không tính gì cả.</string>
+  <string name="tut_wheel">A-2-3-4-5 theo luật đang chọn: %1$s.</string>
+  <string name="tut_foul_title">Đừng binh lủng</string>
+  <string name="tut_foul_text">Chi đầu phải lớn ít nhất bằng chi giữa, và chi giữa phải lớn ít nhất bằng chi cuối. Xếp sai thứ tự là binh lủng, và ứng dụng này sẽ không cho bạn xếp xong như vậy.</string>
+  <string name="tut_foul_strict">Với luật đang chọn, hai chi bằng nhau cũng là binh lủng (cấm chi bằng nhau).</string>
+  <string name="tut_foul_bad">Binh lủng: đôi ở chi cuối lớn hơn mậu thầu ở chi giữa.</string>
+  <string name="tut_foul_good">Cũng những lá đó, xếp đúng: đôi ở chi giữa.</string>
+  <string name="list_sep">", "</string>
+  <!-- Between the clauses of a line ("3 hands, Simple, 60 s"). -->
+  <string name="clause_sep">", "</string>
+  <string name="tut_score_title">Tính điểm</string>
+  <string name="tut_score_rules">Theo luật đang chọn (%1$s), giữa bạn và mỗi đối thủ:</string>
+  <string name="tut_score_rows">Mỗi chi bạn thắng: được %1$s điểm từ họ (hòa thì không tính).</string>
+  <string name="tut_score_norows">Thắng một hay hai chi không được gì: chỉ tính khi thắng cả ba.</string>
+  <string name="tut_score_scoop">Thắng họ cả ba chi là bắt sập: được thêm %1$s điểm từ họ.</string>
+  <string name="tut_score_scoop_only">Thắng họ cả ba chi là bắt sập: được %1$s điểm từ họ.</string>
+  <string name="tut_score_home">Bắt sập cả ba đối thủ cùng lúc là sập làng: được thêm %1$s điểm từ mỗi người.</string>
+  <string name="tut_score_special">Chi đặc biệt được điểm từ mỗi đối thủ, bất kể thắng thua các chi: %1$s.</string>
+  <string name="tut_score_special_win">Chi đặc biệt được điểm từ mỗi đối thủ có chi đó thua bạn: %1$s.</string>
+  <string name="tut_score_dragon">Từ 2 đến A, đủ cả 13 số (sảnh rồng): được %1$s điểm từ mỗi người.</string>
+  <string name="tut_score_change">Mỗi bàn tính điểm Mậu Binh một kiểu, nên mọi con số ở đây đều đổi được trong Cài đặt › Luật, có sẵn các kiểu phổ biến.</string>
+  <string name="tut_try_title">Thử một ván</string>
+  <string name="tut_try_text">Xếp ván này: chạm lá để chọn, rồi chạm một chi. Ván này không tính điểm, không ghi lại.</string>
+  <string name="tut_try_check">Hỏi AI</string>
+  <string name="tut_try_best">Cách xếp của bạn chính là cách tốt nhất của AI!</string>
+  <string name="tut_try_rank">Cách xếp của bạn đứng thứ %1$d trên %2$d, kém cách tốt nhất %3$s điểm.</string>
+  <string name="tut_try_extra">Có cách xếp khác thắng cách của bạn ở cả ba chi.</string>
+  <string name="tut_try_best_rows">Cách tốt nhất của AI:</string>
+  <string name="tut_try_why">Đôi A đặt ở chi cuối, còn đôi nhỏ nhất ghép vào cù lũ: đôi A ở chi cuối thắng thường xuyên hơn nhiều so với chỉ một lá K, và cù lũ chỉ so bằng bộ sám, đôi đi kèm là đôi nào cũng vậy.</string>
+  <string name="tut_try_again">Thử lại</string>
+  <string name="tut_tips_title">Mẹo từ AI</string>
+  <string name="tut_tips_text">Từ phân tích của AI trên 10.000 ván ngẫu nhiên theo luật đơn giản:</string>
+  <string name="tut_end_title">Sẵn sàng</string>
+  <string name="tut_end_text">Luyện tập với ba người chơi AI, bao nhiêu ván tùy thích; sau mỗi ván, xem AI sẽ xếp thế nào. Nút Trợ giúp trên bàn giải thích các nút.</string>
+  <string name="tour_skip">Bỏ qua</string>
+  <string name="tour_next">Tiếp</string>
+  <string name="tour_prev">Quay lại</string>
+  <string name="tour_done">Xong</string>
+  <string name="tour_play_title">Luyện tập</string>
+  <string name="tour_play">Chơi với ba người chơi AI. Chạm lá bài (hoặc vuốt qua nhiều lá) để chọn, rồi chạm một chi để đặt vào.</string>
+  <string name="tour_confirm_title">Xếp xong</string>
+  <string name="tour_confirm">Khi cả ba chi đã đủ và không binh lủng, hãy xếp xong: bạn thấy các chi của mọi người và điểm, rồi phân tích của AI về ván của bạn. Nút Ván trước mở lại ván trước trong lúc bạn xếp ván tiếp.</string>
+  <string name="tour_rules_title">Luật của bạn</string>
+  <string name="tour_rules">Mỗi bàn chơi Mậu Binh một kiểu, nên mọi con số đều do bạn đặt: điểm mỗi chi, sập, sập làng, chi đặc biệt, sảnh rồng, cả việc A-2-3-4-5 có là sảnh hay không. AI chơi và phân tích theo luật bạn chọn.</string>
+  <string name="tour_analyze_title">AI phân tích</string>
+  <string name="tour_analyze">Chọn 13 lá bất kỳ, AI sẽ chấm mọi cách xếp hợp lý. Đó không phải một danh sách quy tắc if-else mà là một mạng nơ-ron tự học bằng cách chơi với chính nó: nó ước tính mỗi cách xếp được trung bình bao nhiêu điểm trước các đối thủ.</string>
+  <string name="tour_battle_title">Thi đấu</string>
+  <string name="tour_battle">Chơi với bạn bè trong một phòng: đấu điểm, hoặc thi xếp bài, khi mọi người xếp cùng những lá bài và AI chấm xem ai xếp hay nhất.</string>
+  <string name="tour_records_title">Lịch sử</string>
+  <string name="tour_records">Mọi ván bạn đã chơi, biểu đồ điểm và các ván bạn đã lưu; mở ván nào cũng phân tích lại được.</string>
+  <string name="tour_settings_title">Cài đặt</string>
+  <string name="tour_settings">Luật, đối thủ, giao diện và cỡ chữ. Phần hướng dẫn và phần tham quan này cũng ở đây.</string>
+  <string name="tour_end_title">Hết phần tham quan</string>
+  <string name="tour_end">Mới chơi Mậu Binh? Phần hướng dẫn dạy luật chơi trong vài trang.</string>
+  <string-array name="tut_tips">
+    <item>Đừng chỉ dồn 5 lá mạnh nhất vào chi đầu. Mạnh nhất ở chi đầu, kế đó ở chi giữa, còn lại ở chi cuối chỉ là cách tốt nhất khoảng một ván trong tám, và mất chừng nửa điểm mỗi ván.</item>
+    <item>Đừng xem nhẹ chi cuối: cách xếp tốt nhất có đôi trở lên ở chi cuối sáu ván trong mười. Không có đôi thì đặt A ở đó (hoặc K).</item>
+    <item>Tách đôi cũng được: khi có hai hoặc ba đôi, cách xếp tốt nhất tách một đôi hơn một nửa số lần.</item>
+    <item>Cù lũ lấy đôi nhỏ nhất của bạn (chín lần trong mười): giữ các đôi lớn hơn cho các chi khác.</item>
+    <item>Thùng không phải lúc nào cũng đáng: hai ván trong ba có 5 lá cùng chất, nhưng chỉ một nửa trong số đó nên xếp thùng.</item>
+    <item>Đừng đắn đo quá: theo luật đơn giản, cách tốt nhất và tốt nhì thường chỉ chênh khoảng 0,01 điểm. Luật tính từng chi (kiểu Đài Loan) thì khắt khe hơn.</item>
+    <item>Phần lớn các ván thua một chút: dù xếp tốt nhất, chỉ bốn trong mười ván được hơn 0 điểm. Điểm đến từ vài ván bài lớn.</item>
+    <item>Sau mỗi ván, nút Phân tích ván này cho thấy cách của bạn so với cách tốt nhất: cách học nhanh nhất.</item>
+  </string-array>
+</resources>

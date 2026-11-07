@@ -8,10 +8,10 @@ export function remarkText(r: Remark): string {
     case 'same': return r.loss <= 0 ? t('remark_same_best') : t('remark_same_close');
     case 'mistake': {
       const names = r.categories.length === 2 && r.categories[0] === r.categories[1]
-        ? t('remark_times_two', cats[r.categories[0]]) : r.categories.map((c) => cats[c]).join('、');
+        ? t('remark_times_two', cats[r.categories[0]]) : r.categories.map((c) => cats[c]).join(t('list_sep'));
       const what = {
         MISSED: () => t('remark_missed', names),
-        SWAPPED: () => t('remark_swapped', names, r.replaced.map((c) => cats[c]).join('、')),
+        SWAPPED: () => t('remark_swapped', names, r.replaced.map((c) => cats[c]).join(t('list_sep'))),
         BROKE: () => t('remark_broke', names),
         PAIR_TO_FRONT: () => t('remark_pair_to_front'),
         PAIR_OUT_OF_FRONT: () => t('remark_pair_out_of_front'),

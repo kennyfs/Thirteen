@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The languages offered in the system's per-app language setting (Android 13+). -->
+<!-- The languages offered in the system's per-app language setting (Android 13+), in this order. Indonesian's
+     resources are values-in (Android's old code); its tag here is "in" too, as Android looks it up (Google's sample does the same). -->
 <locale-config xmlns:android="http://schemas.android.com/apk/res/android">
-  <locale android:name="en" />
   <locale android:name="zh-TW" />
+  <locale android:name="en-US" />
+  <locale android:name="ja" />
+  <locale android:name="zh-HK" />
+  <locale android:name="zh-CN" />
+  <locale android:name="vi" />
+  <locale android:name="in" />
 </locale-config>

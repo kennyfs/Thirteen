@@ -134,7 +134,7 @@ private fun opponentsSummary(vm: AppViewModel, kinds: Array<String>): String {
   val seats = vm.seatChoices
   val first = seats.first()
   return if (seats.all { it == first }) stringResource(R.string.opponents_all, if (first.kind == Kind.NET) vm.settings.model(first.model).name else kinds[first.kind.ordinal])
-  else seats.joinToString("、") { if (it.kind == Kind.NET) vm.settings.model(it.model).name else kinds[it.kind.ordinal] }
+  else seats.joinToString(stringResource(R.string.list_sep)) { if (it.kind == Kind.NET) vm.settings.model(it.model).name else kinds[it.kind.ordinal] }
 }
 
 /** The three computer players: each a network, Monte Carlo or indep. They take effect from the next hand. */

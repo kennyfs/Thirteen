@@ -55,14 +55,15 @@ fun shapeName(shape: Commentary.Shape): String = stringArrayResource(R.array.sha
 @Composable
 private fun remarkText(r: Commentary.Remark): String {
   val cats = stringArrayResource(R.array.category_names)
+  val sep = stringResource(R.string.list_sep)
   return when (r) {
     is Commentary.Same -> if (r.loss <= 0.0) stringResource(R.string.remark_same_best) else stringResource(R.string.remark_same_close)
     is Commentary.Mistake -> {
       val names = if (r.categories.size == 2 && r.categories[0] == r.categories[1]) stringResource(R.string.remark_times_two, cats[r.categories[0]])
-      else r.categories.joinToString("、") { cats[it] }
+      else r.categories.joinToString(sep) { cats[it] }
       val what = when (r.kind) {
         MistakeKind.MISSED -> stringResource(R.string.remark_missed, names)
-        MistakeKind.SWAPPED -> stringResource(R.string.remark_swapped, names, r.replaced.joinToString("、") { cats[it] })
+        MistakeKind.SWAPPED -> stringResource(R.string.remark_swapped, names, r.replaced.joinToString(sep) { cats[it] })
         MistakeKind.BROKE -> stringResource(R.string.remark_broke, names)
         MistakeKind.PAIR_TO_FRONT -> stringResource(R.string.remark_pair_to_front)
         MistakeKind.PAIR_OUT_OF_FRONT -> stringResource(R.string.remark_pair_out_of_front)

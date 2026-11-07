@@ -6,7 +6,7 @@ import { parseDeskKeys, type DeskInput, type DeskKeys, type DeskLines } from './
 import { parseCards, sameArrangement, shuffled, type Rows } from './cards';
 import * as engine from './engine';
 import type { Analysis, Score } from './engine';
-import { t, ta, setLang, browserLang, type Lang } from './i18n.svelte';
+import { t, ta, setLang, browserLang, isLang, type Lang } from './i18n.svelte';
 import { nav, type Screen } from './nav.svelte';
 import * as R from './rules';
 import type { RuleSpec, Values } from './rules';
@@ -40,7 +40,7 @@ export class App {
   colorStyle = $state<ColorStyle>(store.get('look.colors', 'TABLE') as ColorStyle);
   darkMode = $state<DarkMode>(store.get('look.dark', 'SYSTEM') as DarkMode);
   textSize = $state<TextSize>(store.get('look.text', 'NORMAL') as TextSize);
-  lang = $state<Lang>(store.get('lang', '') as Lang || browserLang());
+  lang = $state<Lang>(((l: string) => (isLang(l) ? l : browserLang()))(store.get('lang', '')));
 
   chooseColorStyle(v: ColorStyle) { this.colorStyle = v; store.set('look.colors', v); }
   chooseDarkMode(v: DarkMode) { this.darkMode = v; store.set('look.dark', v); }

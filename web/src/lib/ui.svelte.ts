@@ -37,6 +37,39 @@ export function measure(textScale: number) {
 /** Room for text: what a `px` text takes, as the app's textRoom. */
 export const textRoom = (px: number) => ui.u * (px / 14);
 
+let probe: HTMLSpanElement | null = null;
+const widths = new Map<string, number>();
+/** How wide `text` is at a `px` size (as the app's dp: it follows the page's text size) in the page's font, for a
+ *  layout that goes by its names' lengths (the probabilities' tiles, which differ a lot between languages). Measured
+ *  as the page lays it out (a canvas's measureText is some 8% short in Firefox), once a language, size and text. */
+export function textWidth(text: string, px: number, weight = 400): number {
+  const size = textRoom(px);
+  const key = `${document.documentElement.lang}|${weight}|${size}|${text}`;
+  let v = widths.get(key);
+  if (v === undefined) {
+    if (!probe) {
+      probe = document.createElement('span');
+      probe.setAttribute('aria-hidden', 'true');
+      probe.style.cssText = 'position: absolute; left: -9999px; top: 0; visibility: hidden; white-space: nowrap;';
+      document.body.appendChild(probe);
+    }
+    probe.style.fontSize = `${size}px`;
+    probe.style.fontWeight = String(weight);
+    probe.textContent = text;
+    v = probe.getBoundingClientRect().width;
+    widths.set(key, v);
+  }
+  return v;
+}
+
+/** The least a name may shrink to keep to its room (the app's SHRINK_MIN), and the size it takes in a room: its own
+ *  `rem`, or less down to that, past which it ends in "…" (`.ellipsis`). */
+export const SHRINK_MIN = 0.8;
+export function fitRem(text: string, px: number, room: number): string {
+  const s = Math.max(SHRINK_MIN, Math.min(1, room / Math.max(1, textWidth(text, px))));
+  return `${((px / 16) * s).toFixed(4)}rem`;
+}
+
 /** "+3", "−1.5": no decimals for whole numbers. */
 export function signed(x: number): string {
   const a = Math.abs(x);

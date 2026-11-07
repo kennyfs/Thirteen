@@ -343,7 +343,7 @@ private fun playerNotes(vm: BattleViewModel, room: RoomView, p: PlayerView): Str
   if (p.id == room.host) add(stringResource(R.string.battle_host))
   // A network's seat is already named "AI n".
   if (!p.bot && !p.connected) add(stringResource(R.string.battle_away))
-}.joinToString("、")
+}.joinToString(stringResource(R.string.list_sep))
 
 @Composable
 private fun Standings(vm: BattleViewModel, room: RoomView, modifier: Modifier = Modifier, marks: Boolean = false) {
@@ -799,7 +799,7 @@ private fun settingsLine(room: RoomView, app: AppViewModel): String {
     app.rulesName(Rules.values(room.rules)),
     stringResource(R.string.battle_time) + " " + if (s.timeLimit == 0) stringResource(R.string.battle_no_limit) else stringResource(R.string.battle_seconds, s.timeLimit),
   )
-  return parts.joinToString("，")
+  return parts.joinToString(stringResource(R.string.clause_sep))
 }
 
 /** A hand from the results: its table; a player's line opens the analysis of their hand. */

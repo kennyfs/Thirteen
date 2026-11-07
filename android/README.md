@@ -1,6 +1,6 @@
 # Thirteen for Android
 
-Play against three computer players (always c = 0) and analyze hands, on the phone, in English or Traditional Chinese (the system's per-app language setting). The engine is the repository's
+Play against three computer players (always c = 0) and analyze hands, on the phone, in Traditional Chinese (Taiwan, the original), English, Japanese, Traditional Chinese (Hong Kong), Simplified Chinese, Vietnamese or Indonesian (the system's per-app language setting; `res/values-*`). The engine is the repository's
 C++ (`cpp/`, through `cpp/command/guiengine.h` and JNI) with ONNX Runtime for Android; the UI is Jetpack Compose.
 
 - **Play** (always c = 0): tap cards to select them (or swipe across them: a swipe that starts on an unselected card selects every card it passes, one that starts on a selected card unselects them), then tap a row to place them; or tap a row first, then cards

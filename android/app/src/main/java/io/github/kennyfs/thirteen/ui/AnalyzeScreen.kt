@@ -1,5 +1,7 @@
 package io.github.kennyfs.thirteen.ui
 
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -432,6 +434,7 @@ private fun CandidateItem(
         middle, Modifier.weight(1f),
         style = MaterialTheme.typography.bodyMedium, fontWeight = if (shape != null) FontWeight.Medium else FontWeight.Normal,
         color = if (shape != null) colors.primary else colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
+        autoSize = shrinking(MaterialTheme.typography.bodyMedium),
       )
       // The names give way first when the line is short: cut to "…".
       if (tag != null) Text(
@@ -455,7 +458,10 @@ private fun CandidateItem(
         {
           Column(Modifier.width(left), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             for (r in 0 until 3) {
-              Text(texts[r], style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+              Text(
+                texts[r], style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                autoSize = shrinking(MaterialTheme.typography.bodySmall),
+              )
               RowCards(cd.arrangement[r], cd.info.categories[r], card, LINE_GAP)
             }
           }
@@ -505,16 +511,28 @@ private fun ProbGrid(a: Analysis, p: List<Double>, best: List<Double>?, pane: Bo
   val gaps = SHOWN_PROBS.associateWith { k -> if (best != null) p[k] - best[k] else 0.0 }
   val notable = SHOWN_PROBS.filter { kotlin.math.abs(gaps.getValue(it)) >= NOTABLE_GAP[it] }.toSet()
   val gap = 4.dp
+  // A tile's room: 62 sp of text (4 Chinese characters, "被全壘打"), or the longest name's as far as it may shrink, when
+  // the language's names run longer; with the tile's padding.
+  val nameStyle = MaterialTheme.typography.bodySmall
+  val measurer = rememberTextMeasurer()
+  val density = LocalDensity.current
+  val nameWidths = remember(names.toList(), nameStyle, density) {
+    names.map { with(density) { measurer.measure(it, nameStyle, maxLines = 1, softWrap = false).size.width.toDp() } }
+  }
+  fun room(ks: List<Int>) = ks.maxOf { nameWidths[it] } * SHRINK_MIN + 12.dp
+  val base = textRoom(62)
   BoxWithConstraints(modifier.fillMaxWidth()) {
     val width = maxWidth
-    val tile = textRoom(62)
+    val tile = maxOf(base, room(SHOWN_PROBS))
     val fit = ((maxWidth + gap) / (tile + gap)).toInt()
+    // The three rows' chances in a line of three.
+    val rowsInLine = (maxWidth - gap * 2) / 3 >= maxOf(base * 0.85f, room(listOf(5, 6, 7)))
     val lines: List<List<Int>> = when {
       // In the side pane of a wide window, cap at 2 + 2 + 3 so 4-character titles like "被全壘打" never truncate
-      pane -> if ((maxWidth - gap * 2) / 3 >= tile * 0.85f) listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6, 7)) else listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6), listOf(7))
+      pane -> if (rowsInLine) listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6, 7)) else listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6), listOf(7))
       fit >= 7 -> listOf(SHOWN_PROBS)
       fit >= 4 -> listOf(listOf(0, 1, 2, 3), listOf(5, 6, 7))
-      (maxWidth - gap * 2) / 3 >= tile * 0.85f -> listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6, 7))
+      rowsInLine -> listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6, 7))
       else -> listOf(listOf(0, 1), listOf(2, 3), listOf(5, 6), listOf(7))
     }
     StretchColumn(fill, gap) {
@@ -551,7 +569,10 @@ private fun ProbTile(name: String, p: Double, tone: Int, diff: Double, modifier:
     modifier.clip(RoundedCornerShape(8.dp)).background(colors.surfaceContainerHighest).padding(horizontal = 6.dp, vertical = 3.dp),
     verticalArrangement = Arrangement.Top,
   ) {
-    Text(name, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    Text(
+      name, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
+      autoSize = shrinking(MaterialTheme.typography.bodySmall),
+    )
     Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
       Text(
         "%.1f%%".format(100 * p), style = MaterialTheme.typography.bodyLarge, color = color, maxLines = 1, softWrap = false,

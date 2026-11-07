@@ -1,0 +1,492 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bahasa Indonesia. Istilah Capsa Susun: baris atas / tengah / bawah (seperti di Higgs Domino), salah susun, sapu bersih
+     (menang di ketiga baris atas satu lawan), home run (sapu bersih ketiga lawan sekaligus), naga, bonus baris (royalti).
+     Kombinasi: high card, pair, two pair, triss, straight, flush, full house, bom, straight flush. Lambang: keriting, wajik,
+     hati, sekop. "Hand" sebagai satu putaran = ronde; sebagai 13 kartu = kartu. Tombol, chip, dan tabel: singkat. -->
+<resources>
+  <string name="app_name">Capsa Susun</string>
+  <string name="nav_play">Latihan</string>
+  <string name="nav_analyze">Analisis</string>
+  <string name="nav_settings">Setelan</string>
+  <string name="ok">OK</string>
+  <string name="cancel">Batal</string>
+  <string name="info">Penjelasan</string>
+  <string name="hand_n">Ronde %1$d</string>
+  <string name="you">Kamu</string>
+  <string name="ready">Siap</string>
+  <string name="fouled">Salah susun: atas ≤ tengah ≤ bawah</string>
+  <string name="confirm">Main</string>
+  <string name="next_hand">Ronde berikutnya</string>
+  <string name="analyze_my_hand">Analisis kartuku</string>
+  <string name="fouled_short">Salah susun</string>
+  <string name="home_run">Home run</string>
+  <string name="row_room">Baris %1$s hanya muat %2$d lagi</string>
+  <string name="fill_rows_first">Isi ketiga baris dulu</string>
+  <string name="random">Acak</string>
+  <string name="last_hand">Ronde lalu</string>
+  <string name="clear">Hapus</string>
+  <string name="network">Jaringan saraf</string>
+  <string name="analyze_info">Q adalah hasil harapan kartu ini, dalam poin, melawan tiga pemain seperti jaringan saraf ini. Daftar ini berisi susunan yang tidak kalah dari susunan lain mana pun di semua baris, mulai dari Q terbaik. Peluang yang jauh berbeda dari peluang susunan terbaik berwarna hijau bila lebih baik dan merah bila lebih buruk. Komentar di atas menjelaskan bagaimana susunanmu bisa lebih baik, apakah susunan terbaik menyerang atau bertahan, dan nama pola yang umum.</string>
+  <string name="dragon">Kartu ini naga.</string>
+  <string name="show_all">Tampilkan semua %1$d</string>
+  <string name="yours">Susunanmu</string>
+  <string name="pick_13">Pilih 13 kartu</string>
+  <string name="n_recorded">%1$d ronde tercatat</string>
+  <string name="export">Simpan sebagai file</string>
+  <string name="share">Bagikan</string>
+  <string name="clear_records">Hapus riwayat</string>
+  <string name="reset_scores_short">Reset skor</string>
+  <string name="delete">Hapus</string>
+  <string name="reset">Reset</string>
+  <string name="clear_records_confirm">Hapus semua %1$d ronde yang tercatat? Skor berjalan dan hitungan ronde juga mulai dari awal, dengan ronde latihan baru. Ekspor dulu jika kamu masih memerlukannya.</string>
+  <string name="reset_confirm">Reset skor berjalan dan hitungan ronde? Latihan mulai lagi dengan ronde baru; riwayat tetap disimpan.</string>
+  <string name="mc_samples">Sampel Monte Carlo (lawan: independen)</string>
+  <string name="networks">Jaringan saraf</string>
+  <string name="load_weights">Muat bobot .onnx</string>
+  <string name="built_in">%1$s (bawaan)</string>
+  <string name="not_usable">Jaringan saraf tidak bisa dipakai: %1$s</string>
+  <string name="best">Terbaik</string>
+  <string name="pick_n">Pilih %1$d lagi</string>
+  <string name="seat_pos">CPU %1$d</string>
+  <string name="this_hand">Ronde ini %1$s</string>
+  <string name="analyze_go">Analisis</string>
+  <string name="to_candidates">Kembali ke kandidat</string>
+  <string-array name="row_names">
+    <item>Atas</item>
+    <item>Tengah</item>
+    <item>Bawah</item>
+  </string-array>
+  <string-array name="row_labels">
+    <item></item>
+    <item>High</item>
+    <item>Pair</item>
+    <item>Two pair</item>
+    <item>Triss</item>
+    <item>Straight</item>
+    <item>Flush</item>
+    <item>Full house</item>
+    <item>Bom</item>
+    <item>Str. flush</item>
+  </string-array>
+  <string-array name="kinds">
+    <item>Jaringan saraf</item>
+    <item>Monte Carlo</item>
+    <item>Baris independen</item>
+  </string-array>
+  <string-array name="prob_names">
+    <item>Sapu bersih</item>
+    <item>Disapu bersih</item>
+    <item>Home run</item>
+    <item>Kena home run</item>
+    <item>Jadi bandar</item>
+    <item>Menang atas</item>
+    <item>Menang tengah</item>
+    <item>Menang bawah</item>
+    <item>Kalah atas</item>
+    <item>Kalah tengah</item>
+    <item>Kalah bawah</item>
+    <item>Kena triss</item>
+    <item>Kena full house</item>
+    <item>Kena bom</item>
+    <item>Kena straight flush</item>
+    <item>Kena bom (bawah)</item>
+    <item>Kena straight flush (bawah)</item>
+  </string-array>
+  <string name="ready_royalty">Siap · bonus baris +%1$s</string>
+  <string name="fouled_strict">Salah susun: baris tidak boleh sama kuat (baris ketat)</string>
+  <string name="nav_rules">Aturan</string>
+  <string name="custom">Kustom</string>
+  <string name="restore_preset">Pulihkan preset</string>
+  <string name="rules_next_hand">Setelah aturan diubah, latihan membagikan ronde baru saat kamu meninggalkan halaman ini (ronde yang sedang dimainkan dibuang), dan skor berjalan mulai dari awal.</string>
+  <string name="rules_play">Mengubah permainan</string>
+  <string name="rules_play_note">Dua pilihan ini mengubah susunan mana yang salah susun dan urutan kekuatan kombinasi.</string>
+  <string name="rules_scoring">Skor: poin dari setiap lawan</string>
+  <string name="rule_range">%1$s sampai %2$s</string>
+  <string name="rules_royalties">Bonus baris</string>
+  <string name="strict_rows">Baris ketat: atas &lt; tengah &lt; bawah (sama kuat = salah susun)</string>
+  <string name="wheel">A-2-3-4-5</string>
+  <string name="on_win">Bonus baris hanya dibayar jika mengalahkan baris lawan</string>
+  <string name="legacy_warning">%1$s dibuat sebelum ada input aturan: ia selalu bermain dengan aturan Sederhana, apa pun aturannya.</string>
+  <string name="total_so_far">total %1$s</string>
+  <string-array name="preset_notes">
+    <item>Hanya sapu bersih, home run, dan bonus baris yang dihitung, masing-masing 1 poin.</item>
+    <item>Seperti aturan Sederhana, tetapi bom atau straight flush di tengah mendapat 2.</item>
+    <item>1 per baris, sapu bersih 3, home run tambah 6; triss di atas 3, bom di tengah 8 / straight flush 10, bom di bawah 4 / straight flush 5, naga 36.</item>
+    <item>Chinese poker versi pagat.com: 1 per baris, sapu bersih 3, bonus baris hanya dibayar jika menang, baris ketat.</item>
+  </string-array>
+  <string-array name="wheel_options">
+    <item>Straight terendah</item>
+    <item>Straight tertinggi kedua</item>
+    <item>Bukan straight</item>
+  </string-array>
+  <string-array name="point_labels">
+    <item>Tiap baris</item>
+    <item>Sapu bersih</item>
+    <item>Home run (tambahan, per lawan)</item>
+    <item>Naga</item>
+  </string-array>
+  <string-array name="royalty_labels">
+    <item>Triss di atas</item>
+    <item>Full house di tengah</item>
+    <item>Bom di tengah</item>
+    <item>Straight flush di tengah</item>
+    <item>Bom di bawah</item>
+    <item>Straight flush di bawah</item>
+  </string-array>
+  <string-array name="category_names">
+    <item></item>
+    <item>high card</item>
+    <item>pair</item>
+    <item>two pair</item>
+    <item>triss</item>
+    <item>straight</item>
+    <item>flush</item>
+    <item>full house</item>
+    <item>bom</item>
+    <item>straight flush</item>
+  </string-array>
+  <!-- Urutan Commentary.Shape. -->
+  <string-array name="shape_names">
+    <item>Tiga pair</item>
+    <item>Empat pair</item>
+    <item>Lima pair</item>
+    <item>Dua flush</item>
+    <item>Tiga flush</item>
+    <item>Dua straight</item>
+    <item>Tiga straight</item>
+    <item>Straight dan flush</item>
+    <item>Dua full house</item>
+    <item>Dua triss</item>
+  </string-array>
+  <string name="remark_same_best">Susunanmu adalah yang terbaik.</string>
+  <string name="remark_same_close">Selisih susunanmu dari yang terbaik masih dalam batas galat jaringan saraf: sama bagusnya.</string>
+  <string name="remark_mistake">Susunanmu: %1$s</string>
+  <string name="remark_sep">" "</string>
+  <string name="remark_missed">kamu melewatkan %1$s.</string>
+  <string name="remark_swapped">%1$s lebih baik daripada %2$s milikmu.</string>
+  <string name="remark_times_two">%1$s ×2</string>
+  <string name="remark_broke">memecah %1$s milikmu lebih baik di sini.</string>
+  <string name="remark_pair_to_front">taruh pair di atas.</string>
+  <string name="remark_pair_out_of_front">simpan pair di tengah dan bawah, dan kartu tinggi di atas.</string>
+  <string name="remark_stronger_front">kombinasi yang sama, dengan baris atas yang lebih kuat.</string>
+  <string name="remark_detail">kombinasi yang sama, kartu yang lain.</string>
+  <string name="remark_other">jenis susunan lain lebih baik.</string>
+  <string name="remark_vs_mine_both">" Susunan terbaik lebih sering menyapu bersih dan lebih jarang disapu bersih."</string>
+  <string name="remark_vs_mine_attack">" Susunan terbaik lebih sering menyapu bersih, tapi juga lebih sering disapu bersih."</string>
+  <string name="remark_vs_mine_defense">" Susunan terbaik lebih jarang disapu bersih, tapi juga lebih jarang menyapu bersih."</string>
+  <string name="remark_only">Kartu ini hanya punya satu jenis susunan.</string>
+  <string name="remark_close">Ada jenis susunan lain yang hampir sama bagusnya.</string>
+  <string name="remark_both">Susunan terbaik mengungguli jenis lain dalam menyapu bersih maupun disapu bersih.</string>
+  <string name="remark_attack">Susunan terbaik menyerang: baris %1$s lebih kuat, lebih sering menyapu bersih dan lebih sering disapu bersih.</string>
+  <string name="remark_defense">Susunan terbaik bertahan: baris %1$s lebih kuat, lebih jarang disapu bersih dan lebih jarang menyapu bersih.</string>
+  <string name="remark_rows_both">Susunan terbaik mengungguli jenis lain dalam menang baris maupun sapu bersih.</string>
+  <string name="remark_rows">Susunan terbaik mengejar kemenangan baris, bukan sapu bersih.</string>
+  <string name="remark_scoops_first">Susunan terbaik mengejar sapu bersih, bukan kemenangan baris.</string>
+  <string name="remark_strong">Kartu yang kuat.</string>
+  <string name="remark_weak">Kartu yang lemah: hindari disapu bersih.</string>
+  <string name="remark_home_run">Home run bisa dicapai.</string>
+  <string name="nav_battle">Tanding</string>
+  <string name="battle_name">Namamu</string>
+  <string name="battle_online">Online</string>
+  <string name="battle_nearby">Ponsel terdekat</string>
+  <string name="battle_server">Server</string>
+  <string name="battle_server_hint">mis. thirteen.example.com</string>
+  <string name="battle_puzzle">Kontes teka-teki</string>
+  <string name="battle_puzzle_info">Semua orang menyusun kartu yang sama. Tiap ronde, kamu kehilangan selisih antara pilihanmu dan susunan terbaik jaringan saraf; total terkecil menang. Tanpa unsur keberuntungan.</string>
+  <string name="battle_game">Permainan meja</string>
+  <string name="battle_game_info">Hingga empat pemain, jaringan saraf mengisi kursi kosong; poin terbanyak menang.</string>
+  <string name="battle_join">Gabung</string>
+  <string name="battle_pin">Nomor room</string>
+  <string name="battle_pin_bad">PIN terdiri dari 6 digit.</string>
+  <string name="battle_server_bad">Masukkan alamat server (nama, atau wss://…).</string>
+  <string name="battle_join_room">Gabung ke room</string>
+  <string name="battle_join_room_info">Masukkan nomor room 6 digit yang diberikan kepadamu.</string>
+  <string name="battle_search_again">Cari lagi</string>
+  <string name="battle_no_rooms">Belum ada room di sekitar.</string>
+  <string name="battle_search">Cari room terdekat</string>
+  <string name="battle_searching">Room terdekat (ketuk salah satu, lalu masukkan PIN-nya):</string>
+  <string name="battle_nearby_failed">Koneksi terdekat gagal: %1$s</string>
+  <string name="battle_permissions">Bermain di sekitar memerlukan izin Bluetooth dan perangkat di sekitar.</string>
+  <string name="battle_no_connection">Tidak bisa terhubung: %1$s</string>
+  <string name="battle_lost">Koneksi ke room terputus.</string>
+  <string name="battle_closed">Room sudah ditutup.</string>
+  <string name="battle_err_version">Room ini menjalankan versi aplikasi yang berbeda (server atau ponsel yang menjadi host). Semua orang perlu versi yang sama: perbarui aplikasi.</string>
+  <string name="battle_err_no_room">Tidak ada room dengan PIN itu.</string>
+  <string name="battle_err_full">Room sudah penuh.</string>
+  <string name="battle_err_started">Permainan itu sudah dimulai.</string>
+  <string name="battle_err_rate">Terlalu banyak percobaan: tunggu beberapa menit.</string>
+  <string name="battle_err_busy">Server sedang sibuk: coba lagi nanti.</string>
+  <string name="battle_err_settings">Setelan ini tidak diizinkan.</string>
+  <string name="battle_err_rows">Baris itu tidak memakai 13 kartumu.</string>
+  <string name="battle_err_not_allowed">Tidak bisa sekarang.</string>
+  <string name="battle_hands">Ronde</string>
+  <string name="battle_hands_n">Ronde: %1$d</string>
+  <string name="battle_time">Waktu per ronde</string>
+  <string name="battle_no_limit">tanpa batas</string>
+  <string name="battle_seconds">%1$d dtk</string>
+  <string name="battle_leave_title">Keluar dari pertandingan?</string>
+  <string name="battle_leave_lobby">Kamu keluar dari room.</string>
+  <string name="battle_leave_game">Mulai sekarang setiap rondemu disusun otomatis seperti saat waktu habis, dan kamu tidak bisa kembali.</string>
+  <string name="battle_leave">Keluar</string>
+  <string name="battle_host">host</string>
+  <string name="battle_away">tidak aktif</string>
+  <string name="battle_players">Pemain (%1$d)</string>
+  <string name="battle_hand_of">Ronde %1$d dari %2$d</string>
+  <string name="battle_set_count">%1$d dari %2$d sudah menyusun</string>
+  <string name="battle_ready_count">%1$d dari %2$d siap</string>
+  <string name="battle_your_rank">kamu #%1$d</string>
+  <string name="battle_rank">#%1$d</string>
+  <string name="battle_waiting">Menunggu yang lain…</string>
+  <string name="battle_best_rows">Terbaik jaringan saraf</string>
+  <string name="battle_timed_out"> (waktu habis)</string>
+  <string name="battle_next">Ronde berikutnya</string>
+  <string name="battle_over">Klasemen akhir</string>
+  <string name="battle_total_loss">rugi %1$s</string>
+  <string name="battle_hand_list">Ronde (ketuk satu untuk analisisnya)</string>
+  <string name="battle_done">Selesai</string>
+  <string name="battle_nearby_host_note">Ponsel ini menjadi host room: yang lain bergabung dari dekat, dan ponsel ini menghitung kursi jaringan saraf.</string>
+  <string name="battle_this_hand">Ronde ini %1$s</string>
+  <string name="battle_col_hand">Ronde ini</string>
+  <string name="battle_col_total">Total</string>
+  <string name="battle_col_hand_loss">Rugi</string>
+  <string name="battle_col_total_loss">Total rugi</string>
+  <string name="battle_col_hand_rank">Posisi</string>
+  <string name="battle_hand_rank">%1$d dari %2$d</string>
+  <string name="battle_to_summary">Klasemen akhir</string>
+  <string name="battle_analyze">Analisis</string>
+  <string name="battle_tap_player">Ketuk pemain untuk melihat analisis kartunya</string>
+
+  <!-- Layar yang didesain ulang. -->
+  <string name="back">Kembali</string>
+  <string name="increase">Tambah</string>
+  <string name="decrease">Kurangi</string>
+  <string name="change">Ubah</string>
+  <string name="show_more">Tampilkan lagi</string>
+  <string name="analyzing">Jaringan saraf sedang berpikir…</string>
+  <string name="hint_start">Pilih kartu, lalu ketuk baris untuk menaruhnya.</string>
+  <string name="hint_selected">%1$d dipilih: ketuk baris untuk menaruhnya.</string>
+  <string name="hint_armed">Ketuk kartu untuk baris %1$s: %2$d lagi.</string>
+  <string name="hint_left">Sisa %1$d. Ketuk kartu yang sudah ditaruh untuk mengambilnya kembali.</string>
+  <string name="take_back_row">Ambil kembali baris %1$s</string>
+  <string name="undo">Urungkan</string>
+  <string name="take_all">Ambil semua</string>
+  <string name="sort_rank">Urut angka</string>
+  <string name="sort_suit">Urut lambang</string>
+  <string name="sort_by_rank_on">Diurutkan menurut angka; ketuk untuk urut lambang</string>
+  <string name="sort_by_suit_on">Diurutkan menurut lambang; ketuk untuk urut angka</string>
+  <string name="row_win">Kamu menang</string>
+  <string name="row_lose">Kamu kalah</string>
+  <string name="row_tie">Seri</string>
+  <string name="vs_you_win">Kamu +%1$s</string>
+  <string name="vs_you_lose">Kamu −%1$s</string>
+  <string name="vs_you_even">Seri denganmu</string>
+  <string name="scooped_by">Disapu bersih oleh %1$s</string>
+  <string name="remarks_title">Komentar</string>
+  <string name="candidates">Kandidat</string>
+  <string name="expected">Poin harapan</string>
+  <string name="less_than_best">%1$s di bawah yang terbaik</string>
+  <string name="more_than_yours">%1$s di atas punyamu</string>
+  <string name="yours_rank">%1$s · #%2$d</string>
+  <string name="pick_13_hint">Pilih 13 kartu</string>
+  <string name="source">Dari…</string>
+  <string name="from_records">Ronde dari riwayat</string>
+  <string name="this_game_rules_named">%1$s (aturan ronde itu)</string>
+  <string name="use_current_rules_named">Pakai aturan sekarang: %1$s</string>
+  <string name="settings_look">Tampilan</string>
+  <string name="settings_game">Permainan</string>
+  <string name="settings_about">Tentang</string>
+  <string name="text_size">Ukuran teks</string>
+  <string-array name="text_sizes">
+    <item>Kecil</item>
+    <item>Normal</item>
+    <item>Besar</item>
+  </string-array>
+  <string name="color_style">Warna</string>
+  <string-array name="color_styles">
+    <item>Meja hijau</item>
+    <item>Polos</item>
+    <item>Warna wallpaper</item>
+  </string-array>
+  <string name="dark_mode">Tema gelap</string>
+  <string-array name="dark_modes">
+    <item>Ikuti sistem</item>
+    <item>Mati</item>
+    <item>Nyala</item>
+  </string-array>
+  <string name="opponents_title">Pemain komputer</string>
+  <string name="opponents_all">Ketiganya: %1$s</string>
+  <string name="opponents_info">Jaringan saraf bermain sesuai yang dipelajarinya. Monte Carlo mencoba tiap susunan melawan kartu acak untuk pemain lain, masing-masing disusun dengan baris independen. Baris independen menilai tiap baris secara terpisah.</string>
+  <string name="next_hand_note">Perubahan berlaku mulai ronde berikutnya.</string>
+  <string-array name="kinds_short">
+    <item>Jaringan saraf</item>
+    <item>Monte Carlo</item>
+    <item>Independen</item>
+  </string-array>
+  <string name="networks_summary">%1$d tersedia</string>
+  <string name="networks_info">Jaringan saraf yang diekspor oleh python/train.py (file .onnx) bisa dimuat lalu dipilih untuk pemain komputer dan analisis.</string>
+  <string name="built_in_note">Bawaan</string>
+  <string name="legacy_note">Jaringan saraf lama: memainkan semua aturan sebagai aturan Sederhana</string>
+  <string name="delete_network_confirm">Hapus jaringan saraf %1$s?</string>
+  <string name="records_title">Riwayat</string>
+  <string name="records_summary">%1$d ronde tercatat · %2$d disimpan · grafik skor</string>
+  <string name="records_info">Setiap ronde yang kamu mainkan dicatat di ponsel ini: kartunya, barismu, aturannya, dan waktu yang kamu pakai. Tidak ada yang lain, dan tidak ada yang dikirim kecuali kamu membagikannya. Membagikan file (JSONL) ini ke pengembang membantu melatih pemain komputer yang lebih baik.</string>
+  <string name="records_list">Semua riwayat, terbaru dulu</string>
+  <string name="about_source">Sumber terbuka (GPLv3), di GitHub</string>
+  <string name="privacy_policy">Kebijakan privasi</string>
+  <string name="about_web">Versi web</string>
+  <string name="about_web_note">Main di browser, juga di komputer: %1$s</string>
+  <string name="about_play">Aplikasi Android</string>
+  <string name="about_play_note">Di Google Play, bisa tanding dengan teman</string>
+  <string name="rules_changed"> (diubah)</string>
+  <string-array name="preset_names">
+    <item>Sederhana</item>
+    <item>Sederhana, tengah ×2</item>
+    <item>Taiwan per baris</item>
+    <item>Pagat</item>
+  </string-array>
+  <string-array name="suit_names">
+    <item>Keriting</item>
+    <item>Wajik</item>
+    <item>Hati</item>
+    <item>Sekop</item>
+  </string-array>
+  <string name="battle_how">Cara terhubung</string>
+  <string name="battle_server_is">Server: %1$s</string>
+  <string name="battle_nearby_info">Ponsel di ruangan yang sama, lewat Bluetooth dan Wi-Fi; tanpa internet. Ponsel yang membuka room yang menjalankannya.</string>
+  <string name="battle_new_puzzle">Mulai kontes teka-teki</string>
+  <string name="battle_new_game">Mulai permainan meja</string>
+  <string name="battle_room_number">Nomor room</string>
+  <string name="battle_room_number_info">Yang lain memasukkan nomor ini di “Gabung ke room”.</string>
+  <string name="battle_settings">Setelan</string>
+  <string name="battle_rules_page_named">Dari halaman Aturan: %1$s</string>
+  <string name="battle_start_mode">Mulai %1$s</string>
+  <string name="battle_wait_host">Menunggu host memulai…</string>
+  <string name="battle_submit">Kirim susunan</string>
+  <string name="battle_standings">Klasemen</string>
+  <string name="battle_done_mark">Selesai</string>
+  <string name="battle_thinking">Berpikir</string>
+  <string name="battle_place">#%1$d</string>
+  <string name="replay_hand">Susun ulang kartu ini</string>
+  <string name="favorite_add">Simpan ronde ini</string>
+  <string name="favorite_remove">Hapus dari ronde tersimpan</string>
+  <string name="favorites_title">Ronde tersimpan</string>
+  <string name="favorites_empty">Ketuk bintang pada hasil atau riwayat untuk menyimpan ronde: kartu yang hebat, atau yang parah.</string>
+  <string name="chart_title">Total skor dari waktu ke waktu</string>
+  <string name="chart_summary">%1$d ronde · total %2$s · rata-rata %3$s per ronde</string>
+  <string name="chart_rules">Aturan</string>
+  <string name="chart_empty">Mainkan beberapa ronde dan total skormu akan digambar di sini.</string>
+  <string name="chart_desc">Grafik total skormu setelah tiap ronde dari %1$d ronde, berakhir di %2$s</string>
+  <string name="analyze_this">Analisis kartu ini</string>
+  <string name="records_share_title">Untuk pengembang</string>
+  <string name="favorite_short">Simpan</string>
+  <string name="favorite_saved">Tersimpan</string>
+  <string name="replay_short">Susun ulang</string>
+  <string name="replay_title">Mengulang ronde</string>
+  <string name="replay_note">Tidak dihitung atau dicatat</string>
+  <string name="arrange_help_title">Cara menyusun kartu</string>
+  <string name="arrange_help">• Ketuk kartu untuk memilihnya (atau geser melewati beberapa), lalu ketuk baris untuk menaruhnya.\n• Atau ketuk baris dulu, lalu kartunya.\n• Ketuk kartu di baris untuk mengambilnya kembali; tekan lama baris atau pakai Ambil semua untuk seluruh baris.\n• Jika semua baris penuh dan atas ≤ tengah ≤ bawah (tidak salah susun), ketuk tombol Main.\n• Urut angka / Urut lambang mengurutkan kartumu, agar pair, straight, atau flush mudah terlihat.</string>
+  <string name="help">Bantuan</string>
+  <string name="nav_records">Riwayat</string>
+  <string name="records_practice">Latihan</string>
+  <string name="records_game">Permainan meja</string>
+  <string name="records_puzzle">Kontes teka-teki</string>
+  <string name="chart_puzzle_note">Kontes teka-teki menilai berapa poin harapan susunanmu kurang dari yang terbaik; makin dekat ke 0 makin baik.</string>
+  <string name="records_none">Belum ada riwayat jenis ini.</string>
+  <string name="ready_hint">Siap dimainkan</string>
+  <string name="records_battles">Pertandingan</string>
+  <string name="favorite_battles_title">Pertandingan tersimpan</string>
+  <string name="favorite_battle_add">Simpan pertandingan</string>
+  <string name="favorite_battle_remove">Hapus pertandingan tersimpan</string>
+  <string name="battle_record_size">%1$d dari %2$d ronde, %3$d pemain</string>
+  <string name="battle_record_left">keluar lebih awal</string>
+  <string name="sort_rank_short">Angka</string>
+  <string name="sort_suit_short">Lambang</string>
+  <string name="next_hand_short">Lanjut</string>
+  <string name="battle_next_short">Lanjut</string>
+  <string name="battle_submit_short">Kirim</string>
+  <!-- Kartu sambutan, tutorial (tipsnya dari statistik tips-summary.md), dan tur. -->
+  <string name="back_to_hand">Kembali ke ronde ini</string>
+  <string name="welcome_title">Selamat datang di Capsa Susun</string>
+  <string name="welcome_body">Baru mengenal Capsa Susun? Tutorial mengajarkan aturannya dalam beberapa menit; tur menunjukkan apa saja yang bisa dilakukan aplikasi ini. Keduanya juga bisa kamu temukan nanti di Setelan.</string>
+  <string name="welcome_learn">Belajar main</string>
+  <string name="welcome_tour">Tur aplikasi</string>
+  <string name="welcome_skip">Langsung main</string>
+  <string name="tut_title">Cara bermain</string>
+  <string name="tut_note">Aturan dalam beberapa halaman, kartu untuk dicoba, dan tips dari AI</string>
+  <string name="tour_title">Tur aplikasi</string>
+  <string name="tour_note">Fungsi tiap layar</string>
+  <string name="tut_next">Lanjut</string>
+  <string name="tut_prev">Kembali</string>
+  <string name="tut_close">Tutup</string>
+  <string name="tut_page">%1$d / %2$d</string>
+  <string name="tut_done">Mulai main</string>
+  <string name="tut_goal_title">Tiga baris</string>
+  <string name="tut_goal_text">Empat pemain masing-masing mendapat 13 kartu dan membaginya menjadi tiga baris: 3 kartu di atas, 5 di tengah, dan 5 di bawah. Lalu semua orang membuka barisnya bersamaan dan membandingkannya, baris demi baris, dengan setiap lawan. Itu saja: seluruh permainan adalah soal cara kamu menyusun 13 kartumu.</string>
+  <string name="tut_goal_example">Contoh (atas, tengah, bawah):</string>
+  <string name="tut_ranks_title">Baris mana yang lebih besar</string>
+  <string name="tut_ranks_text">Dari yang terbesar ke bawah. Kombinasi yang lebih besar selalu menang; dalam kombinasi yang sama, kartu yang lebih tinggi menang, A tertinggi dan 2 terendah. Lambang tidak punya urutan: lambang hanya berguna untuk membuat flush.</string>
+  <string name="tut_ranks_front">Baris atas hanya berisi 3 kartu, jadi isinya triss, pair, atau high card: tiga kartu berurutan atau satu lambang tidak ada artinya di sana.</string>
+  <string name="tut_wheel">A-2-3-4-5 menurut aturan yang dipilih sekarang: %1$s.</string>
+  <string name="tut_foul_title">Jangan salah susun</string>
+  <string name="tut_foul_text">Baris bawah harus paling tidak sebesar baris tengah, dan baris tengah paling tidak sebesar baris atas. Urutan lain adalah salah susun, dan aplikasi ini tidak akan membiarkanmu memainkannya.</string>
+  <string name="tut_foul_strict">Menurut aturan yang dipilih sekarang, baris yang sama kuat juga salah susun (baris ketat).</string>
+  <string name="tut_foul_bad">Salah susun: pair di atas mengalahkan high card di tengah.</string>
+  <string name="tut_foul_good">Kartu yang sama disusun dengan benar: pair-nya di tengah.</string>
+  <string name="list_sep">", "</string>
+  <!-- Between the clauses of a line ("3 hands, Simple, 60 s"). -->
+  <string name="clause_sep">", "</string>
+  <string name="tut_score_title">Poin</string>
+  <string name="tut_score_rules">Menurut aturan yang dipilih sekarang (%1$s), antara kamu dan setiap lawan:</string>
+  <string name="tut_score_rows">Setiap baris yang kamu menangkan: %1$s darinya (seri tidak dihitung).</string>
+  <string name="tut_score_norows">Menang satu atau dua baris tidak menghasilkan apa-apa: hanya menang ketiganya yang dihitung.</string>
+  <string name="tut_score_scoop">Kalahkan dia di ketiga baris, itu sapu bersih: %1$s lagi darinya.</string>
+  <string name="tut_score_scoop_only">Kalahkan dia di ketiga baris, itu sapu bersih: %1$s darinya.</string>
+  <string name="tut_score_home">Sapu bersih ketiga lawan sekaligus, itu home run: %1$s lagi dari masing-masing.</string>
+  <string name="tut_score_special">Bonus baris memberi poin dari setiap lawan, apa pun hasil barisnya: %1$s.</string>
+  <string name="tut_score_special_win">Bonus baris memberi poin dari setiap lawan yang barisnya dikalahkan: %1$s.</string>
+  <string name="tut_score_dragon">2 sampai A, ke-13 angka lengkap (naga): %1$s dari masing-masing.</string>
+  <string name="tut_score_change">Tiap meja menghitung skor Capsa Susun dengan cara berbeda, jadi semua angka ini bisa diubah di Setelan › Aturan, dengan preset untuk cara yang umum.</string>
+  <string name="tut_try_title">Coba susun</string>
+  <string name="tut_try_text">Susun kartu ini: ketuk kartu untuk memilihnya, lalu ketuk baris. Tidak dihitung atau dicatat.</string>
+  <string name="tut_try_check">Tanya AI</string>
+  <string name="tut_try_best">Susunanmu adalah susunan terbaik AI!</string>
+  <string name="tut_try_rank">Susunanmu peringkat #%1$d dari %2$d, %3$s poin di bawah yang terbaik.</string>
+  <string name="tut_try_extra">Ada susunan lain yang mengalahkan punyamu di setiap baris.</string>
+  <string name="tut_try_best_rows">Terbaik menurut AI:</string>
+  <string name="tut_try_why">As-nya ditaruh di atas dan pair terkecil melengkapi full house: pair As di atas jauh lebih sering menang daripada K saja, dan full house dinilai dari triss-nya, apa pun pair-nya.</string>
+  <string name="tut_try_again">Coba lagi</string>
+  <string name="tut_tips_title">Tips dari AI</string>
+  <string name="tut_tips_text">Dari analisis AI atas 10.000 kartu acak dengan aturan Sederhana:</string>
+  <string name="tut_end_title">Siap</string>
+  <string name="tut_end_text">Berlatih melawan tiga pemain AI, sebanyak yang kamu mau; setelah tiap ronde, lihat bagaimana AI akan menyusunnya. Bantuan di meja menjelaskan tombol-tombolnya.</string>
+  <string name="tour_skip">Lewati tur</string>
+  <string name="tour_next">Lanjut</string>
+  <string name="tour_prev">Kembali</string>
+  <string name="tour_done">Selesai</string>
+  <string name="tour_play_title">Latihan</string>
+  <string name="tour_play">Mainkan ronde melawan tiga pemain AI. Ketuk kartu (atau geser melewati beberapa) untuk memilihnya, lalu ketuk baris untuk menaruhnya.</string>
+  <string name="tour_confirm_title">Mainkan kartumu</string>
+  <string name="tour_confirm">Jika ketiga baris penuh dan tidak salah susun, mainkan: kamu melihat baris semua pemain dan poinnya, lalu analisis AI atas kartumu. Ronde lalu menampilkan ronde sebelumnya saat kamu menyusun yang berikutnya.</string>
+  <string name="tour_rules_title">Aturanmu</string>
+  <string name="tour_rules">Tiap meja memainkan Capsa Susun dengan cara berbeda, jadi setiap angka bisa kamu atur: poin per baris, sapu bersih, home run, bonus baris, naga, bahkan apakah A-2-3-4-5 termasuk straight. AI bermain dan menganalisis dengan aturan pilihanmu.</string>
+  <string name="tour_analyze_title">Analisis AI</string>
+  <string name="tour_analyze">Pilih 13 kartu apa saja dan AI menilai setiap susunan yang masuk akal. Ini bukan daftar aturan if-else, melainkan jaringan saraf yang dilatih dengan bermain melawan dirinya sendiri: ia memperkirakan skor rata-rata tiap susunan melawan lawan-lawannya.</string>
+  <string name="tour_battle_title">Tanding</string>
+  <string name="tour_battle">Bertanding dengan teman di satu room: permainan meja, atau kontes teka-teki di mana semua orang menyusun kartu yang sama dan AI menilai siapa yang menyusun paling baik.</string>
+  <string name="tour_records_title">Riwayat</string>
+  <string name="tour_records">Setiap ronde yang kamu mainkan, grafik skormu, dan ronde yang kamu simpan; buka mana saja untuk menganalisisnya lagi.</string>
+  <string name="tour_settings_title">Setelan</string>
+  <string name="tour_settings">Aturan, lawanmu, tampilan, dan ukuran teks. Tutorial dan tur ini juga ada di sini.</string>
+  <string name="tour_end_title">Tur selesai</string>
+  <string name="tour_end">Baru mengenal Capsa Susun? Tutorial mengajarkan aturannya dalam beberapa halaman.</string>
+  <string-array name="tut_tips">
+    <item>Jangan asal taruh lima kartu terkuatmu di bawah. Terkuat di bawah, berikutnya di tengah, sisanya di atas hanya jadi cara terbaik sekitar satu dari delapan ronde, dan merugikan sekitar setengah poin per ronde.</item>
+    <item>Manfaatkan baris atas: susunan terbaik punya pair atau lebih di atas pada enam dari sepuluh ronde. Tanpa pair, taruh As di sana (atau K).</item>
+    <item>Memecah pair tidak apa-apa: dengan dua atau tiga pair, susunan terbaik lebih sering memecah satu pair daripada tidak.</item>
+    <item>Full house memakai pair terkecilmu (sembilan dari sepuluh kali): simpan pair yang lebih besar untuk baris lain.</item>
+    <item>Flush tidak selalu layak: dua dari tiga ronde punya lima kartu satu lambang, tetapi hanya separuhnya paling baik disusun dengan flush.</item>
+    <item>Jangan terlalu pusing: dengan aturan Sederhana, susunan terbaik dan terbaik kedua biasanya hanya berbeda sekitar 0,01 poin. Aturan yang menghitung baris (Taiwan) kurang memaafkan.</item>
+    <item>Kebanyakan ronde sedikit rugi: bahkan disusun terbaik, hanya empat dari sepuluh yang bernilai lebih dari nol. Poinnya datang dari sedikit ronde yang besar.</item>
+    <item>Setelah tiap ronde, Analisis kartuku menunjukkan perbandingan susunanmu dengan yang terbaik: cara tercepat untuk belajar.</item>
+  </string-array>
+</resources>

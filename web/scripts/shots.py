@@ -25,6 +25,19 @@ SIZES = {
     'laptop': (1280, 720, False, 'zh-TW'),
     'fhd': (1920, 1080, False, 'zh-TW'),
     'qhd': (2560, 1440, False, 'zh-TW'),
+    # The other languages (by name: shots.py URL OUT phone-ja,laptop-ja,...): Japanese at every kind of size.
+    'phone-ja': (412, 840, False, 'ja-JP'),
+    'phone-ja-land': (915, 380, False, 'ja-JP'),
+    'small-ja': (360, 640, False, 'ja-JP'),
+    'tablet-ja': (800, 1180, False, 'ja-JP'),
+    'laptop-ja': (1280, 720, False, 'ja-JP'),
+    'desktop-ja': (1440, 900, False, 'ja-JP'),
+    'phone-hk': (412, 840, False, 'zh-HK'),
+    'laptop-hk': (1280, 720, False, 'zh-HK'),
+    'phone-cn': (412, 840, False, 'zh-CN'),
+    'phone-vi': (412, 840, False, 'vi-VN'),
+    'laptop-vi': (1280, 720, False, 'vi-VN'),
+    'phone-id': (412, 840, False, 'id-ID'),
 }
 # Phone and tablet: these must not change with the computer's layouts (scripts/shotdiff.py compares two runs).
 MOBILE = ['phone', 'phone-en', 'phone-land', 'small', 'tablet']
@@ -49,12 +62,32 @@ random.Random(7).shuffle(_deck)
 HANDS = [_deck[i * 13:(i + 1) * 13] for i in range(4)]
 
 
+# The visible elements whose own text overflows a box that clips it (an ellipsis, or hidden overflow).
+CUT = """() => {
+  const out = new Set();
+  for (const el of document.querySelectorAll('body *')) {
+    if (![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height || r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth) continue;
+    const cs = getComputedStyle(el);
+    if (cs.visibility === 'hidden' || cs.display === 'inline') continue;
+    const wide = el.scrollWidth > el.clientWidth + 1 && (cs.overflowX === 'hidden' || cs.overflowX === 'clip');
+    const tall = el.scrollHeight > el.clientHeight + 1 && (cs.overflowY === 'hidden' || cs.overflowY === 'clip');
+    if (wide || tall) out.add(el.textContent.trim().replace(/\\s+/g, ' ').slice(0, 100));
+  }
+  return [...out];
+}"""
+
+
 def wait_ready(page):
     page.wait_for_function('window.thirteen && window.thirteen.app.ready', timeout=60000)
     page.wait_for_timeout(300)
 
 if only == ['mobile']:
     only = MOBILE
+# Without names, the zh-TW and en sizes only.
+if not only:
+    only = [n for n, v in SIZES.items() if v[3] in ('zh-TW', 'en-US')]
 
 with sync_playwright() as p:
     browser = p.firefox.launch()
@@ -73,7 +106,12 @@ with sync_playwright() as p:
         # The same four hands every run (the engine deals at random, in its worker).
         page.evaluate('async (h) => { await window.thirteen.app.deal(h); }', HANDS)
         page.wait_for_timeout(300)
-        shot = lambda tag: page.screenshot(path=str(out / f'{name}-{tag}.png'))
+        def shot(tag, page=page, name=name):
+            page.screenshot(path=str(out / f'{name}-{tag}.png'))
+            # Text the layout cuts off or ends in "…", for a look (some is meant to be): NAME-TAG-cut.txt.
+            cut = page.evaluate(CUT)
+            if cut:
+                (out / f'{name}-{tag}-cut.txt').write_text('\n'.join(cut) + '\n')
         shot('1-arrange')
         page.evaluate('() => { window.thirteen.app.play.sortBySuit = true; }')
         page.wait_for_timeout(200)

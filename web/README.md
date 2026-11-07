@@ -12,6 +12,7 @@ bar of screens at the bottom) and on a desktop (a rail at the side), with the sa
 | `build-ort-wasm.sh` | Builds the reduced ONNX Runtime (the app's version and operators, `android/ort-ops.config`) as a WebAssembly static library. |
 | `build-engine.sh` | Builds the engine into `engine-files/` (`engine.js`, `engine.wasm`) and copies the built-in network there (`run2_net10.onnx`). |
 | `scripts/strings.mjs` | The app's strings (`android/.../res/values*/strings.xml`) to `src/generated/strings.json`; run by `npm run dev` and `npm run build`. |
+| `src/lib/i18n.svelte.ts`, `desk-strings.ts`, `strings/*.ts` | The languages (`LANGS`, the settings' order) and the page's own words: English and Taiwan's in the first two, the others' in `strings/<lang>.ts`. |
 | `scripts/shots.py` | Screenshots in headless Firefox (playwright) at phone and desktop sizes. |
 | `scripts/desktest.py`, `scripts/tutest.py` | A computer's mouse and keys; the welcome card, tutorial, tour, last hand, sweeps and the cursor keys (playwright). |
 | `scripts/cachetest.py` | The engine and the network from Cache Storage, in Firefox and Chromium (playwright). |

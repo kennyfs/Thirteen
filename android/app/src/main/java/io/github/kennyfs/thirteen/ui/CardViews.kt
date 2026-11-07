@@ -1,5 +1,7 @@
 package io.github.kennyfs.thirteen.ui
 
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -92,6 +94,14 @@ fun rowWidth(n: Int, width: Dp, gap: Dp = CARD_GAP): Dp = width * n + gap * (n -
  */
 @Composable
 fun textRoom(sp: Int): Dp = with(LocalDensity.current) { 14.sp.toDp() } * (sp / 14f)
+
+/**
+ * A name in a tight place (a tile, a row's label) on one line: it shrinks, to [min] of the style's size at most, before
+ * it ends in "…". Some languages run far longer than Chinese, for which the places were measured.
+ */
+fun shrinking(style: TextStyle, min: Float = SHRINK_MIN) = TextAutoSize.StepBased(style.fontSize * min, style.fontSize, 0.25.sp)
+
+const val SHRINK_MIN = 0.8f
 
 /** The row labels of the current language, for Cards.rowLabel. */
 @Composable

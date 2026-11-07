@@ -12,7 +12,7 @@
   import { remarkText } from '../lib/remarks';
   import { notableQGap, ROYALTIES } from '../lib/rules';
   import { LINE_GAP, rowWidth } from '../lib/sizing';
-  import { fmtQ, textRoom, ui } from '../lib/ui.svelte';
+  import { fitRem, fmtQ, SHRINK_MIN, textRoom, textWidth, ui } from '../lib/ui.svelte';
   import RowCards from './RowCards.svelte';
   import ThreeRows from './ThreeRows.svelte';
 
@@ -76,10 +76,13 @@
     return { label: String(ranks[i]), strong: false };
   }
 
+  // What the names of tiles `ks` need, shrunk as far as they may, with the tile's padding: as the app's ProbGrid, the
+  // tiles go by their names (a Japanese or a Vietnamese one is longer than a figure).
+  const nameRoom = (ks: number[]) => Math.max(...ks.map((k) => textWidth(names[k], 13) * SHRINK_MIN + 12));
   function probLines(width: number, pane: boolean): number[][] {
-    const tile = textRoom(62);
+    const tile = Math.max(textRoom(62), nameRoom(SHOWN));
     const fit = Math.floor((width + 4) / (tile + 4));
-    const three = (width - 8) / 3 >= tile * 0.85;
+    const three = (width - 8) / 3 >= Math.max(textRoom(62) * 0.85, nameRoom([5, 6, 7]));
     if (pane) return three ? [[0, 1], [2, 3], [5, 6, 7]] : [[0, 1], [2, 3], [5, 6], [7]];
     if (fit >= 7) return [SHOWN];
     if (fit >= 4) return [[0, 1, 2, 3], [5, 6, 7]];
@@ -102,12 +105,13 @@
   {@const p = cd.probs!}
   <div class="grid">
     {#each probLines(width, pane) as line, li (li)}
-      {@const inline = (width - 4 * (line.length - 1)) / line.length >= textRoom(98)}
+      {@const each = (width - 4 * (line.length - 1)) / line.length}
+      {@const inline = each >= textRoom(98)}
       <div class="gline">
         {#each line as k (k)}
           {@const x = tone(k, p, best?.probs ?? null)}
           <div class="tile">
-            <span class="body-small dim ellipsis">{names[k]}</span>
+            <span class="body-small dim ellipsis" style:font-size={fitRem(names[k], 13, each - 12)}>{names[k]}</span>
             <span class="fig" class:inline>
               <span class="body-large nowrap" class:good={x.tone === 1} class:bad={x.tone === -1} class:bold={x.tone !== 0}>{pct(p[k])}</span>
               {#if x.tone !== 0}<span class="label-small nowrap" class:good={x.tone === 1} class:bad={x.tone === -1}>{diff(x.d)}</span>{/if}
@@ -119,7 +123,7 @@
     {#each Array(Math.ceil(lostShown.length / 2)) as _, li (li)}
       <div class="gline">
         {#each lostShown.slice(li * 2, li * 2 + 2) as k (k)}
-          <div class="tile"><span class="body-small dim ellipsis">{names[ROYALTY_LOST + k]}</span><span class="body-large">{pct(p[ROYALTY_LOST + k])}</span></div>
+          <div class="tile"><span class="body-small dim ellipsis" style:font-size={fitRem(names[ROYALTY_LOST + k], 13, (width - 4) / 2 - 12)}>{names[ROYALTY_LOST + k]}</span><span class="body-large">{pct(p[ROYALTY_LOST + k])}</span></div>
         {/each}
         {#if lostShown.slice(li * 2, li * 2 + 2).length === 1}<div class="tile blank"></div>{/if}
       </div>
@@ -228,10 +232,11 @@
   .left { display: flex; flex-direction: column; gap: 2px; flex: none; }
   .right { flex: 1; min-width: 0; display: flex; }
   .right > :global(.detail) { flex: 1; }
-  .detail { display: flex; flex-direction: column; gap: 4px; }
+  /* Never wider than its room for a long name (it shrinks, then ends in "…"). */
+  .detail { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .expected { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-  .grid { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-  .gline { display: flex; gap: 4px; flex: 1; }
+  .grid { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+  .gline { display: flex; gap: 4px; flex: 1; min-width: 0; }
   /* From the top: a line's tiles are one height, and their names and figures line up whichever have a difference. */
   .tile { flex: 1 1 0; min-width: 0; background: var(--surface-container-highest); border-radius: 8px; padding: 3px 6px;
     display: flex; flex-direction: column; justify-content: flex-start; }

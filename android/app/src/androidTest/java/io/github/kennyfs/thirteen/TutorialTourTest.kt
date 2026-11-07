@@ -1,5 +1,9 @@
 package io.github.kennyfs.thirteen
 
+import android.app.LocaleManager
+import android.os.Build
+import android.os.LocaleList
+
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
@@ -51,6 +55,10 @@ class TutorialTourTest {
   @Test
   fun welcomeTutorialTourLastHand() {
     shell("mkdir -p /data/local/tmp/tut")
+    // The app's language for the screenshots (the argument locale=ja, a tag), else as it is.
+    InstrumentationRegistry.getArguments().getString("locale")?.takeIf { it.isNotBlank() && Build.VERSION.SDK_INT >= 33 }?.let {
+      context.getSystemService(LocaleManager::class.java).applicationLocales = LocaleList.forLanguageTags(it)
+    }
     context.getSharedPreferences("settings", 0).edit().putBoolean("welcome.seen", false).commit()
     ActivityScenario.launch(MainActivity::class.java).use { scenario ->
       lateinit var vm: AppViewModel

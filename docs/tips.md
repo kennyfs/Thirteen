@@ -1,6 +1,6 @@
 # The tutorial's tips: the numbers behind them
 
-The tutorial's tips (`tut_tips` in the app's strings.xml, English and Chinese; the app's and the web page's tutorial)
+The tutorial's tips (`tut_tips` in the app's strings.xml, in each of its languages; the app's and the web page's tutorial)
 come from the network's own analysis, not from intuition: 10000 random hands (2500 deals x 4) each under `family` and
 `taiwan`, every undominated arrangement valued by run2_net10 (`thirteen gui` analyze, `python/tips`). "Best" is the
 network's top Q. Numbers are family's; taiwan's in brackets where they differ.

@@ -1,7 +1,7 @@
 <!-- The settings: the look, the language, the game (rules, computer players, networks), and about. -->
 <script lang="ts">
   import { TEXT_SCALE, type App, type ColorStyle, type DarkMode, type TextSize } from '../lib/app.svelte';
-  import { t, ta, type Lang } from '../lib/i18n.svelte';
+  import { LANGS, t, ta, type Lang } from '../lib/i18n.svelte';
   import { DESK_INPUTS, DESK_LINES } from '../lib/desk-keys';
   import { nav } from '../lib/nav.svelte';
   import { tour } from '../lib/tour.svelte';
@@ -42,8 +42,8 @@
         {#snippet trailing()}<Menu label={ta('dark_modes')[darks.indexOf(app.darkMode)]} options={darks.map((s, i) => [s, ta('dark_modes')[i]] as [DarkMode, string])}
           selected={app.darkMode} onselect={(v) => app.chooseDarkMode(v)} />{/snippet}
       </SettingRow>
-      <SettingRow title="Language · 語言">
-        {#snippet trailing()}<Menu label={app.lang === 'zh' ? '繁體中文' : 'English'} options={[['zh', '繁體中文'], ['en', 'English']] as [Lang, string][]}
+      <SettingRow title={app.lang === 'en' ? 'Language' : `${t('language')} · Language`}>
+        {#snippet trailing()}<Menu label={LANGS.find((l) => l.id === app.lang)!.name} options={LANGS.map((l) => [l.id, l.name] as [Lang, string])}
           selected={app.lang} onselect={(v) => app.chooseLang(v)} />{/snippet}
       </SettingRow>
 

@@ -379,7 +379,7 @@
   <string name="replay_title">重排這手牌</string>
   <string name="replay_note">不計分、不記錄</string>
   <string name="arrange_help_title">如何出牌</string>
-  <string name="arrange_help">• 點手牌選牌（手指滑過多張可一次選取），再點要放進的那一墩。\n• 也可以先點一墩，再點牌放進去。\n• 點墩上的牌可收回；長按一墩或按「全部取下」收回整墩。\n• 三墩放滿、而且頭墩 ≤ 中墩 ≤ 尾墩（沒有倒水），就可以按「出牌」。\n• 「依點數／依花色」切換手牌的排列方式，方便找對子、順子或同花。</string>
+  <string name="arrange_help">• 點手牌選牌（手指滑過多張可一次選取），再點要放進的那一墩。\n• 也可以先點一墩，再點牌放進去。\n• 點墩上的牌可收回；長按一墩或按「全部收回」收回整墩。\n• 三墩放滿、而且頭墩 ≤ 中墩 ≤ 尾墩（沒有倒水），就可以按「出牌」。\n• 「依點數／依花色」切換手牌的排列方式，方便找對子、順子或同花。</string>
   <string name="help">說明</string>
   <string name="nav_records">紀錄</string>
   <string name="records_practice">練習</string>
@@ -428,6 +428,8 @@
   <string name="tut_foul_bad">倒水：頭墩的一對比中墩的散牌大。</string>
   <string name="tut_foul_good">同樣的牌換個擺法：一對放中墩就沒問題。</string>
   <string name="list_sep">"、"</string>
+  <!-- Between the clauses of a line ("3 hands, Simple, 60 s"). -->
+  <string name="clause_sep">，</string>
   <string name="tut_score_title">計分</string>
   <string name="tut_score_rules">目前選的規則（%1$s），你和每一位對手之間：</string>
   <string name="tut_score_rows">每贏一墩：對方付你 %1$s 分（平手不算）。</string>

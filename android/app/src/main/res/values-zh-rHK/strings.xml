@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 繁體中文（香港）：香港用語與香港玩家對十三張的叫法。 -->
+<resources>
+  <string name="app_name">十三張</string>
+  <string name="nav_play">練習</string>
+  <string name="nav_analyze">分析</string>
+  <string name="nav_settings">設定</string>
+  <string name="ok">確定</string>
+  <string name="cancel">取消</string>
+  <string name="info">說明</string>
+  <string name="hand_n">第 %1$d 局</string>
+  <string name="you">你</string>
+  <string name="ready">可以出牌</string>
+  <string name="fouled">倒水：須頭道 ≤ 中道 ≤ 尾道</string>
+  <string name="confirm">出牌</string>
+  <string name="next_hand">下一局</string>
+  <string name="analyze_my_hand">分析我的牌</string>
+  <string name="fouled_short">倒水</string>
+  <string name="home_run">通殺</string>
+  <string name="row_room">%1$s只剩 %2$d 個位置</string>
+  <string name="fill_rows_first">請先放滿三道</string>
+  <string name="random">隨機</string>
+  <string name="last_hand">上一局</string>
+  <string name="clear">清除</string>
+  <string name="network">神經網絡</string>
+  <string name="analyze_info">Q 是這手牌的期望得分，對手假設是三個像這個神經網絡的玩家。列表只列出不會每一道都被別的擺法壓過的擺法，依 Q 由高到低排列。機率與首選差距明顯時，較好的標綠色、較差的標紅色。上方的評語會說你的擺法哪裡可以更好、首選偏攻擊還是防守，以及常見擺法的名稱。</string>
+  <string name="dragon">這手牌是一條龍。</string>
+  <string name="show_all">顯示全部 %1$d 個</string>
+  <string name="yours">你的擺法</string>
+  <string name="pick_13">請選 13 張牌</string>
+  <string name="n_recorded">已記錄 %1$d 局</string>
+  <string name="export">存成檔案</string>
+  <string name="share">分享</string>
+  <string name="clear_records">清除記錄</string>
+  <string name="reset_scores_short">分數歸零</string>
+  <string name="delete">刪除</string>
+  <string name="reset">重設</string>
+  <string name="clear_records_confirm">刪除全部 %1$d 局記錄？累計分數與局數也會歸零，練習重新派牌。需要的話請先匯出。</string>
+  <string name="reset_confirm">重設累計分數與局數？練習會重新派牌，記錄會保留。</string>
+  <string name="mc_samples">蒙地卡羅樣本數（對手模型：indep）</string>
+  <string name="networks">神經網絡</string>
+  <string name="load_weights">載入 .onnx 權重</string>
+  <string name="built_in">%1$s（內建）</string>
+  <string name="not_usable">無法使用的神經網絡：%1$s</string>
+  <string name="best">首選</string>
+  <string name="pick_n">再選 %1$d 張</string>
+  <string name="seat_pos">電腦 %1$d</string>
+  <string name="this_hand">本局 %1$s</string>
+  <string name="analyze_go">開始分析</string>
+  <string name="to_candidates">回到候選擺法</string>
+  <string-array name="row_names">
+    <item>頭道</item>
+    <item>中道</item>
+    <item>尾道</item>
+  </string-array>
+  <string-array name="row_labels">
+    <item></item>
+    <item>散牌</item>
+    <item>一啤</item>
+    <item>兩啤</item>
+    <item>三條</item>
+    <item>蛇到</item>
+    <item>同花</item>
+    <item>俘虜</item>
+    <item>四條</item>
+    <item>同花順到</item>
+  </string-array>
+  <string-array name="kinds">
+    <item>神經網絡</item>
+    <item>蒙地卡羅</item>
+    <item>逐道獨立（indep）</item>
+  </string-array>
+  <string-array name="prob_names">
+    <item>打槍</item>
+    <item>被打槍</item>
+    <item>通殺</item>
+    <item>被通殺</item>
+    <item>做莊</item>
+    <item>贏頭道</item>
+    <item>贏中道</item>
+    <item>贏尾道</item>
+    <item>輸頭道</item>
+    <item>輸中道</item>
+    <item>輸尾道</item>
+    <item>被頭道三條贏</item>
+    <item>被中道俘虜贏</item>
+    <item>被中道四條贏</item>
+    <item>被中道同花順贏</item>
+    <item>被尾道四條贏</item>
+    <item>被尾道同花順贏</item>
+  </string-array>
+  <string name="ready_royalty">可以出牌 · 特殊牌型 +%1$s</string>
+  <string name="fouled_strict">倒水：嚴格規則下各道不可同大</string>
+  <string name="nav_rules">規則</string>
+  <string name="custom">自訂</string>
+  <string name="restore_preset">還原預設</string>
+  <string name="rules_next_hand">改了規則，離開這頁時練習會重新派牌（目前這手不保留），累計分數也會歸零。</string>
+  <string name="rules_play">影響玩法</string>
+  <string name="rules_play_note">這兩項會改變哪些擺法算倒水、牌型大小。</string>
+  <string name="rules_scoring">計分：每位對手付的分數</string>
+  <string name="rule_range">%1$s～%2$s</string>
+  <string name="rules_royalties">特殊牌型</string>
+  <string name="strict_rows">嚴格：頭 &lt; 中 &lt; 尾（同大算倒水）</string>
+  <string name="wheel">A-2-3-4-5</string>
+  <string name="on_win">特殊牌型只在贏過對方那一道時才收分</string>
+  <string name="legacy_warning">%1$s 是舊格式的網絡，沒有規則輸入，不論規則都照簡單規則出牌。</string>
+  <string name="total_so_far">累計 %1$s</string>
+  <string-array name="preset_notes">
+    <item>只算打槍、通殺與特殊牌型，各 1 分。</item>
+    <item>同簡單規則，但中道四條、同花順算 2 分。</item>
+    <item>每道 1 分，打槍 3，通殺每人再 6；頭道三條 3、中道四條 8／同花順 10、尾道四條 4／同花順 5、一條龍 36。</item>
+    <item>pagat.com 的 Chinese poker 玩法：每道 1 分，打槍 3，特殊牌型只在贏那一道時才算，嚴格規則。</item>
+  </string-array>
+  <string-array name="wheel_options">
+    <item>最小的蛇</item>
+    <item>第二大的蛇</item>
+    <item>不算蛇</item>
+  </string-array>
+  <string-array name="point_labels">
+    <item>每道</item>
+    <item>打槍</item>
+    <item>通殺（每人再付）</item>
+    <item>一條龍</item>
+  </string-array>
+  <string-array name="royalty_labels">
+    <item>頭道三條</item>
+    <item>中道俘虜</item>
+    <item>中道四條</item>
+    <item>中道同花順</item>
+    <item>尾道四條</item>
+    <item>尾道同花順</item>
+  </string-array>
+  <string-array name="category_names">
+    <item></item>
+    <item>散牌</item>
+    <item>一啤</item>
+    <item>兩啤</item>
+    <item>三條</item>
+    <item>蛇</item>
+    <item>同花</item>
+    <item>俘虜</item>
+    <item>四條</item>
+    <item>同花順</item>
+  </string-array>
+  <string-array name="shape_names">
+    <item>三啤</item>
+    <item>四啤</item>
+    <item>五啤</item>
+    <item>雙花</item>
+    <item>三花</item>
+    <item>雙蛇</item>
+    <item>三蛇</item>
+    <item>一蛇一花</item>
+    <item>雙俘虜</item>
+    <item>雙三條</item>
+  </string-array>
+  <string name="remark_same_best">你的擺法就是首選。</string>
+  <string name="remark_same_close">你的擺法與首選的差距在網絡誤差內，可算一樣好。</string>
+  <string name="remark_mistake">你的擺法：%1$s</string>
+  <string name="remark_sep"></string>
+  <string name="remark_missed">漏看了%1$s。</string>
+  <string name="remark_swapped">用%1$s取代%2$s更好。</string>
+  <string name="remark_times_two">兩個%1$s</string>
+  <string name="remark_broke">這手拆掉你的%1$s反而更好。</string>
+  <string name="remark_pair_to_front">把對子放頭道更好。</string>
+  <string name="remark_pair_out_of_front">對子留在中道、尾道，頭道放大的單張更好。</string>
+  <string name="remark_stronger_front">牌型一樣，但頭道可以更大。</string>
+  <string name="remark_detail">牌型一樣，差在搭配。</string>
+  <string name="remark_other">換一種牌型組合更好。</string>
+  <string name="remark_vs_mine_both">首選的打槍與被打槍機率全面勝過你的擺法。</string>
+  <string name="remark_vs_mine_attack">首選打槍較多，但被打槍也較多。</string>
+  <string name="remark_vs_mine_defense">首選被打槍較少，但打槍也較少。</string>
+  <string name="remark_only">這手只有一種牌型組合。</string>
+  <string name="remark_close">也有其他牌型組合幾乎一樣好。</string>
+  <string name="remark_both">首選的打槍與被打槍機率都勝過其他擺法。</string>
+  <string name="remark_attack">首選是攻擊型：%1$s較大，打槍多、被打槍也多。</string>
+  <string name="remark_defense">首選是防守型：%1$s較大，被打槍少、打槍也少。</string>
+  <string name="remark_rows_both">首選贏的道數與打槍都勝過其他牌型組合。</string>
+  <string name="remark_rows">首選以搶道為主，不拚打槍。</string>
+  <string name="remark_scoops_first">首選以打槍為主，犧牲一些道數。</string>
+  <string name="remark_strong">這手牌很強。</string>
+  <string name="remark_weak">這手牌偏弱，重點是少被打槍。</string>
+  <string name="remark_home_run">有機會通殺。</string>
+  <string name="nav_battle">對戰</string>
+  <string name="battle_name">你的暱稱</string>
+  <string name="battle_online">網絡</string>
+  <string name="battle_nearby">附近手機</string>
+  <string name="battle_server">伺服器地址</string>
+  <string name="battle_server_hint">例如 thirteen.example.com</string>
+  <string name="battle_puzzle">解題比賽</string>
+  <string name="battle_puzzle_info">所有人擺同樣的牌，每手扣掉你的擺法比 AI 首選少的分數，總扣分最少者勝，沒有運氣成分。</string>
+  <string name="battle_game">同桌對局</string>
+  <string name="battle_game_info">最多四人，空位由 AI 補上，總分最高者勝。</string>
+  <string name="battle_join">加入</string>
+  <string name="battle_pin">房號</string>
+  <string name="battle_pin_bad">PIN 是 6 位數字。</string>
+  <string name="battle_server_bad">請輸入伺服器地址（域名或 wss://…）。</string>
+  <string name="battle_join_room">加入房間</string>
+  <string name="battle_join_room_info">輸入別人給你的 6 位數房號。</string>
+  <string name="battle_search_again">重新搜尋</string>
+  <string name="battle_no_rooms">附近還沒有找到房間。</string>
+  <string name="battle_search">搜尋附近的房間</string>
+  <string name="battle_searching">附近的房間（按一下再輸入 PIN）：</string>
+  <string name="battle_nearby_failed">附近連線失敗：%1$s</string>
+  <string name="battle_permissions">附近模式需要藍牙與附近裝置的權限。</string>
+  <string name="battle_no_connection">無法連線：%1$s</string>
+  <string name="battle_lost">與房間的連線中斷了。</string>
+  <string name="battle_closed">房間已關閉。</string>
+  <string name="battle_err_version">房間（伺服器或開房的手機）使用的 app 版本不同，所有玩家必須使用相同版本，請更新 app。</string>
+  <string name="battle_err_no_room">找不到這個 PIN 的房間。</string>
+  <string name="battle_err_full">房間已滿。</string>
+  <string name="battle_err_started">對局已經開始了。</string>
+  <string name="battle_err_rate">嘗試太多次，請稍等幾分鐘。</string>
+  <string name="battle_err_busy">伺服器忙碌中，請稍後再試。</string>
+  <string name="battle_err_settings">不接受這些設定。</string>
+  <string name="battle_err_rows">這組擺法沒有用到你的 13 張牌。</string>
+  <string name="battle_err_not_allowed">現在無法這樣做。</string>
+  <string name="battle_hands">手數</string>
+  <string name="battle_hands_n">%1$d 手</string>
+  <string name="battle_time">每手時限</string>
+  <string name="battle_no_limit">不限</string>
+  <string name="battle_seconds">%1$d 秒</string>
+  <string name="battle_leave_title">離開對戰？</string>
+  <string name="battle_leave_lobby">你會離開這個房間。</string>
+  <string name="battle_leave_game">之後你的每一手都會像逾時一樣自動排好，離開後就無法再回來。</string>
+  <string name="battle_leave">離開</string>
+  <string name="battle_host">房主</string>
+  <string name="battle_away">離線</string>
+  <string name="battle_players">玩家（%1$d）</string>
+  <string name="battle_hand_of">第 %1$d／%2$d 手</string>
+  <string name="battle_set_count">已交 %1$d／%2$d</string>
+  <string name="battle_ready_count">%1$d／%2$d 人準備好</string>
+  <string name="battle_your_rank">你目前第 %1$d 名</string>
+  <string name="battle_rank">%1$d.</string>
+  <string name="battle_waiting">等待其他玩家…</string>
+  <string name="battle_best_rows">AI 首選</string>
+  <string name="battle_timed_out">（逾時）</string>
+  <string name="battle_next">下一手</string>
+  <string name="battle_over">最終結果</string>
+  <string name="battle_total_loss">總扣分 %1$s</string>
+  <string name="battle_hand_list">各手（按一下查看分析）</string>
+  <string name="battle_done">完成</string>
+  <string name="battle_nearby_host_note">房間由這部手機主持：其他人透過附近連線加入，AI 座位也在這部手機上計算。</string>
+  <string name="battle_this_hand">本手 %1$s</string>
+  <string name="battle_col_hand">本手</string>
+  <string name="battle_col_total">累計</string>
+  <string name="battle_col_hand_loss">本手扣分</string>
+  <string name="battle_col_total_loss">累計扣分</string>
+  <string name="battle_col_hand_rank">本手名次</string>
+  <string name="battle_hand_rank">%1$d／%2$d</string>
+  <string name="battle_to_summary">最終結果</string>
+  <string name="battle_analyze">分析</string>
+  <string name="battle_tap_player">按一位玩家，查看他這手牌的分析</string>
+
+  <!-- 改版後的畫面。 -->
+  <string name="back">返回</string>
+  <string name="increase">增加</string>
+  <string name="decrease">減少</string>
+  <string name="change">更改</string>
+  <string name="show_more">顯示更多</string>
+  <string name="analyzing">神經網絡思考中…</string>
+  <string name="hint_start">先選牌，再按要放進的那一道。</string>
+  <string name="hint_selected">已選 %1$d 張，按一道放進去。</string>
+  <string name="hint_armed">按牌放進%1$s，還要 %2$d 張。</string>
+  <string name="hint_left">還剩 %1$d 張。按道上的牌可收回。</string>
+  <string name="take_back_row">收回%1$s</string>
+  <string name="undo">復原</string>
+  <string name="take_all">全部收回</string>
+  <string name="sort_rank">依點數</string>
+  <string name="sort_suit">依花色</string>
+  <string name="sort_by_rank_on">目前依點數排，按一下改依花色</string>
+  <string name="sort_by_suit_on">目前依花色排，按一下改依點數</string>
+  <string name="row_win">你贏</string>
+  <string name="row_lose">你輸</string>
+  <string name="row_tie">打和</string>
+  <string name="vs_you_win">你贏他 %1$s 分</string>
+  <string name="vs_you_lose">你輸他 %1$s 分</string>
+  <string name="vs_you_even">和你打和</string>
+  <string name="scooped_by">被 %1$s 打槍</string>
+  <string name="remarks_title">講評</string>
+  <string name="candidates">候選擺法</string>
+  <string name="expected">期望得分</string>
+  <string name="less_than_best">比首選少 %1$s 分</string>
+  <string name="more_than_yours">比你的擺法多 %1$s 分</string>
+  <string name="yours_rank">%1$s · 第 %2$d 名</string>
+  <string name="pick_13_hint">選出 13 張牌</string>
+  <string name="source">來源</string>
+  <string name="from_records">從記錄挑一手</string>
+  <string name="this_game_rules_named">%1$s（該局）</string>
+  <string name="use_current_rules_named">改用目前規則：%1$s</string>
+  <string name="settings_look">顯示</string>
+  <string name="settings_game">遊戲</string>
+  <string name="settings_about">關於</string>
+  <string name="text_size">文字大小</string>
+  <string-array name="text_sizes">
+    <item>小</item>
+    <item>標準</item>
+    <item>大</item>
+  </string-array>
+  <string name="color_style">配色</string>
+  <string-array name="color_styles">
+    <item>牌桌綠</item>
+    <item>極簡</item>
+    <item>跟隨牆紙</item>
+  </string-array>
+  <string name="dark_mode">深色模式</string>
+  <string-array name="dark_modes">
+    <item>跟隨系統</item>
+    <item>關閉</item>
+    <item>開啟</item>
+  </string-array>
+  <string name="opponents_title">電腦對手</string>
+  <string name="opponents_all">3 位都是 %1$s</string>
+  <string name="opponents_info">神經網絡照它學到的方式出牌；蒙地卡羅會把每種擺法對上隨機發給對手的牌（對手用逐道獨立擺）試算；逐道獨立則是每一道分開估計。</string>
+  <string name="next_hand_note">修改從下一局起生效。</string>
+  <string-array name="kinds_short">
+    <item>神經網絡</item>
+    <item>蒙地卡羅</item>
+    <item>逐道獨立</item>
+  </string-array>
+  <string name="networks_summary">共 %1$d 個</string>
+  <string name="networks_info">可以載入 python/train.py 匯出的神經網絡（.onnx 檔），之後就能選給電腦對手和分析使用。</string>
+  <string name="built_in_note">內建</string>
+  <string name="legacy_note">舊格式的網絡：不論規則都照簡單規則出牌</string>
+  <string name="delete_network_confirm">刪除神經網絡 %1$s？</string>
+  <string name="records_title">記錄</string>
+  <string name="records_summary">已記錄 %1$d 局 · 收藏 %2$d 手 · 得分走勢</string>
+  <string name="records_info">你打的每一局都記錄在這部手機上：手牌、你的擺法、規則和花的時間，沒有其他資料，也不會自動傳出去。把這個檔案（JSONL）分享給開發者，可以用來訓練更好的電腦對手。</string>
+  <string name="records_list">全部記錄（新的在前）</string>
+  <string name="about_source">開放源碼（GPLv3），在 GitHub 上</string>
+  <string name="privacy_policy">私隱政策</string>
+  <string name="about_web">網頁版</string>
+  <string name="about_web_note">用瀏覽器玩，電腦也可以：%1$s</string>
+  <string name="about_play">Android app</string>
+  <string name="about_play_note">在 Google Play 上，可以和朋友對戰</string>
+  <string name="rules_changed">（已修改）</string>
+  <string-array name="preset_names">
+    <item>簡單規則</item>
+    <item>簡單規則（中道加倍）</item>
+    <item>台灣式（逐道計分）</item>
+    <item>Pagat</item>
+  </string-array>
+  <string-array name="suit_names">
+    <item>梅花</item>
+    <item>階磚</item>
+    <item>紅心</item>
+    <item>葵扇</item>
+  </string-array>
+  <string name="battle_how">怎樣連線</string>
+  <string name="battle_server_is">伺服器：%1$s</string>
+  <string name="battle_nearby_info">同一個地方的手機透過藍牙與 Wi-Fi 連線，不需要網絡。開房間的手機負責主持。</string>
+  <string name="battle_new_puzzle">開一場解題比賽</string>
+  <string name="battle_new_game">開一桌同桌對局</string>
+  <string name="battle_room_number">房號</string>
+  <string name="battle_room_number_info">請其他人在「加入房間」輸入這個號碼</string>
+  <string name="battle_settings">設定</string>
+  <string name="battle_rules_page_named">規則頁的規則：%1$s</string>
+  <string name="battle_start_mode">開始%1$s</string>
+  <string name="battle_wait_host">等待房主開始…</string>
+  <string name="battle_submit">交出擺法</string>
+  <string name="battle_standings">目前排名</string>
+  <string name="battle_done_mark">已交</string>
+  <string name="battle_thinking">思考中</string>
+  <string name="battle_place">第 %1$d 名</string>
+  <string name="replay_hand">重排這手牌</string>
+  <string name="favorite_add">收藏這手牌</string>
+  <string name="favorite_remove">取消收藏</string>
+  <string name="favorites_title">收藏的牌局</string>
+  <string name="favorites_empty">在結果畫面或記錄上按星星，就能收藏特別好或特別差的牌。</string>
+  <string name="chart_title">累計得分走勢</string>
+  <string name="chart_summary">%1$d 局 · 累計 %2$s · 平均每局 %3$s</string>
+  <string name="chart_rules">規則</string>
+  <string name="chart_empty">多打幾局，這裡就會畫出你的累計得分。</string>
+  <string name="chart_desc">累計得分圖：共 %1$d 局，最後是 %2$s</string>
+  <string name="analyze_this">分析這手牌</string>
+  <string name="records_share_title">給開發者</string>
+  <string name="favorite_short">收藏</string>
+  <string name="favorite_saved">已收藏</string>
+  <string name="replay_short">重排這手</string>
+  <string name="replay_title">重排這手牌</string>
+  <string name="replay_note">不計分、不記錄</string>
+  <string name="arrange_help_title">如何出牌</string>
+  <string name="arrange_help">• 按手牌選牌（手指滑過多張可一次選取），再按要放進的那一道。\n• 也可以先按一道，再按牌放進去。\n• 按道上的牌可收回；長按一道或按「全部收回」收回整道。\n• 三道放滿、而且頭道 ≤ 中道 ≤ 尾道（沒有倒水），就可以按「出牌」。\n• 「依點數／依花色」切換手牌的排列方式，方便找對子、蛇或同花。</string>
+  <string name="help">說明</string>
+  <string name="nav_records">記錄</string>
+  <string name="records_practice">練習</string>
+  <string name="records_game">同桌對局</string>
+  <string name="records_puzzle">解題比賽</string>
+  <string name="chart_puzzle_note">解題比賽的分數是你的擺法比首選少的期望分，越接近 0 越好。</string>
+  <string name="records_none">這一類還沒有記錄。</string>
+  <string name="ready_hint">可以出牌了</string>
+  <string name="records_battles">對戰</string>
+  <string name="favorite_battles_title">收藏的對戰</string>
+  <string name="favorite_battle_add">收藏這場對戰</string>
+  <string name="favorite_battle_remove">取消收藏這場對戰</string>
+  <string name="battle_record_size">%1$d／%2$d 手，%3$d 人</string>
+  <string name="battle_record_left">中途離開</string>
+  <string name="sort_rank_short">點數</string>
+  <string name="sort_suit_short">花色</string>
+  <string name="next_hand_short">下一局</string>
+  <string name="battle_next_short">下一手</string>
+  <string name="battle_submit_short">交出</string>
+  <!-- The welcome card, the tutorial (its tips from tips-summary.md's statistics) and the tour. -->
+  <string name="back_to_hand">回到這一局</string>
+  <string name="welcome_title">歡迎來玩十三張</string>
+  <string name="welcome_body">第一次玩十三張嗎？教學幾分鐘就能學會規則；導覽會介紹這個 app 的各項功能。之後也都能在「設定」裡找到。</string>
+  <string name="welcome_learn">看教學</string>
+  <string name="welcome_tour">導覽功能</string>
+  <string name="welcome_skip">直接開始</string>
+  <string name="tut_title">怎樣玩</string>
+  <string name="tut_note">幾頁學會規則、實際擺一手，還有 AI 統計出的貼士</string>
+  <string name="tour_title">功能導覽</string>
+  <string name="tour_note">介紹每個畫面的功能</string>
+  <string name="tut_next">下一頁</string>
+  <string name="tut_prev">上一頁</string>
+  <string name="tut_close">關閉</string>
+  <string name="tut_page">%1$d / %2$d</string>
+  <string name="tut_done">開始玩</string>
+  <string name="tut_goal_title">分成三道</string>
+  <string name="tut_goal_text">四個人各拿 13 張牌，分成三道：頭道 3 張、中道 5 張、尾道 5 張。大家同時亮牌，和每一位對手逐道比大小。之後就沒有其他動作了：輸贏全看你怎樣擺這 13 張牌。</string>
+  <string name="tut_goal_example">例如（頭道、中道、尾道）：</string>
+  <string name="tut_ranks_title">牌型大小</string>
+  <string name="tut_ranks_text">由大到小排列。牌型大的一定贏；同一種牌型比點數，A 最大、2 最小。花色不分大小，只用來湊同花。</string>
+  <string name="tut_ranks_front">頭道只有 3 張，所以只有三條、一對、散牌三種：三張連號或同花色在頭道不算什麼。</string>
+  <string name="tut_wheel">A-2-3-4-5 在目前的規則下：%1$s。</string>
+  <string name="tut_foul_title">不能倒水</string>
+  <string name="tut_foul_text">尾道要大於或等於中道，中道要大於或等於頭道。順序反了就是「倒水」，app 不會讓你出倒水的牌。</string>
+  <string name="tut_foul_strict">目前的規則是嚴格規則：兩道一樣大也算倒水。</string>
+  <string name="tut_foul_bad">倒水：頭道的一對比中道的散牌大。</string>
+  <string name="tut_foul_good">同樣的牌換個擺法：一對放中道就沒問題。</string>
+  <string name="list_sep">"、"</string>
+  <!-- Between the clauses of a line ("3 hands, Simple, 60 s"). -->
+  <string name="clause_sep">，</string>
+  <string name="tut_score_title">計分</string>
+  <string name="tut_score_rules">目前選的規則（%1$s），你和每一位對手之間：</string>
+  <string name="tut_score_rows">每贏一道：對方付你 %1$s 分（打和不算）。</string>
+  <string name="tut_score_norows">只贏一、兩道不算分，要三道全贏才算。</string>
+  <string name="tut_score_scoop">三道都贏過同一位對手叫「打槍」：對方再多付 %1$s 分。</string>
+  <string name="tut_score_scoop_only">三道都贏過同一位對手叫「打槍」：對方付你 %1$s 分。</string>
+  <string name="tut_score_home">一次打槍三家叫「通殺」：每家再多付 %1$s 分。</string>
+  <string name="tut_score_special">特殊牌型不論輸贏，每家都要付分：%1$s。</string>
+  <string name="tut_score_special_win">特殊牌型贏過對方那一道才收分：%1$s。</string>
+  <string name="tut_score_dragon">13 張剛好 2 到 A 各一張叫「一條龍」：每家付 %1$s 分。</string>
+  <string name="tut_score_change">十三張各地算法不同，所以這些數字都能在「設定 › 規則」修改，也有常見玩法的預設。</string>
+  <string name="tut_try_title">實際擺一手</string>
+  <string name="tut_try_text">試著擺這手牌：按牌選取，再按要放進的那一道。這手不計分、不留記錄。</string>
+  <string name="tut_try_check">讓 AI 評分</string>
+  <string name="tut_try_best">你的擺法就是 AI 的最佳擺法！</string>
+  <string name="tut_try_rank">你的擺法在 %2$d 種中排第 %1$d，比最佳少 %3$s 分。</string>
+  <string name="tut_try_extra">有別的擺法每一道都比你的大。</string>
+  <string name="tut_try_best_rows">AI 的最佳擺法：</string>
+  <string name="tut_try_why">一對 A 放頭道，用最小的一對 6 湊俘虜：頭道有一對 A 比只放一張 K 容易贏得多，而俘虜只比三條的大小，配哪一對都一樣。</string>
+  <string name="tut_try_again">重擺</string>
+  <string name="tut_tips_title">AI 統計出的貼士</string>
+  <string name="tut_tips_text">從 AI 分析一萬手隨機牌（簡單規則）得到的結果：</string>
+  <string name="tut_end_title">準備好了</string>
+  <string name="tut_end_text">和三位 AI 對手練習，想玩幾局都可以；每局結束都能看 AI 會怎樣擺。牌桌上的「說明」會解釋各個按鈕。</string>
+  <string name="tour_skip">跳過導覽</string>
+  <string name="tour_next">下一步</string>
+  <string name="tour_prev">上一步</string>
+  <string name="tour_done">完成</string>
+  <string name="tour_play_title">練習</string>
+  <string name="tour_play">和三位 AI 對手練習。按牌（或手指滑過多張）選取，再按一道放進去。</string>
+  <string name="tour_confirm_title">出牌</string>
+  <string name="tour_confirm">三道放滿、沒有倒水就能出牌：可以看到每家的牌和得分，還有 AI 對你這手的分析。擺下一局時，按「上一局」可以回頭看上一局的結果。</string>
+  <string name="tour_rules_title">規則由你定</string>
+  <string name="tour_rules">十三張各地玩法不同，所以每個數字都能自己設定：每道幾分、打槍、通殺、特殊牌型、一條龍，連 A-2-3-4-5 算不算蛇都能改。AI 會照你選的規則出牌和分析。</string>
+  <string name="tour_analyze_title">AI 分析</string>
+  <string name="tour_analyze">選任意 13 張牌，AI 會評估每一種合理的擺法。它不是一堆 if-else 規則，而是靠自我對弈訓練出來的神經網絡，會估算每種擺法對上對手的平均得分。</string>
+  <string name="tour_battle_title">對戰</string>
+  <string name="tour_battle">和朋友開房對戰：同桌對局，或是大家拿同一手牌、由 AI 評比誰擺得最好的解題比賽。</string>
+  <string name="tour_records_title">記錄</string>
+  <string name="tour_records">每一局的記錄、分數走勢圖和收藏的牌，打開任何一局都能重新分析。</string>
+  <string name="tour_settings_title">設定</string>
+  <string name="tour_settings">規則、對手、外觀與字體大小都在這裡，教學和這個導覽也在這裡。</string>
+  <string name="tour_end_title">導覽結束</string>
+  <string name="tour_end">第一次玩十三張？教學幾頁就能學會規則。</string>
+  <string-array name="tut_tips">
+    <item>別只是把最強的五張放尾道。「最強放尾道、次強放中道、剩下放頭道」只有大約八手才有一手是最佳擺法，平均每手少將近半分。</item>
+    <item>頭道很重要：最佳擺法有六成頭道是一對以上。湊不出對子時，頭道最好放 A（其次是 K）。</item>
+    <item>拆對子沒關係：有兩、三對的手牌，最佳擺法超過一半會拆開某個對子。</item>
+    <item>湊俘虜用最小的那一對（九成如此），大的對子留給其他道。</item>
+    <item>同花不一定要用：三手牌有兩手湊得出同花，但其中只有一半用同花才是最佳。</item>
+    <item>不用太糾結：簡單規則下，第一和第二好的擺法通常只差約 0.01 分；逐道計分的規則（例如台灣式）差距就大得多。</item>
+    <item>大部分手牌期望值是負的：就算擺到最好，也只有四成手牌期望為正，分數主要來自少數大牌。</item>
+    <item>每局結束可以按「分析我的牌」，看看你的擺法和最佳差多少，這是進步最快的方法。</item>
+  </string-array>
+</resources>

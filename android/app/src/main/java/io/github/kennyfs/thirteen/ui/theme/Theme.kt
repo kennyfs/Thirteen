@@ -17,9 +17,11 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -124,6 +126,31 @@ private val AppTypography = Typography().let { t ->
   )
 }
 
+/**
+ * Japanese wraps by its own rules: never before a small kana, "ー" or a closing bracket (strict), and short texts
+ * (titles, labels, buttons) between phrases rather than inside a word (Android 13 and later).
+ */
+private val JapaneseTypography = AppTypography.let { t ->
+  val body = LineBreak(LineBreak.Strategy.Simple, LineBreak.Strictness.Strict, LineBreak.WordBreak.Default)
+  val short = LineBreak(LineBreak.Strategy.Balanced, LineBreak.Strictness.Strict, LineBreak.WordBreak.Phrase)
+  fun TextStyle.by(l: LineBreak) = copy(lineBreak = l)
+  t.copy(
+    displaySmall = t.displaySmall.by(short),
+    headlineLarge = t.headlineLarge.by(short),
+    headlineMedium = t.headlineMedium.by(short),
+    headlineSmall = t.headlineSmall.by(short),
+    titleLarge = t.titleLarge.by(short),
+    titleMedium = t.titleMedium.by(short),
+    titleSmall = t.titleSmall.by(short),
+    bodyLarge = t.bodyLarge.by(body),
+    bodyMedium = t.bodyMedium.by(body),
+    bodySmall = t.bodySmall.by(body),
+    labelLarge = t.labelLarge.by(short),
+    labelMedium = t.labelMedium.by(short),
+    labelSmall = t.labelSmall.by(short),
+  )
+}
+
 private val AppShapes = Shapes(
   extraSmall = RoundedCornerShape(4.dp),
   small = RoundedCornerShape(8.dp),
@@ -159,6 +186,7 @@ fun ThirteenTheme(style: ColorStyle, darkMode: DarkMode, textSize: TextSize, con
     LocalDark provides (dark && style == ColorStyle.MINIMAL),
     LocalDensity provides Density(density.density, density.fontScale * textSize.scale),
   ) {
-    MaterialTheme(colorScheme = scheme, typography = AppTypography, shapes = AppShapes, content = content)
+    val japanese = LocalConfiguration.current.locales[0].language == "ja"
+    MaterialTheme(colorScheme = scheme, typography = if (japanese) JapaneseTypography else AppTypography, shapes = AppShapes, content = content)
   }
 }

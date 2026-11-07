@@ -59,8 +59,8 @@ FROM node:24-slim AS web-page
 WORKDIR /src/web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci
-COPY android/app/src/main/res/values/strings.xml /src/android/app/src/main/res/values/strings.xml
-COPY android/app/src/main/res/values-zh-rTW/strings.xml /src/android/app/src/main/res/values-zh-rTW/strings.xml
+# Only the strings.xml of each language (.dockerignore).
+COPY android/app/src/main/res /src/android/app/src/main/res
 COPY web/ ./
 COPY --from=web-engine /src/web/engine-files engine-files
 RUN npm run build
