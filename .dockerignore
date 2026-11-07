@@ -6,7 +6,14 @@
 !protocol
 !server
 !web
-!android/app/src/main/res/values*/strings.xml
+# One line per language: the legacy builder (no BuildKit) drops a wildcard exception such as values*/strings.xml.
+!android/app/src/main/res/values/strings.xml
+!android/app/src/main/res/values-zh-rTW/strings.xml
+!android/app/src/main/res/values-ja/strings.xml
+!android/app/src/main/res/values-zh-rHK/strings.xml
+!android/app/src/main/res/values-zh-rCN/strings.xml
+!android/app/src/main/res/values-vi/strings.xml
+!android/app/src/main/res/values-in/strings.xml
 web/node_modules
 web/dist
 web/build
