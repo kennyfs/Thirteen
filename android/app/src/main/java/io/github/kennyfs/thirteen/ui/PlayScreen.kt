@@ -361,7 +361,7 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
       }
       ArrangeHelp(onFelt = false)
       Button(
-        onClick = onConfirm, Modifier.weight(1f).height(BIG_BUTTON), enabled = !busy && vm.rowsEval?.valid == true,
+        onClick = onConfirm, Modifier.weight(1f).height(BIG_BUTTON).tourAnchor("confirm"), enabled = !busy && vm.rowsEval?.valid == true,
         shape = RoundedCornerShape(18.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp),
       ) {
         if (busy) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 3.dp, color = MaterialTheme.colorScheme.onPrimary)
