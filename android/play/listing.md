@@ -18,9 +18,15 @@ screenshots (1920 x 1080) come from `STORE=1 ../device-tests.sh`, in `../build/s
 
 四人十三支：每人把 13 張牌擺成 3、5、5 張的頭、中、尾三墩，再和其他三家比牌。
 
+新手教學
+• 幾頁就學會規則，點數依你目前選的規則說明
+• 擺一手讓 AI 評分，並附上 AI 分析一萬手牌得出的技巧
+• 導覽帶你看過每個畫面
+
 練習
 • 和三位 AI 對手對局，對手可以選神經網路、蒙地卡羅或較簡單的模型
 • 每局結束都看得到四家的擺法、打槍、全壘打與得分
+• 擺下一手時，可以回看上一手的結果與分析
 
 分析
 • 列出這手牌的候選擺法，附上期望得分，以及打槍、被打槍、贏各墩的機率
@@ -55,9 +61,15 @@ Practice Chinese poker against a neural network, analyze hands, play friends.
 Four-player Thirteen (Chinese poker): set your 13 cards into rows of 3, 5 and 5, then compare them with the
 three other players.
 
+Learn
+• A short tutorial teaches the rules, with the points under the rules you chose
+• Set a hand the AI judges, and read tips from the AI's analysis of 10,000 hands
+• A tour shows each screen
+
 Practice
 • Play against three AI opponents: a neural network, Monte Carlo search, or simpler models
 • After every hand, see all four arrangements, scoops, home runs and points
+• While you set the next hand, look back at the last one's result and analysis
 
 Analysis
 • See the candidate arrangements of a hand with their expected points and the chances of scooping, being scooped
@@ -79,3 +91,17 @@ Also
 • Open source (GPLv3): https://github.com/kennyfs/Thirteen
 
 No money or betting is involved.
+
+## What's new (release notes, 500 characters each)
+
+### 2.1.1
+
+zh-TW:
+
+新增教學：幾頁就學會規則（點數依你目前選的規則說明），還能擺一手讓 AI 評分，並附上 AI 分析一萬手牌得出的技巧。導覽帶你看過每個畫面。「上一手」可在擺下一手時回看上一手的結果與分析。分析頁可滑過多張牌一次選取。
+
+en-US:
+
+New to Thirteen? A short tutorial teaches the rules (with the points under your own rules), lets you try a hand the
+AI judges, and shares tips from the AI's analysis of 10,000 hands. A tour shows each screen. Last hand brings back
+the previous hand's result and analysis while you set the next. Swipe across the cards on Analyze to pick them.
