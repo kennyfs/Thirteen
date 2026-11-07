@@ -167,7 +167,9 @@
   }
   function rowKey(e: KeyboardEvent, r: number) { if (locked) return; if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); vm.tapRow(r); } }
 
-  // ---- The cursor (the 'cursor' keys): a place in the hand left, and the sweep it carries (true picks, false unpicks) ----
+  // ---- The cursor (the 'cursor' keys): a place in the hand left, and its gear, as a car's: W shifts up, S down, between
+  // unpicking (false), moving alone (null, where it starts) and picking (true). Shifted into picking or unpicking, it does
+  // so to the card under it, and to each card it moves to after. ----
   let cursorAt = $state(0);
   let paint = $state<boolean | null>(null);
   const cursor = $derived(Math.max(0, Math.min(cursorAt, hand.length - 1)));
@@ -178,16 +180,13 @@
     cursorAt = Math.max(0, Math.min(hand.length - 1, cursor + step));
     if (paint !== null) vm.select([hand[cursorAt]], paint);
   }
-  function cursorStart() {
+  function cursorShift(up: boolean) {
+    if (paint === up) return;  // already picking (W) or unpicking (S)
+    if (paint !== null) { paint = null; vm.selectionDone(); return; }
     const c = hand[cursor];
     if (c === undefined) return;
-    paint = !vm.selected.has(c);
+    paint = up;
     vm.select([c], paint);
-  }
-  function cursorStop() {
-    if (paint === null) return;
-    paint = null;
-    vm.selectionDone();
   }
 
   // ---- Keys, by where they are on the keyboard (e.code) ----
@@ -216,8 +215,8 @@
       if (km.cursor.left.includes(code)) { cursorMove(-1); return done(); }
       if (km.cursor.right.includes(code)) { cursorMove(1); return done(); }
       if (km.perLine < 13 && (code === 'ArrowUp' || code === 'ArrowDown')) { cursorMove(code === 'ArrowUp' ? -km.perLine : km.perLine); return done(); }
-      if (code === km.cursor.on) { cursorStart(); return done(); }
-      if (code === km.cursor.off) { cursorStop(); return done(); }
+      if (code === km.cursor.on) { cursorShift(true); return done(); }
+      if (code === km.cursor.off) { cursorShift(false); return done(); }
     }
     if (code === km.sort) { vm.sortBySuit = !vm.sortBySuit; return done(); }
     if (km.undo.includes(code)) { vm.undo(); return done(); }

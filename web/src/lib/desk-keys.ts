@@ -2,9 +2,9 @@
 // how the hand is laid out, in one line of 13 (no line to change) or two of 7 and 6 (larger cards), any way with any
 // layout.
 //  - 'pick': ← → along the hand (↑ ↓ between the two lines) and Space picks, S sorts, Z undoes;
-//  - 'cursor': the left hand alone: A D (or ← →; ↑ ↓ between the lines) move a cursor along the hand, W starts a sweep
-//    from the card under it (picking, or unpicking from a picked card, as the mouse's) that each move carries on, S
-//    stops it; Space sorts, Backspace undoes;
+//  - 'cursor': the left hand alone: A D (or ← →; ↑ ↓ between the lines) move a cursor along the hand, and W S shift it,
+//    as a car's gears, between unpicking, moving alone (where it starts) and picking: picking, it picks the card under
+//    it and each it moves to; Space sorts, Backspace undoes;
 //  - 'keys': a key a card: in one line the letters' top row (Q W E … [ ] \), in two lines the keys as the cards are
 //    (A S D F G H J over Z X C V B N); Space sorts, Backspace undoes.
 // In every way 1 2 3 put the picked cards into a row, Shift and 1 2 3 take a row back, and L shows the hand before
@@ -43,7 +43,7 @@ export interface KeyMap {
   sortLabel: string;
   undo: string[];
   undoLabel: string;
-  /** The cursor's keys (the 'cursor' way): left, right, start a sweep, stop it. */
+  /** The cursor's keys (the 'cursor' way): left, right, and its gear up (toward picking) and down (toward unpicking). */
   cursor: { left: string[]; right: string[]; on: string; off: string } | null;
 }
 
