@@ -15,7 +15,7 @@
   <string name="you">Kamu</string>
   <string name="ready">Siap</string>
   <string name="fouled">Salah susun: atas ≤ tengah ≤ bawah</string>
-  <string name="confirm">Main</string>
+  <string name="confirm">Selesai</string>
   <string name="next_hand">Ronde berikutnya</string>
   <string name="analyze_my_hand">Analisis kartuku</string>
   <string name="fouled_short">Salah susun</string>
@@ -27,7 +27,7 @@
   <string name="clear">Hapus</string>
   <string name="network">Jaringan saraf</string>
   <string name="analyze_info">Q adalah hasil harapan kartu ini, dalam poin, melawan tiga pemain seperti jaringan saraf ini. Daftar ini berisi susunan yang tidak kalah dari susunan lain mana pun di semua baris, mulai dari Q terbaik. Peluang yang jauh berbeda dari peluang susunan terbaik berwarna hijau bila lebih baik dan merah bila lebih buruk. Komentar di atas menjelaskan bagaimana susunanmu bisa lebih baik, apakah susunan terbaik menyerang atau bertahan, dan nama pola yang umum.</string>
-  <string name="dragon">Kartu ini naga.</string>
+  <string name="dragon">Kartu ini adalah Naga.</string>
   <string name="show_all">Tampilkan semua %1$d</string>
   <string name="yours">Susunanmu</string>
   <string name="pick_13">Pilih 13 kartu</string>
@@ -191,7 +191,7 @@
   <string name="battle_nearby">Ponsel terdekat</string>
   <string name="battle_server">Server</string>
   <string name="battle_server_hint">mis. thirteen.example.com</string>
-  <string name="battle_puzzle">Kontes teka-teki</string>
+  <string name="battle_puzzle">Kontes susun</string>
   <string name="battle_puzzle_info">Semua orang menyusun kartu yang sama. Tiap ronde, kamu kehilangan selisih antara pilihanmu dan susunan terbaik jaringan saraf; total terkecil menang. Tanpa unsur keberuntungan.</string>
   <string name="battle_game">Permainan meja</string>
   <string name="battle_game_info">Hingga empat pemain, jaringan saraf mengisi kursi kosong; poin terbanyak menang.</string>
@@ -238,7 +238,7 @@
   <string name="battle_rank">#%1$d</string>
   <string name="battle_waiting">Menunggu yang lain…</string>
   <string name="battle_best_rows">Terbaik jaringan saraf</string>
-  <string name="battle_timed_out"> (waktu habis)</string>
+  <string name="battle_timed_out">\u0020(waktu habis)</string>
   <string name="battle_next">Ronde berikutnya</string>
   <string name="battle_over">Klasemen akhir</string>
   <string name="battle_total_loss">rugi %1$s</string>
@@ -353,7 +353,7 @@
   <string name="battle_how">Cara terhubung</string>
   <string name="battle_server_is">Server: %1$s</string>
   <string name="battle_nearby_info">Ponsel di ruangan yang sama, lewat Bluetooth dan Wi-Fi; tanpa internet. Ponsel yang membuka room yang menjalankannya.</string>
-  <string name="battle_new_puzzle">Mulai kontes teka-teki</string>
+  <string name="battle_new_puzzle">Mulai kontes susun kartu</string>
   <string name="battle_new_game">Mulai permainan meja</string>
   <string name="battle_room_number">Nomor room</string>
   <string name="battle_room_number_info">Yang lain memasukkan nomor ini di “Gabung ke room”.</string>
@@ -384,13 +384,13 @@
   <string name="replay_title">Mengulang ronde</string>
   <string name="replay_note">Tidak dihitung atau dicatat</string>
   <string name="arrange_help_title">Cara menyusun kartu</string>
-  <string name="arrange_help">• Ketuk kartu untuk memilihnya (atau geser melewati beberapa), lalu ketuk baris untuk menaruhnya.\n• Atau ketuk baris dulu, lalu kartunya.\n• Ketuk kartu di baris untuk mengambilnya kembali; tekan lama baris atau pakai Ambil semua untuk seluruh baris.\n• Jika semua baris penuh dan atas ≤ tengah ≤ bawah (tidak salah susun), ketuk tombol Main.\n• Urut angka / Urut lambang mengurutkan kartumu, agar pair, straight, atau flush mudah terlihat.</string>
+  <string name="arrange_help">• Ketuk kartu untuk memilihnya (atau geser melewati beberapa), lalu ketuk baris untuk menaruhnya.\n• Atau ketuk baris dulu, lalu kartunya.\n• Ketuk kartu di baris untuk mengambilnya kembali; tekan lama baris atau pakai Ambil semua untuk seluruh baris.\n• Jika semua baris penuh dan atas ≤ tengah ≤ bawah (tidak salah susun), ketuk tombol Selesai.\n• Urut angka / Urut lambang mengurutkan kartumu, agar pair, straight, atau flush mudah terlihat.</string>
   <string name="help">Bantuan</string>
   <string name="nav_records">Riwayat</string>
   <string name="records_practice">Latihan</string>
   <string name="records_game">Permainan meja</string>
-  <string name="records_puzzle">Kontes teka-teki</string>
-  <string name="chart_puzzle_note">Kontes teka-teki menilai berapa poin harapan susunanmu kurang dari yang terbaik; makin dekat ke 0 makin baik.</string>
+  <string name="records_puzzle">Kontes susun</string>
+  <string name="chart_puzzle_note">Kontes susun kartu menilai berapa poin harapan susunanmu kurang dari yang terbaik; makin dekat ke 0 makin baik.</string>
   <string name="records_none">Belum ada riwayat jenis ini.</string>
   <string name="ready_hint">Siap dimainkan</string>
   <string name="records_battles">Pertandingan</string>
@@ -466,13 +466,13 @@
   <string name="tour_play_title">Latihan</string>
   <string name="tour_play">Mainkan ronde melawan tiga pemain AI. Ketuk kartu (atau geser melewati beberapa) untuk memilihnya, lalu ketuk baris untuk menaruhnya.</string>
   <string name="tour_confirm_title">Mainkan kartumu</string>
-  <string name="tour_confirm">Jika ketiga baris penuh dan tidak salah susun, mainkan: kamu melihat baris semua pemain dan poinnya, lalu analisis AI atas kartumu. Ronde lalu menampilkan ronde sebelumnya saat kamu menyusun yang berikutnya.</string>
+  <string name="tour_confirm">Jika ketiga baris penuh dan tidak salah susun, tekan Selesai: kamu melihat baris semua pemain dan poinnya, lalu analisis AI atas kartumu. Ronde lalu menampilkan ronde sebelumnya saat kamu menyusun yang berikutnya.</string>
   <string name="tour_rules_title">Aturanmu</string>
   <string name="tour_rules">Tiap meja memainkan Capsa Susun dengan cara berbeda, jadi setiap angka bisa kamu atur: poin per baris, sapu bersih, home run, bonus baris, naga, bahkan apakah A-2-3-4-5 termasuk straight. AI bermain dan menganalisis dengan aturan pilihanmu.</string>
   <string name="tour_analyze_title">Analisis AI</string>
   <string name="tour_analyze">Pilih 13 kartu apa saja dan AI menilai setiap susunan yang masuk akal. Ini bukan daftar aturan if-else, melainkan jaringan saraf yang dilatih dengan bermain melawan dirinya sendiri: ia memperkirakan skor rata-rata tiap susunan melawan lawan-lawannya.</string>
   <string name="tour_battle_title">Tanding</string>
-  <string name="tour_battle">Bertanding dengan teman di satu room: permainan meja, atau kontes teka-teki di mana semua orang menyusun kartu yang sama dan AI menilai siapa yang menyusun paling baik.</string>
+  <string name="tour_battle">Bertanding dengan teman di satu room: permainan meja, atau kontes susun kartu di mana semua orang menyusun kartu yang sama dan AI menilai siapa yang menyusun paling baik.</string>
   <string name="tour_records_title">Riwayat</string>
   <string name="tour_records">Setiap ronde yang kamu mainkan, grafik skormu, dan ronde yang kamu simpan; buka mana saja untuk menganalisisnya lagi.</string>
   <string name="tour_settings_title">Setelan</string>
@@ -485,7 +485,7 @@
     <item>Memecah pair tidak apa-apa: dengan dua atau tiga pair, susunan terbaik lebih sering memecah satu pair daripada tidak.</item>
     <item>Full house memakai pair terkecilmu (sembilan dari sepuluh kali): simpan pair yang lebih besar untuk baris lain.</item>
     <item>Flush tidak selalu layak: dua dari tiga ronde punya lima kartu satu lambang, tetapi hanya separuhnya paling baik disusun dengan flush.</item>
-    <item>Jangan terlalu pusing: dengan aturan Sederhana, susunan terbaik dan terbaik kedua biasanya hanya berbeda sekitar 0,01 poin. Aturan yang menghitung baris (Taiwan) kurang memaafkan.</item>
+    <item>Jangan terlalu pusing: dengan aturan Sederhana, susunan terbaik dan terbaik kedua biasanya hanya berbeda sekitar 0,01 poin. Dengan aturan yang menghitung baris (Taiwan), selisihnya jauh lebih besar.</item>
     <item>Kebanyakan ronde sedikit rugi: bahkan disusun terbaik, hanya empat dari sepuluh yang bernilai lebih dari nol. Poinnya datang dari sedikit ronde yang besar.</item>
     <item>Setelah tiap ronde, Analisis kartuku menunjukkan perbandingan susunanmu dengan yang terbaik: cara tercepat untuk belajar.</item>
   </string-array>

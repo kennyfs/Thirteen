@@ -1,5 +1,5 @@
 // 繁體中文（香港）：網頁版獨有的字串（即 i18n.svelte.ts 的 WEB 與 desk-strings.ts 的 DESK），香港用語與十三張的叫法
-// （頭道／中道／尾道、蛇、俘虜、四條、通殺）。
+// （頭道／中道／尾道、蛇、夫佬、四條、通殺）。
 // App 的字串在 android/app/src/main/res/values-zh-rHK/strings.xml。
 import type { Table } from '../i18n.svelte';
 
@@ -60,7 +60,7 @@ export default {
   desk_lines_names: ['一排 13 張：不用換行', '兩排 7＋6：牌比較大'],
   desk_keys_note: '游標或每張牌一個鍵時：空白鍵排序、Backspace 復原。出牌後剩下的牌往前遞補。任何方式都可以用 Shift＋1 2 3 收回整道，L 看上一局。',
   mouse_title: '滑鼠',
-  mouse_tips: '按住拖過多張牌一次選取 · 按一道：放進選的牌 · 雙擊手牌：放進第一個有空位的道 · 右鍵按道：收回整道 · Shift＋按：連選',
+  mouse_tips: '按住拖過多張牌一次選取 · 按一道：放進選的牌 · 連按兩下手牌：放進第一個有空位的道 · 右鍵按道：收回整道 · Shift＋按一下：連選',
   rows_title: '牌道',
   cmp_title: '你的擺法與首選',
   cmp_same: '你的擺法就是首選。',

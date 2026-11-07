@@ -28,7 +28,7 @@
   <string name="analyze_info">Q はこのハンドの期待得点です（相手はこのニューラルネットのような3人と仮定）。リストには、ほかのどの並べ方にも全段で負けることのない並べ方だけを、Q の高い順に載せています。確率が最善の並べ方と大きく違うときは、良いほうを緑、悪いほうを赤で示します。上のコメントでは、あなたの並べ方の改善点、最善の並べ方が攻撃型か守備型か、よくある形の名前を説明します。</string>
   <string name="dragon">このハンドはドラゴンです。</string>
   <string name="show_all">%1$d件すべて表示</string>
-  <string name="yours">あなたの並べ方</string>
+  <string name="yours">あなた</string>
   <string name="pick_13">13枚選んでください</string>
   <string name="n_recorded">%1$dハンド記録済み</string>
   <string name="export">ファイルに保存</string>
@@ -57,7 +57,7 @@
   </string-array>
   <string-array name="row_labels">
     <item></item>
-    <item>役なし</item>
+    <item>ハイカード</item>
     <item>ペア</item>
     <item>ツーペア</item>
     <item>3カード</item>
@@ -134,7 +134,7 @@
   </string-array>
   <string-array name="category_names">
     <item></item>
-    <item>役なし</item>
+    <item>ハイカード</item>
     <item>ワンペア</item>
     <item>ツーペア</item>
     <item>スリーカード</item>
@@ -196,7 +196,7 @@
   <string name="battle_game_info">最大4人。空いた席は AI が埋めます。合計得点が最も多い人の勝ち。</string>
   <string name="battle_join">参加</string>
   <string name="battle_pin">ルーム番号</string>
-  <string name="battle_pin_bad">PIN は6桁の数字です。</string>
+  <string name="battle_pin_bad">ルーム番号は6桁の数字です。</string>
   <string name="battle_server_bad">サーバーのアドレス（ドメイン名か wss://…）を入力してください。</string>
   <string name="battle_join_room">ルームに参加</string>
   <string name="battle_join_room_info">教えてもらった6桁のルーム番号を入力してください。</string>
@@ -204,13 +204,13 @@
   <string name="battle_no_rooms">近くにルームはまだ見つかりません。</string>
   <string name="battle_search">近くのルームを探す</string>
   <string name="battle_searching">近くのルーム（タップして PIN を入力）：</string>
-  <string name="battle_nearby_failed">近くの接続に失敗しました：%1$s</string>
+  <string name="battle_nearby_failed">近くのスマホとの接続に失敗しました：%1$s</string>
   <string name="battle_permissions">近くのスマホと遊ぶには、Bluetooth と付近のデバイスの権限が必要です。</string>
   <string name="battle_no_connection">接続できません：%1$s</string>
   <string name="battle_lost">ルームとの接続が切れました。</string>
   <string name="battle_closed">ルームは閉じられました。</string>
   <string name="battle_err_version">ルーム（サーバーまたはホストのスマホ）のアプリのバージョンが違います。全員が同じバージョンを使う必要があります。アプリを更新してください。</string>
-  <string name="battle_err_no_room">その PIN のルームはありません。</string>
+  <string name="battle_err_no_room">その番号のルームは見つかりません。</string>
   <string name="battle_err_full">ルームは満員です。</string>
   <string name="battle_err_started">その対戦はもう始まっています。</string>
   <string name="battle_err_rate">試行回数が多すぎます。数分待ってください。</string>
@@ -243,7 +243,7 @@
   <string name="battle_total_loss">失点 %1$s</string>
   <string name="battle_hand_list">各ハンド（タップで分析）</string>
   <string name="battle_done">完了</string>
-  <string name="battle_nearby_host_note">このスマホがルームのホストです。ほかの人は近くの接続で参加し、AI の席もこのスマホで計算します。</string>
+  <string name="battle_nearby_host_note">このスマホがルームのホストです。ほかの人は「近くのスマホ」から参加し、AI の席もこのスマホで計算します。</string>
   <string name="battle_this_hand">今回 %1$s</string>
   <string name="battle_col_hand">今回</string>
   <string name="battle_col_total">累計</string>
@@ -312,7 +312,7 @@
     <item>オフ</item>
     <item>オン</item>
   </string-array>
-  <string name="opponents_title">CPU の相手</string>
+  <string name="opponents_title">CPU対戦相手</string>
   <string name="opponents_all">3人とも %1$s</string>
   <string name="opponents_info">ニューラルネットは学習したとおりに打ちます。モンテカルロは、各並べ方をほかの人にランダムに配ったハンド（段ごとの独立評価で並べる）と対戦させて試算します。段ごとの独立評価は、各段を別々に評価します。</string>
   <string name="next_hand_note">変更は次のハンドから反映されます。</string>
@@ -322,7 +322,7 @@
     <item>独立評価</item>
   </string-array>
   <string name="networks_summary">%1$d個</string>
-  <string name="networks_info">python/train.py で書き出したニューラルネット（.onnx ファイル）を読み込むと、CPU の相手と分析に使えるようになります。</string>
+  <string name="networks_info">python/train.py で書き出したニューラルネット（.onnx ファイル）を読み込むと、CPU対戦相手と分析に使えるようになります。</string>
   <string name="built_in_note">内蔵</string>
   <string name="legacy_note">古い形式：どのルールでもシンプルルールで打ちます</string>
   <string name="delete_network_confirm">ニューラルネット %1$s を削除しますか？</string>
@@ -357,12 +357,12 @@
   <string name="battle_room_number">ルーム番号</string>
   <string name="battle_room_number_info">ほかの人は「ルームに参加」でこの番号を入力します。</string>
   <string name="battle_settings">設定</string>
-  <string name="battle_rules_page_named">ルール画面のルール：%1$s</string>
+  <string name="battle_rules_page_named">ルール画面の設定：%1$s</string>
   <string name="battle_start_mode">%1$sを開始</string>
-  <string name="battle_wait_host">ホストの開始を待っています…</string>
-  <string name="battle_submit">並べ方を提出</string>
+  <string name="battle_wait_host">ホストが開始するのを待っています…</string>
+  <string name="battle_submit">並べ方を確定</string>
   <string name="battle_standings">現在の順位</string>
-  <string name="battle_done_mark">提出済み</string>
+  <string name="battle_done_mark">確定済み</string>
   <string name="battle_thinking">考え中</string>
   <string name="battle_place">%1$d位</string>
   <string name="replay_hand">このハンドを並べ直す</string>
@@ -389,7 +389,7 @@
   <string name="records_practice">練習</string>
   <string name="records_game">テーブル</string>
   <string name="records_puzzle">パズル</string>
-  <string name="chart_puzzle_note">パズル対戦のスコアは、あなたの並べ方が最善より低い期待得点の差です。0 に近いほど良い結果です。</string>
+  <string name="chart_puzzle_note">パズル対戦のスコアは、あなたの並べ方と最善の並べ方の期待得点の差です。0 に近いほど良い結果です。</string>
   <string name="records_none">この種類の記録はまだありません。</string>
   <string name="ready_hint">確定できます</string>
   <string name="records_battles">対戦</string>
@@ -402,13 +402,13 @@
   <string name="sort_suit_short">スート</string>
   <string name="next_hand_short">次へ</string>
   <string name="battle_next_short">次へ</string>
-  <string name="battle_submit_short">提出</string>
+  <string name="battle_submit_short">確定</string>
   <!-- ようこそカード、チュートリアル（ヒントは tips-summary.md の統計から）、ツアー。 -->
   <string name="back_to_hand">今のハンドに戻る</string>
   <string name="welcome_title">十三支へようこそ</string>
   <string name="welcome_body">十三支（チャイニーズポーカー）は初めてですか？チュートリアルなら数分でルールがわかります。ツアーではこのアプリでできることを紹介します。どちらもあとから「設定」で開けます。</string>
   <string name="welcome_learn">遊び方を見る</string>
-  <string name="welcome_tour">アプリを案内</string>
+  <string name="welcome_tour">ツアーを見る</string>
   <string name="welcome_skip">すぐに遊ぶ</string>
   <string name="tut_title">遊び方</string>
   <string name="tut_note">ルール・並べる練習・AI のヒント</string>
@@ -424,19 +424,19 @@
   <string name="tut_goal_example">例（トップ、ミドル、ボトム）：</string>
   <string name="tut_ranks_title">役の強さ</string>
   <string name="tut_ranks_text">強い順に並んでいます。役が強いほうが必ず勝ち、同じ役なら数字の大きいほうが勝ちます（A がいちばん強く、2 がいちばん弱い）。スートに強弱はなく、フラッシュを作るためだけに使います。</string>
-  <string name="tut_ranks_front">トップは3枚だけなので、スリーカード・ワンペア・役なしのどれかです。3枚の連番や同じスートは、トップでは役になりません。</string>
+  <string name="tut_ranks_front">トップは3枚だけなので、スリーカード・ワンペア・ハイカードのどれかです。3枚の連番や同じスートは、トップでは役になりません。</string>
   <string name="tut_wheel">今のルールでの A-2-3-4-5：%1$s。</string>
   <string name="tut_foul_title">ファウルに注意</string>
   <string name="tut_foul_text">ボトムはミドル以上、ミドルはトップ以上の強さにしなければなりません。この順番が崩れると「ファウル」で、このアプリではファウルの並べ方は確定できません。</string>
   <string name="tut_foul_strict">今のルールは厳格ルール：同じ強さの段もファウルになります。</string>
-  <string name="tut_foul_bad">ファウル：トップのワンペアがミドルの役なしより強い。</string>
+  <string name="tut_foul_bad">ファウル：トップのワンペアがミドルのハイカードより強い。</string>
   <string name="tut_foul_good">同じカードの正しい並べ方：ペアをミドルに。</string>
   <string name="list_sep">"、"</string>
   <!-- Between the clauses of a line ("3 hands, Simple, 60 s"). -->
   <string name="clause_sep">、</string>
   <string name="tut_score_title">得点</string>
   <string name="tut_score_rules">今のルール（%1$s）では、あなたと相手1人ずつの間で：</string>
-  <string name="tut_score_rows">段に1つ勝つごとに：相手から %1$s 点（引き分けは0）。</string>
+  <string name="tut_score_rows">1段勝つごとに：相手から %1$s 点（引き分けは0点）。</string>
   <string name="tut_score_norows">1段や2段勝っただけでは得点なし。3段すべて勝ったときだけ数えます。</string>
   <string name="tut_score_scoop">同じ相手に3段すべて勝つと「スクープ」：その相手からさらに %1$s 点。</string>
   <string name="tut_score_scoop_only">同じ相手に3段すべて勝つと「スクープ」：その相手から %1$s 点。</string>
@@ -449,7 +449,7 @@
   <string name="tut_try_text">このハンドを並べてみましょう：カードをタップして選び、段をタップします。得点にも記録にも含まれません。</string>
   <string name="tut_try_check">AI に判定してもらう</string>
   <string name="tut_try_best">AI の最善の並べ方と同じです！</string>
-  <string name="tut_try_rank">あなたの並べ方は%2$d通り中%1$d位、最善より %3$s 点低い期待得点です。</string>
+  <string name="tut_try_rank">あなたの並べ方は%2$d通り中%1$d位、期待得点は最善より %3$s 点低いです。</string>
   <string name="tut_try_extra">ほかの並べ方に全段で負けています。</string>
   <string name="tut_try_best_rows">AI の最善：</string>
   <string name="tut_try_why">A のペアをトップに置き、いちばん小さいペアでフルハウスを作ります。トップの A のペアは K 1枚よりずっと勝ちやすく、フルハウスの強さはスリーカードの部分で決まるので、組むペアはどれでも同じです。</string>
@@ -476,7 +476,7 @@
   <string name="tour_records">遊んだすべてのハンド、スコアのグラフ、保存したハンド。どれでも開いて分析し直せます。</string>
   <string name="tour_settings_title">設定</string>
   <string name="tour_settings">ルール、相手、見た目、文字サイズ。チュートリアルとこのツアーもここにあります。</string>
-  <string name="tour_end_title">ツアーはここまで</string>
+  <string name="tour_end_title">ツアー終了</string>
   <string name="tour_end">十三支は初めてですか？チュートリアルなら数ページでルールがわかります。</string>
   <string-array name="tut_tips">
     <item>いちばん強い5枚をボトムに置くだけではダメ。「最強をボトム、次をミドル、残りをトップ」が最善になるのは約8ハンドに1回だけで、1ハンドあたり平均約0.5点損します。</item>

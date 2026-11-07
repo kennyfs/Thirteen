@@ -16,7 +16,7 @@ export default {
   language: 'Ngôn ngữ',
   // DESK
   k_rows: 'Vào chi cuối / chi giữa / chi đầu',
-  k_pick: 'Đi dọc bài trên tay, chọn',
+  k_pick: 'Di chuyển trên bài, chọn',
   k_sort: 'Sắp xếp',
   k_undo: 'Hoàn tác',
   k_take_all: 'Lấy lại hết',
@@ -30,7 +30,7 @@ export default {
   k_replay: 'Xếp lại',
   k_back: 'Quay lại',
   k_move: 'Phương án khác',
-  k_deck: 'Đi dọc các lá, chọn',
+  k_deck: 'Di chuyển qua các lá, chọn',
   k_start: 'Phân tích',
   k_clear: 'Xóa',
   k_random: 'Bài ngẫu nhiên',

@@ -89,7 +89,7 @@
     <item>被尾道铁支赢</item>
     <item>被尾道同花顺赢</item>
   </string-array>
-  <string name="ready_royalty">可以出牌 · 特殊牌型 +%1$s</string>
+  <string name="ready_royalty">可以出牌 · 特殊加分 +%1$s</string>
   <string name="fouled_strict">倒水：严格道规则下各道不可同大</string>
   <string name="nav_rules">规则</string>
   <string name="custom">自定义</string>
@@ -99,17 +99,17 @@
   <string name="rules_play_note">这两项会改变哪些摆法算倒水、牌型大小。</string>
   <string name="rules_scoring">计分：每位对手付的分数</string>
   <string name="rule_range">%1$s～%2$s</string>
-  <string name="rules_royalties">特殊牌型</string>
+  <string name="rules_royalties">特殊加分</string>
   <string name="strict_rows">严格道：头 &lt; 中 &lt; 尾（同大算倒水）</string>
   <string name="wheel">A-2-3-4-5</string>
-  <string name="on_win">特殊牌型只在赢过对方那一道时才收分</string>
+  <string name="on_win">特殊加分只在赢过对方那一道时才收分</string>
   <string name="legacy_warning">%1$s 是旧格式的网络，没有规则输入，不论规则都按简单规则打。</string>
   <string name="total_so_far">累计 %1$s</string>
   <string-array name="preset_notes">
-    <item>只算打枪、全垒打与特殊牌型，各 1 分。</item>
+    <item>只算打枪、全垒打与特殊加分，各 1 分。</item>
     <item>同简单规则，但中道铁支、同花顺算 2 分。</item>
     <item>每道 1 分，打枪 3，全垒打每人再 6；冲三 3、中道铁支 8／同花顺 10、尾道铁支 4／同花顺 5、一条龙 36。</item>
-    <item>pagat.com 的 Chinese poker 玩法：每道 1 分，打枪 3，特殊牌型只在赢那一道时才算，严格道。</item>
+    <item>pagat.com 的 Chinese poker 玩法：每道 1 分，打枪 3，特殊加分只在赢那一道时才算，严格道。</item>
   </string-array>
   <string-array name="wheel_options">
     <item>最小的顺子</item>
@@ -143,9 +143,9 @@
     <item>同花顺</item>
   </string-array>
   <string-array name="shape_names">
-    <item>三轮车</item>
-    <item>四轮车</item>
-    <item>五轮车</item>
+    <item>三对</item>
+    <item>四对</item>
+    <item>五对</item>
     <item>双同花</item>
     <item>三同花</item>
     <item>双顺</item>
@@ -155,7 +155,7 @@
     <item>双三条</item>
   </string-array>
   <string name="remark_same_best">你的摆法就是首选。</string>
-  <string name="remark_same_close">你的摆法与首选的差距在网络误差内，可算一样好。</string>
+  <string name="remark_same_close">你的摆法与首选的差距在神经网络误差内，可算一样好。</string>
   <string name="remark_mistake">你的摆法：%1$s</string>
   <string name="remark_sep"></string>
   <string name="remark_missed">漏看了%1$s。</string>
@@ -163,7 +163,7 @@
   <string name="remark_times_two">两个%1$s</string>
   <string name="remark_broke">这手拆掉你的%1$s反而更好。</string>
   <string name="remark_pair_to_front">把对子放头道更好。</string>
-  <string name="remark_pair_out_of_front">对子留在中尾道，头道放大单张更好。</string>
+  <string name="remark_pair_out_of_front">对子留在中尾道，头道放一张大牌更好。</string>
   <string name="remark_stronger_front">牌型一样，但头道可以更大。</string>
   <string name="remark_detail">牌型一样，差在搭配。</string>
   <string name="remark_other">换一种牌型组合更好。</string>
@@ -228,7 +228,7 @@
   <string name="battle_away">离线</string>
   <string name="battle_players">玩家（%1$d）</string>
   <string name="battle_hand_of">第 %1$d／%2$d 手</string>
-  <string name="battle_set_count">已交 %1$d／%2$d</string>
+  <string name="battle_set_count">已提交 %1$d／%2$d</string>
   <string name="battle_ready_count">%1$d／%2$d 人准备好</string>
   <string name="battle_your_rank">你目前第 %1$d 名</string>
   <string name="battle_rank">%1$d.</string>
@@ -357,9 +357,9 @@
   <string name="battle_rules_page_named">规则页的规则：%1$s</string>
   <string name="battle_start_mode">开始%1$s</string>
   <string name="battle_wait_host">等待房主开始…</string>
-  <string name="battle_submit">交出摆法</string>
+  <string name="battle_submit">提交摆法</string>
   <string name="battle_standings">目前排名</string>
-  <string name="battle_done_mark">已交</string>
+  <string name="battle_done_mark">已提交</string>
   <string name="battle_thinking">思考中</string>
   <string name="battle_place">第 %1$d 名</string>
   <string name="replay_hand">重排这手牌</string>
@@ -399,7 +399,7 @@
   <string name="sort_suit_short">花色</string>
   <string name="next_hand_short">下一局</string>
   <string name="battle_next_short">下一手</string>
-  <string name="battle_submit_short">交出</string>
+  <string name="battle_submit_short">提交</string>
   <!-- The welcome card, the tutorial (its tips from tips-summary.md's statistics) and the tour. -->
   <string name="back_to_hand">回到这一局</string>
   <string name="welcome_title">欢迎来玩十三水</string>
@@ -438,8 +438,8 @@
   <string name="tut_score_scoop">三道都赢过同一位对手叫“打枪”：对方再多付 %1$s 分。</string>
   <string name="tut_score_scoop_only">三道都赢过同一位对手叫“打枪”：对方付你 %1$s 分。</string>
   <string name="tut_score_home">一次打枪三家叫“全垒打”：每家再多付 %1$s 分。</string>
-  <string name="tut_score_special">特殊牌型不论输赢，每家都要付分：%1$s。</string>
-  <string name="tut_score_special_win">特殊牌型赢过对方那一道才收分：%1$s。</string>
+  <string name="tut_score_special">特殊加分不论输赢，每家都要付分：%1$s。</string>
+  <string name="tut_score_special_win">特殊加分赢过对方那一道才收分：%1$s。</string>
   <string name="tut_score_dragon">13 张刚好 2 到 A 各一张叫“一条龙”：每家付 %1$s 分。</string>
   <string name="tut_score_change">十三水各地算法不同，所以这些数字都能在“设置 › 规则”修改，也有常见玩法的预设。</string>
   <string name="tut_try_title">实际摆一手</string>
@@ -464,7 +464,7 @@
   <string name="tour_confirm_title">出牌</string>
   <string name="tour_confirm">三道放满、没有倒水就能出牌：可以看到每家的牌和得分，还有 AI 对你这手的分析。摆下一局时，按“上一局”可以回头看上一局的结果。</string>
   <string name="tour_rules_title">规则由你定</string>
-  <string name="tour_rules">十三水各地玩法不同，所以每个数字都能自己设置：每道几分、打枪、全垒打、特殊牌型、一条龙，连 A-2-3-4-5 算不算顺子都能改。AI 会按你选的规则出牌和分析。</string>
+  <string name="tour_rules">十三水各地玩法不同，所以每个数字都能自己设置：每道几分、打枪、全垒打、特殊加分、一条龙，连 A-2-3-4-5 算不算顺子都能改。AI 会按你选的规则出牌和分析。</string>
   <string name="tour_analyze_title">AI 分析</string>
   <string name="tour_analyze">选任意 13 张牌，AI 会评估每一种合理的摆法。它不是一堆 if-else 规则，而是靠自我对弈训练出来的神经网络，会估算每种摆法对上对手的平均得分。</string>
   <string name="tour_battle_title">对战</string>

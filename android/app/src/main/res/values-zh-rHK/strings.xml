@@ -40,7 +40,7 @@
   <string name="mc_samples">蒙地卡羅樣本數（對手模型：indep）</string>
   <string name="networks">神經網絡</string>
   <string name="load_weights">載入 .onnx 權重</string>
-  <string name="built_in">%1$s（內建）</string>
+  <string name="built_in">%1$s（內置）</string>
   <string name="not_usable">無法使用的神經網絡：%1$s</string>
   <string name="best">首選</string>
   <string name="pick_n">再選 %1$d 張</string>
@@ -61,7 +61,7 @@
     <item>三條</item>
     <item>蛇到</item>
     <item>同花</item>
-    <item>俘虜</item>
+    <item>夫佬</item>
     <item>四條</item>
     <item>同花順到</item>
   </string-array>
@@ -83,7 +83,7 @@
     <item>輸中道</item>
     <item>輸尾道</item>
     <item>被頭道三條贏</item>
-    <item>被中道俘虜贏</item>
+    <item>被中道夫佬贏</item>
     <item>被中道四條贏</item>
     <item>被中道同花順贏</item>
     <item>被尾道四條贏</item>
@@ -124,7 +124,7 @@
   </string-array>
   <string-array name="royalty_labels">
     <item>頭道三條</item>
-    <item>中道俘虜</item>
+    <item>中道夫佬</item>
     <item>中道四條</item>
     <item>中道同花順</item>
     <item>尾道四條</item>
@@ -138,7 +138,7 @@
     <item>三條</item>
     <item>蛇</item>
     <item>同花</item>
-    <item>俘虜</item>
+    <item>夫佬</item>
     <item>四條</item>
     <item>同花順</item>
   </string-array>
@@ -151,7 +151,7 @@
     <item>雙蛇</item>
     <item>三蛇</item>
     <item>一蛇一花</item>
-    <item>雙俘虜</item>
+    <item>雙夫佬</item>
     <item>雙三條</item>
   </string-array>
   <string name="remark_same_best">你的擺法就是首選。</string>
@@ -163,7 +163,7 @@
   <string name="remark_times_two">兩個%1$s</string>
   <string name="remark_broke">這手拆掉你的%1$s反而更好。</string>
   <string name="remark_pair_to_front">把對子放頭道更好。</string>
-  <string name="remark_pair_out_of_front">對子留在中道、尾道，頭道放大的單張更好。</string>
+  <string name="remark_pair_out_of_front">對子留在中道、尾道，頭道放一張大牌更好。</string>
   <string name="remark_stronger_front">牌型一樣，但頭道可以更大。</string>
   <string name="remark_detail">牌型一樣，差在搭配。</string>
   <string name="remark_other">換一種牌型組合更好。</string>
@@ -176,7 +176,7 @@
   <string name="remark_attack">首選是攻擊型：%1$s較大，打槍多、被打槍也多。</string>
   <string name="remark_defense">首選是防守型：%1$s較大，被打槍少、打槍也少。</string>
   <string name="remark_rows_both">首選贏的道數與打槍都勝過其他牌型組合。</string>
-  <string name="remark_rows">首選以搶道為主，不拚打槍。</string>
+  <string name="remark_rows">首選以搶道為主，不拼打槍。</string>
   <string name="remark_scoops_first">首選以打槍為主，犧牲一些道數。</string>
   <string name="remark_strong">這手牌很強。</string>
   <string name="remark_weak">這手牌偏弱，重點是少被打槍。</string>
@@ -311,7 +311,7 @@
   </string-array>
   <string name="opponents_title">電腦對手</string>
   <string name="opponents_all">3 位都是 %1$s</string>
-  <string name="opponents_info">神經網絡照它學到的方式出牌；蒙地卡羅會把每種擺法對上隨機發給對手的牌（對手用逐道獨立擺）試算；逐道獨立則是每一道分開估計。</string>
+  <string name="opponents_info">神經網絡照它學到的方式出牌；蒙地卡羅會把每種擺法對上隨機派給對手的牌（對手用逐道獨立擺）試算；逐道獨立則是每一道分開估計。</string>
   <string name="next_hand_note">修改從下一局起生效。</string>
   <string-array name="kinds_short">
     <item>神經網絡</item>
@@ -320,7 +320,7 @@
   </string-array>
   <string name="networks_summary">共 %1$d 個</string>
   <string name="networks_info">可以載入 python/train.py 匯出的神經網絡（.onnx 檔），之後就能選給電腦對手和分析使用。</string>
-  <string name="built_in_note">內建</string>
+  <string name="built_in_note">內置</string>
   <string name="legacy_note">舊格式的網絡：不論規則都照簡單規則出牌</string>
   <string name="delete_network_confirm">刪除神經網絡 %1$s？</string>
   <string name="records_title">記錄</string>
@@ -449,7 +449,7 @@
   <string name="tut_try_rank">你的擺法在 %2$d 種中排第 %1$d，比最佳少 %3$s 分。</string>
   <string name="tut_try_extra">有別的擺法每一道都比你的大。</string>
   <string name="tut_try_best_rows">AI 的最佳擺法：</string>
-  <string name="tut_try_why">一對 A 放頭道，用最小的一對 6 湊俘虜：頭道有一對 A 比只放一張 K 容易贏得多，而俘虜只比三條的大小，配哪一對都一樣。</string>
+  <string name="tut_try_why">一對 A 放頭道，用最小的一對 6 湊夫佬：頭道有一對 A 比只放一張 K 容易贏得多，而夫佬只比三條的大小，配哪一對都一樣。</string>
   <string name="tut_try_again">重擺</string>
   <string name="tut_tips_title">AI 統計出的貼士</string>
   <string name="tut_tips_text">從 AI 分析一萬手隨機牌（簡單規則）得到的結果：</string>
@@ -479,9 +479,9 @@
     <item>別只是把最強的五張放尾道。「最強放尾道、次強放中道、剩下放頭道」只有大約八手才有一手是最佳擺法，平均每手少將近半分。</item>
     <item>頭道很重要：最佳擺法有六成頭道是一對以上。湊不出對子時，頭道最好放 A（其次是 K）。</item>
     <item>拆對子沒關係：有兩、三對的手牌，最佳擺法超過一半會拆開某個對子。</item>
-    <item>湊俘虜用最小的那一對（九成如此），大的對子留給其他道。</item>
+    <item>湊夫佬用最小的那一對（九成如此），大的對子留給其他道。</item>
     <item>同花不一定要用：三手牌有兩手湊得出同花，但其中只有一半用同花才是最佳。</item>
-    <item>不用太糾結：簡單規則下，第一和第二好的擺法通常只差約 0.01 分；逐道計分的規則（例如台灣式）差距就大得多。</item>
+    <item>不用太在意：簡單規則下，第一和第二好的擺法通常只差約 0.01 分；逐道計分的規則（例如台灣式）差距就大得多。</item>
     <item>大部分手牌期望值是負的：就算擺到最好，也只有四成手牌期望為正，分數主要來自少數大牌。</item>
     <item>每局結束可以按「分析我的牌」，看看你的擺法和最佳差多少，這是進步最快的方法。</item>
   </string-array>

@@ -74,7 +74,7 @@
     <item>Chi độc lập</item>
   </string-array>
   <string-array name="prob_names">
-    <item>Sập</item>
+    <item>Bắt sập</item>
     <item>Bị sập</item>
     <item>Sập làng</item>
     <item>Bị sập làng</item>
@@ -121,7 +121,7 @@
   </string-array>
   <string-array name="point_labels">
     <item>Mỗi chi</item>
-    <item>Sập</item>
+    <item>Bắt sập</item>
     <item>Sập làng (thêm, mỗi người)</item>
     <item>Sảnh rồng</item>
   </string-array>
