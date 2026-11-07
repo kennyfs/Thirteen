@@ -138,7 +138,7 @@
       <div class="kinds">
         {#each KINDS as [cat, cs] (cat)}
           <div class="kind">
-            <span class="title-small kname">{ta('category_names')[cat]}</span>
+            <span class="title-small">{ta('category_names')[cat]}</span>
             <RowCards cards={cs} category={cat} width={ui.desk ? 40 : 30} />
           </div>
         {/each}
@@ -220,12 +220,12 @@
   .content.trying { height: 100%; box-sizing: border-box; max-width: 1100px; }
   h2 { margin: 4px 0 0; }
   p { margin: 0; }
-  .example { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; align-self: flex-start; }
-  .exrow { display: flex; align-items: center; gap: 10px; }
-  .exname { color: var(--on-felt); min-width: 3.2em; }
-  .kinds { display: flex; flex-direction: column; gap: 6px; }
-  .kind { display: flex; align-items: center; gap: 12px; }
-  .kname { min-width: 4.5em; }
+  /* A grid, so the cards line up after the longest name in every language (a name that is too long wraps). */
+  .example { padding: 10px 12px; align-self: flex-start; display: grid; grid-template-columns: auto 1fr; align-items: center;
+    gap: 6px 10px; }
+  .exrow, .kind { display: contents; }
+  .exname { color: var(--on-felt); }
+  .kinds { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 12px; row-gap: 6px; }
   .list { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 8px; }
   .tips li::marker { color: var(--primary); font-weight: 700; }
   .trybox { flex: 1; min-height: 420px; display: flex; flex-direction: column; gap: 8px; }

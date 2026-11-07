@@ -183,6 +183,24 @@ No money or betting is involved.
 
 ## What's new (release notes, 500 characters each)
 
+### 2.2.1
+
+zh-TW:
+
+教學的牌型與三墩範例中，各列的牌在所有語言下都會對齊。
+
+en-US:
+
+In the tutorial, the cards of the hand ranks and of the three rows now line up in every language.
+
+ja-JP:
+
+チュートリアルの役の一覧と3段の例で、どの言語でもカードがそろって並ぶようになりました。
+
+zh-HK:
+
+教學的牌型同三道範例中，每行的牌喺所有語言下都會對齊。
+
 ### 2.2.0
 
 zh-TW:

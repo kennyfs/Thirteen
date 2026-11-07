@@ -3,6 +3,7 @@ package io.github.kennyfs.thirteen.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,7 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -38,10 +39,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.kennyfs.thirteen.Analysis
@@ -122,14 +126,33 @@ private fun Body(text: String, dim: Boolean = false, color: androidx.compose.ui.
 )
 
 /** Three rows on the felt, named. */
+/**
+ * Rows of a name and its cards, the cards lined up after the widest name in any language (as wide as a third of the
+ * room at most; a longer name wraps).
+ */
+@Composable
+private fun LabelledRows(names: List<String>, style: TextStyle, gap: Dp, cards: @Composable (Int) -> Unit) {
+  val measurer = rememberTextMeasurer()
+  BoxWithConstraints {
+    val widest = with(LocalDensity.current) { names.maxOf { measurer.measure(it, style).size.width }.toDp() }
+    val width = minOf(widest, maxWidth / 3)
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+      names.forEachIndexed { i, name ->
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(gap)) {
+          Text(name, style = style, modifier = Modifier.width(width))
+          cards(i)
+        }
+      }
+    }
+  }
+}
+
 @Composable
 private fun ThreeRowsExample(r: Rows, cats: List<Int>, card: Dp) {
   val t = LocalTable.current
   Surface(shape = MaterialTheme.shapes.medium, color = t.felt, contentColor = t.onFelt) {
     Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-      val names = stringArrayResource(R.array.row_names)
-      for (i in 0 until 3) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(names[i], style = MaterialTheme.typography.labelLarge, modifier = Modifier.widthIn(min = 44.dp))
+      LabelledRows(stringArrayResource(R.array.row_names).toList(), MaterialTheme.typography.labelLarge, 10.dp) { i ->
         RowCards(r[i], cats[i], card)
       }
     }
@@ -149,11 +172,8 @@ private fun RanksPage(vm: AppViewModel) {
   Heading(R.string.tut_ranks_title)
   Body(stringResource(R.string.tut_ranks_text))
   val names = stringArrayResource(R.array.category_names)
-  Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-    for ((cat, cs) in KINDS) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-      Text(names[cat], style = MaterialTheme.typography.titleSmall, modifier = Modifier.widthIn(min = 64.dp))
-      RowCards(cs, cat, 30.dp)
-    }
+  LabelledRows(KINDS.map { names[it.first] }, MaterialTheme.typography.titleSmall, 12.dp) { i ->
+    RowCards(KINDS[i].second, KINDS[i].first, 30.dp)
   }
   Body(stringResource(R.string.tut_ranks_front), small = true)
   val wheel = vm.ruleValues["wheel"]?.toInt() ?: 0
