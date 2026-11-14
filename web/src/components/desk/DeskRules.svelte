@@ -7,6 +7,7 @@
   import type { App } from '../../lib/app.svelte';
   import { t, ta } from '../../lib/i18n.svelte';
   import * as R from '../../lib/rules';
+  import InfoButton from '../InfoButton.svelte';
   import Switch from '../Switch.svelte';
   import TitleBar from '../TitleBar.svelte';
 
@@ -63,8 +64,7 @@
     {#each legacy as m (m.path)}<p class="body-medium" class:bad={mismatch} class:dim={!mismatch}>{t('legacy_warning', modelLabel(m))}</p>{/each}
     {#if Object.keys(values).length}
       <section>
-        <div class="section-title">{t('rules_play')}</div>
-        <p class="body-medium dim">{t('rules_play_note')}</p>
+        <div class="section-title with-help">{t('rules_play')}<InfoButton small text={t('rules_play_note')} title={t('rules_play')} /></div>
         <div class="play">
           <div class="switch"><Switch label={t('strict_rows')} on={values.strict === 1} onchange={(v) => app.setRule('strict', v ? 1 : 0)} /></div>
           <div class="wheel">
@@ -107,6 +107,7 @@
   .radio.on { border-color: var(--primary); background: radial-gradient(var(--primary) 0 4.5px, transparent 5px); }
   section { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
   .section-title { color: var(--primary); font-size: 0.875rem; font-weight: 500; }
+  .with-help { display: flex; align-items: center; gap: 2px; margin: -8px 0; }
   .play { display: flex; flex-wrap: wrap; gap: 8px 32px; align-items: flex-start; }
   .switch { min-width: 320px; flex: 1; }
   .switch :global(.row) { padding-left: 0; padding-right: 0; }

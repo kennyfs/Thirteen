@@ -11,6 +11,8 @@
   <string name="ok">OK</string>
   <string name="cancel">Batal</string>
   <string name="info">Penjelasan</string>
+  <string name="close">Tutup</string>
+  <string name="help_about">Penjelasan: %1$s</string>
   <string name="hand_n">Ronde %1$d</string>
   <string name="you">Kamu</string>
   <string name="ready">Siap</string>
@@ -40,7 +42,7 @@
   <string name="reset">Reset</string>
   <string name="clear_records_confirm">Hapus semua %1$d ronde yang tercatat? Skor berjalan dan hitungan ronde juga mulai dari awal, dengan ronde latihan baru. Ekspor dulu jika kamu masih memerlukannya.</string>
   <string name="reset_confirm">Reset skor berjalan dan hitungan ronde? Latihan mulai lagi dengan ronde baru; riwayat tetap disimpan.</string>
-  <string name="mc_samples">Sampel Monte Carlo (lawan: independen)</string>
+  <string name="mc_samples">Sampel Monte Carlo</string>
   <string name="networks">Jaringan saraf</string>
   <string name="load_weights">Muat bobot .onnx</string>
   <string name="built_in">%1$s (bawaan)</string>
@@ -315,7 +317,7 @@
   </string-array>
   <string name="opponents_title">Pemain komputer</string>
   <string name="opponents_all">Ketiganya: %1$s</string>
-  <string name="opponents_info">Jaringan saraf bermain sesuai yang dipelajarinya. Monte Carlo mencoba tiap susunan melawan kartu acak untuk pemain lain, masing-masing disusun dengan baris independen. Baris independen menilai tiap baris secara terpisah.</string>
+  <string name="opponents_info">Jaringan saraf: bermain sesuai yang dipelajarinya.\nMonte Carlo: mencoba tiap susunan melawan kartu acak untuk pemain lain, masing-masing disusun dengan baris independen.\nBaris independen: menilai tiap baris secara terpisah.</string>
   <string name="next_hand_note">Perubahan berlaku mulai ronde berikutnya.</string>
   <string-array name="kinds_short">
     <item>Jaringan saraf</item>

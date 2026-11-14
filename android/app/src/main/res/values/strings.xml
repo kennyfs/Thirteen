@@ -7,6 +7,8 @@
   <string name="ok">OK</string>
   <string name="cancel">Cancel</string>
   <string name="info">Explanation</string>
+  <string name="close">Close</string>
+  <string name="help_about">About %1$s</string>
   <string name="hand_n">Hand %1$d</string>
   <string name="you">You</string>
   <string name="ready">Ready</string>
@@ -36,7 +38,7 @@
   <string name="reset">Reset</string>
   <string name="clear_records_confirm">Delete all %1$d recorded hands? The running scores and the hand count start over too, with a new practice hand. Export first if you need them.</string>
   <string name="reset_confirm">Reset the running scores and the hand count? Practice starts over with a new hand; records are kept.</string>
-  <string name="mc_samples">Monte Carlo samples (opponents: indep)</string>
+  <string name="mc_samples">Monte Carlo samples</string>
   <string name="networks">Networks</string>
   <string name="load_weights">Load .onnx weights</string>
   <string name="built_in">%1$s (built-in)</string>
@@ -312,7 +314,7 @@
   </string-array>
   <string name="opponents_title">Computer players</string>
   <string name="opponents_all">All three: %1$s</string>
-  <string name="opponents_info">A network plays as it learned. Monte Carlo tries each arrangement against random hands for the others, each set by independent rows. Independent rows judges each row on its own.</string>
+  <string name="opponents_info">Network: plays as it learned.\nMonte Carlo: tries each arrangement against random hands for the others, each set by independent rows.\nIndependent rows: judges each row on its own.</string>
   <string name="next_hand_note">Changes take effect from the next hand.</string>
   <string-array name="kinds_short">
     <item>Network</item>

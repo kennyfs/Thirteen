@@ -64,7 +64,7 @@ export default {
   desk_keys_names: ['Phím mũi tên và Space', 'Con trỏ cho tay trái (A D di chuyển, W S chuyển giữa chọn và bỏ chọn)', 'Mỗi lá một phím (một hàng: Q W E … [ ] \\, hai hàng: A–J và Z–N)'],
   desk_lines: 'Bài trên bàn',
   desk_lines_names: ['Một hàng 13 lá: không phải đổi hàng', 'Hai hàng 7 + 6: lá to hơn'],
-  desk_keys_note: 'Với con trỏ hoặc mỗi lá một phím: Space sắp xếp, Backspace hoàn tác. Các lá còn lại dồn lên sau mỗi lần đặt. Ở mọi cách, Shift + 1 2 3 lấy lại một chi, và L xem ván trước.',
+  desk_keys_note: 'Với con trỏ hoặc mỗi lá một phím: Space sắp xếp, Backspace hoàn tác.\nCác lá còn lại dồn lên sau mỗi lần đặt.\nỞ mọi cách, Shift + 1 2 3 lấy lại một chi, và L xem ván trước.',
   mouse_title: 'Chuột',
   mouse_tips: 'Kéo qua các lá để chọn · Nhấp một chi: đặt các lá đã chọn vào · Nhấp đúp một lá: vào chi còn chỗ ở trên cùng · Nhấp chuột phải vào một chi: lấy lại cả chi · Shift + nhấp: chọn một dãy',
   rows_title: 'Các chi',

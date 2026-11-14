@@ -94,13 +94,16 @@ fun TitleBar(title: String, onBack: (() -> Unit)? = null, modifier: Modifier = M
   }
 }
 
-/** A group's heading in a list of settings. */
+/** A group's heading in a list of settings; with `help`, an (i) after it that shows it. */
 @Composable
-fun SectionHeader(text: String, modifier: Modifier = Modifier) {
-  Text(
-    text, modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp),
-    style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary,
-  )
+fun SectionHeader(text: String, modifier: Modifier = Modifier, help: String? = null) {
+  val style = MaterialTheme.typography.titleSmall
+  if (help == null) Text(text, modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp), style = style, color = MaterialTheme.colorScheme.primary)
+  // The button's 40 dp takes the place of the padding over and under the text.
+  else Row(modifier.padding(start = 16.dp, end = 16.dp, top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Text(text, Modifier.weight(1f, fill = false), style = style, color = MaterialTheme.colorScheme.primary)
+    InfoButton(help, text, small = true)
+  }
 }
 
 /** A row of a settings list: a title, its current value under it, and an arrow when it opens a page. */
@@ -298,18 +301,21 @@ private fun RepeatingButton(description: String, icon: ImageVector, enabled: Boo
   ) { Icon(icon, description) }
 }
 
-/** An (i) button that shows `text` in a dialog. */
+/**
+ * An (i) button that shows `text` in a dialog, under `title` (the setting's name) when there is one; the text's line
+ * breaks stay. `small`: a setting's own, after its name (a 20 dp icon in a 40 dp button, in the quiet color).
+ */
 @Composable
-fun InfoButton(text: String, title: String? = null, tint: Color = MaterialTheme.colorScheme.primary) {
+fun InfoButton(text: String, title: String? = null, tint: Color = MaterialTheme.colorScheme.primary, small: Boolean = false) {
   var open by remember { mutableStateOf(false) }
-  val description = stringResource(R.string.info)
-  IconButton(onClick = { open = true }, Modifier.semantics { contentDescription = description }) {
-    Icon(Icons.Outlined.Info, null, tint = tint)
+  val description = if (title != null) stringResource(R.string.help_about, title) else stringResource(R.string.info)
+  IconButton(onClick = { open = true }, Modifier.then(if (small) Modifier.size(40.dp) else Modifier).semantics { contentDescription = description }) {
+    Icon(Icons.Outlined.Info, null, if (small) Modifier.size(20.dp) else Modifier, tint = if (small) MaterialTheme.colorScheme.onSurfaceVariant else tint)
   }
   if (open)
     AlertDialog(
       onDismissRequest = { open = false },
-      confirmButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.ok)) } },
+      confirmButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.close)) } },
       title = title?.let { { Text(it) } },
       text = { Text(text, Modifier.verticalScroll(rememberScrollState()), style = MaterialTheme.typography.bodyLarge) },
     )

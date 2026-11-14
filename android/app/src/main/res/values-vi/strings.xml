@@ -11,6 +11,8 @@
   <string name="ok">OK</string>
   <string name="cancel">Hủy</string>
   <string name="info">Giải thích</string>
+  <string name="close">Đóng</string>
+  <string name="help_about">Giải thích: %1$s</string>
   <string name="hand_n">Ván %1$d</string>
   <string name="you">Bạn</string>
   <string name="ready">Sẵn sàng</string>
@@ -40,7 +42,7 @@
   <string name="reset">Đặt lại</string>
   <string name="clear_records_confirm">Xóa cả %1$d ván đã ghi? Điểm cộng dồn và số ván cũng tính lại từ đầu, với một ván luyện tập mới. Hãy xuất ra trước nếu bạn cần.</string>
   <string name="reset_confirm">Đặt lại điểm cộng dồn và số ván? Phần luyện tập bắt đầu lại với ván mới; lịch sử vẫn được giữ.</string>
-  <string name="mc_samples">Số mẫu Monte Carlo (đối thủ: chi độc lập)</string>
+  <string name="mc_samples">Số mẫu Monte Carlo</string>
   <string name="networks">Mạng nơ-ron</string>
   <string name="load_weights">Nạp trọng số .onnx</string>
   <string name="built_in">%1$s (có sẵn)</string>
@@ -316,7 +318,7 @@
   </string-array>
   <string name="opponents_title">Đối thủ máy</string>
   <string name="opponents_all">Cả ba: %1$s</string>
-  <string name="opponents_info">Mạng nơ-ron chơi theo những gì nó đã học. Monte Carlo thử từng cách xếp với các tay bài ngẫu nhiên của người khác, mỗi tay được xếp theo chi độc lập. Chi độc lập đánh giá riêng từng chi.</string>
+  <string name="opponents_info">Mạng nơ-ron: chơi theo những gì nó đã học.\nMonte Carlo: thử từng cách xếp với các tay bài ngẫu nhiên của người khác, mỗi tay được xếp theo chi độc lập.\nChi độc lập: đánh giá riêng từng chi.</string>
   <string name="next_hand_note">Thay đổi có hiệu lực từ ván sau.</string>
   <string-array name="kinds_short">
     <item>Mạng nơ-ron</item>

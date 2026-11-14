@@ -64,7 +64,7 @@ export default {
   desk_keys_names: ['Panah dan Space', 'Kursor untuk tangan kiri (A D bergerak, W S geser antara memilih dan batal pilih)', 'Satu tombol per kartu (satu deret Q W E … [ ] \\, dua deret A–J dan Z–N)'],
   desk_lines: 'Kartu di meja',
   desk_lines_names: ['Satu deret 13: tanpa pindah deret', 'Dua deret, 7 + 6: kartu lebih besar'],
-  desk_keys_note: 'Dengan kursor atau satu tombol per kartu: Space mengurutkan, Backspace mengurungkan. Kartu yang tersisa merapat setelah tiap penempatan. Di semua cara, Shift + 1 2 3 mengambil kembali satu baris, dan L menampilkan ronde sebelumnya.',
+  desk_keys_note: 'Dengan kursor atau satu tombol per kartu: Space mengurutkan, Backspace mengurungkan.\nKartu yang tersisa merapat setelah tiap penempatan.\nDi semua cara, Shift + 1 2 3 mengambil kembali satu baris, dan L menampilkan ronde sebelumnya.',
   mouse_title: 'Mouse',
   mouse_tips: 'Seret melewati kartu untuk memilihnya · Klik baris: taruh kartu terpilih · Klik ganda kartu: ke baris pertama yang masih muat · Klik kanan baris: ambil kembali · Shift-klik: pilih berurutan',
   rows_title: 'Baris',

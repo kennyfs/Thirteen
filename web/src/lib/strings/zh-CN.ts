@@ -57,7 +57,7 @@ export default {
   desk_keys_names: ['方向键与空格键', '左手光标（A D 移动，W S 切换选取与取消）', '每张牌一个键（一排时 Q W E … [ ] \\，两排时 A–J、Z–N）'],
   desk_lines: '手牌排列',
   desk_lines_names: ['一排 13 张：不用换行', '两排 7＋6：牌比较大'],
-  desk_keys_note: '光标或每张牌一个键时：空格键排序、Backspace 撤销。出牌后剩下的牌往前递补。任何方式都可以用 Shift＋1 2 3 收回整道，L 看上一局。',
+  desk_keys_note: '光标或每张牌一个键时：空格键排序、Backspace 撤销。\n出牌后剩下的牌往前递补。\n任何方式都可以用 Shift＋1 2 3 收回整道，L 看上一局。',
   mouse_title: '鼠标',
   mouse_tips: '按住拖过多张牌一次选取 · 点一道：放进选的牌 · 双击手牌：放进第一个有空位的道 · 右键点道：收回整道 · Shift＋点击：连选',
   rows_title: '牌道',

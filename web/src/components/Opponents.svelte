@@ -2,6 +2,7 @@
 <script lang="ts">
   import { KINDS, type App } from '../lib/app.svelte';
   import { t, ta } from '../lib/i18n.svelte';
+  import InfoButton from './InfoButton.svelte';
   import Menu from './Menu.svelte';
   import TitleBar from './TitleBar.svelte';
   import Toggle from './Toggle.svelte';
@@ -10,7 +11,7 @@
 </script>
 
 <div class="page">
-  <TitleBar title={t('opponents_title')} {onback} />
+  <TitleBar title={t('opponents_title')} {onback}><InfoButton text={t('opponents_info')} title={t('opponents_title')} /></TitleBar>
   <div class="scroll"><div class="readable">
     <p class="body-medium dim note">{t('next_hand_note')}</p>
     {#each app.seatChoices as seat, i (i)}
@@ -25,7 +26,6 @@
     <div class="line pad"><span class="body-large grow" class:off={!app.seatChoices.some((s) => s.kind === 'MC')}>{t('mc_samples')}</span>
       <Menu label={String(app.mcSamples)} disabled={!app.seatChoices.some((s) => s.kind === 'MC')} options={[100, 200, 500, 1000].map((n) => [n, String(n)] as [number, string])}
         selected={app.mcSamples} onselect={(n) => app.chooseMcSamples(n)} /></div>
-    <p class="body-medium dim note">{t('opponents_info')}</p>
   </div></div>
 </div>
 

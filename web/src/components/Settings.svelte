@@ -5,6 +5,7 @@
   import { DESK_INPUTS, DESK_LINES } from '../lib/desk-keys';
   import { nav } from '../lib/nav.svelte';
   import { tour } from '../lib/tour.svelte';
+  import InfoButton from './InfoButton.svelte';
   import Menu from './Menu.svelte';
   import Networks from './Networks.svelte';
   import Opponents from './Opponents.svelte';
@@ -49,7 +50,7 @@
 
       {#if desk}
         <div class="block">
-          <div class="body-large">{t('desk_keys')}</div>
+          <div class="body-large with-help">{t('desk_keys')}<InfoButton small text={t('desk_keys_note')} title={t('desk_keys')} /></div>
           <div class="radios" role="radiogroup" aria-label={t('desk_keys')}>
             {#each DESK_INPUTS as k, i (k)}
               <button class="radio-row" role="radio" aria-checked={app.deskKeys.input === k} onclick={() => app.chooseDeskKeys(k)}>
@@ -65,7 +66,6 @@
               </button>
             {/each}
           </div>
-          <div class="body-small dim">{t('desk_keys_note')}</div>
         </div>
       {/if}
 
@@ -117,6 +117,7 @@
   .desk-pane :global(.readable) { margin: 0; max-width: 960px; padding: 0 12px; }
   .block { padding: 8px 16px; display: flex; flex-direction: column; gap: 8px; }
   .radios { display: flex; flex-direction: column; }
+  .with-help { display: flex; align-items: center; gap: 2px; margin: -6px 0; }
   .radio-row { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 0; background: none; border: none; color: inherit; cursor: pointer; font: inherit; text-align: left; }
   .radio { flex: none; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--on-surface-variant); box-sizing: border-box; }
   .radio.on { border-color: var(--primary); background: radial-gradient(var(--primary) 0 4px, transparent 4.5px); }

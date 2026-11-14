@@ -58,7 +58,7 @@ export default {
   desk_keys_names: ['方向鍵與空白鍵', '左手游標（A D 移動，W S 切換選取與取消）', '每張牌一個鍵（一排時 Q W E … [ ] \\，兩排時 A–J、Z–N）'],
   desk_lines: '手牌排列',
   desk_lines_names: ['一排 13 張：不用換行', '兩排 7＋6：牌比較大'],
-  desk_keys_note: '游標或每張牌一個鍵時：空白鍵排序、Backspace 復原。出牌後剩下的牌往前遞補。任何方式都可以用 Shift＋1 2 3 收回整道，L 看上一局。',
+  desk_keys_note: '游標或每張牌一個鍵時：空白鍵排序、Backspace 復原。\n出牌後剩下的牌往前遞補。\n任何方式都可以用 Shift＋1 2 3 收回整道，L 看上一局。',
   mouse_title: '滑鼠',
   mouse_tips: '按住拖過多張牌一次選取 · 按一道：放進選的牌 · 連按兩下手牌：放進第一個有空位的道 · 右鍵按道：收回整道 · Shift＋按一下：連選',
   rows_title: '牌道',

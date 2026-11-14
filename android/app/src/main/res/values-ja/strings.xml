@@ -10,6 +10,8 @@
   <string name="ok">OK</string>
   <string name="cancel">キャンセル</string>
   <string name="info">説明</string>
+  <string name="close">閉じる</string>
+  <string name="help_about">%1$sの説明</string>
   <string name="hand_n">第%1$dハンド</string>
   <string name="you">あなた</string>
   <string name="ready">確定できます</string>
@@ -39,7 +41,7 @@
   <string name="reset">リセット</string>
   <string name="clear_records_confirm">記録した%1$dハンドをすべて削除しますか？累計スコアとハンド数もリセットされ、練習は新しいハンドから始まります。必要なら先にエクスポートしてください。</string>
   <string name="reset_confirm">累計スコアとハンド数をリセットしますか？練習は新しいハンドから始まります。記録は残ります。</string>
-  <string name="mc_samples">モンテカルロのサンプル数（相手：indep）</string>
+  <string name="mc_samples">モンテカルロのサンプル数</string>
   <string name="networks">ニューラルネット</string>
   <string name="load_weights">.onnx の重みを読み込む</string>
   <string name="built_in">%1$s（内蔵）</string>
@@ -314,7 +316,7 @@
   </string-array>
   <string name="opponents_title">CPU対戦相手</string>
   <string name="opponents_all">3人とも %1$s</string>
-  <string name="opponents_info">ニューラルネットは学習したとおりに打ちます。モンテカルロは、各並べ方をほかの人にランダムに配ったハンド（段ごとの独立評価で並べる）と対戦させて試算します。段ごとの独立評価は、各段を別々に評価します。</string>
+  <string name="opponents_info">ニューラルネット：学習したとおりに並べます。\nモンテカルロ：各並べ方を、ほかの人にランダムに配ったハンド（段ごとの独立評価で並べる）と対戦させて試算します。\n段ごとの独立評価：各段を別々に評価します。</string>
   <string name="next_hand_note">変更は次のハンドから反映されます。</string>
   <string-array name="kinds_short">
     <item>ニューラルネット</item>

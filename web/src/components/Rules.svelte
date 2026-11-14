@@ -7,6 +7,7 @@
   import type { App } from '../lib/app.svelte';
   import { t, ta } from '../lib/i18n.svelte';
   import * as R from '../lib/rules';
+  import InfoButton from './InfoButton.svelte';
   import Switch from './Switch.svelte';
   import TitleBar from './TitleBar.svelte';
   import { ui } from '../lib/ui.svelte';
@@ -55,8 +56,7 @@
     <div class="note"><button class="btn outlined" disabled={Object.keys(spec.overrides).length === 0} onclick={() => app.choosePreset(spec.preset)}>{t('restore_preset')}</button></div>
     {#each legacy as m (m.path)}<p class="body-medium note" class:bad={mismatch} class:dim={!mismatch}>{t('legacy_warning', modelLabel(m))}</p>{/each}
     {#if Object.keys(values).length}
-      <div class="section-header">{t('rules_play')}</div>
-      <p class="body-medium dim note">{t('rules_play_note')}</p>
+      <div class="section-header with-help">{t('rules_play')}<InfoButton small text={t('rules_play_note')} title={t('rules_play')} /></div>
       <Switch label={t('strict_rows')} on={values.strict === 1} onchange={(v) => app.setRule('strict', v ? 1 : 0)} />
       <div class="body-large note">{t('wheel')}</div>
       <div role="radiogroup">
@@ -81,6 +81,8 @@
   .scroll { flex: 1; overflow: auto; padding-bottom: 24px; }
   .readable { max-width: 720px; margin: 0 auto; }
   .note { padding: 4px 16px; margin: 4px 0; }
+  /* The (i)'s 36 px in place of the padding over and under the heading. */
+  .with-help { display: flex; align-items: center; gap: 2px; padding-top: 6px; padding-bottom: 0; }
   .presets { display: flex; flex-direction: column; gap: 8px; padding: 0 12px; }
   .preset { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; border: 2px solid transparent; text-align: left;
     background: var(--surface-container-low); color: inherit; cursor: pointer; font: inherit; }

@@ -88,8 +88,7 @@ fun RulesPage(vm: AppViewModel, onBack: () -> Unit) {
     )
     if (values.isEmpty()) return@SettingsSubpage
 
-    SectionHeader(stringResource(R.string.rules_play))
-    Text(stringResource(R.string.rules_play_note), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+    SectionHeader(stringResource(R.string.rules_play), help = stringResource(R.string.rules_play_note))
     SwitchRow(stringResource(R.string.strict_rows), values["strict"] == 1.0) { vm.setRule("strict", if (it) 1.0 else 0.0) }
     Text(stringResource(R.string.wheel), Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.bodyLarge)
     val wheel = values["wheel"]?.toInt() ?: 0

@@ -11,6 +11,7 @@
   import Dialog from './Dialog.svelte';
   import { nav } from '../lib/nav.svelte';
   import Icon from './Icon.svelte';
+  import InfoButton from './InfoButton.svelte';
   import Rules from './Rules.svelte';
   import Menu from './Menu.svelte';
   import RecordLine from './RecordLine.svelte';
@@ -19,7 +20,6 @@
 
   let { app, onrules }: { app: App; onrules: () => void } = $props();
   let pickRecord = $state(false);
-  let info = $state(false);
   let gridW = $state(0);
   let gridH = $state(0);
   let pageW = $state(0);
@@ -74,7 +74,7 @@
   {#if app.analysis && app.anaPage === 1}
     <TitleBar title={t('candidates')} onback={() => nav.back()}>
       {#if pageW >= 560}<div class="mini">{#each sorted as c (c)}<Card card={c} width={22} />{/each}</div>{/if}
-      <button class="btn icon text" aria-label={t('info')} onclick={() => (info = true)}><Icon name="info" /></button>
+      <InfoButton text={t('analyze_info')} />
     </TitleBar>
     <CandidateList a={app.analysis} mine={app.anaMine} legacyNote={resultLegacy} />
   {:else}
@@ -128,12 +128,6 @@
       {#each records as r (r.id)}<RecordLine {r} max={ui.sizes.record} onclick={() => { app.analyzeRecord(r); pickRecord = false; }} />{/each}
     </div>
     {#snippet actions()}<button class="btn text" onclick={() => (pickRecord = false)}>{t('cancel')}</button>{/snippet}
-  </Dialog>
-{/if}
-{#if info}
-  <Dialog title={t('info')} onclose={() => (info = false)}>
-    <p class="body-large" style="margin:0">{t('analyze_info')}</p>
-    {#snippet actions()}<button class="btn text" onclick={() => (info = false)}>{t('ok')}</button>{/snippet}
   </Dialog>
 {/if}
 

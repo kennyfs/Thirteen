@@ -8,6 +8,8 @@
   <string name="ok">確定</string>
   <string name="cancel">取消</string>
   <string name="info">說明</string>
+  <string name="close">關閉</string>
+  <string name="help_about">說明：%1$s</string>
   <string name="hand_n">第 %1$d 局</string>
   <string name="you">你</string>
   <string name="ready">可以出牌</string>
@@ -37,7 +39,7 @@
   <string name="reset">重設</string>
   <string name="clear_records_confirm">刪除全部 %1$d 局記錄？累計分數與局數也會歸零，練習重新派牌。需要的話請先匯出。</string>
   <string name="reset_confirm">重設累計分數與局數？練習會重新派牌，記錄會保留。</string>
-  <string name="mc_samples">蒙地卡羅樣本數（對手模型：indep）</string>
+  <string name="mc_samples">蒙地卡羅樣本數</string>
   <string name="networks">神經網絡</string>
   <string name="load_weights">載入 .onnx 權重</string>
   <string name="built_in">%1$s（內置）</string>
@@ -311,7 +313,7 @@
   </string-array>
   <string name="opponents_title">電腦對手</string>
   <string name="opponents_all">3 位都是 %1$s</string>
-  <string name="opponents_info">神經網絡照它學到的方式出牌；蒙地卡羅會把每種擺法對上隨機派給對手的牌（對手用逐道獨立擺）試算；逐道獨立則是每一道分開估計。</string>
+  <string name="opponents_info">神經網絡：照它學到的方式出牌。\n蒙地卡羅：把每種擺法對上隨機派給對手的牌試算，對手的牌用逐道獨立擺。\n逐道獨立：每一道分開估計。</string>
   <string name="next_hand_note">修改從下一局起生效。</string>
   <string-array name="kinds_short">
     <item>神經網絡</item>

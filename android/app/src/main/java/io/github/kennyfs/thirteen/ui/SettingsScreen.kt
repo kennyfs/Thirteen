@@ -55,11 +55,11 @@ import io.github.kennyfs.thirteen.TextSize
 /** The settings pages that open from the list. */
 enum class SettingsPage { RULES, OPPONENTS, NETWORKS }
 
-/** A page of the settings: a title bar with Back and a column that scrolls, kept to a readable width. */
+/** A page of the settings: a title bar with Back (and `help` behind an (i)) and a column that scrolls, kept to a readable width. */
 @Composable
-fun SettingsSubpage(title: String, onBack: () -> Unit, content: @Composable () -> Unit) {
+fun SettingsSubpage(title: String, onBack: () -> Unit, help: String? = null, content: @Composable () -> Unit) {
   Column(Modifier.fillMaxSize()) {
-    TitleBar(title, onBack)
+    TitleBar(title, onBack) { if (help != null) InfoButton(help, title) }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
       Column(Modifier.readable()) { content() }
     }
@@ -140,7 +140,7 @@ private fun opponentsSummary(vm: AppViewModel, kinds: Array<String>): String {
 /** The three computer players: each a network, Monte Carlo or indep. They take effect from the next hand. */
 @Composable
 fun OpponentsPage(vm: AppViewModel, onBack: () -> Unit) {
-  SettingsSubpage(stringResource(R.string.opponents_title), onBack) {
+  SettingsSubpage(stringResource(R.string.opponents_title), onBack, help = stringResource(R.string.opponents_info)) {
     Text(
       stringResource(R.string.next_hand_note), Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
       style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -166,10 +166,6 @@ fun OpponentsPage(vm: AppViewModel, onBack: () -> Unit) {
       stringResource(R.string.mc_samples), listOf(100, 200, 500, 1000).map { it to it.toString() }, vm.mcSamples, vm::chooseMcSamples,
       enabled = vm.seatChoices.any { it.kind == Kind.MC },
     )
-    Text(
-      stringResource(R.string.opponents_info), Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium,
-      color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
   }
 }
 
@@ -179,7 +175,7 @@ fun NetworksPage(vm: AppViewModel, onBack: () -> Unit) {
   val resolver = LocalContext.current.contentResolver
   val load = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) vm.importModel(resolver, uri) }
   var deleting by rememberSaveable { mutableStateOf<String?>(null) }
-  SettingsSubpage(stringResource(R.string.networks), onBack) {
+  SettingsSubpage(stringResource(R.string.networks), onBack, help = stringResource(R.string.networks_info)) {
     for (m in vm.models) {
       Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
@@ -195,10 +191,6 @@ fun NetworksPage(vm: AppViewModel, onBack: () -> Unit) {
       Icon(Icons.Outlined.FileOpen, null, Modifier.padding(end = 8.dp))
       Text(stringResource(R.string.load_weights))
     }
-    Text(
-      stringResource(R.string.networks_info), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodyMedium,
-      color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
   }
   deleting?.let { path ->
     val m = vm.models.firstOrNull { it.path == path }

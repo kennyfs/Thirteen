@@ -4,6 +4,7 @@
   import { t } from '../lib/i18n.svelte';
   import Dialog from './Dialog.svelte';
   import Icon from './Icon.svelte';
+  import InfoButton from './InfoButton.svelte';
   import TitleBar from './TitleBar.svelte';
   let { app, onback = null }: { app: App; onback?: (() => void) | null } = $props();
   let deleting = $state<Model | null>(null);
@@ -11,7 +12,7 @@
 </script>
 
 <div class="page">
-  <TitleBar title={t('networks')} {onback} />
+  <TitleBar title={t('networks')} {onback}><InfoButton text={t('networks_info')} title={t('networks')} /></TitleBar>
   <div class="scroll"><div class="readable">
     {#each app.models as m (m.path)}
       <div class="row">
@@ -25,7 +26,6 @@
       <input type="file" accept=".onnx" hidden bind:this={input} onchange={() => { const f = input.files?.[0]; if (f) app.importModel(f); input.value = ''; }} />
       <button class="btn outlined big" onclick={() => input.click()}><Icon name="folder" />{t('load_weights')}</button>
     </div>
-    <p class="body-medium dim note">{t('networks_info')}</p>
   </div></div>
 </div>
 
@@ -47,5 +47,4 @@
   .row { display: flex; align-items: center; min-height: 64px; padding: 0 4px 0 16px; border-bottom: 1px solid var(--outline-variant); margin: 0 16px 0 0; }
   .grow { flex: 1; }
   .pad { padding: 16px; }
-  .note { padding: 0 16px; margin: 0; }
 </style>
