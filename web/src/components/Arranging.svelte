@@ -204,6 +204,22 @@
   const rowNames = $derived(ta('row_names'));
   const sortOptions = $derived<[boolean, string][]>([[false, t('sort_rank')], [true, t('sort_suit')]]);
   const canConfirm = $derived(!busy && vm.rowsEval?.valid === true);
+
+  // A press anywhere but on the hand or the rows puts the picked cards down (and forgets the row picked first); what it
+  // lands on still does its own thing. In the capture phase, before that thing, and only while something is picked.
+  let areaEl: HTMLDivElement;
+  $effect(() => {
+    if (skeleton || (vm.selected.size === 0 && vm.armed === null)) return;
+    const away = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      const at = e.target as Element | null;
+      if (at && areaEl?.contains(at) && at.closest('.tray, .rows')) return;
+      vm.selected = new Set();
+      vm.armed = null;
+    };
+    document.addEventListener('pointerdown', away, true);
+    return () => document.removeEventListener('pointerdown', away, true);
+  });
 </script>
 
 {#snippet rowSlot(r: number)}
@@ -272,7 +288,7 @@
 
 <svelte:window onkeydown={onKey} />
 
-<div class="area" class:skeleton bind:clientWidth={areaW} bind:clientHeight={areaH} aria-hidden={skeleton || undefined} inert={skeleton}>
+<div class="area" class:skeleton bind:this={areaEl} bind:clientWidth={areaW} bind:clientHeight={areaH} aria-hidden={skeleton || undefined} inert={skeleton}>
   {#if areaW > 0}
     {#if bare}
       <div class="felt desk-felt">

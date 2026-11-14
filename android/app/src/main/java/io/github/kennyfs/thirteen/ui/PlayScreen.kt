@@ -81,7 +81,13 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -222,12 +228,43 @@ fun Arranging(
   vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, modifier: Modifier = Modifier, confirmShort: String = confirmLabel,
   maxCard: Dp = LocalCardSizes.current.play, onConfirm: () -> Unit,
 ) {
-  BoxWithConstraints(modifier.fillMaxSize()) {
+  // A press on the table but not on the hand or the rows puts the picked cards down; what it lands on still does its
+  // own thing (it is only looked at, in the first pass, before the buttons see it).
+  val keep = remember { KeepPicked() }
+  BoxWithConstraints(
+    modifier.fillMaxSize().onGloballyPositioned { keep.origin = it.positionInWindow() }.pointerInput(vm) {
+      awaitPointerEventScope {
+        while (true) {
+          val e = awaitPointerEvent(PointerEventPass.Initial)
+          if (e.type != PointerEventType.Press || (vm.selected.isEmpty() && vm.armed == null)) continue
+          val at = e.changes.first().position + keep.origin
+          if (keep.rects.values.none { it.contains(at) }) vm.putDown()
+        }
+      }
+    },
+  ) {
     val wide = maxWidth > maxHeight * 1.15f
     val fit = arrangeFit(maxWidth, maxHeight, wide, textRoom(14), maxCard)
-    if (wide) ArrangeWide(vm, wheel, busy, confirmLabel, confirmShort, fit.card, onConfirm)
-    else ArrangeTall(vm, wheel, busy, confirmLabel, confirmShort, fit, onConfirm)
+    CompositionLocalProvider(LocalKeepPicked provides keep) {
+      if (wide) ArrangeWide(vm, wheel, busy, confirmLabel, confirmShort, fit.card, onConfirm)
+      else ArrangeTall(vm, wheel, busy, confirmLabel, confirmShort, fit, onConfirm)
+    }
   }
+}
+
+/** Where on the table a press keeps the picked cards up (the hand, the rows), in the window's coordinates. */
+private class KeepPicked {
+  var origin = Offset.Zero
+  val rects = mutableMapOf<String, Rect>()
+}
+
+private val LocalKeepPicked = staticCompositionLocalOf<KeepPicked?> { null }
+
+/** Marks this as a place where a press keeps the picked cards up. */
+@Composable
+private fun Modifier.keepsPicked(key: String): Modifier {
+  val keep = LocalKeepPicked.current ?: return this
+  return onGloballyPositioned { keep.rects[key] = it.boundsInWindow() }
 }
 
 @Composable
@@ -292,7 +329,7 @@ private fun RowsStack(vm: Arranger, card: Dp, labelWidth: Dp?, wheel: Int, modif
   var box by remember { mutableStateOf<LayoutCoordinates?>(null) }
   val placed = vm.rows.flatten()
   Column(
-    modifier.let { if (scroll) it.verticalScroll(rememberScrollState()) else it }
+    modifier.keepsPicked("rows").let { if (scroll) it.verticalScroll(rememberScrollState()) else it }
       .onGloballyPositioned { box = it }.swipeUnplace(vm, placed, bounds),
     verticalArrangement = Arrangement.spacedBy(if (labelWidth == null) 8.dp else ROW_STACK_GAP),
   ) {
@@ -585,7 +622,7 @@ private fun HandTray(vm: Arranger, card: Dp, perLine: Int, modifier: Modifier = 
   // Else, sorted by suit, a wider gap between the suits, which the page's sizes leave room for in a single line.
   val single = perLine >= 13
   Column(
-    modifier.fillMaxWidth().tourAnchor("hand").onGloballyPositioned { tray = it }.swipeSelect(vm, hand, bounds).padding(top = card * 0.22f),
+    modifier.fillMaxWidth().tourAnchor("hand").keepsPicked("hand").onGloballyPositioned { tray = it }.swipeSelect(vm, hand, bounds).padding(top = card * 0.22f),
     horizontalAlignment = if (bySuit != null) Alignment.Start else Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(lineGap),
   ) {
     for (line in bySuit ?: hand.chunked(perLine.coerceAtLeast(1))) {

@@ -56,6 +56,12 @@ class Arranger(
     if (selected.size == Cards.ROW_SIZES[row] - rows[row].size) placeInto(row)
   }
 
+  /** A press elsewhere than on the hand or the rows: the picked cards go down, and the row picked first is forgotten. */
+  fun putDown() {
+    selected = emptySet()
+    armed = null
+  }
+
   /** A tap on a row: places the selected cards, or with none selected, picks the row for the next cards. */
   fun tapRow(row: Int) {
     if (selected.isNotEmpty()) placeInto(row)

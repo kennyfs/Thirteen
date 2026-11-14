@@ -240,11 +240,27 @@
       return done();
     }
   }
+
+  // A press anywhere but on the hand or the rows puts the picked cards down (and forgets the row picked first); what it
+  // lands on still does its own thing. In the capture phase, before that thing, and only while something is picked.
+  let areaEl: HTMLDivElement;
+  $effect(() => {
+    if (skeleton || locked || (vm.selected.size === 0 && vm.armed === null)) return;
+    const away = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      const at = e.target as Element | null;
+      if (at && areaEl?.contains(at) && at.closest('.tray, .rows')) return;
+      vm.selected = new Set();
+      vm.armed = null;
+    };
+    document.addEventListener('pointerdown', away, true);
+    return () => document.removeEventListener('pointerdown', away, true);
+  });
 </script>
 
 <svelte:window onkeydown={onKey} />
 
-<div class="area" class:skeleton bind:clientWidth={areaW} bind:clientHeight={areaH} aria-hidden={skeleton || undefined} inert={skeleton}>
+<div class="area" class:skeleton bind:this={areaEl} bind:clientWidth={areaW} bind:clientHeight={areaH} aria-hidden={skeleton || undefined} inert={skeleton}>
   {#if areaW > 0}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="felt table" class:locked style:padding="{DESK_PAD}px" style:gap="{DESK_HAND_GAP}px" oncontextmenu={tableMenu}>
