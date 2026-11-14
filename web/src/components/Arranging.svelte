@@ -4,6 +4,8 @@
   table. The rows' cards and the hand's are one size, the largest the room allows up to the window's `play` size.
   `bare` (a computer's): the rows one above another in the middle and the hand under them, without the buttons, which
   the page's side panel has (Play.svelte), and the keys below.
+  `skeleton`: the table before its hand (TableSkeleton), the same shape with the cards, the words and the buttons as
+  pulsing blocks, so that nothing moves when the hand comes.
 
   A mouse does what a finger does: a sweep with the button held picks (or unpicks) the cards it passes. Keys: 1 2 3 put the picked cards into a row (or pick the row for the next ones), ← →
   go along the hand and Space picks, S sorts, Z undoes, Delete takes all back, Esc unpicks, Enter plays.
@@ -27,8 +29,11 @@
     vm: Arranger; wheel: number; busy: boolean; confirmLabel: string; onconfirm: () => void; bare?: boolean;
     /** Help asked for (the ? key, or the button): the page shows it when it has the buttons. */
     help?: boolean;
+    skeleton?: boolean;
   }
-  let { vm, wheel, busy, confirmLabel, onconfirm, bare = false, help = $bindable(false) }: Props = $props();
+  let { vm, wheel, busy, confirmLabel, onconfirm, bare = false, help = $bindable(false), skeleton = false }: Props = $props();
+  /** A skeleton's hand: thirteen places. */
+  const PLACES = Array.from({ length: 13 }, (_, i) => i);
 
   let areaW = $state(0);
   let areaH = $state(0);
@@ -41,7 +46,7 @@
   const labelHeight = $derived(textRoom(24) + textRoom(16) + 2);
   const above = $derived(!wide && fit.above);
 
-  const hand = $derived(vm.unplaced);
+  const hand = $derived(skeleton ? PLACES : vm.unplaced);
   const counts = $derived.by(() => {
     const m = new Map<number, number>();
     for (const c of hand) m.set(rank(c), (m.get(rank(c)) ?? 0) + 1);
@@ -57,7 +62,7 @@
   });
   // Sorted by suit with the room for it: a line a suit, the lines closer together if that makes them fit.
   const suitLines = $derived.by(() => {
-    if (!vm.sortBySuit || wide) return null;
+    if (skeleton || !vm.sortBySuit || wide) return null;
     const groups = new Map<number, number[]>();
     for (const c of hand) groups.set(suit(c), [...(groups.get(suit(c)) ?? []), c]);
     const lines = [...groups.values()].flatMap((g) => chunk(g, fit.perLine));
@@ -173,6 +178,7 @@
 
   // ---- Keys ----
   function onKey(e: KeyboardEvent) {
+    if (skeleton) return;
     const el = e.target as HTMLElement | null;
     if (el && (el.closest('input, textarea, select, [contenteditable]') || document.querySelector('dialog[open]'))) return;
     if (e.altKey || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() !== 'z')) return;
@@ -250,7 +256,8 @@
       <div class="hand-line">
         {#each line as c, i (c)}
           {#if i > 0}<span style:width="{single && !suitLines && vm.sortBySuit && suit(line[i - 1]) !== suit(c) ? SUIT_GAP : HAND_GAP}px" class="gap"></span>{/if}
-          <Card card={c} width={card} tint={SAME_RANK_CATEGORY[counts.get(rank(c)) ?? 0]} light selected={vm.selected.has(c)} onclick={() => clickCard(c)} />
+          {#if skeleton}<div class="place sk-felt" style:width="{card}px" style:height="{cardHeight(card)}px" style:border-radius="{card * 0.14}px"></div>
+          {:else}<Card card={c} width={card} tint={SAME_RANK_CATEGORY[counts.get(rank(c)) ?? 0]} light selected={vm.selected.has(c)} onclick={() => clickCard(c)} />{/if}
         {/each}
       </div>
     {/each}
@@ -265,7 +272,7 @@
 
 <svelte:window onkeydown={onKey} />
 
-<div class="area" bind:clientWidth={areaW} bind:clientHeight={areaH}>
+<div class="area" class:skeleton bind:clientWidth={areaW} bind:clientHeight={areaH} aria-hidden={skeleton || undefined} inert={skeleton}>
   {#if areaW > 0}
     {#if bare}
       <div class="felt desk-felt">
@@ -359,6 +366,15 @@
   .sort { flex: none; height: 46px; padding: 0 10px; gap: 4px; }
   .go { flex: 1; min-width: 0; }
   .help-text { white-space: pre-line; margin: 0; }
+  /* A skeleton: the felt stays, what is on it pulses; words are bars as long as they are, buttons blocks. */
+  .skeleton .felt > *, .skeleton .bar { animation: sk-pulse 1.6s ease-in-out infinite; }
+  .skeleton .place { flex: none; }
+  .skeleton .row-label > span, .skeleton .row-header > span { align-self: flex-start; color: transparent; border-radius: 6px;
+    background: color-mix(in srgb, var(--on-felt) 16%, transparent); }
+  .skeleton .wb:not(.tools), .skeleton .tool { background: color-mix(in srgb, var(--on-felt) 16%, transparent); border-color: transparent; color: transparent; }
+  .skeleton .wb:not(.tools) > :global(*) { visibility: hidden; }
+  .skeleton .bar .btn { background: var(--surface-container-highest); border-color: transparent; color: transparent; }
+  @media (prefers-reduced-motion: reduce) { .skeleton .felt > *, .skeleton .bar { animation: none; } }
   .desk-felt { flex: 1; min-height: 0; margin: 0 12px 12px; padding: 16px; display: flex; flex-direction: column; align-items: center;
     justify-content: center; gap: 28px; }
   .desk-rows { display: flex; justify-content: center; }

@@ -15,6 +15,8 @@
   import Icon from '../Icon.svelte';
   import SeatResults from '../SeatResults.svelte';
   import TitleBar from '../TitleBar.svelte';
+  import PanelSkeleton from '../PanelSkeleton.svelte';
+  import TableSkeleton from '../TableSkeleton.svelte';
   import Toggle from '../Toggle.svelte';
   import ProbTiles from './ProbTiles.svelte';
   import { remarks as remarksOf } from '../../lib/commentary';
@@ -166,7 +168,14 @@
       <button class="btn tonal" onclick={showAnalysis}><Icon name="analytics" />{t('all_candidates')}<Kbd k="A" inline /></button>
     </section>
   {:else}
-    <section class="card"><div class="thinking body-medium dim"><span class="spinner small"></span>{t('analyzing')}</div></section>
+    <!-- The comparison's card on its way: its mark, its tiles (2, 2 and 3 a line, as ProbTiles') and its button. -->
+    <section class="card" role="status" aria-busy="true"><span class="sr-only">{t('analyzing')}</span>
+      <div class="sk-cmp sk" aria-hidden="true">
+        <span class="sk-block mark"></span>
+        {#each [2, 2, 3] as n, i (i)}<div class="tiles">{#each Array(n) as _, j (j)}<span class="sk-block"></span>{/each}</div>{/each}
+        <span class="sk-block go"></span>
+      </div>
+    </section>
   {/if}
 {/snippet}
 
@@ -185,7 +194,7 @@
       {/if}
     </TitleBar>
     {#if f?.analysis}<DeskCandidates a={f.analysis} mine={f.result.rows[0]} legacyNote={legacy} />
-    {:else}<div class="loading"><div class="spinner"></div><div class="body-large dim">{t('analyzing')}</div></div>{/if}
+    {:else}<PanelSkeleton label={t('analyzing')} />{/if}
   </div>
 {:else}
   <div class="desk">
@@ -198,7 +207,7 @@
       {:else if app.ready}
         <DeskArranging vm={app.play} {wheel} busy={app.waiting} onconfirm={() => app.confirm()} keys={app.deskKeys} bind:help />
       {:else}
-        <div class="loading"><div class="spinner"></div></div>
+        <TableSkeleton desk keys={app.deskKeys} />
       {/if}
     </div>
     <aside class="side" class:wide={!!f}>
@@ -270,13 +279,14 @@
   .remarks .mistake { background: var(--error-container); color: var(--on-error-container); border-radius: 8px; padding: 2px 8px; align-self: flex-start; }
   .yours-head { display: flex; align-items: center; gap: 8px; }
   .side.wide { width: 400px; }
-  .thinking { display: flex; align-items: center; gap: 10px; min-height: 40px; }
   .star { color: var(--highlight); display: contents; }
   .chip.static { cursor: default; background: var(--secondary-container); color: var(--on-secondary-container); border: none; }
   .keys { display: inline-flex; align-items: center; gap: 4px; margin-right: 8px; }
-  .loading { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 32px; }
-  .spinner { width: 48px; height: 48px; border-radius: 50%; border: 5px solid var(--surface-container-highest); border-top-color: var(--primary); animation: spin 0.9s linear infinite; }
-  .spinner.small { width: 22px; height: 22px; border-width: 3px; }
+  .sk-cmp { display: flex; flex-direction: column; gap: 6px; }
+  .sk-cmp .mark { width: 96px; height: 22px; border-radius: 8px; margin-bottom: 2px; }
+  .tiles { display: flex; gap: 6px; }
+  .tiles span { flex: 1; height: 52px; border-radius: 10px; }
+  .sk-cmp .go { width: 160px; height: 40px; border-radius: 20px; margin-top: 6px; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .help-text { white-space: pre-line; margin: 0; }
 </style>

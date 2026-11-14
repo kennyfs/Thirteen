@@ -825,7 +825,7 @@ fun PlayerAnalysisPage(r: BattleReview, room: RoomView) {
   val name = room.players.firstOrNull { it.id == play.player }?.name ?: "?"
   TitleBar("${stringResource(R.string.battle_hand_of, o.index + 1, room.settings.hands)} · $name", onBack = if (r.fromReview) r::closeDetail else r::closeAnalysis)
   val a = r.detailAnalysis
-  if (a == null) Loading(stringResource(R.string.analyzing))
+  if (a == null) PanelSkeleton(stringResource(R.string.analyzing))
   else CandidateList(a, play.rows, legacyNote = null, tags = r.detailTags, mineLabel = if (play.player == r.me) null else name)
 }
 

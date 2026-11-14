@@ -10,6 +10,7 @@
   row takes it all back (elsewhere on the table it unpicks). The keys are desk-keys.ts's, by the settings' choice; with
   the cursor's, a mark under the hand shows the cursor and whether a sweep is on.
   `locked` (a battle's hand handed in): the same table, nothing to do on it, `waiting` where the hand was.
+  `skeleton`: the table before its hand (TableSkeleton), the same shape with the cards and the words as pulsing blocks.
 -->
 <script lang="ts">
   import type { Arranger } from '../../lib/arranger.svelte';
@@ -22,8 +23,13 @@
   import Kbd from './Kbd.svelte';
   import type { Snippet } from 'svelte';
 
-  interface Props { vm: Arranger; wheel: number; busy: boolean; onconfirm: () => void; keys?: DeskKeys; help?: boolean; locked?: boolean; waiting?: Snippet }
-  let { vm, wheel, busy, onconfirm, keys = { input: 'pick', lines: 13 }, help = $bindable(false), locked = false, waiting }: Props = $props();
+  interface Props {
+    vm: Arranger; wheel: number; busy: boolean; onconfirm: () => void; keys?: DeskKeys; help?: boolean; locked?: boolean; waiting?: Snippet;
+    skeleton?: boolean;
+  }
+  let { vm, wheel, busy, onconfirm, keys = { input: 'pick', lines: 13 }, help = $bindable(false), locked = false, waiting, skeleton = false }: Props = $props();
+  /** A skeleton's hand: thirteen places. */
+  const PLACES = Array.from({ length: 13 }, (_, i) => i);
 
   const km = $derived(keyMap(keys));
   const below = $derived(km.cards || km.cursor ? textRoom(13) + 10 : 0);
@@ -32,7 +38,7 @@
   const fit = $derived(deskArrangeFit(areaW, areaH, ui.u, km.perLine, below));
   const card = $derived(fit.card);
   const label = $derived(deskRowLabel(ui.u));
-  const hand = $derived(vm.unplaced);
+  const hand = $derived(skeleton ? PLACES : vm.unplaced);
   const counts = $derived.by(() => {
     const m = new Map<number, number>();
     for (const c of hand) m.set(rank(c), (m.get(rank(c)) ?? 0) + 1);
@@ -47,7 +53,7 @@
 
   /** The suit gap before place `i` of a line: in one line sorted by suit, between suits. */
   function suitGap(i: number): boolean {
-    if (km.perLine < 13 || !vm.sortBySuit) return false;
+    if (skeleton || km.perLine < 13 || !vm.sortBySuit) return false;
     return suit(hand[i - 1]) !== suit(hand[i]);
   }
 
@@ -191,7 +197,7 @@
 
   // ---- Keys, by where they are on the keyboard (e.code) ----
   function onKey(e: KeyboardEvent) {
-    if (locked) return;
+    if (locked || skeleton) return;
     const el = e.target as HTMLElement | null;
     if (el && (el.closest('input, textarea, select, [contenteditable]') || document.querySelector('dialog[open]'))) return;
     if (e.altKey) return;
@@ -238,7 +244,7 @@
 
 <svelte:window onkeydown={onKey} />
 
-<div class="area" bind:clientWidth={areaW} bind:clientHeight={areaH}>
+<div class="area" class:skeleton bind:clientWidth={areaW} bind:clientHeight={areaH} aria-hidden={skeleton || undefined} inert={skeleton}>
   {#if areaW > 0}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="felt table" class:locked style:padding="{DESK_PAD}px" style:gap="{DESK_HAND_GAP}px" oncontextmenu={tableMenu}>
@@ -278,6 +284,9 @@
                 {@const keyLabel = km.cardLabels?.[li * km.perLine + i]}
                 {#if i > 0}<span style:width="{suitGap(li * km.perLine + i) ? SUIT_GAP : HAND_GAP}px" class="gap"></span>{/if}
                 <div class="place">
+                  {#if skeleton}<div class="sk-felt" style:width="{card}px" style:height="{cardHeight(card)}px" style:border-radius="{card * 0.14}px"></div>
+                    {#if below > 0}<span style:height="{below}px"></span>{/if}
+                  {:else}
                   <!-- svelte-ignore a11y_no_static_element_interactions -->
                   <span class="hold" ondblclick={() => doubleCard(c)} onclickcapture={(e) => (shift = e.shiftKey)}>
                     <Card card={c} width={card} tint={SAME_RANK_CATEGORY[counts.get(rank(c)) ?? 0]} light selected={vm.selected.has(c)} onclick={() => clickCard(c)}
@@ -288,6 +297,7 @@
                     {@const here = li * km.perLine + i === cursor}
                     <span class="cursor" style:height="{below}px" style:width="{card}px" aria-hidden={!here}>
                       {#if here && paint !== null}<span class="painting label-small">{paint ? t('cursor_on') : t('cursor_off_mark')}</span>{/if}</span>
+                  {/if}
                   {/if}
                 </div>
               {/each}
@@ -335,4 +345,10 @@
   .slot-row.can:hover { outline-style: solid; }
   .locked .slot-row { cursor: default; }
   .locked .rows :global(button.card) { pointer-events: none; }
+  /* A skeleton: the felt stays, what is on it pulses; words are bars as long as they are. */
+  .skeleton .table > * { animation: sk-pulse 1.6s ease-in-out infinite; }
+  .skeleton .name > *, .skeleton .state { color: transparent; border-radius: 6px; background: color-mix(in srgb, var(--on-felt) 16%, transparent); }
+  .skeleton .name :global(kbd) { visibility: hidden; }
+  .skeleton .state { align-self: flex-start; }
+  @media (prefers-reduced-motion: reduce) { .skeleton .table > * { animation: none; } }
 </style>

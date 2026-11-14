@@ -142,7 +142,7 @@ fun LastAnalysis(vm: AppViewModel) {
       Button(onClick = { vm.peek = 0 }, Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.back_to_hand)) }
     }
     val a = p.analysis
-    if (a == null) Loading(stringResource(R.string.analyzing))
+    if (a == null) PanelSkeleton(stringResource(R.string.analyzing), Modifier.weight(1f))
     else CandidateList(a, p.result.first[0], legacyNote(vm, a), Modifier.weight(1f))
   }
 }
@@ -745,17 +745,8 @@ fun MyHandAnalysis(vm: AppViewModel) {
       Button(onClick = { vm.deal() }, Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.next_hand)) }
     }
     val a = vm.gameAnalysis
-    if (a == null) Loading(stringResource(R.string.analyzing))
+    if (a == null) PanelSkeleton(stringResource(R.string.analyzing), Modifier.weight(1f))
     else CandidateList(a, mine, legacyNote(vm, a), Modifier.weight(1f))
-  }
-}
-
-/** A centred spinner with what is being waited for. */
-@Composable
-fun Loading(text: String, modifier: Modifier = Modifier) {
-  Column(modifier.fillMaxWidth().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-    CircularProgressIndicator(Modifier.size(48.dp), strokeWidth = 5.dp)
-    Text(text, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
   }
 }
 

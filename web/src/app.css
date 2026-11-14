@@ -104,3 +104,13 @@ button { font: inherit; color: inherit; }
 .badge { display: inline-block; padding: 1px 7px; border-radius: 8px; font-size: 0.8125rem; font-weight: 500; white-space: nowrap; }
 .section-header { padding: 16px 16px 6px; color: var(--primary); font-size: 0.875rem; font-weight: 500; }
 .felt { background: var(--felt); color: var(--on-felt); border-radius: 10px; }
+/*
+  Skeletons: what is loading drawn as blocks in its shape, pulsing over 1.6 s (still under reduced motion). On the page
+  the blocks are surface-container-highest on surface-container-high; on the felt, the felt's text at a sixth.
+*/
+.sk { animation: sk-pulse 1.6s ease-in-out infinite; }
+.sk-block { background: var(--surface-container-highest); }
+.sk-felt { background: color-mix(in srgb, var(--on-felt) 16%, transparent); }
+@keyframes sk-pulse { 50% { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) { .sk { animation: none; } }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

@@ -13,6 +13,7 @@
   import Battle from './components/Battle.svelte';
   import Dialog from './components/Dialog.svelte';
   import Icon, { type IconName } from './components/Icon.svelte';
+  import PanelSkeleton from './components/PanelSkeleton.svelte';
   import Play from './components/Play.svelte';
   import Records from './components/Records.svelte';
   import Settings from './components/Settings.svelte';
@@ -112,8 +113,9 @@
     {/each}
   </nav>
   <main>
-    {#if !app.ready}
-      <div class="loading"><span class="spinner"></span></div>
+    <!-- While the engine loads: the practice table in its skeleton shape (Play shows it), else a list's. -->
+    {#if !app.ready && !(app.screen === 'PLAY' && !nav.sub)}
+      <PanelSkeleton />
     {:else if nav.sub === 'tutorial'}
       <Tutorial {app} />
     {:else if app.screen === 'PLAY'}
@@ -160,7 +162,4 @@
   nav button.on .pill { background: var(--secondary-container); color: var(--on-secondary-container); }
   nav button:hover .pill { background: var(--surface-container-highest); }
   .label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  .loading { height: 100%; display: flex; align-items: center; justify-content: center; }
-  .spinner { width: 40px; height: 40px; border-radius: 50%; border: 4px solid transparent; border-top-color: var(--primary); animation: spin 0.9s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
 </style>

@@ -25,6 +25,8 @@
   import Toggle from '../Toggle.svelte';
   import DeskArranging from './DeskArranging.svelte';
   import DeskCandidates from './DeskCandidates.svelte';
+  import PanelSkeleton from '../PanelSkeleton.svelte';
+  import TableSkeleton from '../TableSkeleton.svelte';
   import Kbd from './Kbd.svelte';
   import KeyList from './KeyList.svelte';
   import { keyList, keyMap, startHint } from '../../lib/desk-keys';
@@ -337,7 +339,7 @@
       <div class="main">
         {#if b.deal}
           <DeskArranging {vm} {wheel} busy={b.submitting} onconfirm={() => b.submit()} keys={app.deskKeys} bind:help />
-        {:else}<div class="center">{@render spinner(40)}</div>{/if}
+        {:else}<TableSkeleton desk keys={app.deskKeys} />{/if}
       </div>
       <aside class="side">
         <div class="side-head">
@@ -455,7 +457,7 @@
       {#if r.detailAnalysis}
         <DeskCandidates a={r.detailAnalysis} mine={play.rows} tags={r.detailTags} mineLabel={play.player === r.me ? null : name} />
       {:else}
-        <div class="center">{@render spinner(48)}<span class="body-large dim">{t('analyzing')}</span></div>
+        <PanelSkeleton label={t('analyzing')} />
       {/if}
     {/if}
   {/if}

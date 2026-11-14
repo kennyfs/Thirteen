@@ -21,7 +21,9 @@
   import Icon from './Icon.svelte';
   import Menu from './Menu.svelte';
   import RowCards from './RowCards.svelte';
+  import PanelSkeleton from './PanelSkeleton.svelte';
   import SeatResults from './SeatResults.svelte';
+  import TableSkeleton from './TableSkeleton.svelte';
   import ThreeRows from './ThreeRows.svelte';
   import TitleBar from './TitleBar.svelte';
   import DeskBattle from './desk/DeskBattle.svelte';
@@ -374,7 +376,7 @@
     {#if b.deal}
       <Arranging vm={b.arranger} {wheel} busy={b.submitting} confirmLabel={t('battle_submit')} onconfirm={() => b.submit()} />
     {:else}
-      <div class="center">{@render spinner(40)}</div>
+      <TableSkeleton />
     {/if}
 
   {:else if page === 'waiting' && room}
@@ -462,7 +464,7 @@
       {#if r.detailAnalysis}
         <CandidateList a={r.detailAnalysis} mine={play.rows} tags={r.detailTags} mineLabel={play.player === r.me ? null : name} />
       {:else}
-        <div class="center">{@render spinner(48)}<span class="body-large dim">{t('analyzing')}</span></div>
+        <PanelSkeleton label={t('analyzing')} />
       {/if}
     {/if}
   {/if}

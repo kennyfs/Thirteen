@@ -7,6 +7,8 @@
   import { signed, ui } from '../lib/ui.svelte';
   import Arranging from './Arranging.svelte';
   import CandidateList from './CandidateList.svelte';
+  import PanelSkeleton from './PanelSkeleton.svelte';
+  import TableSkeleton from './TableSkeleton.svelte';
   import { nav } from '../lib/nav.svelte';
   import Icon from './Icon.svelte';
   import Rules from './Rules.svelte';
@@ -68,7 +70,7 @@
       {@render onward(true)}
     </TitleBar>
     {#if f.analysis}<CandidateList a={f.analysis} mine={f.result.rows[0]} legacyNote={legacy} />
-    {:else}<div class="loading"><div class="spinner"></div><div class="body-large dim">{t('analyzing')}</div></div>{/if}
+    {:else}<PanelSkeleton label={t('analyzing')} />{/if}
   {:else if f}
     {@const r = f.result}
     {@const mine = r.score.result[0]}
@@ -112,7 +114,7 @@
     {#if app.ready}
       <Arranging vm={app.play} {wheel} busy={app.waiting} confirmLabel={t('confirm')} onconfirm={() => app.confirm()} />
     {:else}
-      <div class="loading"><div class="spinner"></div></div>
+      <TableSkeleton />
     {/if}
   {/if}
 </div>
@@ -136,7 +138,5 @@
   .star { color: var(--highlight); display: contents; }
   .chip.static { cursor: default; background: var(--secondary-container); color: var(--on-secondary-container); border: none; }
   .lastbtn { padding: 0 10px; min-height: 36px; }
-  .loading { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 32px; }
-  .spinner { width: 48px; height: 48px; border-radius: 50%; border: 5px solid var(--surface-container-highest); border-top-color: var(--primary); animation: spin 0.9s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>
