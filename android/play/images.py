@@ -87,7 +87,8 @@ def feature(lang):
 
 
 def icon():
-    """The launcher icon (drawable/ic_launcher.xml), full bleed: Google Play rounds the corners itself."""
+    """The launcher icon's cards (drawable/ic_launcher_foreground.xml, at the old 48 dp icon's size) on the felt, full
+    bleed: Google Play rounds the corners itself."""
     N = 512
     k = N / 48 * S
     im = Image.new("RGBA", (N * S, N * S), GREEN + (255,))

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- A test build's launcher icon background: the felt at night (main's is the felt). -->
+  <color name="ic_launcher_background">#0B1F18</color>
+</resources>
