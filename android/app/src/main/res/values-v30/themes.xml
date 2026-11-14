@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!--
+    As values-v29, and the window into a display cutout on every side, landscape's full screen too (Android 15's default
+    for an app that targets it). Before Android 11 there is no such mode but shortEdges, which Android 15 deprecated.
+  -->
+  <style name="Theme.Thirteen" parent="Base.Theme.Thirteen">
+    <item name="android:enforceStatusBarContrast">false</item>
+    <item name="android:enforceNavigationBarContrast">true</item>
+    <item name="android:windowLayoutInDisplayCutoutMode">always</item>
+  </style>
+</resources>

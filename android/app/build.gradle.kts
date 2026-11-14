@@ -144,6 +144,8 @@ dependencies {
   implementation(project(":protocol"))
   implementation("com.squareup.okhttp3:okhttp:5.5.1")
   implementation("com.google.android.gms:play-services-nearby:19.5.1")
+  // play-services-basement asks for fragment 1.1.0, which Google Play reports as outdated: a current one instead.
+  implementation("androidx.fragment:fragment:1.9.1")
 
   testImplementation("junit:junit:4.13.2")
   androidTestImplementation(composeBom)

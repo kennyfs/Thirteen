@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <!-- The window behind the first frame, in the colors of the app's surface. -->
-  <style name="Theme.Thirteen" parent="@android:style/Theme.Material.Light.NoActionBar">
+  <!--
+    The window behind the first frame, in the colors of the app's surface. The app draws under the system bars on every
+    version (MainActivity.edgeToEdge); before Android 15 the bars are made see-through here, as Android 15 draws them
+    for an app that targets it, rather than with Window.setStatusBarColor and setNavigationBarColor, which Android 15
+    deprecated (androidx's enableEdgeToEdge calls them, and Google Play flags them).
+  -->
+  <style name="Base.Theme.Thirteen" parent="@android:style/Theme.Material.Light.NoActionBar">
     <item name="android:windowBackground">@color/surface</item>
+    <item name="android:statusBarColor">@android:color/transparent</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
   </style>
+  <style name="Theme.Thirteen" parent="Base.Theme.Thirteen" />
   <color name="surface">#F5FBF6</color>
 </resources>
