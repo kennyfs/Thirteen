@@ -183,6 +183,27 @@ No money or betting is involved.
 
 ## What's new (release notes, 500 characters each)
 
+### 2.3.0
+
+zh-TW:
+
+設定中較長的說明收進項目旁的 ⓘ。載入時以牌桌與清單的骨架取代轉圈圈，內容出現時版面不會跳動。點手牌與三墩以外的地方，選起的牌會放下。對戰中每手的結果在全部算好後一次顯示。配合 Android 15 更新全螢幕顯示。
+
+en-US:
+
+The longer explanations in Settings are now behind an (i) beside the setting. While loading, the table and the lists
+show their outline instead of a spinner, so nothing jumps when they arrive. Picked cards go back down when you tap
+anywhere but the hand or the rows. In battles, a hand's result appears all at once, once it is fully worked out.
+Edge-to-edge display updated for Android 15.
+
+ja-JP:
+
+設定の長い説明は、項目の横の ⓘ に収めました。読み込み中はスピナーの代わりに台やリストの形を表示し、内容が出ても画面がずれません。手札と3段以外の場所をタップすると、選んだカードが元に戻ります。対戦では、各ハンドの結果をすべて計算してから一度に表示します。Android 15 に合わせて全画面表示を更新しました。
+
+zh-HK:
+
+設定中較長的說明收埋喺項目旁邊的 ⓘ。載入時用牌枱同清單的骨架代替轉圈，內容出現時版面唔會跳。㩒手牌同三道以外的地方，揀起的牌會放返低。對戰中每手牌的結果喺全部計好之後一次顯示。配合 Android 15 更新全螢幕顯示。
+
 ### 2.2.1
 
 zh-TW:
