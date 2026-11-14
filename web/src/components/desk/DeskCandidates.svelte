@@ -2,7 +2,8 @@
   A computer's page of candidates: the remarks over all; the list at the left (best Q first, the player's pinned on top
   when it is not the best); at the right the player's arrangement (the best, without one) always on the left, and the
   one chosen (or the last one under the mouse in the list) beside it, the cards in another row framed; under each its
-  figures as the app's tiles, a difference against the best, as the app's. ↑ ↓ choose.
+  figures as the app's tiles, a difference against the best, as the app's. ↑ ↓ choose, the list keeping the one chosen
+  between a fifth and four fifths of its height.
   The props are CandidateList's: `tags` names others who played a candidate (a battle's players), `mineLabel` pins
   `mine` as someone else's, without the remarks on it.
 -->
@@ -16,6 +17,7 @@
   import { remarkText } from '../../lib/remarks';
   import { notableQGap } from '../../lib/rules';
   import { CARD_GAP } from '../../lib/sizing';
+  import { keepInBand } from '../../lib/scroll';
   import { fmtQ, ui } from '../../lib/ui.svelte';
   import ThreeRows from '../ThreeRows.svelte';
   import ProbTiles from './ProbTiles.svelte';
@@ -72,7 +74,8 @@
     e.preventDefault();
     at = Math.max(0, Math.min(order.length - 1, at + (e.key === 'ArrowDown' ? 1 : -1)));
     hovered = null;
-    document.querySelector(`.dc [data-at="${at}"]`)?.scrollIntoView({ block: 'nearest' });
+    const row = document.querySelector<HTMLElement>(`.dc [data-at="${at}"]`);
+    if (row) keepInBand(row);
   }
 
   // The detail's cards: the two arrangements side by side in the width, and in the height what the rest leaves (the
