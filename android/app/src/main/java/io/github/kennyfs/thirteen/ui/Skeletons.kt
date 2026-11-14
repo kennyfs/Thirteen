@@ -13,13 +13,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -32,6 +35,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.kennyfs.thirteen.ui.theme.LocalTable
 
 /**
  * A list's place while it loads (an analysis on its way), as the web page's PanelSkeleton: a heading bar and `rows` rows
@@ -39,12 +43,12 @@ import androidx.compose.ui.unit.dp
  * surfaceContainerHighest on surfaceContainerHigh, pulsing over 1.6 s. `label` is what TalkBack says.
  */
 @Composable
-fun PanelSkeleton(label: String, modifier: Modifier = Modifier, rows: Int = 5) {
+fun PanelSkeleton(label: String = "", modifier: Modifier = Modifier, rows: Int = 5) {
   val pulse = skeletonPulse()
   val block = MaterialTheme.colorScheme.surfaceContainerHighest
   val ground = MaterialTheme.colorScheme.surfaceContainerHigh
   Column(
-    modifier.fillMaxSize().padding(12.dp).clearAndSetSemantics { contentDescription = label }.graphicsLayer { alpha = pulse.value },
+    modifier.fillMaxSize().padding(12.dp).clearAndSetSemantics { if (label.isNotEmpty()) contentDescription = label }.graphicsLayer { alpha = pulse.value },
     verticalArrangement = Arrangement.spacedBy(8.dp),
   ) {
     Bar(block, 20.dp, Modifier.padding(start = 4.dp, top = 4.dp, bottom = 8.dp).fillMaxWidth(0.6f).widthIn(max = 320.dp))
@@ -59,6 +63,27 @@ fun PanelSkeleton(label: String, modifier: Modifier = Modifier, rows: Int = 5) {
           Bar(block, 18.dp, Modifier.width(44.dp))
         }
         Box(Modifier.fillMaxWidth().widthIn(max = 420.dp).height(44.dp).background(block, RoundedCornerShape(8.dp)))
+      }
+    }
+  }
+}
+
+/**
+ * A table game's hand on its way (its outcome, or its score from the player's seat): the felt with a line a player, a
+ * name and the cards, as the felt's text at a sixth, pulsing; in the place SeatResults then takes.
+ */
+@Composable
+fun SeatsSkeleton(players: Int, modifier: Modifier = Modifier) {
+  val pulse = skeletonPulse()
+  val t = LocalTable.current
+  val block = t.onFelt.copy(alpha = 0.16f)
+  Surface(modifier.fillMaxSize().clearAndSetSemantics {}, shape = MaterialTheme.shapes.large, color = t.felt) {
+    Column(Modifier.fillMaxSize().padding(12.dp).graphicsLayer { alpha = pulse.value }, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+      repeat(players) {
+        Row(Modifier.weight(1f).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+          Bar(block, 18.dp, Modifier.width(88.dp))
+          Box(Modifier.weight(1f).fillMaxHeight(0.7f).heightIn(max = 72.dp).background(block, RoundedCornerShape(8.dp)))
+        }
       }
     }
   }

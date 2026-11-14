@@ -650,8 +650,14 @@ private fun ResultTable(r: BattleReview, room: RoomView, o: HandOutcome, onPlaye
  */
 @Composable
 private fun HandTable(r: BattleReview, room: RoomView, o: HandOutcome?, modifier: Modifier = Modifier, onPlayer: ((Int) -> Unit)? = null) {
-  val table = o?.let { r.tables[it.index] }
-  if (o != null && table != null) {
+  // The hand once its page has all it needs, all at once; a skeleton of it before.
+  if (o == null || !r.isReady(o.index)) {
+    if (room.settings.mode == Mode.PUZZLE) PanelSkeleton(modifier = modifier, rows = maxOf(2, room.players.size))
+    else SeatsSkeleton(room.players.size.coerceAtLeast(2), modifier.padding(start = 8.dp, end = 12.dp, bottom = 10.dp))
+    return
+  }
+  val table = r.tables[o.index]
+  if (table != null) {
     val (order, score) = table
     val plays = order.map { o.plays[it] }
     val byId = room.players.associateBy { it.id }
@@ -674,7 +680,7 @@ private fun HandTable(r: BattleReview, room: RoomView, o: HandOutcome?, modifier
   }
   BoxWithConstraints(modifier.fillMaxSize().padding(horizontal = 12.dp)) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-      if (o != null) ResultTable(r, room, o, onPlayer)
+      ResultTable(r, room, o, onPlayer)
     }
   }
 }
@@ -688,8 +694,10 @@ private fun HandTable(r: BattleReview, room: RoomView, o: HandOutcome?, modifier
 @Composable
 private fun ReviewPage(vm: BattleViewModel, room: RoomView, last: Boolean = false) {
   val me = room.players.firstOrNull { it.id == vm.me }
-  val o = if (last) vm.outcomes.lastOrNull() else vm.outcomes.lastOrNull { it.index == room.hand }
-  val index = o?.index ?: room.hand
+  val arrived = if (last) vm.outcomes.lastOrNull() else vm.outcomes.lastOrNull { it.index == room.hand }
+  val index = arrived?.index ?: room.hand
+  // The hand once its page has all it needs, all at once.
+  val o = arrived?.takeIf { vm.review.isReady(it.index) }
   val puzzle = room.settings.mode == Mode.PUZZLE
   var analysisMode by rememberSaveable(index) { mutableStateOf(false) }
   HandHeader(
@@ -807,7 +815,7 @@ private fun settingsLine(room: RoomView, app: AppViewModel): String {
 fun DetailPage(r: BattleReview, room: RoomView, actions: @Composable RowScope.(HandOutcome) -> Unit = {}) {
   val o = r.outcomes.firstOrNull { it.index == r.detail } ?: return
   TitleBar(stringResource(R.string.battle_hand_of, o.index + 1, room.settings.hands), onBack = r::closeDetail) {
-    MyHandResult(r, o)
+    if (r.isReady(o.index)) MyHandResult(r, o)
     actions(o)
   }
   Text(

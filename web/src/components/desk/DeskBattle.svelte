@@ -213,9 +213,20 @@
   {/if}
 {/snippet}
 
+{#snippet resultSkeleton()}
+  <!-- A hand on its way (its outcome, or what its page needs worked out): a puzzle's list, or the felt with a line a player. -->
+  {#if puzzle}<PanelSkeleton rows={Math.max(2, room?.players.length ?? 4)} />
+  {:else}
+    <div class="felt seat-table sk-table" role="status" aria-busy="true">
+      {#each Array(room?.players.length ?? 4) as _, i (i)}<div class="sk-seat sk" aria-hidden="true"><span class="sk-felt"></span><span class="sk-felt"></span></div>{/each}
+    </div>
+  {/if}
+{/snippet}
+
 {#snippet handTable(o: HandOutcome | null, onplayer: ((player: number) => void) | null)}
+  {@const ready = !!o && r.isReady(o.index)}
   {@const table = o ? r.tables[o.index] : undefined}
-  {#if o && room && table}
+  {#if o && room && ready && table}
     {@const plays = table.order.map((i) => o.plays[i])}
     {@const byId = new Map(room.players.map((p) => [p.id, p]))}
     {@const totals = plays.map((p) => r.outcomes.filter((h) => h.index <= o.index).reduce((sum, h) => {
@@ -228,10 +239,10 @@
         notes={plays.map((p) => (p.timedOut ? timedOut() : null))} {totals} max={MAX_DESK_PLAY}
         onplayer={onplayer ? (s) => onplayer(plays[s].player) : null} />
     </div>
-  {:else if o && room}
+  {:else if o && room && ready}
     {@render puzzleTable(o, onplayer)}
   {:else}
-    <div class="center">{@render spinner(40)}</div>
+    {@render resultSkeleton()}
   {/if}
 {/snippet}
 
@@ -388,7 +399,8 @@
     </div>
 
   {:else if (page === 'review' || page === 'last') && room}
-    {@const o = reviewing}
+    <!-- The hand once its page has all it needs, all at once. -->
+    {@const o = reviewing && r.isReady(reviewing.index) ? reviewing : null}
     {@render bar(o?.index ?? room.hand, page !== 'last', o, true)}
     {@render handTable(o, analysisMode && !puzzle && o ? (p) => b.analyzeHand(o.index, p) : null)}
 
@@ -542,6 +554,10 @@
   /* A hand's result */
   .seat-table { flex: 1; min-height: 0; margin: 0 16px 16px; padding: 12px; display: flex; flex-direction: column; }
   .seat-table > :global(.results) { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: safe center; }
+  .sk-table { gap: 6px; }
+  .sk-seat { flex: 1; min-height: 0; display: flex; align-items: center; gap: 12px; padding: 4px; }
+  .sk-seat span:first-child { flex: none; width: 88px; height: 18px; border-radius: 9px; }
+  .sk-seat span:last-child { flex: 1; height: 70%; max-height: 72px; border-radius: 8px; }
   .table-wrap { flex: 1; min-height: 0; overflow: auto; padding: 0 16px 16px; }
   table.hands { width: 100%; max-width: 1400px; margin: 0 auto; border-collapse: collapse; }
   .hands th { text-align: left; font-size: 0.8125rem; font-weight: 500; color: var(--on-surface-variant); padding: 6px 10px; border-bottom: 1px solid var(--outline-variant); white-space: nowrap; }

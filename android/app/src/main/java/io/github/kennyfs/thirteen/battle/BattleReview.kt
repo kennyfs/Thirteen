@@ -8,6 +8,7 @@ import io.github.kennyfs.thirteen.Engine
 import io.github.kennyfs.thirteen.Score
 import io.github.kennyfs.thirteen.protocol.HandOutcome
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -33,6 +34,16 @@ class BattleReview(private val scope: CoroutineScope, private val model: () -> S
    */
   var tables by mutableStateOf<Map<Int, Pair<List<Int>, Score>>>(emptyMap()); private set
 
+  /**
+   * The hands whose page has all it needs (a table game's score from the player's seat, every play's row categories),
+   * worked out or failed: a hand is shown once it is, all at once, rather than its plain list first, the table after.
+   */
+  var ready by mutableStateOf<Set<Int>>(emptySet()); private set
+  /** The work for each hand, and the hand it was for (a hand replaced by another is worked out again). */
+  private val preparing = HashMap<Int, Pair<Job, HandOutcome>>()
+  /** Counts the clears, so that work for a battle cleared away writes nothing into the next. */
+  private var generation = 0
+
   /** The hand opened for a closer look, and the player whose hand of it is analyzed. */
   var detail by mutableStateOf<Int?>(null); private set
   var analyzed by mutableStateOf<Int?>(null); private set
@@ -51,22 +62,39 @@ class BattleReview(private val scope: CoroutineScope, private val model: () -> S
     val fresh = list.filter { it.index !in known }
     for (o in list) known[o.index] = o
     outcomes = known.values.sortedBy { it.index }
+    scope.launch { for (o in list) prepare(o).join() }
+    return fresh
+  }
+
+  /** Whether a hand's page has all it needs (see [ready]). */
+  fun isReady(index: Int): Boolean = index in ready
+
+  /** Works out what a hand's page needs, once a hand; then it is ready. Without the rules there is nothing to work out. */
+  private fun prepare(o: HandOutcome): Job {
+    val known = preparing[o.index]
+    if (known != null && known.second == o) return known.first
     val rules = rules
-    if (rules.isEmpty()) return fresh
-    scope.launch {
-      for (o in list) {
-        if (o.score == null || o.index in tables) continue
+    val gen = generation
+    val job = scope.launch {
+      known?.first?.join()
+      if (rules.isNotEmpty() && o.score != null && o.index !in tables) {
         val mine = o.plays.indexOfFirst { it.player == me }
         val order = if (mine < 0) o.plays.indices.toList() else listOf(mine) + o.plays.indices.filter { it != mine }
-        runCatching { Engine.score(order.map { o.plays[it].rows }, rules) }.onSuccess { tables = tables + (o.index to (order to it)) }
+        val score = runCatching { Engine.score(order.map { o.plays[it].rows }, rules) }
+        if (gen != generation) return@launch
+        score.onSuccess { tables = tables + (o.index to (order to it)) }
       }
-      for (o in list) for (rows in o.plays.map { it.rows } + listOfNotNull(o.best)) {
+      if (rules.isNotEmpty()) for (rows in o.plays.map { it.rows } + listOfNotNull(o.best)) {
         val key = rows.map { it.sorted() }
         if (key in categories) continue
-        runCatching { Engine.rows(rows, rules).categories }.onSuccess { categories = categories + (key to it) }
+        val found = runCatching { Engine.rows(rows, rules).categories }
+        if (gen != generation) return@launch
+        found.onSuccess { categories = categories + (key to it) }
       }
+      if (gen == generation) ready = ready + o.index
     }
-    return fresh
+    preparing[o.index] = job to o
+    return job
   }
 
   fun categoriesOf(rows: List<List<Int>>): List<Int>? = categories[rows.map { it.sorted() }]
@@ -78,12 +106,17 @@ class BattleReview(private val scope: CoroutineScope, private val model: () -> S
     outcomes = emptyList()
     categories = emptyMap()
     tables = emptyMap()
+    ready = emptySet()
+    preparing.clear()
+    generation++
     closeDetail()
   }
 
   /** A closed hand opened from the results: its table first. */
   fun openDetail(index: Int) {
-    if (outcomes.none { it.index == index }) return
+    val o = outcomes.firstOrNull { it.index == index } ?: return
+    // Its turn now, not after the hands before it.
+    prepare(o)
     detail = index
     fromReview = false
     closeAnalysis()

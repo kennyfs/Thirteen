@@ -112,6 +112,15 @@ export class Review {
   categories = $state<Record<string, number[]>>({});
   /** A table game's hands from the player's seat: the plays' order (theirs first) and the full score in it. */
   tables = $state<Record<number, { order: number[]; score: Score }>>({});
+  /**
+   * The hands whose page has all it needs (a table game's score from the player's seat, every play's row categories),
+   * worked out or failed: a hand is shown once it is, all at once, rather than its plain list first, the table after.
+   */
+  ready = $state<Record<number, true>>({});
+  /** The work for each hand, and the hand's content it was for (a hand replaced by another is worked out again). */
+  private preparing = new Map<number, { job: Promise<void>; content: string }>();
+  /** Counts the clears, so that work for a battle cleared away writes nothing into the next. */
+  private generation = 0;
   detail = $state<number | null>(null);
   analyzed = $state<number | null>(null);
   detailAnalysis = $state<Analysis | null>(null);
@@ -127,25 +136,44 @@ export class Review {
     const fresh = list.filter((o) => !known.has(o.index));
     for (const o of list) known.set(o.index, o);
     this.outcomes = [...known.values()].sort((a, b) => a.index - b.index);
+    (async () => { for (const o of list) await this.prepare(o); })();
+    return fresh;
+  }
+
+  /** Whether a hand's page has all it needs (see `ready`). */
+  isReady(index: number): boolean { return !!this.ready[index]; }
+
+  /** Works out what a hand's page needs, once a hand; then it is ready. Without the rules there is nothing to work out. */
+  private prepare(o: HandOutcome): Promise<void> {
+    const content = JSON.stringify([o.plays.map((p) => [p.player, p.rows]), o.best ?? null, !!o.score]);
+    const known = this.preparing.get(o.index);
+    if (known && known.content === content) return known.job;
     const rules = this.rules;
-    if (!rules) return fresh;
-    (async () => {
-      for (const o of list) {
-        if (!o.score || this.tables[o.index]) continue;
+    const gen = this.generation;
+    const job = (async () => {
+      if (known) await known.job;
+      if (rules && o.score && !this.tables[o.index]) {
         const mine = o.plays.findIndex((p) => p.player === this.me);
         const order = mine < 0 ? o.plays.map((_, i) => i) : [mine, ...o.plays.map((_, i) => i).filter((i) => i !== mine)];
         try {
           const score = await engine.score(order.map((i) => o.plays[i].rows), rules);
+          if (gen !== this.generation) return;
           this.tables = { ...this.tables, [o.index]: { order, score } };
-        } catch { /* the table shows the plain list */ }
+        } catch { /* the page shows the plain list */ }
       }
-      for (const o of list) for (const rows of [...o.plays.map((p) => p.rows), ...(o.best ? [o.best] : [])]) {
+      if (rules) for (const rows of [...o.plays.map((p) => p.rows), ...(o.best ? [o.best] : [])]) {
         const key = keyOf(rows);
         if (this.categories[key]) continue;
-        try { this.categories = { ...this.categories, [key]: (await engine.rows(rows, rules)).categories }; } catch { /* untinted */ }
+        try {
+          const { categories } = await engine.rows(rows, rules);
+          if (gen !== this.generation) return;
+          this.categories = { ...this.categories, [key]: categories };
+        } catch { /* untinted */ }
       }
+      if (gen === this.generation) this.ready = { ...this.ready, [o.index]: true };
     })();
-    return fresh;
+    this.preparing.set(o.index, { job, content });
+    return job;
   }
 
   categoriesOf(rows: Rows): number[] | null { return this.categories[keyOf(rows)] ?? null; }
@@ -157,11 +185,17 @@ export class Review {
     this.outcomes = [];
     this.categories = {};
     this.tables = {};
+    this.ready = {};
+    this.preparing.clear();
+    this.generation++;
     this.closeDetail();
   }
 
   openDetail(index: number) {
-    if (!this.outcomes.some((o) => o.index === index)) return;
+    const o = this.outcomes.find((x) => x.index === index);
+    if (!o) return;
+    // Its turn now, not after the hands before it.
+    void this.prepare(o);
     this.detail = index;
     this.fromReview = false;
     this.closeAnalysis();

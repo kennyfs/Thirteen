@@ -236,9 +236,20 @@
   </svelte:element>
 {/snippet}
 
+{#snippet resultSkeleton()}
+  <!-- A hand on its way (its outcome, or what its page needs worked out): a puzzle's list, or the felt with a line a player. -->
+  {#if puzzle}<PanelSkeleton rows={Math.max(2, room?.players.length ?? 4)} />
+  {:else}
+    <div class="felt seat-table sk-table" role="status" aria-busy="true">
+      {#each Array(room?.players.length ?? 4) as _, i (i)}<div class="sk-seat sk" aria-hidden="true"><span class="sk-felt"></span><span class="sk-felt"></span></div>{/each}
+    </div>
+  {/if}
+{/snippet}
+
 {#snippet handTable(o: HandOutcome | null, onplayer: ((player: number) => void) | null)}
+  {@const ready = !!o && r.isReady(o.index)}
   {@const table = o ? r.tables[o.index] : undefined}
-  {#if o && room && table}
+  {#if o && room && ready && table}
     {@const plays = table.order.map((i) => o.plays[i])}
     {@const byId = new Map(room.players.map((p) => [p.id, p]))}
     {@const totals = plays.map((p) => r.outcomes.filter((h) => h.index <= o.index).reduce((sum, h) => {
@@ -251,7 +262,7 @@
         notes={plays.map((p) => (p.timedOut ? timedOut() : null))} {totals}
         onplayer={onplayer ? (s) => onplayer(plays[s].player) : null} />
     </div>
-  {:else if o && room}
+  {:else if o && room && ready}
     <div class="scroll result-table" bind:clientWidth={tableW}>
       {#if tableW > 0}
         {@render line('', '', null, null, t(puzzle ? 'battle_col_hand_loss' : 'battle_col_hand'), 'dim head', t(puzzle ? 'battle_col_total_loss' : 'battle_col_total'), false, null)}
@@ -267,7 +278,7 @@
       {/if}
     </div>
   {:else}
-    <div class="center">{@render spinner(40)}</div>
+    {@render resultSkeleton()}
   {/if}
 {/snippet}
 
@@ -394,7 +405,8 @@
     </div>
 
   {:else if (page === 'review' || page === 'last') && room}
-    {@const o = reviewing}
+    <!-- The hand once its page has all it needs, all at once. -->
+    {@const o = reviewing && r.isReady(reviewing.index) ? reviewing : null}
     {@render header(o?.index ?? room.hand, page !== 'last', analysisMode && !puzzle ? t('battle_tap_player') : null, o, true)}
     {@render handTable(o, analysisMode && !puzzle && o ? (p) => b.analyzeHand(o.index, p) : null)}
 
@@ -450,7 +462,7 @@
   {:else if page === 'detail' && room}
     {@const o = r.outcomes.find((x) => x.index === r.detail) ?? null}
     {#if o}
-      <TitleBar title={t('battle_hand_of', o.index + 1, room.settings.hands)} onback={() => r.closeDetail()}>{@render myResult(o)}</TitleBar>
+      <TitleBar title={t('battle_hand_of', o.index + 1, room.settings.hands)} onback={() => r.closeDetail()}>{@render myResult(r.isReady(o.index) ? o : null)}</TitleBar>
       <p class="body-medium dim tap-note">{t('battle_tap_player')}</p>
       {@render handTable(o, (p) => r.openAnalysis(p))}
     {/if}
@@ -555,6 +567,10 @@
   .seat-table { flex: 1; min-height: 0; margin: 0 12px 10px 8px; padding: 8px; display: flex; flex-direction: column; }
   .seat-table > :global(.results) { flex: 1; min-height: 0; }
   .result-table { padding: 0 12px 12px; }
+  .sk-table { gap: 6px; }
+  .sk-seat { flex: 1; min-height: 0; display: flex; align-items: center; gap: 12px; padding: 4px; }
+  .sk-seat span:first-child { flex: none; width: 88px; height: 18px; border-radius: 9px; }
+  .sk-seat span:last-child { flex: 1; height: 70%; max-height: 72px; border-radius: 8px; }
   .line { display: flex; flex-direction: column; gap: 4px; width: 100%; padding: 6px 4px; border-radius: 12px; border: none;
     background: transparent; color: inherit; font: inherit; text-align: left; box-sizing: border-box; }
   button.line { cursor: pointer; }
