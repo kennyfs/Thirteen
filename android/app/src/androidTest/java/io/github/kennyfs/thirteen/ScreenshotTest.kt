@@ -20,8 +20,11 @@ import io.github.kennyfs.thirteen.protocol.RoomSettings
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.performClick
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario
@@ -156,6 +159,18 @@ class ScreenshotTest {
       shot(c, "7-settings")
       compose.onNodeWithText(instrumentation.targetContext.getString(R.string.nav_rules)).performScrollTo().performClick()
       shot(c, "8-rules")
+      // The explanations behind the (i)s: the rules that change the play, the computer players.
+      val ctx = instrumentation.targetContext
+      val close = ctx.getString(R.string.close)
+      compose.onNodeWithContentDescription(ctx.getString(R.string.help_about, ctx.getString(R.string.rules_play))).performScrollTo().performClick()
+      shot(c, "8b-rules-info", dialog = true)
+      compose.onNodeWithText(close).performClick()
+      scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+      compose.onAllNodesWithText(ctx.getString(R.string.opponents_title)).onFirst().performScrollTo().performClick()
+      shot(c, "8c-opponents")
+      compose.onNodeWithContentDescription(ctx.getString(R.string.help_about, ctx.getString(R.string.opponents_title))).performClick()
+      shot(c, "8d-opponents-info", dialog = true)
+      compose.onNodeWithText(close).performClick()
       scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
       compose.onNodeWithTag("nav_RECORDS").performClick()
       shot(c, "9-records")
@@ -169,13 +184,15 @@ class ScreenshotTest {
     }
   }
 
-  private fun shot(c: Config, name: String) {
+  /** `dialog`: a dialog is open, its scrim over the app's background, which then is not looked for at the sides. */
+  private fun shot(c: Config, name: String, dialog: Boolean = false) {
     compose.waitForIdle()
     // After a change of size or rotation the display can take a moment to turn (the app first).
     // Now and then the emulator misses the rotation: it is asked again.
     var tries = 0
     compose.waitUntil(TIMEOUT) {
-      compose.onRoot().fetchSemanticsNode().size.let { (it.width > it.height) == c.landscape }.also {
+      // The activity's root (a dialog open is a second one).
+      compose.onAllNodes(isRoot()).fetchSemanticsNodes().first().size.let { (it.width > it.height) == c.landscape }.also {
         if (!it && ++tries % 200 == 0) shell("settings put system user_rotation ${if (c.landscape) 1 else 0}")
       }
     }
@@ -188,13 +205,13 @@ class ScreenshotTest {
       val last = screen
       screen = instrumentation.uiAutomation.takeScreenshot()
       screen.let {
-        it != null && (it.width > it.height) == c.landscape && light(it.getPixel(1, it.height / 2)) != c.dark &&
-          light(it.getPixel(it.width - 2, it.height / 2)) != c.dark &&
+        it != null && (it.width > it.height) == c.landscape &&
+          (dialog || light(it.getPixel(1, it.height / 2)) != c.dark && light(it.getPixel(it.width - 2, it.height / 2)) != c.dark) &&
           last != null && it.sameAs(last)
       }
     }
     val what = "${c.name} $name"
-    val width = compose.onRoot().fetchSemanticsNode().size.width
+    val width = compose.onAllNodes(isRoot()).fetchSemanticsNodes().first().size.width
     for (node in compose.onAllNodesWithTag(CARD_TAG, useUnmergedTree = true).fetchSemanticsNodes()) {
       // boundsInRoot is clipped by the ancestors and the screen; size is the card's own.
       val shown = node.boundsInRoot

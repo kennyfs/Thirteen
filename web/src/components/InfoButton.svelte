@@ -16,12 +16,20 @@
 </button>
 {#if open}
   <Dialog title={title ?? t('info')} onclose={() => (open = false)}>
-    <p class="body-large">{text}</p>
+    <p class="body-large">{#each text.split('\n') as line, i (i)}<span>{line}</span>{/each}</p>
     {#snippet actions()}<button class="btn text" onclick={() => (open = false)}>{t('close')}</button>{/snippet}
   </Dialog>
 {/if}
 
 <style>
-  p { margin: 0; white-space: pre-line; }
+  /*
+    A line of the text each its own block, which avoids a short last line where the browser can. Japanese, where the
+    browser breaks it between phrases, evens its lines out; elsewhere it breaks anywhere, as Japanese body text does.
+  */
+  p { margin: 0; }
+  p span { display: block; text-wrap: pretty; }
+  @supports (word-break: auto-phrase) {
+    :global(:root:lang(ja)) p span { text-wrap: balance; word-break: auto-phrase; }
+  }
   .small { flex: none; width: 36px; min-height: 36px; height: 36px; border-radius: 18px; color: var(--on-surface-variant); }
 </style>

@@ -8,7 +8,7 @@
   <string name="cancel">Cancel</string>
   <string name="info">Explanation</string>
   <string name="close">Close</string>
-  <string name="help_about">About %1$s</string>
+  <string name="help_about">%1$s, explained</string>
   <string name="hand_n">Hand %1$d</string>
   <string name="you">You</string>
   <string name="ready">Ready</string>
