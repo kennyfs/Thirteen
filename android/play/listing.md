@@ -183,74 +183,83 @@ No money or betting is involved.
 
 ## What's new (release notes, 500 characters each)
 
+Each version's block pastes as it is into the Play Console's release notes.
+
+### 2.3.1
+
+```text
+<zh-TW>
+更新 App 圖示：在主畫面上填滿整個圖示形狀，不再有一圈白邊；也支援 Android 13 以上的主題圖示。
+</zh-TW>
+<en-US>
+The app icon now fills its shape on the home screen, without a white ring around it, and supports themed icons on Android 13 and later.
+</en-US>
+<ja-JP>
+アプリのアイコンがホーム画面で形いっぱいに表示されるようになり、周りの白い縁がなくなりました。Android 13 以降のテーマアイコンにも対応しました。
+</ja-JP>
+<zh-HK>
+更新 App 圖示：喺主畫面填滿成個圖示形狀，唔再有一圈白邊；亦支援 Android 13 或以上的主題圖示。
+</zh-HK>
+```
+
 ### 2.3.0
 
-zh-TW:
-
+```text
+<zh-TW>
 設定中較長的說明收進項目旁的 ⓘ。載入時以牌桌與清單的骨架取代轉圈圈，內容出現時版面不會跳動。點手牌與三墩以外的地方，選起的牌會放下。對戰中每手的結果在全部算好後一次顯示。配合 Android 15 更新全螢幕顯示。
-
-en-US:
-
-The longer explanations in Settings are now behind an (i) beside the setting. While loading, the table and the lists
-show their outline instead of a spinner, so nothing jumps when they arrive. Picked cards go back down when you tap
-anywhere but the hand or the rows. In battles, a hand's result appears all at once, once it is fully worked out.
-Edge-to-edge display updated for Android 15.
-
-ja-JP:
-
+</zh-TW>
+<en-US>
+The longer explanations in Settings are now behind an (i) beside the setting. While loading, the table and the lists show their outline instead of a spinner, so nothing jumps when they arrive. Picked cards go back down when you tap anywhere but the hand or the rows. In battles, a hand's result appears all at once, once it is fully worked out. Edge-to-edge display updated for Android 15.
+</en-US>
+<ja-JP>
 設定の長い説明は、項目の横の ⓘ に収めました。読み込み中はスピナーの代わりに台やリストの形を表示し、内容が出ても画面がずれません。手札と3段以外の場所をタップすると、選んだカードが元に戻ります。対戦では、各ハンドの結果をすべて計算してから一度に表示します。Android 15 に合わせて全画面表示を更新しました。
-
-zh-HK:
-
+</ja-JP>
+<zh-HK>
 設定中較長的說明收埋喺項目旁邊的 ⓘ。載入時用牌枱同清單的骨架代替轉圈，內容出現時版面唔會跳。㩒手牌同三道以外的地方，揀起的牌會放返低。對戰中每手牌的結果喺全部計好之後一次顯示。配合 Android 15 更新全螢幕顯示。
+</zh-HK>
+```
 
 ### 2.2.1
 
-zh-TW:
-
+```text
+<zh-TW>
 教學的牌型與三墩範例中，各列的牌在所有語言下都會對齊。
-
-en-US:
-
+</zh-TW>
+<en-US>
 In the tutorial, the cards of the hand ranks and of the three rows now line up in every language.
-
-ja-JP:
-
+</en-US>
+<ja-JP>
 チュートリアルの役の一覧と3段の例で、どの言語でもカードがそろって並ぶようになりました。
-
-zh-HK:
-
+</ja-JP>
+<zh-HK>
 教學的牌型同三道範例中，每行的牌喺所有語言下都會對齊。
+</zh-HK>
+```
 
 ### 2.2.0
 
-zh-TW:
-
+```text
+<zh-TW>
 新增日文、繁體中文（香港）、簡體中文、越南文與印尼文，各自使用當地的十三支用語，可在 Android 的「應用程式語言」設定中切換。較長的文字會縮小以完整顯示，不再被截斷；分析頁的機率方塊依名稱長度排列。「與首選差距在誤差內」的講評改稱「神經網路誤差」。
-
-en-US:
-
-New languages: Japanese, Traditional Chinese (Hong Kong), Simplified Chinese, Vietnamese and Indonesian, each with
-the game's own terms. Choose one in Android's app language setting. Longer text now shrinks to fit instead of being
-cut off, and the probability tiles on Analyze lay out by their names. The remark on a near-best arrangement now
-speaks of the neural network's error.
-
-ja-JP:
-
+</zh-TW>
+<en-US>
+New languages: Japanese, Traditional Chinese (Hong Kong), Simplified Chinese, Vietnamese and Indonesian, each with the game's own terms. Choose one in Android's app language setting. Longer text now shrinks to fit instead of being cut off, and the probability tiles on Analyze lay out by their names. The remark on a near-best arrangement now speaks of the neural network's error.
+</en-US>
+<ja-JP>
 日本語に対応しました。香港の繁体字中国語、簡体字中国語、ベトナム語、インドネシア語も追加し、それぞれ現地のプレイヤーが使う用語で表示します。言語は Android の「アプリの言語」設定で切り替えられます。長い文字は切れずに縮小して表示し、分析画面の確率タイルは名前の長さに合わせて並ぶようになりました。
-
-zh-HK:
-
+</ja-JP>
+<zh-HK>
 新增香港繁體中文、日文、簡體中文、越南文同印尼文，各自用當地的十三張用語，可以喺 Android 的「應用程式語言」設定切換。較長的文字會縮細以完整顯示，唔會再被截斷；分析頁的機率方塊按名稱長度排列。「與首選差距在誤差內」的評語改稱「神經網絡誤差」。
+</zh-HK>
+```
 
 ### 2.1.1
 
-zh-TW:
-
+```text
+<zh-TW>
 新增教學：幾頁就學會規則（點數依你目前選的規則說明），還能擺一手讓 AI 評分，並附上 AI 分析一萬手牌得出的技巧。導覽帶你看過每個畫面。「上一手」可在擺下一手時回看上一手的結果與分析。分析頁可滑過多張牌一次選取。
-
-en-US:
-
-New to Thirteen? A short tutorial teaches the rules (with the points under your own rules), lets you try a hand the
-AI judges, and shares tips from the AI's analysis of 10,000 hands. A tour shows each screen. Last hand brings back
-the previous hand's result and analysis while you set the next. Swipe across the cards on Analyze to pick them.
+</zh-TW>
+<en-US>
+New to Thirteen? A short tutorial teaches the rules (with the points under your own rules), lets you try a hand the AI judges, and shares tips from the AI's analysis of 10,000 hands. A tour shows each screen. Last hand brings back the previous hand's result and analysis while you set the next. Swipe across the cards on Analyze to pick them.
+</en-US>
+```
