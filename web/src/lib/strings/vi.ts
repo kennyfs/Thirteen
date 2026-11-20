@@ -6,6 +6,9 @@ import type { Table } from '../i18n.svelte';
 export default {
   // WEB
   records_info: 'Mọi ván bạn chơi đều được ghi trong trình duyệt này: các lá bài, các chi bạn xếp, luật chơi và thời gian bạn dùng. Không có gì khác, và không gửi đi đâu cả. Gửi tệp (JSONL) cho nhà phát triển giúp huấn luyện đối thủ máy giỏi hơn.',
+  tut_foul_text: 'Chi đầu phải lớn ít nhất bằng chi giữa, và chi giữa phải lớn ít nhất bằng chi cuối. Xếp sai thứ tự là binh lủng, và ở đây bạn sẽ không xếp xong như vậy được.',
+  welcome_body: 'Mới chơi Mậu Binh? Phần hướng dẫn dạy luật chơi trong vài phút; phần tham quan giới thiệu những gì trang này làm được. Sau này bạn vẫn mở lại được cả hai trong Cài đặt.',
+  battle_err_version: 'Phòng đang chạy một phiên bản khác (ở máy chủ hoặc ở điện thoại làm chủ phòng). Mọi người cần cùng một phiên bản: hãy tải lại trang này; người chơi trên ứng dụng thì cập nhật ứng dụng.',
   keys_title: 'Phím tắt',
   keys_arrange: '1 2 3 đặt lá đã chọn vào một chi · ← → và Space để chọn · S sắp xếp · Z hoàn tác · Delete lấy lại hết · Enter xếp xong',
   keys_result: 'Enter ván tiếp · A phân tích · F lưu · R xếp lại',

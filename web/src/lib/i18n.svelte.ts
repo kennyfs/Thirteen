@@ -27,6 +27,10 @@ const app = all as unknown as Record<Lang, Table>;
 const WEB: Record<'en' | 'zh', Table> = {
   en: {
     records_info: 'Every hand you play is recorded in this browser: the cards, your rows, the rules and the time you took. Nothing else, and nothing is sent anywhere. Sending the file (JSONL) to the developer helps train better computer players.',
+    // The app's say "app"; the page says here or reloads.
+    tut_foul_text: 'The back must be at least as big as the middle, and the middle at least as big as the front. Rows in any other order are a foul (倒水), which you cannot play here.',
+    welcome_body: 'New to Thirteen (Chinese poker)? The tutorial teaches the rules in a few minutes; the tour shows what you can do here. You can find both in Settings later.',
+    battle_err_version: 'The room runs another version (the server or the phone that hosts it). Everyone needs the same version: reload this page; players on the phone app update it.',
     // One, where the app's string says "hands".
     n_recorded_one: '1 hand recorded',
     chart_summary_one: '1 hand · total %2$s · average %3$s a hand',
@@ -44,6 +48,10 @@ const WEB: Record<'en' | 'zh', Table> = {
   },
   zh: {
     records_info: '你打的每一局都記錄在這個瀏覽器裡：手牌、你的擺法、規則和花的時間，沒有其他資料，也不會傳到任何地方。把這個檔案（JSONL）寄給開發者，可以用來訓練更好的電腦對手。',
+    // The app's say "app"; the page says here or reloads.
+    tut_foul_text: '尾墩要大於或等於中墩，中墩要大於或等於頭墩。順序反了就是「倒水」，這裡不會讓你出倒水的牌。',
+    welcome_body: '第一次玩十三支嗎？教學幾分鐘就能學會規則；導覽會介紹網頁版的各項功能。之後也都能在「設定」裡找到。',
+    battle_err_version: '房間（伺服器或開房的手機）使用的版本不同，所有玩家必須使用相同版本：請重新整理網頁；用手機 app 的玩家請更新 app。',
     keys_title: '快捷鍵',
     keys_arrange: '1 2 3 把選的牌放進頭／中／尾墩 · ← → 與空白鍵選牌 · S 排序 · Z 復原 · Delete 全部收回 · Enter 出牌',
     keys_result: 'Enter 下一局 · A 分析 · F 收藏 · R 重排',

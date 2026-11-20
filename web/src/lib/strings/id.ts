@@ -6,6 +6,9 @@ import type { Table } from '../i18n.svelte';
 export default {
   // WEB
   records_info: 'Setiap ronde yang kamu mainkan dicatat di browser ini: kartunya, barismu, aturannya, dan waktu yang kamu pakai. Tidak ada yang lain, dan tidak ada yang dikirim ke mana pun. Mengirim file (JSONL) ini ke pengembang membantu melatih pemain komputer yang lebih baik.',
+  tut_foul_text: 'Baris bawah harus paling tidak sebesar baris tengah, dan baris tengah paling tidak sebesar baris atas. Urutan lain adalah salah susun, dan di sini kamu tidak bisa memainkannya.',
+  welcome_body: 'Baru mengenal Capsa Susun? Tutorial mengajarkan aturannya dalam beberapa menit; tur menunjukkan apa saja yang bisa dilakukan di halaman ini. Keduanya juga bisa kamu temukan nanti di Setelan.',
+  battle_err_version: 'Room ini menjalankan versi yang berbeda (server atau ponsel yang menjadi host). Semua orang perlu versi yang sama: muat ulang halaman ini; pemain di aplikasi perlu memperbaruinya.',
   keys_title: 'Tombol',
   keys_arrange: '1 2 3 taruh kartu terpilih ke baris · ← → dan Space memilih · S mengurutkan · Z mengurungkan · Delete ambil semua · Enter main',
   keys_result: 'Enter ronde berikutnya · A analisis · F simpan · R susun ulang',
