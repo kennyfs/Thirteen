@@ -185,6 +185,23 @@ No money or betting is involved.
 
 Each version's block pastes as it is into the Play Console's release notes.
 
+### 2.4.0
+
+```text
+<zh-TW>
+新增術語表：教學、講評與說明裡的墩、牌型、打槍等用語可以直接點開解釋。設定頁整理：外觀選項改為按鈕、底部加上 app 簡介。App 圖示的牌縮小一些，比例更協調。
+</zh-TW>
+<en-US>
+Settings are tidier: outlined buttons for the appearance options, and a short introduction at the bottom. The app icon's cards are a little smaller, for better proportions.
+</en-US>
+<ja-JP>
+設定画面を整理しました：外観の項目をボタンにし、下にアプリの紹介を追加しました。アプリアイコンのカードを少し小さくして、バランスを整えました。
+</ja-JP>
+<zh-HK>
+設定頁整理：外觀選項改為按鈕，底部加上 app 簡介。App 圖示的牌縮細少少，比例更協調。
+</zh-HK>
+```
+
 ### 2.3.1
 
 ```text
