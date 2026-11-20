@@ -39,7 +39,7 @@
 <DeskRules {app} {onback} />
 {:else}
 <div class="page">
-  <TitleBar title={t('nav_rules')} {onback} />
+  <TitleBar title={t('nav_rules')} {onback} max={onback ? 720 : 0} />
   <div class="scroll"><div class="readable">
     <p class="body-medium dim note">{t('rules_next_hand')}</p>
     <div class="presets" role="radiogroup">

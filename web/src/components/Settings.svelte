@@ -28,7 +28,7 @@
 
 {#snippet list(desk: boolean)}
   <div class="page">
-    <TitleBar title={t('nav_settings')} />
+    <TitleBar title={t('nav_settings')} max={720} />
     <div class="scroll"><div class="readable">
       <div class="section-header">{t('settings_look')}</div>
       <div class="block">
@@ -37,15 +37,15 @@
       </div>
       <SettingRow title={t('color_style')}>
         {#snippet trailing()}<Menu label={ta('color_styles')[styles.indexOf(app.colorStyle)]} options={styles.map((s, i) => [s, ta('color_styles')[i]] as [ColorStyle, string])}
-          selected={app.colorStyle} onselect={(v) => app.chooseColorStyle(v)} />{/snippet}
+          selected={app.colorStyle} onselect={(v) => app.chooseColorStyle(v)} chip={false} />{/snippet}
       </SettingRow>
       <SettingRow title={t('dark_mode')}>
         {#snippet trailing()}<Menu label={ta('dark_modes')[darks.indexOf(app.darkMode)]} options={darks.map((s, i) => [s, ta('dark_modes')[i]] as [DarkMode, string])}
-          selected={app.darkMode} onselect={(v) => app.chooseDarkMode(v)} />{/snippet}
+          selected={app.darkMode} onselect={(v) => app.chooseDarkMode(v)} chip={false} />{/snippet}
       </SettingRow>
       <SettingRow title={app.lang === 'en' ? 'Language' : `${t('language')} · Language`}>
         {#snippet trailing()}<Menu label={LANGS.find((l) => l.id === app.lang)!.name} options={LANGS.map((l) => [l.id, l.name] as [Lang, string])}
-          selected={app.lang} onselect={(v) => app.chooseLang(v)} />{/snippet}
+          selected={app.lang} onselect={(v) => app.chooseLang(v)} chip={false} />{/snippet}
       </SettingRow>
 
       {#if desk}
@@ -82,6 +82,8 @@
       <SettingRow title={t('app_name')} value={t('about_source')} href="https://github.com/kennyfs/Thirteen" />
       <SettingRow title={t('about_play')} value={t('about_play_note')} href="https://play.google.com/store/apps/details?id=io.github.kennyfs.thirteen" />
       <SettingRow title={t('privacy_policy')} href="https://github.com/kennyfs/Thirteen/blob/main/docs/privacy.md" />
+      <p class="about body-medium dim">{t('about_text')}</p>
+      <p class="version body-small dim">{t('about_network', app.models[0].name)}</p>
     </div></div>
   </div>
 {/snippet}
@@ -115,6 +117,8 @@
   .desk-pane { flex: 1; min-width: 0; }
   /* The pages beside the list start at its edge, not in the middle of the room. */
   .desk-pane :global(.readable) { margin: 0; max-width: 960px; padding: 0 12px; }
+  .about { margin: 0; padding: 8px 16px; }
+  .version { margin: 0; padding: 4px 16px 0; }
   .block { padding: 8px 16px; display: flex; flex-direction: column; gap: 8px; }
   .radios { display: flex; flex-direction: column; }
   .with-help { display: flex; align-items: center; gap: 2px; margin: -6px 0; }

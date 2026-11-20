@@ -291,7 +291,7 @@
   <string name="from_records">A recorded hand</string>
   <string name="this_game_rules_named">%1$s (that hand\'s)</string>
   <string name="use_current_rules_named">Use the current rules: %1$s</string>
-  <string name="settings_look">Display</string>
+  <string name="settings_look">Appearance</string>
   <string name="settings_game">Game</string>
   <string name="settings_about">About</string>
   <string name="text_size">Text size</string>
@@ -308,9 +308,9 @@
   </string-array>
   <string name="dark_mode">Dark theme</string>
   <string-array name="dark_modes">
-    <item>As the system</item>
-    <item>Off</item>
-    <item>On</item>
+    <item>System</item>
+    <item>Light</item>
+    <item>Dark</item>
   </string-array>
   <string name="opponents_title">Computer players</string>
   <string name="opponents_all">All three: %1$s</string>
@@ -332,6 +332,9 @@
   <string name="records_list">All records, newest first</string>
   <string name="about_source">Open source (GPLv3), on GitHub</string>
   <string name="privacy_policy">Privacy policy</string>
+  <string name="about_text">Four-player Thirteen (Chinese poker): set your 13 cards into a front, middle and back row and compare them with the three other players. The scoring can be set to how you play, with presets for common rules. The computer players and the analysis use a neural network trained by playing against itself: after every hand, see how the AI would have set it and how far yours was from the best; or analyze any hand to see each arrangement\'s expected points and its chances of scooping or being scooped. Play friends online or face to face nearby, and every hand you play is recorded. No ads, no money involved. Open source (GPLv3).</string>
+  <string name="about_version">Version %1$s · neural network %2$s</string>
+  <string name="about_network">Neural network %1$s</string>
   <string name="about_web">Web version</string>
   <string name="about_web_note">Play in a browser, on a computer too: %1$s</string>
   <string name="about_play">The Android app</string>

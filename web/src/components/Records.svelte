@@ -131,7 +131,7 @@
 <DeskRecords {app} />
 {:else}
 <div class="page">
-  <TitleBar title={t('records_title')} />
+  <TitleBar title={t('records_title')} max={840} />
   <div class="scroll">
     <div class="readable">
       <div class="kinds"><Toggle options={RECORD_KINDS.map((k, i) => [k, t(KIND_NAMES[i])] as [RecordKind, string])} selected={kind} onselect={(k) => { kind = k; shown = 20; chosen = ''; }} /></div>

@@ -290,7 +290,7 @@
   <string name="from_records">从记录挑一手</string>
   <string name="this_game_rules_named">%1$s（该局）</string>
   <string name="use_current_rules_named">改用目前规则：%1$s</string>
-  <string name="settings_look">显示</string>
+  <string name="settings_look">外观</string>
   <string name="settings_game">游戏</string>
   <string name="settings_about">关于</string>
   <string name="text_size">字体大小</string>
@@ -302,14 +302,14 @@
   <string name="color_style">配色</string>
   <string-array name="color_styles">
     <item>牌桌绿</item>
-    <item>极简</item>
+    <item>简约</item>
     <item>跟随壁纸</item>
   </string-array>
   <string name="dark_mode">深色模式</string>
   <string-array name="dark_modes">
     <item>跟随系统</item>
-    <item>关闭</item>
-    <item>开启</item>
+    <item>浅色</item>
+    <item>深色</item>
   </string-array>
   <string name="opponents_title">电脑对手</string>
   <string name="opponents_all">3 位都是 %1$s</string>
@@ -331,6 +331,9 @@
   <string name="records_list">全部记录（新的在前）</string>
   <string name="about_source">开源（GPLv3），在 GitHub 上</string>
   <string name="privacy_policy">隐私政策</string>
+  <string name="about_text">四人十三水：把 13 张牌摆成头、中、尾三道，和其他三家比牌。计分规则可以按你习惯的玩法调整，也有常见玩法的预设。电脑对手和分析都用自我对打训练出来的神经网络：每局结束能看 AI 会怎么摆、你的摆法差多少；也能摆出任何一手牌，看每种摆法的期望得分，以及打枪、被打枪的概率。还能和朋友通过网络或在附近面对面对战，打过的每一局都有记录。没有广告，不涉及金钱，开放源代码（GPLv3）。</string>
+  <string name="about_version">版本 %1$s・神经网络 %2$s</string>
+  <string name="about_network">神经网络 %1$s</string>
   <string name="about_web">网页版</string>
   <string name="about_web_note">用浏览器玩，电脑也可以：%1$s</string>
   <string name="about_play">Android 应用</string>

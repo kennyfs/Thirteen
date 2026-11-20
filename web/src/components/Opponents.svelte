@@ -11,7 +11,7 @@
 </script>
 
 <div class="page">
-  <TitleBar title={t('opponents_title')} {onback}><InfoButton text={t('opponents_info')} title={t('opponents_title')} /></TitleBar>
+  <TitleBar title={t('opponents_title')} {onback} max={onback ? 720 : 0}><InfoButton text={t('opponents_info')} title={t('opponents_title')} /></TitleBar>
   <div class="scroll"><div class="readable">
     <p class="body-medium dim note">{t('next_hand_note')}</p>
     {#each app.seatChoices as seat, i (i)}

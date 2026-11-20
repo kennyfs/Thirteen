@@ -12,7 +12,7 @@
 </script>
 
 <div class="page">
-  <TitleBar title={t('networks')} {onback}><InfoButton text={t('networks_info')} title={t('networks')} /></TitleBar>
+  <TitleBar title={t('networks')} {onback} max={onback ? 720 : 0}><InfoButton text={t('networks_info')} title={t('networks')} /></TitleBar>
   <div class="scroll"><div class="readable">
     {#each app.models as m (m.path)}
       <div class="row">

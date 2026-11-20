@@ -293,7 +293,7 @@
   <string name="from_records">記録から選ぶ</string>
   <string name="this_game_rules_named">%1$s（そのハンド）</string>
   <string name="use_current_rules_named">今のルールを使う：%1$s</string>
-  <string name="settings_look">表示</string>
+  <string name="settings_look">外観</string>
   <string name="settings_game">ゲーム</string>
   <string name="settings_about">このアプリについて</string>
   <string name="text_size">文字サイズ</string>
@@ -311,8 +311,8 @@
   <string name="dark_mode">ダークモード</string>
   <string-array name="dark_modes">
     <item>システムに合わせる</item>
-    <item>オフ</item>
-    <item>オン</item>
+    <item>ライト</item>
+    <item>ダーク</item>
   </string-array>
   <string name="opponents_title">CPU対戦相手</string>
   <string name="opponents_all">3人とも %1$s</string>
@@ -334,6 +334,9 @@
   <string name="records_list">すべての記録（新しい順）</string>
   <string name="about_source">オープンソース（GPLv3）、GitHub で公開</string>
   <string name="privacy_policy">プライバシーポリシー</string>
+  <string name="about_text">4人で遊ぶ十三支（チャイニーズポーカー）：13枚をトップ・ミドル・ボトムの3段に並べ、ほかの3人と比べます。得点のルールは遊び方に合わせて変えられ、よくあるルールのプリセットもあります。コンピューターの相手と分析には、自己対戦で学習したニューラルネットワークを使っています。毎ハンドのあとに AI ならどう並べたか、自分の並べ方との差を確かめられ、どんなハンドでも並べ方ごとの期待得点とスクープの確率を見られます。友だちとオンラインや近くで対面対戦もでき、遊んだハンドはすべて記録されます。広告なし、お金は一切かかりません。オープンソース（GPLv3）。</string>
+  <string name="about_version">バージョン %1$s・ニューラルネットワーク %2$s</string>
+  <string name="about_network">ニューラルネットワーク %1$s</string>
   <string name="about_web">Web 版</string>
   <string name="about_web_note">ブラウザで遊べます。パソコンでも：%1$s</string>
   <string name="about_play">Android アプリ</string>

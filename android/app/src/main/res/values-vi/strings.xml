@@ -295,7 +295,7 @@
   <string name="from_records">Một ván đã ghi</string>
   <string name="this_game_rules_named">%1$s (của ván đó)</string>
   <string name="use_current_rules_named">Dùng luật hiện tại: %1$s</string>
-  <string name="settings_look">Hiển thị</string>
+  <string name="settings_look">Giao diện</string>
   <string name="settings_game">Trò chơi</string>
   <string name="settings_about">Giới thiệu</string>
   <string name="text_size">Cỡ chữ</string>
@@ -313,8 +313,8 @@
   <string name="dark_mode">Giao diện tối</string>
   <string-array name="dark_modes">
     <item>Theo hệ thống</item>
-    <item>Tắt</item>
-    <item>Bật</item>
+    <item>Sáng</item>
+    <item>Tối</item>
   </string-array>
   <string name="opponents_title">Đối thủ máy</string>
   <string name="opponents_all">Cả ba: %1$s</string>
@@ -336,6 +336,9 @@
   <string name="records_list">Tất cả ván đã ghi, mới nhất trước</string>
   <string name="about_source">Mã nguồn mở (GPLv3), trên GitHub</string>
   <string name="privacy_policy">Chính sách quyền riêng tư</string>
+  <string name="about_text">Mậu binh bốn người: xếp 13 lá thành ba chi rồi so với ba người còn lại. Cách tính điểm có thể chỉnh theo cách bạn chơi, kèm sẵn các luật phổ biến. Đối thủ máy và phần phân tích dùng một mạng nơ-ron được huấn luyện bằng cách tự chơi với chính nó: sau mỗi ván, xem AI sẽ xếp thế nào và cách xếp của bạn kém bao nhiêu; hoặc phân tích bất kỳ ván nào để xem điểm kỳ vọng và xác suất bắt sập và bị bắt sập của từng cách xếp. Chơi với bạn bè qua mạng hoặc gặp mặt ở gần, và mọi ván đã chơi đều được ghi lại. Không quảng cáo, không liên quan đến tiền. Mã nguồn mở (GPLv3).</string>
+  <string name="about_version">Phiên bản %1$s · mạng nơ-ron %2$s</string>
+  <string name="about_network">Mạng nơ-ron %1$s</string>
   <string name="about_web">Bản web</string>
   <string name="about_web_note">Chơi trên trình duyệt, cả trên máy tính: %1$s</string>
   <string name="about_play">Ứng dụng Android</string>

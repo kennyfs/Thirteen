@@ -115,7 +115,7 @@ fun SettingsScreen(vm: AppViewModel, open: (SettingsPage) -> Unit) {
 
         SectionHeader(stringResource(R.string.settings_about))
         val version = runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: ""
-        SettingRow(stringResource(R.string.app_name) + " " + version, stringResource(R.string.about_source)) {
+        SettingRow(stringResource(R.string.app_name), stringResource(R.string.about_source)) {
           context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/kennyfs/Thirteen")))
         }
         SettingRow(stringResource(R.string.about_web), stringResource(R.string.about_web_note, WEB_HOST)) {
@@ -124,6 +124,12 @@ fun SettingsScreen(vm: AppViewModel, open: (SettingsPage) -> Unit) {
         SettingRow(stringResource(R.string.privacy_policy)) {
           context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/kennyfs/Thirteen/blob/main/docs/privacy.md")))
         }
+        // What the app is, as Mahjong-TW's settings end; then the version and the bundled network.
+        Text(stringResource(R.string.about_text), Modifier.padding(horizontal = 16.dp, vertical = 8.dp), style = MaterialTheme.typography.bodyMedium,
+          color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.about_version, version, io.github.kennyfs.thirteen.Settings.BUILT_IN.removeSuffix(".onnx")),
+          Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp), style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant)
       }
     }
   }

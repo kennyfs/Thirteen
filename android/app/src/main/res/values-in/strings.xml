@@ -312,8 +312,8 @@
   <string name="dark_mode">Tema gelap</string>
   <string-array name="dark_modes">
     <item>Ikuti sistem</item>
-    <item>Mati</item>
-    <item>Nyala</item>
+    <item>Terang</item>
+    <item>Gelap</item>
   </string-array>
   <string name="opponents_title">Pemain komputer</string>
   <string name="opponents_all">Ketiganya: %1$s</string>
@@ -335,6 +335,9 @@
   <string name="records_list">Semua riwayat, terbaru dulu</string>
   <string name="about_source">Sumber terbuka (GPLv3), di GitHub</string>
   <string name="privacy_policy">Kebijakan privasi</string>
+  <string name="about_text">Capsa Susun empat pemain: susun 13 kartu menjadi baris depan, tengah, dan belakang, lalu bandingkan dengan tiga pemain lain. Cara menghitung skor bisa diatur sesuai cara Anda bermain, dengan preset untuk aturan yang umum. Lawan komputer dan analisisnya memakai jaringan saraf yang dilatih dengan bermain melawan dirinya sendiri: setelah setiap tangan, lihat bagaimana AI menyusunnya dan seberapa jauh susunan Anda dari yang terbaik; atau analisis tangan mana pun untuk melihat skor harapan tiap susunan dan peluang sapu bersih atau disapu bersih. Bermain dengan teman secara online atau tatap muka di dekat Anda, dan setiap tangan yang dimainkan tercatat. Tanpa iklan, tanpa uang. Sumber terbuka (GPLv3).</string>
+  <string name="about_version">Versi %1$s · jaringan saraf %2$s</string>
+  <string name="about_network">Jaringan saraf %1$s</string>
   <string name="about_web">Versi web</string>
   <string name="about_web_note">Main di browser, juga di komputer: %1$s</string>
   <string name="about_play">Aplikasi Android</string>

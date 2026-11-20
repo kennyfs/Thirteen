@@ -289,7 +289,7 @@
   <string name="from_records">從紀錄挑一手</string>
   <string name="this_game_rules_named">%1$s（該局）</string>
   <string name="use_current_rules_named">改用目前規則：%1$s</string>
-  <string name="settings_look">顯示</string>
+  <string name="settings_look">外觀</string>
   <string name="settings_game">遊戲</string>
   <string name="settings_about">關於</string>
   <string name="text_size">文字大小</string>
@@ -301,14 +301,14 @@
   <string name="color_style">配色</string>
   <string-array name="color_styles">
     <item>牌桌綠</item>
-    <item>極簡</item>
+    <item>簡約</item>
     <item>跟隨桌布</item>
   </string-array>
   <string name="dark_mode">深色模式</string>
   <string-array name="dark_modes">
     <item>跟隨系統</item>
-    <item>關閉</item>
-    <item>開啟</item>
+    <item>淺色</item>
+    <item>深色</item>
   </string-array>
   <string name="opponents_title">電腦對手</string>
   <string name="opponents_all">3 位都是 %1$s</string>
@@ -330,6 +330,9 @@
   <string name="records_list">全部紀錄（新的在前）</string>
   <string name="about_source">開放原始碼（GPLv3），在 GitHub 上</string>
   <string name="privacy_policy">隱私權政策</string>
+  <string name="about_text">四人十三支：把 13 張牌擺成頭、中、尾三墩，和其他三家比牌。計分規則可以照你習慣的玩法調整，也有常見玩法的預設。電腦對手和分析都用自我對打訓練出來的神經網路：每局結束能看 AI 會怎麼擺、你的擺法差多少；也能擺出任何一手牌，看每種擺法的期望得分，以及打槍、被打槍的機率。還能和朋友透過網路或在附近面對面對戰，打過的每一局都有紀錄。沒有廣告，不涉及金錢，開放原始碼（GPLv3）。</string>
+  <string name="about_version">版本 %1$s・神經網路 %2$s</string>
+  <string name="about_network">神經網路 %1$s</string>
   <string name="about_web">網頁版</string>
   <string name="about_web_note">用瀏覽器玩，電腦也可以：%1$s</string>
   <string name="about_play">Android app</string>

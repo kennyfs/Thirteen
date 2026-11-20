@@ -123,7 +123,7 @@
 {/snippet}
 
 <div class="page">
-  <TitleBar title={t('tut_title')} onback={() => nav.back()}>
+  <TitleBar title={t('tut_title')} onback={() => nav.back()} max={page === 4 ? 1100 : 760}>
     <span class="body-medium dim">{t('tut_page', page + 1, PAGES)}</span>
   </TitleBar>
   <div class="scroll"><div class="content" class:trying={page === 4}>
