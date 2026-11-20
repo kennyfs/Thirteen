@@ -7,6 +7,7 @@
   import { t } from '../lib/i18n.svelte';
   import Dialog from './Dialog.svelte';
   import Icon from './Icon.svelte';
+  import Linked from './Linked.svelte';
   let { text, title = null, small = false }: { text: string; title?: string | null; small?: boolean } = $props();
   let open = $state(false);
 </script>
@@ -16,7 +17,7 @@
 </button>
 {#if open}
   <Dialog title={title ?? t('info')} onclose={() => (open = false)}>
-    <p class="body-large">{#each text.split('\n') as line, i (i)}<span>{line}</span>{/each}</p>
+    <p class="body-large">{#each text.split('\n') as line, i (i)}<span><Linked text={line} /></span>{/each}</p>
     {#snippet actions()}<button class="btn text" onclick={() => (open = false)}>{t('close')}</button>{/snippet}
   </Dialog>
 {/if}

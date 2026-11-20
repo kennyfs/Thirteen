@@ -14,6 +14,8 @@
 !android/app/src/main/res/values-zh-rCN/strings.xml
 !android/app/src/main/res/values-vi/strings.xml
 !android/app/src/main/res/values-in/strings.xml
+# The glossary (Taiwan Chinese), which scripts/strings.mjs reads into the page's zh strings.
+!android/app/src/main/res/values/glossary.xml
 web/node_modules
 web/dist
 web/build

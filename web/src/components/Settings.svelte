@@ -5,6 +5,8 @@
   import { DESK_INPUTS, DESK_LINES } from '../lib/desk-keys';
   import { nav } from '../lib/nav.svelte';
   import { tour } from '../lib/tour.svelte';
+  import { hasGlossary } from '../lib/glossary';
+  import { openGlossary } from '../lib/glossarylink.svelte';
   import InfoButton from './InfoButton.svelte';
   import Menu from './Menu.svelte';
   import Networks from './Networks.svelte';
@@ -77,6 +79,7 @@
       <div class="section-header">{t('help')}</div>
       <SettingRow title={t('tut_title')} value={t('tut_note')} onclick={() => nav.open('tutorial')} />
       <SettingRow title={t('tour_title')} value={t('tour_note')} onclick={() => tour.start()} />
+      {#if hasGlossary()}<SettingRow title={t('glossary_title')} value={t('glossary_note')} onclick={() => openGlossary()} />{/if}
 
       <div class="section-header">{t('settings_about')}</div>
       <SettingRow title={t('app_name')} value={t('about_source')} href="https://github.com/kennyfs/Thirteen" />

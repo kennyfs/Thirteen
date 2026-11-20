@@ -22,6 +22,7 @@
   import ThreeRows from '../ThreeRows.svelte';
   import ProbTiles from './ProbTiles.svelte';
   import DeskRows from './DeskRows.svelte';
+  import Linked from '../Linked.svelte';
   import Kbd from './Kbd.svelte';
 
   interface Props { a: Analysis; mine: Rows | null; legacyNote?: string | null; tags?: Record<number, string>; mineLabel?: string | null }
@@ -131,9 +132,9 @@
       {#if rem.length}
         <div class="remarks">
           <span class="title-medium">{t('remarks_title')}</span>
-          {#if mineRemark?.kind === 'mistake'}<span class="mistake title-medium bold">{remarkText(mineRemark)}</span>
-          {:else if mineRemark}<span class="title-medium bold">{remarkText(mineRemark)}</span>{/if}
-          {#if restRemarks}<span class="body-large">{restRemarks}</span>{/if}
+          {#if mineRemark?.kind === 'mistake'}<span class="mistake title-medium bold"><Linked text={remarkText(mineRemark)} /></span>
+          {:else if mineRemark}<span class="title-medium bold"><Linked text={remarkText(mineRemark)} /></span>{/if}
+          {#if restRemarks}<span class="body-large"><Linked text={restRemarks} /></span>{/if}
         </div>
       {/if}
     </div>

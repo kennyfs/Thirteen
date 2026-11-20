@@ -37,14 +37,14 @@ fun Remarks(remarks: List<Commentary.Remark>, modifier: Modifier = Modifier) {
     Text(stringResource(R.string.remarks_title), style = MaterialTheme.typography.titleSmall, color = colors.onSecondaryContainer)
     // A mistake on the error colors' own pair: the theme's error color on the container can be light on light.
     if (mine is Commentary.Mistake)
-      Text(
+      LinkedText(
         remarkText(mine), Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(colors.errorContainer).padding(horizontal = 8.dp, vertical = 3.dp),
         style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = colors.onErrorContainer,
       )
     else if (mine != null)
-      Text(remarkText(mine), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = colors.onSecondaryContainer)
+      LinkedText(remarkText(mine), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = colors.onSecondaryContainer)
     val rest = (remarks - setOfNotNull(mine)).map { remarkText(it) }.joinToString(stringResource(R.string.remark_sep))
-    if (rest.isNotEmpty()) Text(rest, style = MaterialTheme.typography.bodyMedium, color = colors.onSecondaryContainer)
+    if (rest.isNotEmpty()) LinkedText(rest, style = MaterialTheme.typography.bodyMedium, color = colors.onSecondaryContainer)
   }
 }
 

@@ -84,6 +84,11 @@ fun TutorialPage(vm: AppViewModel, onBack: () -> Unit, onPlay: () -> Unit, onTou
   var page by rememberSaveable { mutableStateOf(0) }
   Column(Modifier.fillMaxSize()) {
     TitleBar(stringResource(R.string.tut_title), onBack = onBack) {
+      if (hasGlossary()) {
+        var glossary by remember { mutableStateOf(false) }
+        TextButton(onClick = { glossary = true }, Modifier.testTag("tut_glossary")) { Text(stringResource(R.string.glossary_title)) }
+        if (glossary) GlossaryDialog(null) { glossary = false }
+      }
       Text(stringResource(R.string.tut_page, page + 1, PAGES), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
@@ -120,7 +125,7 @@ fun TutorialPage(vm: AppViewModel, onBack: () -> Unit, onPlay: () -> Unit, onTou
 private fun Heading(id: Int) = Text(stringResource(id), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 4.dp))
 
 @Composable
-private fun Body(text: String, dim: Boolean = false, color: androidx.compose.ui.graphics.Color? = null, small: Boolean = false) = Text(
+private fun Body(text: String, dim: Boolean = false, color: androidx.compose.ui.graphics.Color? = null, small: Boolean = false) = LinkedText(
   text, style = if (small) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
   color = color ?: if (dim) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
 )

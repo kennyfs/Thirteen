@@ -14,6 +14,7 @@
   import { LINE_GAP, rowWidth } from '../lib/sizing';
   import { fitRem, fmtQ, SHRINK_MIN, textRoom, textWidth, ui } from '../lib/ui.svelte';
   import RowCards from './RowCards.svelte';
+  import Linked from './Linked.svelte';
   import ThreeRows from './ThreeRows.svelte';
 
   interface Props { a: Analysis; mine: Rows | null; legacyNote?: string | null; tags?: Record<number, string>; mineLabel?: string | null }
@@ -193,9 +194,9 @@
         {#if rem.length}
           <div class="remarks">
             <div class="title-small">{t('remarks_title')}</div>
-            {#if mineRemark?.kind === 'mistake'}<div class="mistake body-medium bold">{remarkText(mineRemark)}</div>
-            {:else if mineRemark}<div class="body-medium bold">{remarkText(mineRemark)}</div>{/if}
-            {#if restRemarks}<div class="body-medium">{restRemarks}</div>{/if}
+            {#if mineRemark?.kind === 'mistake'}<div class="mistake body-medium bold"><Linked text={remarkText(mineRemark)} /></div>
+            {:else if mineRemark}<div class="body-medium bold"><Linked text={remarkText(mineRemark)} /></div>{/if}
+            {#if restRemarks}<div class="body-medium"><Linked text={restRemarks} /></div>{/if}
           </div>
         {/if}
       </div>

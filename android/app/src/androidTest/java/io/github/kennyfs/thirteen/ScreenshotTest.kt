@@ -172,6 +172,14 @@ class ScreenshotTest {
       shot(c, "8d-opponents-info", dialog = true)
       compose.onNodeWithText(close).performClick()
       scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+      // The settings' end (what the app is), and the glossary where the language has it.
+      compose.onNodeWithText(ctx.getString(R.string.about_text)).performScrollTo()
+      shot(c, "8e-settings-end")
+      if (ctx.resources.getBoolean(R.bool.show_glossary)) {
+        compose.onNodeWithText(ctx.getString(R.string.glossary_title)).performScrollTo().performClick()
+        shot(c, "8f-glossary", dialog = true)
+        compose.onNodeWithText(close).performClick()
+      }
       compose.onNodeWithTag("nav_RECORDS").performClick()
       shot(c, "9-records")
       // A puzzle battle in the records, for its pages, under the rules of the hand just played.

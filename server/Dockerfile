@@ -59,7 +59,7 @@ FROM node:24-slim AS web-page
 WORKDIR /src/web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci
-# Only the strings.xml of each language (.dockerignore).
+# Only the strings.xml of each language and the glossary (.dockerignore).
 COPY android/app/src/main/res /src/android/app/src/main/res
 COPY web/ ./
 COPY --from=web-engine /src/web/engine-files engine-files

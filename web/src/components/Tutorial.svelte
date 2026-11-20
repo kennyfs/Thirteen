@@ -19,6 +19,9 @@
   import { fmtQ, ui } from '../lib/ui.svelte';
   import Arranging from './Arranging.svelte';
   import Icon from './Icon.svelte';
+  import Linked from './Linked.svelte';
+  import { hasGlossary } from '../lib/glossary';
+  import { openGlossary } from '../lib/glossarylink.svelte';
   import RowCards from './RowCards.svelte';
   import TitleBar from './TitleBar.svelte';
   import DeskArranging from './desk/DeskArranging.svelte';
@@ -124,17 +127,18 @@
 
 <div class="page">
   <TitleBar title={t('tut_title')} onback={() => nav.back()} max={page === 4 ? 1100 : 760}>
+    {#if hasGlossary()}<button class="btn text" onclick={() => openGlossary()}>{t('glossary_title')}</button>{/if}
     <span class="body-medium dim">{t('tut_page', page + 1, PAGES)}</span>
   </TitleBar>
   <div class="scroll"><div class="content" class:trying={page === 4}>
     {#if page === 0}
       <h2 class="headline-small">{t('tut_goal_title')}</h2>
-      <p class="body-large">{t('tut_goal_text')}</p>
+      <p class="body-large"><Linked text={t('tut_goal_text')} /></p>
       <p class="body-medium dim">{t('tut_goal_example')}</p>
       {@render threeRows(GOAL, GOAL_CATS, ui.desk ? 52 : 40)}
     {:else if page === 1}
       <h2 class="headline-small">{t('tut_ranks_title')}</h2>
-      <p class="body-large">{t('tut_ranks_text')}</p>
+      <p class="body-large"><Linked text={t('tut_ranks_text')} /></p>
       <div class="kinds">
         {#each KINDS as [cat, cs] (cat)}
           <div class="kind">
@@ -143,12 +147,12 @@
           </div>
         {/each}
       </div>
-      <p class="body-medium">{t('tut_ranks_front')}</p>
-      <p class="body-medium dim">{t('tut_wheel', ta('wheel_options')[wheel])}</p>
+      <p class="body-medium"><Linked text={t('tut_ranks_front')} /></p>
+      <p class="body-medium dim"><Linked text={t('tut_wheel', ta('wheel_options')[wheel])} /></p>
     {:else if page === 2}
       <h2 class="headline-small">{t('tut_foul_title')}</h2>
-      <p class="body-large">{t('tut_foul_text')}</p>
-      {#if values.strict === 1}<p class="body-medium">{t('tut_foul_strict')}</p>{/if}
+      <p class="body-large"><Linked text={t('tut_foul_text')} /></p>
+      {#if values.strict === 1}<p class="body-medium"><Linked text={t('tut_foul_strict')} /></p>{/if}
       <p class="title-small bad">{t('tut_foul_bad')}</p>
       {@render threeRows(FOUL, [2, 1, 6], ui.desk ? 46 : 36)}
       <p class="title-small good">{t('tut_foul_good')}</p>
@@ -156,8 +160,8 @@
     {:else if page === 3}
       <h2 class="headline-small">{t('tut_score_title')}</h2>
       <p class="body-large">{t('tut_score_rules', app.rulesName(values))}</p>
-      <ul class="body-large list">{#each scoring as line (line)}<li>{line}</li>{/each}</ul>
-      <p class="body-medium dim">{t('tut_score_change')}</p>
+      <ul class="body-large list">{#each scoring as line (line)}<li><Linked text={line} /></li>{/each}</ul>
+      <p class="body-medium dim"><Linked text={t('tut_score_change')} /></p>
     {:else if page === 4}
       <h2 class="headline-small">{t('tut_try_title')}</h2>
       {#if judged && verdict}
@@ -168,7 +172,7 @@
         {/if}
         <p class="body-medium dim">{t('tut_try_best_rows')}</p>
         {@render threeRows(judged.best.arrangement, judged.best.info.categories, ui.desk ? 46 : 34)}
-        {#if judged.why}<p class="body-large">{t('tut_try_why')}</p>{/if}
+        {#if judged.why}<p class="body-large"><Linked text={t('tut_try_why')} /></p>{/if}
         <div class="buttons"><button class="btn outlined" onclick={() => resetTry()}><Icon name="replay" />{t('tut_try_again')}</button></div>
       {:else}
         <p class="body-large">{ui.desk ? td('tut_try_text') : t('tut_try_text')}</p>
@@ -192,10 +196,10 @@
     {:else if page === 5}
       <h2 class="headline-small">{t('tut_tips_title')}</h2>
       <p class="body-medium dim">{t('tut_tips_text')}</p>
-      <ol class="body-large list tips">{#each ta('tut_tips') as tip (tip)}<li>{tip}</li>{/each}</ol>
+      <ol class="body-large list tips">{#each ta('tut_tips') as tip (tip)}<li><Linked text={tip} /></li>{/each}</ol>
     {:else}
       <h2 class="headline-small">{t('tut_end_title')}</h2>
-      <p class="body-large">{t('tut_end_text')}</p>
+      <p class="body-large"><Linked text={t('tut_end_text')} /></p>
       <div class="buttons">
         <button class="btn filled big" onclick={finish}>{t('tut_done')}</button>
         <button class="btn tonal big" onclick={() => { finish(); tour.start(); }}>{t('welcome_tour')}</button>

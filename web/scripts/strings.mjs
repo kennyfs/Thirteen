@@ -49,6 +49,8 @@ for (const [lang, dir] of Object.entries(DIRS)) {
   if (missing.length) console.warn(`strings: ${lang} lacks ${missing.length} (English instead): ${missing.slice(0, 8).join(' ')}…`);
   all[lang] = { ...en, ...own };
 }
+// The glossary (values/glossary.xml) is in Taiwan Chinese only, and only that language shows it (lib/glossary.ts).
+Object.assign(all.zh, read(join(res, 'values', 'glossary.xml')));
 mkdirSync(join(root, 'src', 'generated'), { recursive: true });
 writeFileSync(join(root, 'src', 'generated', 'strings.json'), JSON.stringify(all) + '\n');
 console.log(`strings: ${Object.keys(en).length} names, ${Object.keys(all).length} languages`);

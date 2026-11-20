@@ -321,7 +321,7 @@ fun InfoButton(text: String, title: String? = null, tint: Color = MaterialTheme.
       // Its lines are short definitions: Japanese breaks them between phrases, as titles, not inside a word.
       text = {
         val style = MaterialTheme.typography.bodyLarge
-        Text(text, Modifier.verticalScroll(rememberScrollState()), style = style.copy(lineBreak = style.lineBreak.copy(wordBreak = LineBreak.WordBreak.Phrase)))
+        LinkedText(text, Modifier.verticalScroll(rememberScrollState()), style = style.copy(lineBreak = style.lineBreak.copy(wordBreak = LineBreak.WordBreak.Phrase)))
       },
     )
 }

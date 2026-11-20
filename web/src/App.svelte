@@ -20,6 +20,8 @@
   import Tour from './components/Tour.svelte';
   import Tutorial from './components/Tutorial.svelte';
   import Welcome from './components/Welcome.svelte';
+  import GlossaryDialog from './components/GlossaryDialog.svelte';
+  import { glossaryLink } from './lib/glossarylink.svelte';
   import { tour, welcomeDone, welcomeDue } from './lib/tour.svelte';
 
   const app = new App();
@@ -136,6 +138,7 @@
   <Welcome onlearn={() => welcomed(openTutorial)} ontour={() => welcomed(() => tour.start())} onclose={() => welcomed()} />
 {/if}
 {#if tour.on && app.ready}<Tour ontutorial={openTutorial} />{/if}
+{#if glossaryLink.open}<GlossaryDialog focusId={glossaryLink.term} onclose={() => (glossaryLink.open = false)} />{/if}
 
 {#if app.error}
   <Dialog onclose={() => (app.error = null)}>

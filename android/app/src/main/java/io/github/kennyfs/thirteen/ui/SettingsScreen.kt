@@ -36,6 +36,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -112,6 +113,11 @@ fun SettingsScreen(vm: AppViewModel, open: (SettingsPage) -> Unit) {
         val openTutorial = LocalOpenTutorial.current
         SettingRow(stringResource(R.string.tut_title), stringResource(R.string.tut_note)) { openTutorial() }
         SettingRow(stringResource(R.string.tour_title), stringResource(R.string.tour_note)) { tour.start() }
+        if (hasGlossary()) {
+          var glossary by remember { mutableStateOf(false) }
+          SettingRow(stringResource(R.string.glossary_title), stringResource(R.string.glossary_note)) { glossary = true }
+          if (glossary) GlossaryDialog(null) { glossary = false }
+        }
 
         SectionHeader(stringResource(R.string.settings_about))
         val version = runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: ""
