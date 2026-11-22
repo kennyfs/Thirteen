@@ -385,7 +385,7 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     }
     // A loop already at work (this was one of its tries, or a rejoin it made dropped within its wait) goes on by
     // itself: a second one would try twice at once.
-    if (reconnect?.isActive == true) return
+    if (reconnect?.isActive == true) { busy = true; return }
     // A dropped connection in a game: the seat is kept, so try to take it back. Nearby, the hosting phone may be
     // gone: its backup carries on the room after a try at the phone, and the others look for it there too.
     val r = room
