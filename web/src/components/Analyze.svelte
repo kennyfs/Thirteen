@@ -24,6 +24,8 @@
   let gridH = $state(0);
   let pageW = $state(0);
   let pageH = $state(0);
+  let miniW = $state(0);
+  const miniCard = $derived(Math.min(22, Math.floor((miniW - 2 * 12) / 13)));
   const wide = $derived(pageW > pageH * 1.15);
   const perLine = $derived(wide ? 13 : 7);
   const lines = $derived(wide ? 4 : 8);
@@ -106,7 +108,7 @@
     {#if legacy}<div class="body-medium bad legacy">{legacy}</div>{/if}
     <div class="actions" style:min-height="{BIG_BUTTON + 16}px">
       <span class="headline-small" class:good={app.anaHand.size === 13}>{app.anaHand.size} / 13</span>
-      {#if wide}<div class="mini grow">{#each sorted as c (c)}<Card card={c} width={22} />{/each}</div>{:else}<span class="grow"></span>{/if}
+      {#if wide}<div class="mini grow" bind:clientWidth={miniW}>{#if miniCard >= 14}{#each sorted as c (c)}<Card card={c} width={miniCard} />{/each}{/if}</div>{:else}<span class="grow"></span>{/if}
       <Menu chip={false} label={t('source')} options={[['random', t('random')], ['last', t('last_hand')], ['records', t('from_records')]]}
         onselect={(v) => { if (v === 'random') app.randomAnalyzeHand(); else if (v === 'last') app.analyzeLastHand(); else pickRecord = true; }} />
       <button class="btn outlined icon" aria-label={t('clear')} disabled={app.anaHand.size === 0} onclick={() => app.setAnalyzeHand(new Set())}><Icon name="clear" /></button>
