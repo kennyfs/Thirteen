@@ -139,6 +139,12 @@
   }
   .result-head { display: flex; align-items: center; gap: 10px; padding: 4px 12px 4px 16px; min-height: 56px; flex: none; }
   .result-head.wide { min-height: 48px; padding: 0 12px 0 16px; }
+  @media (max-width: 780px) {
+    .result-head.wide { gap: 6px; padding: 0 8px 0 12px; }
+    .result-head.wide .headline-small { font-size: 1.125rem; }
+    .result-head.wide :global(.btn) { padding: 0 10px; font-size: 0.8125rem; }
+    .result-head.wide :global(.btn.icon) { width: 38px; min-height: 38px; padding: 0; }
+  }
   .grow { flex: 1; min-width: 0; }
   .result-felt { flex: 1; min-height: 0; margin: 0 4px; padding: 4px 2px; }
   .result-felt.wide { margin: 0 12px 6px 8px; padding: 6px; }

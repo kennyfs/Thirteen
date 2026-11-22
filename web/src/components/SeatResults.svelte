@@ -8,7 +8,7 @@
   import type { Score } from '../lib/engine';
   import { t, ta } from '../lib/i18n.svelte';
   import { MAX_OTHER, MAX_PLAY, rowWidth } from '../lib/sizing';
-  import { signed, textRoom, ui } from '../lib/ui.svelte';
+  import { signed, textRoom, textWidth, ui } from '../lib/ui.svelte';
   import RowCards from './RowCards.svelte';
 
   interface Props {
@@ -25,11 +25,15 @@
   const seats = $derived(rows.length);
   const wide = $derived(w > h);
   const ARROWS = 56, SEAT_GAP = 4, COLUMN_GAP = 10, SMALL_GAP = 3;
-  const nameWidth = $derived(textRoom(92));
   // Wide: the lines, as many as the players, fill the height; their cards as large as the height and width allow.
+  // Use spare horizontal room for longer subtitles (e.g. English "You won 1 from them") without shrinking the cards.
+  const heightCard = $derived(((h - SEAT_GAP * (seats - 1)) / seats - textRoom(18) - 10) / 1.4);
+  const neededName = $derived(Math.max(textRoom(92), ...rows.map((_, s) => textWidth(sub(s), 13) + 4)));
+  const spareName = $derived(w - ARROWS - 16 - COLUMN_GAP * 3 - SMALL_GAP * 10 - 12 - Math.min(heightCard, max) * 13);
+  const nameWidth = $derived(Math.max(textRoom(92), Math.min(neededName, Math.max(textRoom(92), spareName))));
   const lineCard = $derived(Math.max(14, Math.min(
     (w - nameWidth - ARROWS - 16 - COLUMN_GAP * 3 - SMALL_GAP * 10 - 12) / 13,
-    ((h - SEAT_GAP * (seats - 1)) / seats - textRoom(18) - 10) / 1.4,
+    heightCard,
     max,
   )));
   // Narrow: the rows side by side fill the width.
