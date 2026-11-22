@@ -157,27 +157,27 @@
     <item>Two trips</item>
   </string-array>
   <string name="remark_same_best">Yours is the best arrangement.</string>
-  <string name="remark_same_close">Yours is within the neural network\'s error of the best: as good.</string>
+  <string name="remark_same_close">Yours is within the neural network\'s margin of error—just as good.</string>
   <string name="remark_mistake">Yours: %1$s</string>
   <string name="remark_sep">" "</string>
   <string name="remark_missed">you missed the %1$s.</string>
   <string name="remark_swapped">the %1$s does better than your %2$s.</string>
   <string name="remark_times_two">%1$s ×2</string>
-  <string name="remark_broke">breaking your %1$s does better here.</string>
+  <string name="remark_broke">breaking up your %1$s works better here.</string>
   <string name="remark_pair_to_front">put a pair in front.</string>
-  <string name="remark_pair_out_of_front">keep the pairs back and a high front.</string>
+  <string name="remark_pair_out_of_front">keep the pairs in the middle or back, and play a high card in front.</string>
   <string name="remark_stronger_front">the same rows, with a stronger front.</string>
-  <string name="remark_detail">the same rows, other cards.</string>
+  <string name="remark_detail">same hand types, different card choices.</string>
   <string name="remark_other">another kind of arrangement does better.</string>
   <string name="remark_vs_mine_both">" The best one scoops more and is scooped less."</string>
   <string name="remark_vs_mine_attack">" The best one scoops more, but is scooped more too."</string>
   <string name="remark_vs_mine_defense">" The best one is scooped less, but scoops less too."</string>
   <string name="remark_only">The hand has only one kind of arrangement.</string>
   <string name="remark_close">Another kind of arrangement is nearly as good.</string>
-  <string name="remark_both">The best one beats the other kinds on both scoops and scooped.</string>
-  <string name="remark_attack">The best one attacks: a stronger %1$s, more scoops and more scooped.</string>
-  <string name="remark_defense">The best one defends: a stronger %1$s, fewer scooped and fewer scoops.</string>
-  <string name="remark_rows_both">The best one beats the other kinds on both rows and scoops.</string>
+  <string name="remark_both">The best one scoops more and is scooped less than other arrangements.</string>
+  <string name="remark_attack">The best one attacks: a stronger %1$s, scooping more but also getting scooped more.</string>
+  <string name="remark_defense">The best one defends: a stronger %1$s, getting scooped less while scooping less.</string>
+  <string name="remark_rows_both">The best one wins more rows and scoops more than other arrangements.</string>
   <string name="remark_rows">The best one plays for rows rather than scoops.</string>
   <string name="remark_scoops_first">The best one plays for scoops rather than rows.</string>
   <string name="remark_strong">A strong hand.</string>

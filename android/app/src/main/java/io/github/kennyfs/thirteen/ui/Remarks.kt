@@ -82,7 +82,7 @@ private fun remarkText(r: Commentary.Remark): String {
     Commentary.OnlyChoice -> stringResource(R.string.remark_only)
     is Commentary.Close -> stringResource(R.string.remark_close)
     is Commentary.Style -> {
-      val row = stringArrayResource(R.array.row_names)[r.row]
+      val row = stringArrayResource(R.array.row_names)[r.row].lowercase()
       when (r.kind) {
         StyleKind.BOTH -> stringResource(R.string.remark_both)
         StyleKind.ATTACK -> stringResource(R.string.remark_attack, row)

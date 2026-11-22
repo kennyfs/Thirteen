@@ -26,7 +26,7 @@ export function remarkText(r: Remark): string {
     case 'only': return t('remark_only');
     case 'close': return t('remark_close');
     case 'style': {
-      const row = ta('row_names')[r.row];
+      const row = ta('row_names')[r.row].toLowerCase();
       return r.style === 'BOTH' ? t('remark_both') : r.style === 'ATTACK' ? t('remark_attack', row) : t('remark_defense', row);
     }
     case 'rows': return r.rows === 'BOTH' ? t('remark_rows_both') : r.rows === 'ROWS' ? t('remark_rows') : t('remark_scoops_first');
