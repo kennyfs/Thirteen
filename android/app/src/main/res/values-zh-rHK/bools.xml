@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <!-- Not yet: this language's glossary has no linking phrases of its own (glossary_p_<id>) yet. -->
-  <bool name="show_glossary">false</bool>
+  <bool name="show_glossary">true</bool>
 </resources>
