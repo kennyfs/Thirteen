@@ -26,9 +26,9 @@
   <string name="glossary_t_front_trips">衝三</string>
   <string name="glossary_d_front_trips">頭墩放三條。頭墩只有 3 張，三條是它最大的牌型，很多規則會另外加分。</string>
   <string name="glossary_t_special">特殊墩</string>
-  <string name="glossary_d_special">放在某一墩會另外加分的大牌型：頭墩的衝三、中墩的鐵支或同花順、尾墩的鐵支或同花順。依規則，可能不論輸贏每家都付分，也可能要贏過對方那一墩才收分。</string>
+  <string name="glossary_d_special">放在某一墩會另外加分的大牌型：頭墩的衝三、中墩的葫蘆、鐵支或同花順、尾墩的鐵支或同花順。依規則，可能不論輸贏每家都付分，也可能要贏過對方那一墩才收分。</string>
   <string name="glossary_t_dragon">一條龍</string>
-  <string name="glossary_d_dragon">13 張剛好是 2 到 A 各一張。拿到時不必比牌，依規則每一家都付你分數。</string>
+  <string name="glossary_d_dragon">13 張剛好是 2 到 A 各一張。只要沒有倒水，依規則每一家都會另外付你分數。</string>
   <string name="glossary_t_network">神經網路</string>
   <string name="glossary_d_network">電腦對手和分析用的模型：看一手牌和一種擺法，估計這樣擺平均能拿幾分。它是讓程式自己和自己對打大量牌局訓練出來的。</string>
   <string name="glossary_t_q">Q（期望得分）</string>
