@@ -226,7 +226,7 @@
         <div class="tools">
           <button class="btn outlined" disabled={!vm.canUndo} onclick={() => vm.undo()}><Icon name="undo" />{t('undo')}<Kbd k={km.undoLabel} inline /></button>
           <button class="btn outlined" disabled={!vm.canClear} onclick={() => vm.clearRows()}><Icon name="clearAll" />{t('take_all')}<Kbd k="Del" inline /></button>
-          {#if app.prev}<button class="btn outlined" data-tour="last" onclick={() => app.stepPrev()}><Icon name="history" />{t('last_hand')}<Kbd k="L" inline /></button>{/if}
+          {#if app.prev}<button class="btn outlined" data-tour="last" data-keep-picked onclick={() => app.stepPrev()}><Icon name="history" />{t('last_hand')}<Kbd k="L" inline /></button>{/if}
         </div>
         <button class="btn filled big" data-tour="confirm" disabled={!canConfirm} onclick={() => app.confirm()}>{app.waiting ? '…' : t('confirm')}<Kbd k="Enter" inline /></button>
         <span class="grow"></span>

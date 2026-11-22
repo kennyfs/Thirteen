@@ -99,7 +99,7 @@
           <button class="chip" data-tour="rules" onclick={onrules}>{app.rulesName(app.gameValues)}<Icon name="dropDown" /></button>
         {/if}
         {#if app.prev}
-          <button class="btn text lastbtn" data-tour="last" onclick={() => app.stepPrev()}><Icon name="history" />{t('last_hand')}</button>
+          <button class="btn text lastbtn" data-tour="last" data-keep-picked onclick={() => app.stepPrev()}><Icon name="history" />{t('last_hand')}</button>
         {/if}
       </div>
       <div class="scores">
