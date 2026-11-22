@@ -31,8 +31,11 @@ export const lineCard = (width: number) => Math.max(8, down((width - LINE_GAP * 
  */
 export interface ArrangeFit {
   card: number; hand: number; even: number; above: boolean; perLine: number;
-  /** Wide only: the rows' labels kept at the normal text size, as a larger one would crush the cards (see wideFit). */
-  compact?: boolean;
+  /**
+   * The rows' labels' text size against the page's, below 1 where a label at the page's size would make the cards
+   * smaller than a label at the normal size does (see arrangeFit).
+   */
+  labels?: number;
 }
 
 /**
@@ -41,15 +44,40 @@ export interface ArrangeFit {
  */
 export const ROWS_TO_HAND = 0.75;
 
-/** How the arranging page is laid out, for an area `w` x `h`. */
+/**
+ * How the arranging page is laid out, for an area `w` x `h`; `u` is the text's unit (what 14px of text takes).
+ *
+ * At a large text size the rows' labels (a name and a line of state beside or above each row's cards) and, on a wide
+ * page, the room kept for the buttons can take the cards' room. Then the labels are made only as much smaller as keeps
+ * the cards (the rows' and the hand's) as large as labels at the normal size would leave them, within 1 px: `labels`
+ * says how much. The buttons' names wrap or give way to icons instead. The app's Sizing.kt does the same.
+ */
 export function arrangeFit(w0: number, h0: number, wide: boolean, u: number, maxCard = MAX_PLAY): ArrangeFit {
-  const room = (sp: number) => u * (sp / 14);
-  if (wide) {
-    // The rows' labels grow with the text; when at a large text size they would be taller than the rows' cards (a
-    // short page sideways), they keep the normal size instead, and the cards their room.
-    const fit = wideFit(w0, h0, u, maxCard);
-    return fit.tight && u > 14 ? { ...wideFit(w0, h0, 14, maxCard), compact: true } : fit;
+  const fit = (lu: number, least?: number) => (wide ? wideFit(w0, h0, lu, maxCard, least) : tallFit(w0, h0, lu, maxCard, least));
+  const full = fit(u);
+  if (u <= 14) return full;
+  // Compared before the least card size holds them: on a small page the labels may crush cards already at it (their
+  // rows then taller than the page).
+  const normal = fit(14, -Infinity);
+  const crushed = (lu: number) => {
+    const f = fit(lu, -Infinity);
+    return f.card < normal.card - 1 || f.hand < normal.hand - 1;
+  };
+  if (!crushed(u)) return full;
+  // The largest label size that does not: the cards shrink (or stay) as the labels grow.
+  let lo = 14;
+  let hi = u;
+  for (let i = 0; i < 10; i++) {
+    const mid = (lo + hi) / 2;
+    if (crushed(mid)) hi = mid;
+    else lo = mid;
   }
+  return { ...fit(lo), labels: lo / u };
+}
+
+/** The tall layout, for the rows' labels' text unit `lu` (see arrangeFit). */
+function tallFit(w0: number, h0: number, lu: number, maxCard: number, least = 20): ArrangeFit {
+  const room = (sp: number) => lu * (sp / 14);
   const w = w0 - 32;
   const h = h0 - (BIG_BUTTON + 16) - 16;
   const header = Math.max(32, room(26));
@@ -60,9 +88,15 @@ export function arrangeFit(w0: number, h0: number, wide: boolean, u: number, max
       const labels = above ? 0 : Math.max(72, room(64)) + 8;
       const byRowsWidth = (w - labels - ROW_PAD * 2 - CARD_GAP * 4) / 5;
       const byHandWidth = (w - HAND_GAP * (perLine - 1) - (perLine >= 13 ? (SUIT_GAP - HAND_GAP) * 3 : 0)) / perLine;
-      const fixed = ROW_PAD * 2 * 3 + 8 * 2 + HAND_LINE_GAP * (lines - 1) + (above ? header * 3 : 0);
+      // The rows' padding and the two gaps between them (8 under headers, ROW_STACK_GAP beside labels), the 8 above the
+      // hand and its lines' gaps.
+      const fixed = ROW_PAD * 2 * 3 + (above ? 8 : ROW_STACK_GAP) * 2 + 8 + HAND_LINE_GAP * (lines - 1) + (above ? header * 3 : 0);
       const byHeight = (h - fixed) / (1.4 * (3 + lines) + 0.22);
-      const s = Math.max(20, down(Math.min(byRowsWidth, byHandWidth, byHeight, maxCard)));
+      let s = Math.max(least, down(Math.min(byRowsWidth, byHandWidth, byHeight, maxCard)));
+      // A label beside taller than the card (as drawn) makes its row taller (its name and a line of state); 2 more for
+      // the fractions of the three labels' heights, which would otherwise scroll the rows by a pixel.
+      const label = room(40) + 2;
+      if (!above && s * 1.4 < label) s = Math.max(least, down(Math.min(s, (h - fixed - label * 3 - 2) / (1.4 * lines + 0.22))));
       if (!best || s > best.card + 0.5) best = { card: s, hand: s, even: s, above, perLine };
     }
   }
@@ -139,12 +173,13 @@ export function deskArrangeFit(w: number, h: number, u: number, perLine = 13, be
   return { card: Math.max(24, Math.floor(Math.min(byRows, byHand, byHeight, MAX_DESK_PLAY))), perLine };
 }
 
-/** arrangeFit on a wide page; `tight` when the rows' labels are taller than their cards would be. */
-function wideFit(w0: number, h0: number, u: number, maxCard: number): ArrangeFit & { tight: boolean } {
-  const room = (sp: number) => u * (sp / 14);
+/** The wide layout, for the rows' labels' text unit `lu` (see arrangeFit). */
+function wideFit(w0: number, h0: number, lu: number, maxCard: number, least = 18): ArrangeFit {
+  const room = (sp: number) => lu * (sp / 14);
   const w = w0 - 20 - 12;
   const h = h0 - 6 - 12;
   const labels = Math.max(72, room(64)) + 8;
+  // The buttons' room is kept by the labels' unit too: their names wrap, or give way to icons, before the cards shrink.
   const buttons = Math.max(200, room(190));
   const byRowsWidth = (w - buttons - ROWS_GAP - labels - ROW_PAD * 2 - CARD_GAP * 4) / 5;
   const byHandWidth = (w - HAND_GAP * 12 - (SUIT_GAP - HAND_GAP) * 3) / 13;
@@ -154,18 +189,18 @@ function wideFit(w0: number, h0: number, u: number, maxCard: number): ArrangeFit
   if (byHeight * 1.4 < label) {
     // Each row is as tall as its label already: its cards may be as tall too; only the hand takes what height is left.
     const handByHeight = (h - fixed - label * 3) / (1.4 + 0.22);
-    const rowCard = Math.max(18, down(Math.min(byRowsWidth, label / 1.4, maxCard)));
-    const handCard = Math.max(18, down(Math.min(byHandWidth, handByHeight, maxCard)));
-    return { card: rowCard, hand: handCard, even: Math.min(rowCard, handCard), above: false, perLine: 13, tight: true };
+    const rowCard = Math.max(least, down(Math.min(byRowsWidth, label / 1.4, maxCard)));
+    const handCard = Math.max(least, down(Math.min(byHandWidth, handByHeight, maxCard)));
+    return { card: rowCard, hand: handCard, even: Math.min(rowCard, handCard), above: false, perLine: 13 };
   }
-  const card = Math.max(18, down(Math.min(byRowsWidth, byHandWidth, byHeight, maxCard)));
+  const card = Math.max(least, down(Math.min(byRowsWidth, byHandWidth, byHeight, maxCard)));
   // A larger hand, as wide as the felt at most, with the rows as large as the height then leaves them.
   const avail = h - fixed;
   // Not capped by maxCard (the size the pages that arrange share): the hand takes the width this page has.
   const hand = down(Math.min(byHandWidth, MAX_PLAY, avail / (1.4 * 3 * ROWS_TO_HAND + 1.4 + 0.22)));
   const rows = down(Math.min((avail - hand * (1.4 + 0.22)) / (1.4 * 3), byRowsWidth, maxCard));
   if (hand > card && rows >= 18 && rows >= hand * ROWS_TO_HAND - 0.5 && rows * 1.4 >= label) {
-    return { card: rows, hand, even: card, above: false, perLine: 13, tight: false };
+    return { card: rows, hand, even: card, above: false, perLine: 13 };
   }
-  return { card, hand: card, even: card, above: false, perLine: 13, tight: false };
+  return { card, hand: card, even: card, above: false, perLine: 13 };
 }

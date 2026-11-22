@@ -42,7 +42,7 @@
   const card = $derived(bare ? Math.min(ui.sizes.play, deskFit(areaW, areaH)) : fit.card);
   /** The hand's cards: on a wide page they may be larger than the rows' (sizing.ts, ROWS_TO_HAND). */
   const handCard = $derived(bare ? card : fit.hand);
-  // The labels beside the rows: sizes from the text's (the normal size when sizing.ts says compact).
+  // The labels beside the rows: sizes from the text's, made smaller where sizing.ts says (fit.labels).
   // The three tools lay out alike, as the app's do: their names all beside the icons, all under them, or none (icons
   // only, the name still the button's label). Each is a third of the line, less the gaps, its padding and border.
   let toolsW = $state(0);
@@ -55,9 +55,10 @@
     if (widths.every((w) => w <= innerW) && 24 + 2 + textRoom(16) * 1.2 <= innerH) return 'under';
     return 'none';
   });
-  const labelWidth = $derived(Math.max(72, (fit.compact ? 14 : ui.u) * 4.6));
-  const headerHeight = $derived(Math.max(32, textRoom(13) * 2));
-  const labelHeight = $derived(textRoom(24) + textRoom(16) + 2);
+  const labels = $derived(fit.labels ?? 1);
+  const labelWidth = $derived(Math.max(72, ui.u * 4.6 * labels));
+  const headerHeight = $derived(Math.max(32, textRoom(13) * 2 * labels));
+  const labelHeight = $derived((textRoom(24) + textRoom(16)) * labels + 2);
   const above = $derived(!wide && fit.above);
 
   const hand = $derived(skeleton ? PLACES : vm.unplaced);
@@ -311,7 +312,7 @@
         {@render tray()}
       </div>
     {:else if wide}
-      <div class="felt wide-felt" class:compact={fit.compact} style:margin="0 12px 6px 8px" style:padding="6px">
+      <div class="felt wide-felt" style:--labels={labels} style:margin="0 12px 6px 8px" style:padding="6px">
         <div class="wide-top" style:gap="{ROWS_GAP}px">
           {@render rowsStack()}
           <div class="wide-buttons" style:gap="{ROW_STACK_GAP}px">
@@ -327,7 +328,7 @@
         {@render tray()}
       </div>
     {:else}
-      <div class="felt tall-felt" bind:clientHeight={feltH}>
+      <div class="felt tall-felt" style:--labels={labels} bind:clientHeight={feltH}>
         <div class="tall-rows">{@render rowsStack()}</div>
         <div style:padding-top="8px">{@render tray()}</div>
       </div>
@@ -380,10 +381,13 @@
   .slot-row.target { background: var(--target); outline: 2.5px dashed var(--highlight); outline-offset: -2.5px; }
   .row-header { display: flex; align-items: center; gap: 8px; padding-left: 4px; }
   .row-label { display: flex; flex-direction: column; gap: 2px; min-width: 0; color: var(--on-felt); }
-  /* A short page sideways at a large text size (sizing.ts's compact): the rows' labels at the normal size. */
-  .wide-felt.compact .row-label { gap: 0; }
-  .wide-felt.compact .row-label .title-medium { font-size: 16px; line-height: 1.2; }
-  .wide-felt.compact .row-label .state { font-size: 13px; line-height: 1.15; }
+  /* At a large text size the rows' labels only as large as leaves the cards their size (sizing.ts's labels). */
+  .felt .row-label .title-medium, .felt .row-header .title-medium {
+    font-size: calc(1rem * var(--labels, 1)); line-height: calc(1.375rem * var(--labels, 1));
+  }
+  .felt .row-label .state, .felt .row-header .state {
+    font-size: calc(0.8125rem * var(--labels, 1)); line-height: calc(1.125rem * var(--labels, 1));
+  }
   .row-label.fill { flex: 1; }
   .state { color: var(--on-felt); font-weight: 500; overflow-wrap: anywhere; }
   .state.hl { color: var(--highlight); font-weight: 700; }

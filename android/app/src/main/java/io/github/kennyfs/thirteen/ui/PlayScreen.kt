@@ -249,7 +249,7 @@ fun Arranging(
     // Hoisted above the wide/tall branch so rotating between portrait and landscape keeps the dialog open.
     var helpOpen by rememberSaveable { mutableStateOf(false) }
     CompositionLocalProvider(LocalKeepPicked provides keep) {
-      if (wide) ArrangeWide(vm, wheel, busy, confirmLabel, confirmShort, fit.card, fit.hand, fit.compact, { helpOpen = true }, onConfirm)
+      if (wide) ArrangeWide(vm, wheel, busy, confirmLabel, confirmShort, fit.card, fit.hand, fit.labels, { helpOpen = true }, onConfirm)
       else ArrangeTall(vm, wheel, busy, confirmLabel, confirmShort, fit, { helpOpen = true }, onConfirm)
     }
     if (helpOpen) ArrangeHelpDialog { helpOpen = false }
@@ -285,14 +285,14 @@ private fun Felt(modifier: Modifier = Modifier, content: @Composable () -> Unit)
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, confirmShort: String, card: Dp, hand: Dp, compact: Boolean, onHelp: () -> Unit, onConfirm: () -> Unit) {
+private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, confirmShort: String, card: Dp, hand: Dp, labels: Float, onHelp: () -> Unit, onConfirm: () -> Unit) {
   Felt(Modifier.fillMaxSize().padding(start = 8.dp, end = 12.dp, bottom = 6.dp)) {
     Column(Modifier.fillMaxSize().padding(6.dp), verticalArrangement = Arrangement.SpaceBetween, horizontalAlignment = Alignment.CenterHorizontally) {
       val density = LocalDensity.current
       // The buttons fill the room right of the rows, in three lines as tall as the rows' (sorting, the tools, the confirm).
       var rowsHeight by remember { mutableStateOf(0.dp) }
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ROWS_GAP)) {
-        RowsStack(vm, card, if (compact) 72.dp else labelWidth(density), wheel, Modifier.width(IntrinsicSize.Max).onSizeChanged { rowsHeight = with(density) { it.height.toDp() } }, compact = compact)
+        RowsStack(vm, card, labelWidth(density, labels), wheel, Modifier.width(IntrinsicSize.Max).onSizeChanged { rowsHeight = with(density) { it.height.toDp() } }, labels = labels)
         Column(Modifier.weight(1f).height(rowsHeight), verticalArrangement = Arrangement.spacedBy(ROW_STACK_GAP)) {
           SortToggle(vm, Modifier.fillMaxWidth().weight(1f), MaterialTheme.typography.titleMedium)
           // The three tools lay out alike: their names all beside the icons, all under them, or none (icons only).
@@ -329,7 +329,7 @@ private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
  * it touches back to the hand (one undo step for the swipe); a tap still takes back one.
  */
 @Composable
-private fun RowsStack(vm: Arranger, card: Dp, labelWidth: Dp?, wheel: Int, modifier: Modifier = Modifier, scroll: Boolean = false, labelFill: Boolean = false, compact: Boolean = false) {
+private fun RowsStack(vm: Arranger, card: Dp, labelWidth: Dp?, wheel: Int, modifier: Modifier = Modifier, scroll: Boolean = false, labelFill: Boolean = false, labels: Float = 1f) {
   val density = LocalDensity.current
   val bounds = remember { mutableMapOf<Int, Rect>() }
   var box by remember { mutableStateOf<LayoutCoordinates?>(null) }
@@ -340,7 +340,7 @@ private fun RowsStack(vm: Arranger, card: Dp, labelWidth: Dp?, wheel: Int, modif
     verticalArrangement = Arrangement.spacedBy(if (labelWidth == null) 8.dp else ROW_STACK_GAP),
   ) {
     for (r in 0 until 3)
-      RowSlotTall(vm, r, card, labelWidth, headerHeight(density), wheel, labelFill, compact) { c ->
+      RowSlotTall(vm, r, card, labelWidth, headerHeight(density, labels), wheel, labelFill, labels) { c ->
         Modifier.onGloballyPositioned { coords -> box?.let { if (coords.isAttached) bounds[c] = it.localBoundingBoxOf(coords) } }
       }
   }
@@ -372,11 +372,11 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
       BoxWithConstraints(Modifier.fillMaxSize().padding(8.dp)) {
         val density = LocalDensity.current
         // What the rows take, for the hand's room under them.
-        val rowH = if (fit.above) headerHeight(density) + cardHeight(fit.card) else maxOf(cardHeight(fit.card), labelHeight(density))
+        val rowH = if (fit.above) headerHeight(density, fit.labels) + cardHeight(fit.card) else maxOf(cardHeight(fit.card), labelHeight(density, fit.labels))
         val rowsH = (rowH + ROW_PAD * 2) * 3 + 8.dp * 2
         val handRoom = maxHeight - rowsH - 8.dp
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-          RowsStack(vm, fit.card, if (fit.above) null else labelWidth(density), wheel, Modifier.weight(1f, fill = false), scroll = true, labelFill = true)
+          RowsStack(vm, fit.card, if (fit.above) null else labelWidth(density, fit.labels), wheel, Modifier.weight(1f, fill = false), scroll = true, labelFill = true, labels = fit.labels)
           HandTray(vm, fit.card, fit.perLine, Modifier.padding(top = 8.dp), room = handRoom)
         }
       }
@@ -468,18 +468,21 @@ private fun Modifier.rowGround(vm: Arranger, r: Int, target: Boolean, t: TableCo
 @Composable
 private fun RowSlotTall(
   vm: Arranger, r: Int, card: Dp, labelWidth: Dp?, headerHeight: Dp, wheel: Int, labelFill: Boolean = false,
-  compact: Boolean = false, cardModifier: (Int) -> Modifier = { Modifier },
+  labels: Float = 1f, cardModifier: (Int) -> Modifier = { Modifier },
 ) {
   val t = LocalTable.current
   val cards = vm.rows[r]
   val eval = vm.rowsEval
   val category = if (cards.size == Cards.ROW_SIZES[r] && eval != null) eval.categories[r] else 0
   val (state, target, dim) = rowState(vm, r, wheel)
-  // compact (a wide page at a large font, see ArrangeFit): the label at the normal size, so it does not crush the cards.
+  // labels: at a large font, the label only as large as leaves the cards their size (see arrangeFit). Scaled as drawn
+  // (in dp): a large font enlarges small text more than large, so a smaller sp would come out larger than asked.
   val density = LocalDensity.current
-  fun normal(s: TextStyle) = if (!compact) s else with(density) { s.copy(fontSize = s.fontSize.value.dp.toSp(), lineHeight = s.lineHeight.value.dp.toSp()) }
-  val nameStyle = normal(MaterialTheme.typography.titleMedium)
-  val stateStyle = normal(MaterialTheme.typography.bodySmall)
+  fun scaled(s: TextStyle) = if (labels >= 1f) s else with(density) {
+    s.copy(fontSize = (s.fontSize.toDp() * labels).toSp(), lineHeight = (s.lineHeight.toDp() * labels).toSp())
+  }
+  val nameStyle = scaled(MaterialTheme.typography.titleMedium)
+  val stateStyle = scaled(MaterialTheme.typography.bodySmall)
   val name = @Composable { m: Modifier ->
     Text(
       stringArrayResource(R.array.row_names)[r], m, style = nameStyle, fontWeight = FontWeight.Bold,
@@ -516,10 +519,10 @@ private fun RowSlotTall(
 
 /** A row's label beside its cards in a tall layout, and its header above them. */
 // Sizes from the text's: a small size scaled (a large sp would be scaled less, as large text is under a large font).
-private fun labelWidth(d: androidx.compose.ui.unit.Density): Dp = maxOf(72.dp, with(d) { 14.sp.toDp() } * 4.6f)
-private fun headerHeight(d: androidx.compose.ui.unit.Density): Dp = maxOf(32.dp, with(d) { 13.sp.toDp() } * 2)
+private fun labelWidth(d: androidx.compose.ui.unit.Density, labels: Float = 1f): Dp = maxOf(72.dp, with(d) { 14.sp.toDp() } * 4.6f * labels)
+private fun headerHeight(d: androidx.compose.ui.unit.Density, labels: Float = 1f): Dp = maxOf(32.dp, with(d) { 13.sp.toDp() } * 2 * labels)
 /** The height of a label beside the cards: the name and a line of state. */
-private fun labelHeight(d: androidx.compose.ui.unit.Density): Dp = with(d) { 24.sp.toDp() + 16.sp.toDp() } + 2.dp
+private fun labelHeight(d: androidx.compose.ui.unit.Density, labels: Float = 1f): Dp = with(d) { 24.sp.toDp() + 16.sp.toDp() } * labels + 2.dp
 
 /** Returns a row's cards to the hand (as a long press on the row does). */
 @Composable
