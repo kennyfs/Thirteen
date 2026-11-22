@@ -58,6 +58,7 @@ import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -252,7 +253,7 @@ fun Arranging(
   }
 }
 
-/** Where on the table a press keeps the picked cards up (the hand, the rows), in the window's coordinates. */
+/** Where on the table a press keeps the picked cards up (the hand, the rows, the sorting), in the window's coordinates. */
 private class KeepPicked {
   var origin = Offset.Zero
   val rects = mutableMapOf<String, Rect>()
@@ -264,6 +265,8 @@ private val LocalKeepPicked = staticCompositionLocalOf<KeepPicked?> { null }
 @Composable
 private fun Modifier.keepsPicked(key: String): Modifier {
   val keep = LocalKeepPicked.current ?: return this
+  // Gone from the screen (the other layout after a turn), its place keeps nothing.
+  DisposableEffect(keep, key) { onDispose { keep.rects.remove(key) } }
   return onGloballyPositioned { keep.rects[key] = it.boundsInWindow() }
 }
 
@@ -384,7 +387,7 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
       val sortTiny = stringResource(if (vm.sortBySuit) R.string.sort_suit_short else R.string.sort_rank_short)
       OutlinedButton(
         onClick = { vm.sortBySuit = !vm.sortBySuit },
-        Modifier.height(46.dp).semantics { contentDescription = sortLabel },
+        Modifier.height(46.dp).keepsPicked("sortButton").semantics { contentDescription = sortLabel },
         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp),
       ) {
         Icon(Icons.Filled.SwapVert, null, Modifier.size(20.dp))
@@ -531,7 +534,8 @@ private fun SortToggle(vm: Arranger, modifier: Modifier = Modifier, style: TextS
   val t = LocalTable.current
   ToggleGroup(
     listOf(false to stringResource(R.string.sort_rank), true to stringResource(R.string.sort_suit)), vm.sortBySuit, { vm.sortBySuit = it },
-    modifier, ToggleColors(t.onFelt, t.felt, t.onFelt.copy(alpha = 0.12f), t.onFelt), style,
+    // A new order of the same cards: the picked ones stay up.
+    modifier.keepsPicked("sortToggle"), ToggleColors(t.onFelt, t.felt, t.onFelt.copy(alpha = 0.12f), t.onFelt), style,
   )
 }
 

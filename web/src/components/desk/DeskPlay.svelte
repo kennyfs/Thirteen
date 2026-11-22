@@ -222,7 +222,7 @@
       {@render scoreboard()}
       {#if !f}
         <p class="hint title-medium" class:bad={fouled} aria-live="polite">{hint}</p>
-        <div class="sortline"><Toggle options={[[false, t('sort_rank')], [true, t('sort_suit')]] as [boolean, string][]} selected={vm.sortBySuit} onselect={(v) => (vm.sortBySuit = v)} /><Kbd k={km.sortLabel} /></div>
+        <div class="sortline" data-keep-picked><Toggle options={[[false, t('sort_rank')], [true, t('sort_suit')]] as [boolean, string][]} selected={vm.sortBySuit} onselect={(v) => (vm.sortBySuit = v)} /><Kbd k={km.sortLabel} /></div>
         <div class="tools">
           <button class="btn outlined" disabled={!vm.canUndo} onclick={() => vm.undo()}><Icon name="undo" />{t('undo')}<Kbd k={km.undoLabel} inline /></button>
           <button class="btn outlined" disabled={!vm.canClear} onclick={() => vm.clearRows()}><Icon name="clearAll" />{t('take_all')}<Kbd k="Del" inline /></button>

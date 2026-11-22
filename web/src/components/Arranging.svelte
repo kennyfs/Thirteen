@@ -205,15 +205,16 @@
   const sortOptions = $derived<[boolean, string][]>([[false, t('sort_rank')], [true, t('sort_suit')]]);
   const canConfirm = $derived(!busy && vm.rowsEval?.valid === true);
 
-  // A press anywhere but on the hand or the rows puts the picked cards down (and forgets the row picked first); what it
-  // lands on still does its own thing. In the capture phase, before that thing, and only while something is picked.
+  // A press anywhere but on the hand, the rows or the sorting (data-keep-picked: a new order of the same picked cards)
+  // puts the picked cards down (and forgets the row picked first); what it lands on still does its own thing. In the
+  // capture phase, before that thing, and only while something is picked.
   let areaEl: HTMLDivElement;
   $effect(() => {
     if (skeleton || (vm.selected.size === 0 && vm.armed === null)) return;
     const away = (e: PointerEvent) => {
       if (e.button !== 0) return;
       const at = e.target as Element | null;
-      if (at && areaEl?.contains(at) && at.closest('.tray, .rows')) return;
+      if (at && ((areaEl?.contains(at) && at.closest('.tray, .rows')) || at.closest('[data-keep-picked]'))) return;
       vm.selected = new Set();
       vm.armed = null;
     };
@@ -300,7 +301,7 @@
         <div class="wide-top" style:gap="{ROWS_GAP}px">
           {@render rowsStack()}
           <div class="wide-buttons" style:gap="{ROW_STACK_GAP}px">
-            <div class="wb"><Toggle options={sortOptions} selected={vm.sortBySuit} onselect={(v) => (vm.sortBySuit = v)} felt big height={44} /></div>
+            <div class="wb" data-keep-picked><Toggle options={sortOptions} selected={vm.sortBySuit} onselect={(v) => (vm.sortBySuit = v)} felt big height={44} /></div>
             <div class="wb tools">
               <button class="tool" disabled={!vm.canUndo} onclick={() => vm.undo()}><Icon name="undo" /><span>{t('undo')}</span></button>
               <button class="tool" disabled={!vm.canClear} onclick={() => vm.clearRows()}><Icon name="clearAll" /><span>{t('take_all')}</span></button>
@@ -317,7 +318,7 @@
         <div style:padding-top="8px">{@render tray()}</div>
       </div>
       <div class="bar" style:height="{BIG_BUTTON + 16}px">
-        <button class="btn outlined sort" aria-label={t(vm.sortBySuit ? 'sort_by_suit_on' : 'sort_by_rank_on')} onclick={() => (vm.sortBySuit = !vm.sortBySuit)}>
+        <button class="btn outlined sort" data-keep-picked aria-label={t(vm.sortBySuit ? 'sort_by_suit_on' : 'sort_by_rank_on')} onclick={() => (vm.sortBySuit = !vm.sortBySuit)}>
           <Icon name="swap" size={20} /><span>{t(vm.sortBySuit ? 'sort_suit' : 'sort_rank')}</span>
         </button>
         <button class="btn outlined icon" aria-label={t('undo')} disabled={!vm.canUndo} onclick={() => vm.undo()}><Icon name="undo" /></button>

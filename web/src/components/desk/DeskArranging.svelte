@@ -241,15 +241,16 @@
     }
   }
 
-  // A press anywhere but on the hand or the rows puts the picked cards down (and forgets the row picked first); what it
-  // lands on still does its own thing. In the capture phase, before that thing, and only while something is picked.
+  // A press anywhere but on the hand, the rows or the sorting (data-keep-picked: a new order of the same picked cards)
+  // puts the picked cards down (and forgets the row picked first); what it lands on still does its own thing. In the
+  // capture phase, before that thing, and only while something is picked.
   let areaEl: HTMLDivElement;
   $effect(() => {
     if (skeleton || locked || (vm.selected.size === 0 && vm.armed === null)) return;
     const away = (e: PointerEvent) => {
       if (e.button !== 0) return;
       const at = e.target as Element | null;
-      if (at && areaEl?.contains(at) && at.closest('.tray, .rows')) return;
+      if (at && ((areaEl?.contains(at) && at.closest('.tray, .rows')) || at.closest('[data-keep-picked]'))) return;
       vm.selected = new Set();
       vm.armed = null;
     };
