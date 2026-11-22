@@ -5,7 +5,6 @@ import io.github.kennyfs.thirteen.battle.BattleReview
 import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.runtime.rememberCoroutineScope
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -877,15 +876,7 @@ fun PlayerAnalysisPage(r: BattleReview, room: RoomView) {
  */
 @Composable
 fun BattleRecordPage(app: AppViewModel, record: BattleRecord, onBack: () -> Unit) {
-  val scope = rememberCoroutineScope()
-  val r = remember(record.id) {
-    BattleReview(scope, { app.settings.models().first().path }) { app.error = it }.apply {
-      me = record.me
-      rules = record.rules
-      names = record.players.associate { it.id to it.name }
-      add(record.outcomes)
-    }
-  }
+  val r = remember(record.id) { app.reviewOf(record) }
   val room = remember(record) { record.view() }
   BackHandler(r.detail != null) { if (r.analyzed != null) r.closeAnalysis() else r.closeDetail() }
   val star = @Composable { saved: Boolean, label: Int, onClick: () -> Unit ->

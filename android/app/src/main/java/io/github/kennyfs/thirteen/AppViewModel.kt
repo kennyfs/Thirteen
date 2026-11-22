@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import io.github.kennyfs.thirteen.battle.BattleReview
 import io.github.kennyfs.thirteen.protocol.BattleRecord
 import org.json.JSONObject
 import kotlin.random.Random
@@ -180,6 +181,23 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   var favoriteBattleIds by mutableStateOf(favoriteBattles.ids()); private set
   /** The battle opened from the records. */
   var openedBattle by mutableStateOf<BattleRecord?>(null)
+  private var openedReview: Pair<String, BattleReview>? = null
+
+  /**
+   * The review of a battle opened from the records: kept here, not in the page, so that a rotation keeps the hand and
+   * the analysis opened in it. Another battle drops the one before (its work writes nothing then).
+   */
+  fun reviewOf(record: BattleRecord): BattleReview {
+    openedReview?.let { (id, r) -> if (id == record.id) return r else r.clear() }
+    val r = BattleReview(viewModelScope, { settings.models().first().path }) { error = it }.apply {
+      me = record.me
+      rules = record.rules
+      names = record.players.associate { it.id to it.name }
+      add(record.outcomes)
+    }
+    openedReview = record.id to r
+    return r
+  }
   var lastRecord by mutableStateOf<JSONObject?>(null); private set
   /** A screen asks for another: the number of requests so far and the screen's name ("PLAY" to rearrange a hand...). */
   var tabRequest by mutableStateOf(0 to ""); private set
