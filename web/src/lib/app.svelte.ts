@@ -164,6 +164,7 @@ export class App {
 
   constructor() {
     setLang(this.lang);
+    store.whenFull(() => { this.error = t('storage_full'); });
     this.catching((async () => {
       await this.loadModels();
       await this.loadRules();

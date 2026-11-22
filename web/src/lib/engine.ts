@@ -31,24 +31,43 @@ const MODEL = url(files.model);
 let worker: Worker | null = null;
 let next = 0;
 const waiting = new Map<number, { resolve: (s: string) => void; reject: (e: Error) => void }>();
+/** The networks the page put into the engine (not the built-in one), written again into a new worker. */
+const loaded = new Map<string, ArrayBuffer>();
+
+/**
+ * A worker that failed is dropped, with the networks it had: the next request starts a new one (and loads them
+ * again) instead of waiting forever on a dead one, or failing as it did.
+ */
+function drop(message: string) {
+  worker?.terminate();
+  worker = null;
+  builtIn = null;
+  for (const w of waiting.values()) w.reject(new EngineError(message));
+  waiting.clear();
+}
 
 function start(): Worker {
   if (worker) return worker;
   // The worker is bundled elsewhere than the page: its name tells it where the engine's files are.
-  worker = new Worker(new URL('./engine-worker.ts', import.meta.url), { type: 'module', name: JSON.stringify(ENGINE) });
+  const w = new Worker(new URL('./engine-worker.ts', import.meta.url), { type: 'module', name: JSON.stringify(ENGINE) });
+  worker = w;
   void keepOnly([ENGINE.wasm, MODEL]);
-  worker.onmessage = (e: MessageEvent) => {
-    const w = waiting.get(e.data.id);
-    if (!w) return;
+  w.onmessage = (e: MessageEvent) => {
+    if (w !== worker) return;
+    const p = waiting.get(e.data.id);
+    if (!p) return;
     waiting.delete(e.data.id);
-    if (e.data.error !== undefined) w.reject(new EngineError(e.data.error));
-    else w.resolve(e.data.line);
+    if (e.data.error !== undefined) p.reject(new EngineError(e.data.error));
+    else p.resolve(e.data.line);
+    if (e.data.fatal) drop(e.data.error);
   };
-  worker.onerror = (e) => {
-    for (const w of waiting.values()) w.reject(new EngineError(e.message || 'The engine failed to start'));
-    waiting.clear();
+  w.onerror = (e) => {
+    e.preventDefault();
+    if (w === worker) drop(e.message || 'The engine failed to start');
   };
-  return worker;
+  // The networks loaded before, ahead of any request (the worker takes messages in order).
+  for (const [path, data] of loaded) w.postMessage({ id: next++, file: { path, data } });
+  return w;
 }
 
 function post(msg: object, transfer: Transferable[] = []): Promise<string> {
@@ -63,21 +82,30 @@ function post(msg: object, transfer: Transferable[] = []): Promise<string> {
 /** Writes a network into the engine's file system (null removes it). */
 export async function putFile(path: string, data: ArrayBuffer | null): Promise<void> {
   await post({ file: { path, data } });
+  if (path === BUILT_IN) return;
+  if (data === null) loaded.delete(path);
+  else loaded.set(path, data);
 }
 
 let builtIn: Promise<void> | null = null;
 
 /** Fetches the built-in network into the engine once. */
 export function loadBuiltIn(): Promise<void> {
-  builtIn ??= storedBytes(MODEL, files.modelSize).then(
-    (b) => putFile(BUILT_IN, b),
-    (e) => { throw new EngineError(String((e as Error)?.message ?? e)); },
-  );
+  if (!builtIn) {
+    // A failed fetch is not kept: the next request tries again (the connection may be back).
+    const p: Promise<void> = storedBytes(MODEL, files.modelSize).then(
+      (b) => putFile(BUILT_IN, b),
+      (e) => { throw new EngineError(String((e as Error)?.message ?? e)); },
+    ).catch((e) => { if (builtIn === p) builtIn = null; throw e; });
+    builtIn = p;
+  }
   return builtIn;
 }
 
 export async function request(req: Record<string, unknown>): Promise<any> {
-  const a = JSON.parse(await post({ line: JSON.stringify(req) }));
+  const line = await post({ line: JSON.stringify(req) });
+  let a: any;
+  try { a = JSON.parse(line); } catch { throw new EngineError(`The engine's answer does not read: ${line.slice(0, 80)}`); }
   if (a.error !== undefined) throw new EngineError(a.error);
   return a;
 }

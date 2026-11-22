@@ -1,6 +1,7 @@
 // The engine's worker: the WebAssembly build of GuiEngine (web/engine), one request at a time in the order they come.
 // Messages in: {id, line} (a request line), {id, file: {path, data}} (a network to write into the engine's file
-// system, before a request names it). Out: {id, line} (the answer line) or {id, error}.
+// system, before a request names it). Out: {id, line} (the answer line) or {id, error}, with fatal: true when the engine
+// failed to start.
 /// <reference lib="webworker" />
 
 interface Engine {
@@ -37,8 +38,16 @@ const ready: Promise<Engine> = Promise.race([
 
 self.onmessage = async (e: MessageEvent) => {
   const { id } = e.data;
+  let engine: Engine;
   try {
-    const engine = await ready;
+    engine = await ready;
+  } catch (err) {
+    // The engine did not start (its files failed to load): every request here would fail the same way, so the page
+    // starts a new worker for the next one.
+    self.postMessage({ id, error: String((err as Error)?.message ?? err), fatal: true });
+    return;
+  }
+  try {
     if (e.data.file) {
       const { path, data } = e.data.file as { path: string; data: ArrayBuffer | null };
       if (data === null) {

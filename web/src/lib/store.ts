@@ -8,8 +8,23 @@ const PREFIX = 'thirteen.';
 export function get(key: string, fallback: string): string {
   try { return localStorage.getItem(PREFIX + key) ?? fallback; } catch { return fallback; }
 }
+/**
+ * Called once a page load when a write fails for want of room (not when storage is off, as in a private window, where
+ * nothing could be kept anyway): the page says so, rather than records going missing without a word.
+ */
+let onFull: (() => void) | null = null;
+let fullTold = false;
+export function whenFull(f: () => void) { onFull = f; }
+
+const isQuota = (e: unknown) =>
+  e instanceof DOMException && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014);
+
 export function set(key: string, value: string) {
-  try { localStorage.setItem(PREFIX + key, value); } catch { /* storage full or off */ }
+  try {
+    localStorage.setItem(PREFIX + key, value);
+  } catch (e) {
+    if (isQuota(e) && !fullTold) { fullTold = true; onFull?.(); }
+  }
 }
 export const getNum = (key: string, fallback: number) => {
   const x = Number(get(key, String(fallback)));

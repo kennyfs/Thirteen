@@ -26,6 +26,7 @@ const app = all as unknown as Record<Lang, Table>;
 // Where the page says other than the app: what is kept is kept in this browser.
 const WEB: Record<'en' | 'zh', Table> = {
   en: {
+    storage_full: 'This browser\'s storage is full, so new hands are not being recorded. Save your records as a file, then clear them to make room.',
     records_info: 'Every hand you play is recorded in this browser: the cards, your rows, the rules and the time you took. Nothing else, and nothing is sent anywhere. Sending the file (JSONL) to the developer helps train better computer players.',
     // The app's say "app"; the page says here or reloads.
     tut_foul_text: 'The back must be at least as big as the middle, and the middle at least as big as the front. Rows in any other order are a foul (倒水), which you cannot play here.',
@@ -47,6 +48,7 @@ const WEB: Record<'en' | 'zh', Table> = {
     language: 'Language',
   },
   zh: {
+    storage_full: '這個瀏覽器的儲存空間已滿，新的牌局沒有存進紀錄。請先把紀錄存成檔案，再清除紀錄騰出空間。',
     records_info: '你打的每一局都記錄在這個瀏覽器裡：手牌、你的擺法、規則和花的時間，沒有其他資料，也不會傳到任何地方。把這個檔案（JSONL）寄給開發者，可以用來訓練更好的電腦對手。',
     // The app's say "app"; the page says here or reloads.
     tut_foul_text: '尾墩要大於或等於中墩，中墩要大於或等於頭墩。順序反了就是「倒水」，這裡不會讓你出倒水的牌。',
