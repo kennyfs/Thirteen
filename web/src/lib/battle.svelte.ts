@@ -123,6 +123,7 @@ export class Review {
   private preparing = new Map<number, { job: Promise<void>; content: string }>();
   /** Counts the clears, so that work for a battle cleared away writes nothing into the next. */
   private generation = 0;
+  private analysisSeq = 0;
   detail = $state<number | null>(null);
   analyzed = $state<number | null>(null);
   detailAnalysis = $state<Analysis | null>(null);
@@ -218,6 +219,8 @@ export class Review {
     if (index === null || !o || !play) return;
     const rules = this.rules;
     const names = this.names;
+    const gen = this.generation;
+    const seq = ++this.analysisSeq;
     this.analyzed = player;
     this.detailAnalysis = null;
     this.detailTags = {};
@@ -235,17 +238,18 @@ export class Review {
           const i = a.cands.findIndex((c) => c.info.keys.every((k, r) => k === keys[r]));
           if (i >= 0) (tags[i] ??= []).push(names[p.player] ?? '?');
         }
-        if (this.detail === index && this.analyzed === player) {
+        if (gen === this.generation && seq === this.analysisSeq && this.detail === index && this.analyzed === player) {
           this.detailAnalysis = a;
           this.detailTags = Object.fromEntries(Object.entries(tags).map(([k, v]) => [k, v.join(', ')]));
         }
       } catch (e) {
-        this.onError((e as Error).message ?? String(e));
+        if (gen === this.generation && seq === this.analysisSeq) this.onError((e as Error).message ?? String(e));
       }
     })();
   }
 
   closeAnalysis() {
+    this.analysisSeq++;
     this.analyzed = null;
     this.detailAnalysis = null;
     this.detailTags = {};

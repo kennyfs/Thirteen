@@ -66,20 +66,31 @@ export class App {
   presetValues = $state<Record<string, Values>>({});
   legacyModels = $state<Set<string>>(new Set());
 
+  private rulesSeq = 0;
+  private pendingRuleSpec: RuleSpec | null = null;
+
   choosePreset(preset: string) { this.applyRules({ preset, overrides: {} }); }
 
   setRule(name: string, value: number) {
-    const preset = this.presetValues[this.ruleSpec.preset];
-    const overrides = { ...this.ruleSpec.overrides };
+    const cur = this.pendingRuleSpec ?? this.ruleSpec;
+    const preset = this.presetValues[cur.preset];
+    const overrides = { ...cur.overrides };
     if (preset?.[name] === value) delete overrides[name]; else overrides[name] = value;
-    this.applyRules({ preset: this.ruleSpec.preset, overrides });
+    this.applyRules({ preset: cur.preset, overrides });
   }
 
   private applyRules(spec: RuleSpec) {
+    const seq = ++this.rulesSeq;
+    this.pendingRuleSpec = spec;
     this.catching(engine.ruleValues(R.specString(spec)).then((v) => {
+      if (seq !== this.rulesSeq) return;
+      this.pendingRuleSpec = null;
       this.ruleValues = v;
       this.ruleSpec = spec;
       store.set('rules', R.specString(spec));
+    }, (e) => {
+      if (seq === this.rulesSeq) this.pendingRuleSpec = null;
+      throw e;
     }));
   }
 
@@ -180,8 +191,8 @@ export class App {
 
   /** Counts the deals: work begun for one hand writes nothing once another is dealt (a double tap on Next deals twice). */
   private dealNo = 0;
-  /** A hand being confirmed: a second tap waits for nothing and does nothing. */
-  private confirming = false;
+  /** The deal whose confirm() is in flight (-1 when none): blocks a double tap without blocking the next deal. */
+  private confirmingNo = -1;
 
   /** Deals a new hand (`fixed`: the four hands, the player's first). */
   async deal(fixed?: number[][], again = false) {
@@ -193,6 +204,8 @@ export class App {
     this.replaying = again;
     this.lastRecord = null;
     this.result = null;
+    this.waiting = false;
+    this.opponents = null;
     nav.leave('analysis');
     this.gameAnalysis = null;
     const hands = fixed ?? (await engine.deal());
@@ -227,9 +240,9 @@ export class App {
   }
 
   confirm() {
-    if (this.confirming || this.result) return;
-    this.confirming = true;
+    if (!this.opponents || this.confirmingNo === this.dealNo || this.result) return;
     const no = this.dealNo;
+    this.confirmingNo = no;
     this.catching((async () => {
       const ev = await this.play.eval();
       if (no !== this.dealNo) return;
@@ -248,9 +261,9 @@ export class App {
         }
         this.result = { rows: all, score: sc };
       } finally {
-        this.waiting = false;
+        if (no === this.dealNo) this.waiting = false;
       }
-    })().finally(() => { this.confirming = false; }));
+    })().finally(() => { if (this.confirmingNo === no) this.confirmingNo = -1; }));
   }
 
   /** The hand just finished, as its result pages show it; null while a hand is in play. */
@@ -300,14 +313,13 @@ export class App {
   computeGameAnalysis() {
     const r = this.result;
     if (!r || this.gameAnalysis || this.gameAnalyzing === r) return;
-    this.analyzing = true;
     this.gameAnalyzing = r;
     this.catching(engine.analyze([...this.hand].sort((a, b) => a - b), this.gameRules, this.model(this.anaModel).path, [r.rows[0]])
       .then((a) => {
         if (this.result === r) this.gameAnalysis = a;
         else if (this.prev?.result === r && !this.prev.analysis) this.prev = { ...this.prev, analysis: a };
       })
-      .finally(() => { this.analyzing = false; if (this.gameAnalyzing === r) this.gameAnalyzing = null; }));
+      .finally(() => { if (this.gameAnalyzing === r) this.gameAnalyzing = null; }));
   }
 
   /** The totals and the hand count start over, and so does practice: a new hand, the first. */
@@ -376,10 +388,13 @@ export class App {
   anaRules = $state<string | null>(null);
   analysis = $state<Analysis | null>(null);
   analyzing = $state(false);
+  private anaSeq = 0;
 
   get anaRuleValues(): Values { return this.anaRules ? R.values(this.anaRules) : this.ruleValues; }
 
   setAnalyzeHand(cards: Set<number>, mine: Rows | null = null, rules: string | null = null) {
+    this.anaSeq++;
+    this.analyzing = false;
     this.anaHand = cards;
     this.anaMine = mine;
     this.anaRules = rules;
@@ -397,7 +412,7 @@ export class App {
     this.setAnalyzeHand(s, null, this.anaRules);
   }
 
-  useCurrentRules() { this.anaRules = null; this.analysis = null; }
+  useCurrentRules() { this.anaSeq++; this.analyzing = false; this.anaRules = null; this.analysis = null; }
   randomAnalyzeHand() { this.setAnalyzeHand(new Set(shuffled([...Array(52).keys()]).slice(0, 13))); }
 
   analyzeLastHand() {
@@ -411,15 +426,20 @@ export class App {
 
   analyzeRecordOnScreen(rec: Rec) { this.analyzeRecord(rec); nav.go('ANALYZE'); }
 
-  chooseAnalyzeModel(path: string) { this.anaModel = path; store.set('analyze.model', path); }
+  chooseAnalyzeModel(path: string) { this.anaSeq++; this.analyzing = false; this.anaModel = path; store.set('analyze.model', path); }
 
   analyze() {
     if (this.anaHand.size !== 13) { this.error = t('pick_13'); return; }
+    const seq = ++this.anaSeq;
     this.analyzing = true;
     this.catching(engine.analyze([...this.anaHand].sort((a, b) => a - b), this.anaRules ?? R.specString(this.ruleSpec), this.model(this.anaModel).path,
       this.anaMine ? [$state.snapshot(this.anaMine) as Rows] : [])
-      .then((a) => { this.analysis = a; nav.open('candidates', 'ANALYZE'); })
-      .finally(() => { this.analyzing = false; }));
+      .then((a) => {
+        if (seq !== this.anaSeq) return;
+        this.analysis = a;
+        nav.open('candidates', 'ANALYZE');
+      })
+      .finally(() => { if (seq === this.anaSeq) this.analyzing = false; }));
   }
 
   // ---- Networks and opponents ----

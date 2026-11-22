@@ -125,9 +125,9 @@ export class Arranger {
   private update(next: Rows) {
     this.rows = next;
     this.rowsEval = null;
-    if (this.hand.length === 0) return;
     const v = ++this.version;
-    engine.rows(next, this.rules).then((e) => { if (v === this.version) this.rowsEval = e; }, (e) => this.onError(e.message));
+    if (this.hand.length === 0) return;
+    engine.rows(next, this.rules).then((e) => { if (v === this.version) this.rowsEval = e; }, (e) => { if (v === this.version) this.onError(e.message); });
   }
 
   /** The rows as the engine sees them now. */

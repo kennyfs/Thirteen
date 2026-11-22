@@ -83,23 +83,33 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   /** Networks that predate the rules input, by path. */
   var legacyModels by mutableStateOf<Set<String>>(emptySet()); private set
 
+  private var rulesSeq = 0
+  private var pendingRuleSpec: RuleSpec? = null
+
   /** Picks a preset, dropping any changes. */
   fun choosePreset(preset: String) = applyRules(RuleSpec(preset))
 
   /** Sets one value; the same as the preset's drops the override. */
   fun setRule(name: String, value: Double) {
-    val preset = presetValues[ruleSpec.preset]
-    val overrides = if (preset?.get(name) == value) ruleSpec.overrides - name else ruleSpec.overrides + (name to value)
-    applyRules(ruleSpec.copy(overrides = overrides))
+    val cur = pendingRuleSpec ?: ruleSpec
+    val preset = presetValues[cur.preset]
+    val overrides = if (preset?.get(name) == value) cur.overrides - name else cur.overrides + (name to value)
+    applyRules(cur.copy(overrides = overrides))
   }
 
   private fun applyRules(spec: RuleSpec) {
+    val seq = ++rulesSeq
+    pendingRuleSpec = spec
     viewModelScope.launch {
       try {
-        ruleValues = Engine.rules(spec.spec())
+        val v = Engine.rules(spec.spec())
+        if (seq != rulesSeq) return@launch
+        pendingRuleSpec = null
+        ruleValues = v
         ruleSpec = spec
         settings.rules = spec
       } catch (e: EngineException) {
+        if (seq == rulesSeq) pendingRuleSpec = null
         // The steppers keep to the ranges the engine takes, so this is a bug: say so in a dialog, not in the page.
         error = e.message
       }
@@ -201,8 +211,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
   /** Counts the deals: work begun for one hand writes nothing once another is dealt (a double tap on Next deals twice). */
   private var dealNo = 0
-  /** A hand being confirmed: a second tap does nothing. */
-  private var confirming = false
+  /** The deal whose confirm() is in flight (-1 when none): blocks a double tap without blocking the next deal. */
+  private var confirmingNo = -1
+  private var gameAnalyzing: Any? = null
 
   /** Deals a new hand; tests pass `fixed` hands (the player's first). */
   fun deal(fixed: List<List<Int>>? = null, again: Boolean = false) = launchCatching {
@@ -212,6 +223,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     replaying = again
     lastRecord = null
     result = null
+    waiting = false
+    opponents = null
     resultTab = 0
     gameAnalysis = null
     val hands = fixed ?: Engine.deal()
@@ -241,11 +254,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   fun placeInto(row: Int) = play.placeInto(row)
 
   fun confirm() {
-    if (confirming || result != null) return
-    confirming = true
+    if (opponents == null || confirmingNo == dealNo || result != null) return
     val no = dealNo
+    confirmingNo = no
     launchCatching {
-      try { confirmNow(no) } finally { confirming = false }
+      try { confirmNow(no) } finally { if (confirmingNo == no) confirmingNo = -1 }
     }
   }
 
@@ -270,7 +283,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
       }
       result = all to score
     } finally {
-      waiting = false
+      if (no == dealNo) waiting = false
     }
   }
 
@@ -278,14 +291,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   fun showGameAnalysis() = launchCatching {
     resultTab = 1
     val r = result ?: return@launchCatching
-    if (gameAnalysis != null) return@launchCatching
-    analyzing = true
+    if (gameAnalysis != null || gameAnalyzing === r) return@launchCatching
+    gameAnalyzing = r
     try {
       val a = Engine.analyze(hand.sorted(), gameRules, settings.model(anaModel).path, listOf(r.first[0]))
       if (result === r) gameAnalysis = a
       else prev?.let { p -> if (p.result === r && p.analysis == null) prev = p.copy(analysis = a) }
     } finally {
-      analyzing = false
+      if (gameAnalyzing === r) gameAnalyzing = null
     }
   }
 
@@ -377,8 +390,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   val anaRuleValues: Map<String, Double> get() = anaRules?.let(Rules::values) ?: ruleValues
   var analysis by mutableStateOf<Analysis?>(null); private set
   var analyzing by mutableStateOf(false); private set
+  private var anaSeq = 0
 
   fun setAnalyzeHand(cards: Set<Int>, mine: Arrangement? = null, rules: String? = null) {
+    anaSeq++
+    analyzing = false
     anaHand = cards
     anaMine = mine
     anaRules = rules
@@ -396,6 +412,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
   /** Analyzes under the rules page's rules instead of the game's. */
   fun useCurrentRules() {
+    anaSeq++
+    analyzing = false
     anaRules = null
     analysis = null
   }
@@ -418,6 +436,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
   }
 
   fun chooseAnalyzeModel(path: String) {
+    anaSeq++
+    analyzing = false
     anaModel = path
     settings.analyzeModel = path
   }
@@ -427,12 +447,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
       error = str(R.string.pick_13)
       return@launchCatching
     }
+    val seq = ++anaSeq
     analyzing = true
     try {
-      analysis = Engine.analyze(anaHand.sorted(), anaRules ?: ruleSpec.spec(), settings.model(anaModel).path, listOfNotNull(anaMine))
+      val a = Engine.analyze(anaHand.sorted(), anaRules ?: ruleSpec.spec(), settings.model(anaModel).path, listOfNotNull(anaMine))
+      if (seq != anaSeq) return@launchCatching
+      analysis = a
       anaPage = 1
     } finally {
-      analyzing = false
+      if (seq == anaSeq) analyzing = false
     }
   }
 

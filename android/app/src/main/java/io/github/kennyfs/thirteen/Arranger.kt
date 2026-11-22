@@ -121,17 +121,20 @@ class Arranger(
     history = (history + listOf(rows)).takeLast(50)
   }
 
+  private var version = 0
+
   private fun updateRows(next: Arrangement) {
     rows = next
     rowsEval = null
+    val v = ++version
     if (hand.isEmpty()) return
     val rules = rules
     scope.launch {
       try {
         val eval = Engine.rows(next, rules)
-        if (rows == next) rowsEval = eval
+        if (v == version) rowsEval = eval
       } catch (e: Exception) {
-        onError(e.message ?: e.toString())
+        if (v == version) onError(e.message ?: e.toString())
       }
     }
   }

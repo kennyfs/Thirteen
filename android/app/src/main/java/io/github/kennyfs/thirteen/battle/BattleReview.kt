@@ -43,6 +43,7 @@ class BattleReview(private val scope: CoroutineScope, private val model: () -> S
   private val preparing = HashMap<Int, Pair<Job, HandOutcome>>()
   /** Counts the clears, so that work for a battle cleared away writes nothing into the next. */
   private var generation = 0
+  private var analysisSeq = 0
 
   /** The hand opened for a closer look, and the player whose hand of it is analyzed. */
   var detail by mutableStateOf<Int?>(null); private set
@@ -140,6 +141,8 @@ class BattleReview(private val scope: CoroutineScope, private val model: () -> S
     val play = o.plays.firstOrNull { it.player == player } ?: return
     val rules = rules
     val names = names
+    val gen = generation
+    val seq = ++analysisSeq
     analyzed = player
     detailAnalysis = null
     detailTags = emptyMap()
@@ -156,17 +159,18 @@ class BattleReview(private val scope: CoroutineScope, private val model: () -> S
           val i = a.cands.indexOfFirst { it.info.keys == keys }
           if (i >= 0) tags.getOrPut(i) { mutableListOf() } += names[p.player] ?: "?"
         }
-        if (detail == index && analyzed == player) {
+        if (gen == generation && seq == analysisSeq && detail == index && analyzed == player) {
           detailAnalysis = a
           detailTags = tags.mapValues { it.value.joinToString(", ") }
         }
       } catch (e: Exception) {
-        onError(e.message ?: e.toString())
+        if (gen == generation && seq == analysisSeq) onError(e.message ?: e.toString())
       }
     }
   }
 
   fun closeAnalysis() {
+    analysisSeq++
     analyzed = null
     detailAnalysis = null
     detailTags = emptyMap()
