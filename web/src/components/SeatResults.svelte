@@ -111,7 +111,7 @@
             <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
             <div class="line" class:me={s === 0} class:homerun={score.homeRun[s]} class:pick={!!onplayer}
               role={onplayer ? 'button' : undefined} tabindex={onplayer ? 0 : undefined}
-              onclick={() => onplayer?.(s)} onkeydown={(e) => { if (e.key === 'Enter') onplayer?.(s); }}
+              onclick={() => onplayer?.(s)} onkeydown={(e) => { if (onplayer && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onplayer(s); } }}
               bind:clientHeight={() => lineH, (v) => { if (s === 0) lineH = v; }}
               style:gap="{COLUMN_GAP}px">
               <div class="name" style:width="{nameWidth}px">
@@ -152,7 +152,7 @@
           {@const by = rows.map((_, j) => j).filter((j) => score.scoops[j][s])}
           {@const open = sideBySide && expanded === s}
           <div class="block" class:me={s === 0} class:homerun={score.homeRun[s]} role="button" tabindex="0" style:padding="6px {GRID_PAD}px"
-            onclick={() => tap(s)} onkeydown={(e) => { if (e.key === 'Enter') tap(s); }}>
+            onclick={() => tap(s)} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tap(s); } }}>
             <div class="head">
               <div class="who">
                 <div class="nameline"><span class="title-medium bold nowrap">{names[s]}</span>{#if notes[s]}<span class="body-small fdim ellipsis">{notes[s]}</span>{/if}</div>

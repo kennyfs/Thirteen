@@ -22,7 +22,7 @@
   const card = $derived(Math.min(max, (w - LINE_GAP * 4) / 5));
 </script>
 
-<div class="rec" role="button" tabindex="0" onclick={onclick} onkeydown={(e) => { if (e.key === 'Enter') onclick(); }} bind:clientWidth={w}>
+<div class="rec" role="button" tabindex="0" onclick={onclick} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onclick(); } }} bind:clientWidth={w}>
   <div class="top">
     <span class="title-medium nowrap" style:min-width="{textRoom(44)}px" class:good={result !== null && result > 0} class:bad={result !== null && result < 0}>
       {result === null ? '' : signed(result)}

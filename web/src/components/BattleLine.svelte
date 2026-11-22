@@ -14,7 +14,7 @@
   const saved = $derived(app.favoriteBattleIds.has(b.id));
 </script>
 
-<div class="line" role="button" tabindex="0" {onclick} onkeydown={(e) => { if (e.key === 'Enter') onclick(); }}>
+<div class="line" role="button" tabindex="0" {onclick} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onclick(); } }}>
   <div class="text">
     <span class="title-medium ellipsis">
       {#if place !== null && mine}{t('battle_place', place)} · {puzzle ? t('battle_total_loss', fmtLoss(mine.total)) : signed(mine.total)}{:else}—{/if}

@@ -76,7 +76,7 @@
 {#snippet tile(r: Rec)}
   {@const rows = rowsOf(r)}
   {@const fav = app.favoriteIds.has(r.id)}
-  <div class="tile" role="button" tabindex="0" onclick={() => (acting = r)} onkeydown={(e) => { if (e.key === 'Enter') acting = r; }}>
+  <div class="tile" role="button" tabindex="0" onclick={() => (acting = r)} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); acting = r; } }}>
     <div class="tile-head">
       <span class="title-medium nowrap" class:good={r.result > 0} class:bad={r.result < 0}>{typeof r.result === 'number' ? signed(r.result) : ''}</span>
       <span class="body-small dim ellipsis grow">{localTime(r.timestamp ?? '')}</span>
