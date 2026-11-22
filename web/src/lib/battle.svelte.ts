@@ -485,6 +485,8 @@ export class Battle {
           this.battleStart = Date.now();
           if (this.joined) saveSeat({ url: this.resumeUrl ?? '', ...this.joined, battle: this.battleId });
         }
+        // The totals change with each hand: the battle as it stands.
+        if (previous?.hand !== msg.room.hand || previous?.phase !== msg.room.phase) this.saveBattle();
         if (msg.room.phase === 'OVER') saveSeat(null);
         this.roomAt = Date.now();
         if (msg.room.players.find((p) => p.id === this.me)?.submitted) this.submitting = false;

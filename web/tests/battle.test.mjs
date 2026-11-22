@@ -181,6 +181,44 @@ try {
     assert.equal(sockets.length, countAfter, 'no further reconnect attempts after closed');
     b.dismiss();
   });
+
+  await test('battle record keeps final totals when state arrives after result', async () => {
+    const { b } = makeBattle();
+    b.create('PUZZLE');
+    const ws = sockets.at(-1);
+    ws.open();
+    ws.recv({ t: 'welcome', version: 2 });
+    ws.recv({ t: 'joined', room: 'r1', you: 0, token: 'tok' });
+    ws.recv({ t: 'state', room: { ...ROOM, settings: { ...ROOM.settings, hands: 1 } } });
+    // Room.kt sends HandResult before broadcastState with updated totals and OVER.
+    ws.recv({
+      t: 'result',
+      outcome: {
+        index: 0,
+        plays: [
+          { player: 0, rows: [[0, 1, 2], [3, 4, 5, 6, 7], [8, 9, 10, 11, 12]] },
+          { player: 1, rows: [[0, 1, 2], [3, 4, 5, 6, 7], [8, 9, 10, 11, 12]] },
+        ],
+        losses: [0.5, 0.1],
+      },
+    });
+    ws.recv({
+      t: 'state',
+      room: {
+        ...ROOM,
+        settings: { ...ROOM.settings, hands: 1 },
+        phase: 'OVER',
+        players: [
+          { ...ROOM.players[0], total: 0.5 },
+          { ...ROOM.players[1], total: 0.1 },
+        ],
+      },
+    });
+    const saved = JSON.parse(kept.get('thirteen.battles').trim());
+    assert.equal(saved.players[0].total, 0.5, 'player 0 final total is saved');
+    assert.equal(saved.players[1].total, 0.1, 'player 1 final total is saved');
+    b.dismiss();
+  });
 } finally {
   globalThis.setTimeout = realSetTimeout;
   await server.close();
