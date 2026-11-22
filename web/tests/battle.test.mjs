@@ -96,23 +96,23 @@ try {
   await test('NO_ROOM on resume during reconnect closes the room and stops retrying', async () => {
     const { b, errors } = makeBattle();
     b.create('PUZZLE');
-    const ws1 = sockets.at(-1);
-    ws1.open();
-    ws1.recv({ t: 'welcome', version: 2 });
-    ws1.recv({ t: 'joined', room: 'r1', you: 0, token: 'tok' });
-    ws1.recv({ t: 'state', room: ROOM });
+    const wsA = sockets.at(-1);
+    wsA.open();
+    wsA.recv({ t: 'welcome', version: 2 });
+    wsA.recv({ t: 'joined', room: 'r1', you: 0, token: 'tok' });
+    wsA.recv({ t: 'state', room: ROOM });
     assert.equal(b.busy, false);
     assert.equal(b.inRoom, true);
 
-    ws1.drop();
+    wsA.drop();
     assert.equal(b.busy, true);
     await wait(30);
     assert.equal(sockets.length, 2);
-    const ws2 = sockets.at(-1);
-    ws2.open();
-    ws2.recv({ t: 'welcome', version: 2 });
-    assert.equal(ws2.sent.at(-1).t, 'resume');
-    ws2.recv({ t: 'error', code: 'NO_ROOM' });
+    const wsB = sockets.at(-1);
+    wsB.open();
+    wsB.recv({ t: 'welcome', version: 2 });
+    assert.equal(wsB.sent.at(-1).t, 'resume');
+    wsB.recv({ t: 'error', code: 'NO_ROOM' });
 
     assert.equal(b.busy, false);
     assert.equal(b.room, null);
@@ -125,26 +125,26 @@ try {
   await test('transient RATE error during reconnect keeps busy true and retries', async () => {
     const { b } = makeBattle();
     b.create('PUZZLE');
-    const ws1 = sockets.at(-1);
-    ws1.open();
-    ws1.recv({ t: 'welcome', version: 2 });
-    ws1.recv({ t: 'joined', room: 'r1', you: 0, token: 'tok' });
-    ws1.recv({ t: 'state', room: ROOM });
+    const wsA = sockets.at(-1);
+    wsA.open();
+    wsA.recv({ t: 'welcome', version: 2 });
+    wsA.recv({ t: 'joined', room: 'r1', you: 0, token: 'tok' });
+    wsA.recv({ t: 'state', room: ROOM });
 
-    ws1.drop();
+    wsA.drop();
     await wait(30);
-    const ws2 = sockets.at(-1);
-    ws2.open();
-    ws2.recv({ t: 'welcome', version: 2 });
-    ws2.recv({ t: 'error', code: 'RATE' });
+    const wsB = sockets.at(-1);
+    wsB.open();
+    wsB.recv({ t: 'welcome', version: 2 });
+    wsB.recv({ t: 'error', code: 'RATE' });
     assert.equal(b.busy, true, 'busy stays true while reconnect loop is still running');
 
     await wait(45);
     assert.ok(sockets.length >= 3, 'reconnect loop retries after RATE');
-    const ws3 = sockets.at(-1);
-    ws3.open();
-    ws3.recv({ t: 'welcome', version: 2 });
-    ws3.recv({ t: 'joined', room: 'r1', you: 0, token: 'tok' });
+    const wsC = sockets.at(-1);
+    wsC.open();
+    wsC.recv({ t: 'welcome', version: 2 });
+    wsC.recv({ t: 'joined', room: 'r1', you: 0, token: 'tok' });
     assert.equal(b.busy, false);
     b.dismiss();
   });
@@ -152,12 +152,12 @@ try {
   await test('closed message while reconnecting with outcomes finishes cleanly without further retries', async () => {
     const { b } = makeBattle();
     b.create('PUZZLE');
-    const ws1 = sockets.at(-1);
-    ws1.open();
-    ws1.recv({ t: 'welcome', version: 2 });
-    ws1.recv({ t: 'joined', room: 'r1', you: 0, token: 'tok' });
-    ws1.recv({ t: 'state', room: ROOM });
-    ws1.recv({
+    const wsA = sockets.at(-1);
+    wsA.open();
+    wsA.recv({ t: 'welcome', version: 2 });
+    wsA.recv({ t: 'joined', room: 'r1', you: 0, token: 'tok' });
+    wsA.recv({ t: 'state', room: ROOM });
+    wsA.recv({
       t: 'result',
       outcome: {
         index: 0,
@@ -169,11 +169,11 @@ try {
       },
     });
 
-    ws1.drop();
+    wsA.drop();
     await wait(30);
-    const ws2 = sockets.at(-1);
-    ws2.open();
-    ws2.recv({ t: 'closed', reason: 'expired' });
+    const wsB = sockets.at(-1);
+    wsB.open();
+    wsB.recv({ t: 'closed', reason: 'expired' });
     assert.equal(b.busy, false);
     assert.equal(b.finished, true);
     const countAfter = sockets.length;
