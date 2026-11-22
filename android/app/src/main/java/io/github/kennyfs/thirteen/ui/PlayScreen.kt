@@ -117,6 +117,7 @@ import io.github.kennyfs.thirteen.R
 import io.github.kennyfs.thirteen.Score
 import io.github.kennyfs.thirteen.ui.theme.LocalTable
 import io.github.kennyfs.thirteen.ui.theme.TableText
+import io.github.kennyfs.thirteen.ui.theme.AppText
 import io.github.kennyfs.thirteen.ui.theme.TableColors
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -260,7 +261,8 @@ fun Arranging(
       if (wide) ArrangeWide(vm, wheel, busy, confirmLabel, confirmShort, fit.card, fit.hand, fit.labels, { helpOpen = true }, onConfirm)
       else ArrangeTall(vm, wheel, busy, confirmLabel, confirmShort, fit, { helpOpen = true }, onConfirm)
     }
-    if (helpOpen) ArrangeHelpDialog { helpOpen = false }
+    // The dialog's words at the app's size, not the table's.
+    if (helpOpen) AppText { ArrangeHelpDialog { helpOpen = false } }
   }
   }
 }
@@ -539,8 +541,7 @@ private fun RowSlotTall(
 private fun labelWidth(d: androidx.compose.ui.unit.Density, labels: Float = 1f): Dp = maxOf(72.dp, with(d) { 14.sp.toDp() } * 4.6f * labels)
 private fun headerHeight(d: androidx.compose.ui.unit.Density, labels: Float = 1f): Dp = maxOf(32.dp, with(d) { 13.sp.toDp() } * 2 * labels)
 /** The height of a label beside the cards: the name and a line of state. */
-private fun labelHeight(d: androidx.compose.ui.unit.Density, labels: Float = 1f): Dp =
-  with(d) { 24.sp.toDp() + 16.sp.toDp() } * labels * FALLBACK_LINES + 2.dp
+private fun labelHeight(d: androidx.compose.ui.unit.Density, labels: Float = 1f): Dp = with(d) { 24.sp.toDp() + 16.sp.toDp() } * labels + 2.dp
 
 /** Returns a row's cards to the hand (as a long press on the row does). */
 @Composable

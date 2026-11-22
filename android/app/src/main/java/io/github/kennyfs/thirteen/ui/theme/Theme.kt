@@ -178,9 +178,16 @@ const val TABLE_FONT_MAX = 1.5f
 /** The arranging screens' density: the font size no larger than TABLE_FONT_MAX (see TableText). */
 val LocalTableDensity = staticCompositionLocalOf { Density(1f) }
 
+/** The rest of the app's density (the system's font size, times the app's text size). */
+val LocalAppDensity = staticCompositionLocalOf { Density(1f) }
+
 /** `content` with the arranging screens' density, its words no larger than at TABLE_FONT_MAX. */
 @Composable
 fun TableText(content: @Composable () -> Unit) = CompositionLocalProvider(LocalDensity provides LocalTableDensity.current, content = content)
+
+/** `content` at the rest of the app's density: a dialog opened from an arranging screen. */
+@Composable
+fun AppText(content: @Composable () -> Unit) = CompositionLocalProvider(LocalDensity provides LocalAppDensity.current, content = content)
 
 @Composable
 fun ThirteenTheme(style: ColorStyle, darkMode: DarkMode, textSize: TextSize, content: @Composable () -> Unit) {
@@ -199,6 +206,7 @@ fun ThirteenTheme(style: ColorStyle, darkMode: DarkMode, textSize: TextSize, con
     LocalOutcome provides outcome,
     LocalDark provides (dark && style == ColorStyle.MINIMAL),
     LocalDensity provides Density(density.density, density.fontScale * textSize.scale),
+    LocalAppDensity provides Density(density.density, density.fontScale * textSize.scale),
     LocalTableDensity provides Density(density.density, minOf(density.fontScale, TABLE_FONT_MAX) * textSize.scale),
   ) {
     val japanese = LocalConfiguration.current.locales[0].language == "ja"

@@ -82,7 +82,7 @@ private fun wideFit(areaW: Dp, areaH: Dp, lu: Dp, maxCard: Dp, least: Dp = 18.dp
   val byHeight = (h - fixed) / (1.4f * 4 + 0.22f)
   // A label taller than the card makes its row taller. Then each row is as tall as its label already: its cards may
   // be as tall too, and only the hand takes the height that is left (the web's sizing.ts alike).
-  val label = labelRoom(40) * FALLBACK_LINES + 2.dp
+  val label = labelRoom(40) + 2.dp
   if (byHeight * 1.4f < label) {
     val rowCard = minOf(byRowsWidth, label / 1.4f, maxCard).down().coerceAtLeast(least)
     val handCard = minOf(byHandWidth, (h - fixed - label * 3) / (1.4f + 0.22f), maxCard).down().coerceAtLeast(least)
@@ -100,12 +100,11 @@ private fun wideFit(areaW: Dp, areaH: Dp, lu: Dp, maxCard: Dp, least: Dp = 18.dp
 
 /**
  * The least height of a wide arranging table (arrangeFit's wide branch) whose cards are still finger-sized, 32 dp wide
- * all alike: the felt's padding, three rows (each as tall as a row label at the normal size, as small as arrangeFit
- * makes one, if that is taller) and the hand at that size. A page that holds the table among other things (the
- * tutorial's practice) scrolls below this rather than crush the cards.
+ * all alike: the felt's padding, three rows and the hand at that size. A row label at the normal size, as small as
+ * arrangeFit makes one, is no taller than such a row. A page that holds the table among other things (the tutorial's
+ * practice) scrolls below this rather than crush the cards.
  */
-fun wideArrangeMinHeight(): Dp =
-  6.dp + 12.dp + ROW_PAD * 6 + ROW_STACK_GAP * 2 + 6.dp + maxOf(32.dp * 1.4f, 40.dp * FALLBACK_LINES + 2.dp) * 3 + 32.dp * (1.4f + 0.22f)
+fun wideArrangeMinHeight(): Dp = 6.dp + 12.dp + ROW_PAD * 6 + ROW_STACK_GAP * 2 + 6.dp + 32.dp * (1.4f * 4 + 0.22f)
 
 /**
  * `card`: the rows' cards; `hand`: the hand's (larger on a wide page when that fills the width, see ROWS_TO_HAND);
@@ -147,13 +146,6 @@ fun arrangeFit(areaW: Dp, areaH: Dp, wide: Boolean, u: Dp, maxCard: Dp = MAX_PLA
   return ArrangeFit(f.card, f.above, f.perLine, f.hand, f.even, labels = lo / u)
 }
 
-/**
- * A row label beside the cards is a name (a 24sp line) and a line of state (16sp), 2 apart; a line in a fallback font
- * (Chinese, in Roboto's place) is taller than the line height asks, by about a sixth, so the label's lines are counted
- * so much taller. (The page's lines keep their height: its sizing.ts has no such factor.)
- */
-const val FALLBACK_LINES = 1.17f
-
 /** No least card size, for arrangeFit's comparisons. */
 private val NO_LEAST = (-10000).dp
 
@@ -178,7 +170,7 @@ private fun tallFit(areaW: Dp, areaH: Dp, lu: Dp, maxCard: Dp, least: Dp = 20.dp
       var s = minOf(byRowsWidth, byHandWidth, byHeight, maxCard).down().coerceAtLeast(least)
       // A label beside taller than the card (as drawn) makes its row taller (its name and a line of state); 2 more for
       // the fractions of the three labels' heights.
-      val label = room(40) * FALLBACK_LINES + 2.dp
+      val label = room(40) + 2.dp
       if (!above && s * 1.4f < label) s = minOf(s, (h - fixed - label * 3 - 2.dp) / (1.4f * lines + 0.22f)).down().coerceAtLeast(least)
       // The first of the equally large ones wins: the labels beside.
       if (best == null || s > best.card + 0.5.dp) best = ArrangeFit(s, above, perLine)
