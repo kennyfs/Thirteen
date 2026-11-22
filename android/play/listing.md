@@ -185,6 +185,50 @@ No money or betting is involved.
 
 Each version's block pastes as it is into the Play Console's release notes.
 
+### 2.5.0
+
+```text
+<zh-TW>
+• 手機橫放時，手牌放大到填滿牌桌寬度
+• 切換排序時，已選起的牌不會放下
+• 術語表支援所有語言，教學與講評裡的術語可以點開說明
+• 對戰斷線時，房間內會顯示「重新連線中」，房間已關閉時也會告知
+• 手機橫放時，教學的「實際擺一手」可以看到整副手牌
+• 修正多處畫面在大字級、橫向或英文下文字被截斷的問題
+• 修正連點出牌、建房或交出擺法可能重複執行的問題
+• 修正輸入錯誤伺服器位址時 app 會關閉的問題
+• 用詞修訂：房號、神經網路、講評等
+</zh-TW>
+<en-US>
+• Sideways on a phone, the hand grows to the table's width
+• Picked cards stay up when you sort again
+• The glossary in every language: tap a term in the tutorial or remarks
+• A dropped battle connection shows "Reconnecting…", and a closed room says so
+• The tutorial's practice hand fits on a phone held sideways
+• Fixed: text cut off at large font sizes, sideways or in English; double taps acting twice; a crash on a malformed server address
+</en-US>
+<ja-JP>
+• スマホを横向きにすると、手札が卓の幅いっぱいまで大きくなります
+• 並べ替えても、選んだカードは上がったままです
+• 用語集がすべての言語に対応：チュートリアルやコメントの用語をタップすると説明が開きます
+• 対戦中に接続が切れると「再接続中…」と表示し、ルームが閉じたときもお知らせします
+• 横向きのチュートリアルで手札全体が見えるようになりました
+• 大きな文字サイズ、横向き、英語で文字が切れる問題を修正しました
+• 「出す」、ルーム作成、提出の連打で二重に実行される問題を修正しました
+• 誤ったサーバーアドレスでアプリが終了する問題を修正しました
+</ja-JP>
+<zh-HK>
+• 手機打橫時，手牌會放大至填滿牌枱闊度
+• 轉換排序時，已揀起的牌不會放低
+• 術語表支援所有語言，教學及講評中的術語可按下查看說明
+• 對戰斷線時，房間內會顯示「重新連線中」，房間已關閉時亦會通知
+• 手機打橫時，教學的「實際擺一手」可以看到整副手牌
+• 修正多處畫面在大字體、打橫或英文下文字被截斷的問題
+• 修正連按出牌、開房或交出擺法可能重複執行的問題
+• 修正輸入錯誤伺服器地址時 app 會關閉的問題
+</zh-HK>
+```
+
 ### 2.4.0
 
 ```text
