@@ -120,6 +120,8 @@ kotlin {
 }
 
 tasks.named("preBuild") { dependsOn(extractOrt) }
+// GlossaryTest reads the glossaries, strings and switches in src/main/res itself: a change there is a change to its input.
+tasks.withType<Test>().configureEach { inputs.dir("src/main/res").withPathSensitivity(PathSensitivity.RELATIVE) }
 
 dependencies {
   ortAar("com.microsoft.onnxruntime:onnxruntime-android:$ortVersion@aar")
