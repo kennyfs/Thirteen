@@ -16,6 +16,9 @@
 
 <style>
   header { display: flex; align-items: center; gap: 4px; min-height: 56px; padding: 4px 12px 4px 4px; flex: none; }
+  @media (max-height: 500px) {
+    header { min-height: 44px; padding: 2px 12px 2px 4px; }
+  }
   header.column { width: 100%; margin: 0 auto; box-sizing: border-box; }
   h1 { margin: 0; flex: 1; }
   h1.pad { padding-left: 12px; }

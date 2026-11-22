@@ -44,7 +44,10 @@
   .page { height: 100%; display: flex; flex-direction: column; min-height: 0; }
   .scroll { flex: 1; overflow: auto; padding-bottom: 24px; }
   .readable { max-width: 720px; margin: 0 auto; }
-  .row { display: flex; align-items: center; min-height: 64px; padding: 0 4px 0 16px; border-bottom: 1px solid var(--outline-variant); margin: 0 16px 0 0; }
+  .row { display: flex; align-items: center; min-height: 56px; padding: 6px 4px 6px 16px; border-bottom: 1px solid var(--outline-variant); margin: 0 16px 0 0; }
+  @media (max-height: 500px) {
+    .row { min-height: 48px; padding: 4px 4px 4px 16px; }
+  }
   .grow { flex: 1; }
   .pad { padding: 16px; }
 </style>

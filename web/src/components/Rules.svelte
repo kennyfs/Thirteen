@@ -92,5 +92,10 @@
   .radio.on { border-color: var(--primary); background: radial-gradient(var(--primary) 0 4.5px, transparent 5px); }
   .opt { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 16px; width: 100%; background: none; border: none; color: inherit; cursor: pointer; font: inherit; }
   .num { display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 0 12px 0 16px; }
+  @media (max-height: 500px) {
+    .preset { padding: 8px 12px; }
+    .opt { min-height: 44px; }
+    .num { min-height: 48px; }
+  }
   .value { min-width: 2.5em; text-align: center; }
 </style>

@@ -21,8 +21,11 @@
 {/if}
 
 <style>
-  .row { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 16px; width: 100%; box-sizing: border-box;
+  .row { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 6px 16px; width: 100%; box-sizing: border-box;
     background: none; border: none; text-align: left; color: inherit; font: inherit; text-decoration: none; }
+  @media (max-height: 500px) {
+    .row { min-height: 48px; padding: 4px 16px; }
+  }
   button.row, a.row { cursor: pointer; }
   button.row:hover, a.row:hover { background: var(--surface-container); }
   button.row.selected { background: var(--secondary-container); }

@@ -10,6 +10,9 @@
 <style>
   .row { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 6px 16px; width: 100%; background: none; border: none;
     text-align: left; color: inherit; cursor: pointer; font: inherit; }
+  @media (max-height: 500px) {
+    .row { min-height: 48px; padding: 4px 16px; }
+  }
   .grow { flex: 1; }
   .track { flex: none; width: 52px; height: 32px; border-radius: 16px; border: 2px solid var(--outline); box-sizing: border-box;
     background: var(--surface-container-highest); position: relative; transition: background 0.15s; }
