@@ -40,6 +40,8 @@
   const wide = $derived(bare || areaW > areaH * 1.15);
   const fit = $derived(arrangeFit(areaW, areaH, wide, ui.u, ui.sizes.play));
   const card = $derived(bare ? Math.min(ui.sizes.play, deskFit(areaW, areaH)) : fit.card);
+  /** The hand's cards: on a wide page they may be larger than the rows' (sizing.ts, ROWS_TO_HAND). */
+  const handCard = $derived(bare ? card : fit.hand);
   // The labels beside the rows: sizes from the text's.
   const labelWidth = $derived(Math.max(72, textRoom(14) * 4.6));
   const headerHeight = $derived(Math.max(32, textRoom(13) * 2));
@@ -66,7 +68,7 @@
     const groups = new Map<number, number[]>();
     for (const c of hand) groups.set(suit(c), [...(groups.get(suit(c)) ?? []), c]);
     const lines = [...groups.values()].flatMap((g) => chunk(g, fit.perLine));
-    const fits = (gap: number) => cardHeight(card) * lines.length + gap * (lines.length - 1) + card * 0.22 <= handRoom;
+    const fits = (gap: number) => cardHeight(handCard) * lines.length + gap * (lines.length - 1) + handCard * 0.22 <= handRoom;
     if (fits(HAND_LINE_GAP)) return { lines, gap: HAND_LINE_GAP };
     if (fits(HAND_LINE_GAP_TIGHT)) return { lines, gap: HAND_LINE_GAP_TIGHT };
     return null;
@@ -267,20 +269,20 @@
 {/snippet}
 
 {#snippet tray()}
-  <div class="tray" role="group" data-tour="hand" style:padding-top="{card * 0.22}px" style:gap="{suitLines?.gap ?? HAND_LINE_GAP}px" class:left={!!suitLines}
+  <div class="tray" role="group" data-tour="hand" style:padding-top="{handCard * 0.22}px" style:gap="{suitLines?.gap ?? HAND_LINE_GAP}px" class:left={!!suitLines}
     onpointerdown={(e) => down(e, 'hand')} onpointermove={move} onpointerup={up} onpointercancel={up}>
     {#each handLines as line, li (li)}
       <div class="hand-line">
         {#each line as c, i (c)}
           {#if i > 0}<span style:width="{single && !suitLines && vm.sortBySuit && suit(line[i - 1]) !== suit(c) ? SUIT_GAP : HAND_GAP}px" class="gap"></span>{/if}
-          {#if skeleton}<div class="place sk-felt" style:width="{card}px" style:height="{cardHeight(card)}px" style:border-radius="{card * 0.14}px"></div>
-          {:else}<Card card={c} width={card} tint={SAME_RANK_CATEGORY[counts.get(rank(c)) ?? 0]} light selected={vm.selected.has(c)} onclick={() => clickCard(c)} />{/if}
+          {#if skeleton}<div class="place sk-felt" style:width="{handCard}px" style:height="{cardHeight(handCard)}px" style:border-radius="{handCard * 0.14}px"></div>
+          {:else}<Card card={c} width={handCard} tint={SAME_RANK_CATEGORY[counts.get(rank(c)) ?? 0]} light selected={vm.selected.has(c)} onclick={() => clickCard(c)} />{/if}
         {/each}
       </div>
     {/each}
     {#if hand.length === 0}
       <div class="ready title-medium bold" class:bad={readiness.bad} aria-live="polite"
-        style:height="{cardHeight(card) * (wide ? 1 : Math.ceil(13 / fit.perLine)) + HAND_LINE_GAP * ((wide ? 1 : Math.ceil(13 / fit.perLine)) - 1)}px">
+        style:height="{cardHeight(handCard) * (wide ? 1 : Math.ceil(13 / fit.perLine)) + HAND_LINE_GAP * ((wide ? 1 : Math.ceil(13 / fit.perLine)) - 1)}px">
         {readiness.text}
       </div>
     {/if}

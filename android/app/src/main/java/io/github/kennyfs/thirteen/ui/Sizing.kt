@@ -66,7 +66,17 @@ val ROW_STACK_GAP = 6.dp
 val BAR_HEIGHT = 44.dp
 
 /** How the arranging page is laid out: the card's width (the rows' and the hand's), and how it is arranged. */
-class ArrangeFit(val card: Dp, val above: Boolean, val perLine: Int)
+/**
+ * `card`: the rows' cards; `hand`: the hand's (larger on a wide page when that fills the width, see ROWS_TO_HAND);
+ * `even`: the size both would have alike, which the other pages take as the play size (CardSizes.play).
+ */
+class ArrangeFit(val card: Dp, val above: Boolean, val perLine: Int, val hand: Dp = card, val even: Dp = card)
+
+/**
+ * On a wide page the hand may be larger than the rows' cards, up to filling the felt's width, so long as the rows' keep
+ * at least this much of its size (the rows give up the height the hand takes). The web page's sizing.ts has the same.
+ */
+const val ROWS_TO_HAND = 0.75f
 
 /** `u` is textRoom(14): what a 14sp text takes, which grows with the font size. */
 fun arrangeFit(areaW: Dp, areaH: Dp, wide: Boolean, u: Dp, maxCard: Dp = MAX_PLAY): ArrangeFit {
@@ -87,6 +97,12 @@ fun arrangeFit(areaW: Dp, areaH: Dp, wide: Boolean, u: Dp, maxCard: Dp = MAX_PLA
     val label = room(40) + 2.dp
     if (byHeight * 1.4f < label) byHeight = (h - fixed - label * 3) / (1.4f + 0.22f)
     val s = minOf(byRowsWidth, byHandWidth, byHeight, maxCard).down().coerceAtLeast(18.dp)
+    // A larger hand, as wide as the felt at most, with the rows as large as the height then leaves them.
+    val avail = h - fixed
+    // Not capped by maxCard (the size the pages that arrange share): the hand takes the width this page has.
+    val hand = minOf(byHandWidth, MAX_PLAY, avail / (1.4f * 3 * ROWS_TO_HAND + 1.4f + 0.22f)).down()
+    val rows = minOf((avail - hand * (1.4f + 0.22f)) / (1.4f * 3), byRowsWidth, maxCard).down()
+    if (hand > s && rows >= 18.dp && rows >= hand * ROWS_TO_HAND - 0.5.dp && rows * 1.4f >= label) return ArrangeFit(rows, false, 13, hand, s)
     return ArrangeFit(s, false, 13)
   }
   // Felt padded 8 outside and 8 inside; the bar of buttons under it. The hand in one line or, at most, two.
@@ -118,11 +134,11 @@ fun cardSizes(w: Dp, h: Dp, u: Dp): CardSizes {
   // Tall: the title row and the scores, which take a second line when they do not fit side by side.
   val scoreLines = if ((room(16) * 4.6f + 8.dp) * 4f > w - 28.dp) 2 else 1
   val header = if (wide) 54.dp else 6.dp + maxOf(48.dp, room(26)) + (room(20) + 6.dp) * scoreLines
-  val play = arrangeFit(w, h - header, wide, u).card
+  val play = arrangeFit(w, h - header, wide, u).even
   // A battle's header: the hand, the time left and how many have set it, in a line of titleLarge (28 high) padded 4
   // above and under, or two when they do not fit side by side.
   val battleLines = if (room(16) * 15 + 60.dp > w - 28.dp) 2 else 1
-  val battle = arrangeFit(w, h - (room(28) + 2.dp) * battleLines - 8.dp, wide, u).card
+  val battle = arrangeFit(w, h - (room(28) + 2.dp) * battleLines - 8.dp, wide, u).even
   val other = if (wide) {
     // The result page's four players in the height left by its header (48), the felt's padding and the gaps: each a line
     // of hand names and the cards.

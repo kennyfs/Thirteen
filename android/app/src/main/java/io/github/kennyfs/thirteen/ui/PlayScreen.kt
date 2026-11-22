@@ -247,7 +247,7 @@ fun Arranging(
     val wide = maxWidth > maxHeight * 1.15f
     val fit = arrangeFit(maxWidth, maxHeight, wide, textRoom(14), maxCard)
     CompositionLocalProvider(LocalKeepPicked provides keep) {
-      if (wide) ArrangeWide(vm, wheel, busy, confirmLabel, confirmShort, fit.card, onConfirm)
+      if (wide) ArrangeWide(vm, wheel, busy, confirmLabel, confirmShort, fit.card, fit.hand, onConfirm)
       else ArrangeTall(vm, wheel, busy, confirmLabel, confirmShort, fit, onConfirm)
     }
   }
@@ -282,7 +282,7 @@ private fun Felt(modifier: Modifier = Modifier, content: @Composable () -> Unit)
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, confirmShort: String, card: Dp, onConfirm: () -> Unit) {
+private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, confirmShort: String, card: Dp, hand: Dp, onConfirm: () -> Unit) {
   Felt(Modifier.fillMaxSize().padding(start = 8.dp, end = 12.dp, bottom = 6.dp)) {
     Column(Modifier.fillMaxSize().padding(6.dp), verticalArrangement = Arrangement.SpaceBetween, horizontalAlignment = Alignment.CenterHorizontally) {
       val density = LocalDensity.current
@@ -316,7 +316,7 @@ private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
           ConfirmButton(vm, busy, confirmLabel, confirmShort, Modifier.fillMaxWidth().weight(1f), MaterialTheme.typography.titleLarge, onConfirm)
         }
       }
-      HandTray(vm, card, 13)
+      HandTray(vm, hand, 13)
     }
   }
 }

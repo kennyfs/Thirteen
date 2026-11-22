@@ -25,7 +25,17 @@ export const rowWidth = (n: number, w: number, gap = CARD_GAP) => w * n + gap * 
 /** The width at which 13 cards in three rows, side by side, fill `width`. */
 export const lineCard = (width: number) => Math.max(8, down((width - LINE_GAP * 10 - LINE_GROUP_GAP * 2) / 13));
 
-export interface ArrangeFit { card: number; above: boolean; perLine: number }
+/**
+ * `card`: the rows' cards; `hand`: the hand's (larger on a wide page when that fills the width, see ROWS_TO_HAND);
+ * `even`: the size both would have alike, which the other pages take as the play size (CardSizes.play).
+ */
+export interface ArrangeFit { card: number; hand: number; even: number; above: boolean; perLine: number }
+
+/**
+ * On a wide page the hand may be larger than the rows' cards, up to filling the felt's width, so long as the rows' keep
+ * at least this much of its size (the rows give up the height the hand takes).
+ */
+export const ROWS_TO_HAND = 0.75;
 
 /** How the arranging page is laid out, for an area `w` x `h`. */
 export function arrangeFit(w0: number, h0: number, wide: boolean, u: number, maxCard = MAX_PLAY): ArrangeFit {
@@ -41,7 +51,14 @@ export function arrangeFit(w0: number, h0: number, wide: boolean, u: number, max
     let byHeight = (h - fixed) / (1.4 * 4 + 0.22);
     const label = room(40) + 2;
     if (byHeight * 1.4 < label) byHeight = (h - fixed - label * 3) / (1.4 + 0.22);
-    return { card: Math.max(18, down(Math.min(byRowsWidth, byHandWidth, byHeight, maxCard))), above: false, perLine: 13 };
+    const card = Math.max(18, down(Math.min(byRowsWidth, byHandWidth, byHeight, maxCard)));
+    // A larger hand, as wide as the felt at most, with the rows as large as the height then leaves them.
+    const avail = h - fixed;
+    // Not capped by maxCard (the size the pages that arrange share): the hand takes the width this page has.
+    const hand = down(Math.min(byHandWidth, MAX_PLAY, avail / (1.4 * 3 * ROWS_TO_HAND + 1.4 + 0.22)));
+    const rows = down(Math.min((avail - hand * (1.4 + 0.22)) / (1.4 * 3), byRowsWidth, maxCard));
+    if (hand > card && rows >= 18 && rows >= hand * ROWS_TO_HAND - 0.5 && rows * 1.4 >= label) return { card: rows, hand, even: card, above: false, perLine: 13 };
+    return { card, hand: card, even: card, above: false, perLine: 13 };
   }
   const w = w0 - 32;
   const h = h0 - (BIG_BUTTON + 16) - 16;
@@ -56,7 +73,7 @@ export function arrangeFit(w0: number, h0: number, wide: boolean, u: number, max
       const fixed = ROW_PAD * 2 * 3 + 8 * 2 + HAND_LINE_GAP * (lines - 1) + (above ? header * 3 : 0);
       const byHeight = (h - fixed) / (1.4 * (3 + lines) + 0.22);
       const s = Math.max(20, down(Math.min(byRowsWidth, byHandWidth, byHeight, maxCard)));
-      if (!best || s > best.card + 0.5) best = { card: s, above, perLine };
+      if (!best || s > best.card + 0.5) best = { card: s, hand: s, even: s, above, perLine };
     }
   }
   return best!;
@@ -70,7 +87,7 @@ export function cardSizes(w: number, h: number, u: number): CardSizes {
   const room = (sp: number) => u * (sp / 14);
   const scoreLines = (room(16) * 4.6 + 8) * 4 > w - 28 ? 2 : 1;
   const header = wide ? 54 : 6 + Math.max(48, room(26)) + (room(20) + 6) * scoreLines;
-  const play = arrangeFit(w, h - header, wide, u).card;
+  const play = arrangeFit(w, h - header, wide, u).even;
   const other = wide
     ? Math.min(lineCard(w * 0.66 - PAGE_PAD * 2), down(((h - Math.max(48, room(32)) - 6 - 12 - 4 * 3) / 4 - room(18) - 12) / 1.4), MAX_OTHER)
     : Math.min(lineCard(w - PAGE_PAD * 2), MAX_OTHER);
