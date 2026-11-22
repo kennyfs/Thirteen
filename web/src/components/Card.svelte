@@ -53,4 +53,5 @@
   .card.selected { border: 3px solid var(--highlight); box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35); }
   .card.marked { outline: 4px solid var(--mark); outline-offset: 1px; }
   .rank { font-family: Georgia, "Times New Roman", "Noto Serif", serif; font-weight: 700; line-height: 1; letter-spacing: -0.04em; }
+  @media (prefers-reduced-motion: reduce) { .card { transition: none; } }
 </style>

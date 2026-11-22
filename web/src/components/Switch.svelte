@@ -16,4 +16,5 @@
   .thumb { position: absolute; left: 6px; top: 6px; width: 16px; height: 16px; border-radius: 50%; background: var(--outline); transition: all 0.15s; }
   .track.on { background: var(--primary); border-color: var(--primary); }
   .track.on .thumb { left: 22px; top: 2px; width: 24px; height: 24px; background: var(--on-primary); }
+  @media (prefers-reduced-motion: reduce) { .track, .thumb { transition: none; } }
 </style>

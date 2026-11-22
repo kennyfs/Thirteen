@@ -114,7 +114,7 @@ fun SettingsScreen(vm: AppViewModel, open: (SettingsPage) -> Unit) {
         SettingRow(stringResource(R.string.tut_title), stringResource(R.string.tut_note)) { openTutorial() }
         SettingRow(stringResource(R.string.tour_title), stringResource(R.string.tour_note)) { tour.start() }
         if (hasGlossary()) {
-          var glossary by remember { mutableStateOf(false) }
+          var glossary by rememberSaveable { mutableStateOf(false) }
           SettingRow(stringResource(R.string.glossary_title), stringResource(R.string.glossary_note)) { glossary = true }
           if (glossary) GlossaryDialog(null) { glossary = false }
         }

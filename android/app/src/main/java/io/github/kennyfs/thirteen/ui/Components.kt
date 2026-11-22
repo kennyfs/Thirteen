@@ -52,6 +52,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -308,7 +309,7 @@ private fun RepeatingButton(description: String, icon: ImageVector, enabled: Boo
  */
 @Composable
 fun InfoButton(text: String, title: String? = null, tint: Color = MaterialTheme.colorScheme.primary, small: Boolean = false) {
-  var open by remember { mutableStateOf(false) }
+  var open by rememberSaveable { mutableStateOf(false) }
   val description = if (title != null) stringResource(R.string.help_about, title) else stringResource(R.string.info)
   IconButton(onClick = { open = true }, Modifier.then(if (small) Modifier.size(40.dp) else Modifier).semantics { contentDescription = description }) {
     Icon(Icons.Outlined.Info, null, if (small) Modifier.size(20.dp) else Modifier, tint = if (small) MaterialTheme.colorScheme.onSurfaceVariant else tint)

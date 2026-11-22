@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -84,7 +85,7 @@ fun linkedGlossaryText(text: String, onTerm: (String) -> Unit, beforeId: String?
 @Composable
 fun LinkedText(text: String, modifier: Modifier = Modifier, style: TextStyle = LocalTextStyle.current, color: Color = Color.Unspecified,
   fontWeight: FontWeight? = null) {
-  var term by remember { mutableStateOf<String?>(null) }
+  var term by rememberSaveable { mutableStateOf<String?>(null) }
   Text(linkedGlossaryText(text, onTerm = { term = it }, once = true), modifier, color = color, style = style, fontWeight = fontWeight)
   term?.let { GlossaryDialog(focusId = it, onDismiss = { term = null }) }
 }

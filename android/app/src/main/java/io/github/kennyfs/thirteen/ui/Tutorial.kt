@@ -85,7 +85,7 @@ fun TutorialPage(vm: AppViewModel, onBack: () -> Unit, onPlay: () -> Unit, onTou
   Column(Modifier.fillMaxSize()) {
     TitleBar(stringResource(R.string.tut_title), onBack = onBack) {
       if (hasGlossary()) {
-        var glossary by remember { mutableStateOf(false) }
+        var glossary by rememberSaveable { mutableStateOf(false) }
         TextButton(onClick = { glossary = true }, Modifier.testTag("tut_glossary")) { Text(stringResource(R.string.glossary_title)) }
         if (glossary) GlossaryDialog(null) { glossary = false }
       }

@@ -73,6 +73,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -171,11 +172,12 @@ private fun modeName(mode: Mode) = stringResource(if (mode == Mode.PUZZLE) R.str
 @Composable
 private fun EntryPage(vm: BattleViewModel) {
   val context = LocalContext.current
+  val noPermission = stringResource(R.string.battle_permissions)
   // What to do once the nearby permissions are granted.
   var then by remember { mutableStateOf<(() -> Unit)?>(null) }
   var editServer by rememberSaveable { mutableStateOf(false) }
   val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
-    if (granted.values.all { it }) then?.invoke() else vm.error = context.getString(R.string.battle_permissions)
+    if (granted.values.all { it }) then?.invoke() else vm.error = noPermission
     then = null
   }
   fun nearby(action: () -> Unit) {
@@ -379,7 +381,8 @@ private fun Standings(vm: BattleViewModel, room: RoomView, modifier: Modifier = 
 @Composable
 private fun LobbyPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) {
   val isHost = room.host == vm.me
-  val context = LocalContext.current
+  // The choices' words, read again when the configuration (the language) changes.
+  val res = LocalResources.current
   val s = room.settings
   Column(Modifier.fillMaxSize()) {
     TitleBar(modeName(s.mode), onBack = vm::leave) {
@@ -420,12 +423,12 @@ private fun LobbyPage(vm: BattleViewModel, room: RoomView, app: AppViewModel) {
           val ruleName = app.rulesName(Rules.values(room.rules))
           if (isHost) {
             SelectRow(
-              stringResource(R.string.battle_hands), (listOf(1, 3, 5, 10, 15, 20, 30) + s.hands).distinct().sorted().map { it to context.getString(R.string.battle_hands_n, it) },
+              stringResource(R.string.battle_hands), (listOf(1, 3, 5, 10, 15, 20, 30) + s.hands).distinct().sorted().map { it to res.getString(R.string.battle_hands_n, it) },
               s.hands, { vm.changeSettings(s.copy(hands = it)) },
             )
             SelectRow(
               stringResource(R.string.battle_time),
-              Limits.TIME_LIMITS.map { it to if (it == 0) context.getString(R.string.battle_no_limit) else context.getString(R.string.battle_seconds, it) },
+              Limits.TIME_LIMITS.map { it to if (it == 0) res.getString(R.string.battle_no_limit) else res.getString(R.string.battle_seconds, it) },
               s.timeLimit, { vm.changeSettings(s.copy(timeLimit = it)) },
             )
             val names = stringArrayResource(R.array.preset_names)
@@ -679,7 +682,7 @@ private fun HandTable(r: BattleReview, room: RoomView, o: HandOutcome?, modifier
     }
     return
   }
-  BoxWithConstraints(modifier.fillMaxSize().padding(horizontal = 12.dp)) {
+  Box(modifier.fillMaxSize().padding(horizontal = 12.dp)) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
       ResultTable(r, room, o, onPlayer)
     }

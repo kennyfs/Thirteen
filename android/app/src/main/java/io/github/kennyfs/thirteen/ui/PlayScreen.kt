@@ -411,7 +411,7 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
 /** A (?) button: how to set a hand, in a dialog. */
 @Composable
 private fun ArrangeHelp(onFelt: Boolean = true, modifier: Modifier = Modifier.width(52.dp), mode: LabelMode = LabelMode.NONE) {
-  var open by remember { mutableStateOf(false) }
+  var open by rememberSaveable { mutableStateOf(false) }
   val t = LocalTable.current
   val openTutorial = LocalOpenTutorial.current
   val label = stringResource(R.string.help)

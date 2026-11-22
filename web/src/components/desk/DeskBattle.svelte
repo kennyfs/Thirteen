@@ -533,6 +533,8 @@
   .clock { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 10px; background: var(--surface-container-high); }
   .clock.bad { color: var(--on-error-container); background: var(--error-container); }
   .pulse { animation: pulse 1s ease-in-out infinite; }
+  /* Without motion the clock's colour alone says the time is short. */
+  @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
   @keyframes pulse { 50% { opacity: 0.55; } }
   .hint { margin: 0; min-height: 2.9em; }
   .sortline { display: flex; align-items: center; gap: 8px; color: var(--on-surface-variant); }
