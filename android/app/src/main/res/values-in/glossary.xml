@@ -8,7 +8,7 @@
   <string-array name="glossary_p_row"><item>baris atas</item><item>baris tengah</item><item>baris bawah</item><item>ketiga baris</item><item>tiga baris</item></string-array>
   <string name="glossary_t_rank">Kombinasi</string>
   <string name="glossary_d_rank">Kombinasi dalam satu baris, dari tertinggi ke terendah: straight flush, bom (four of a kind), full house, flush, straight, triss, two pair, pair, high card. Kombinasi lebih tinggi selalu menang; jika sama, angka lebih tinggi menang (A tertinggi, 2 terendah, lambang tidak berperingkat). Baris atas hanya 3 kartu sehingga hanya bisa triss, pair, atau high card.</string>
-  <string-array name="glossary_p_rank"><item>kombinasi</item><item>straight flush</item><item>bom</item><item>four of a kind</item><item>full house</item><item>flush</item><item>straight</item><item>triss</item><item>two pair</item><item>pair</item><item>high card</item></string-array>
+  <string-array name="glossary_p_rank"><item>kombinasi</item><item>straight flush</item><item>bom</item><item>four of a kind</item><item>full house</item><item>flush</item><item>straight</item><item>triss</item><item>two pair</item><item>high card</item></string-array>
   <string name="glossary_t_wheel">A-2-3-4-5</string>
   <string name="glossary_d_wheel">Straight dengan A dihitung sebagai 1. Tergantung aturan: bisa menjadi straight terendah, straight tertinggi kedua, atau bukan straight. Atur di Setelan › Aturan.</string>
   <string-array name="glossary_p_wheel"><item>A-2-3-4-5</item></string-array>

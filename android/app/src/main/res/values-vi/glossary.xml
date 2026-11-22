@@ -8,7 +8,7 @@
   <string-array name="glossary_p_row"><item>chi cuối</item><item>chi giữa</item><item>chi đầu</item><item>ba chi</item><item>3 chi</item></string-array>
   <string name="glossary_t_rank">Loại bài</string>
   <string name="glossary_d_rank">Tổ hợp bài trong một chi, từ lớn đến nhỏ: thùng phá sảnh, tứ quý, cù lũ, thùng, sảnh, sám, thú, đôi, mậu thầu. Loại lớn hơn luôn thắng; cùng loại thì so điểm (A lớn nhất, 2 nhỏ nhất, không so chất). Chi cuối chỉ có 3 lá nên chỉ có sám, đôi hoặc mậu thầu.</string>
-  <string-array name="glossary_p_rank"><item>loại bài</item><item>thùng phá sảnh</item><item>tứ quý</item><item>cù lũ</item><item>thùng</item><item>sảnh</item><item>sám</item><item>thú</item><item>đôi</item><item>mậu thầu</item></string-array>
+  <string-array name="glossary_p_rank"><item>loại bài</item><item>thùng phá sảnh</item><item>tứ quý</item><item>cù lũ</item><item>thùng</item><item>sảnh</item><item>sám</item><item>thú</item><item>mậu thầu</item></string-array>
   <string name="glossary_t_wheel">A-2-3-4-5</string>
   <string name="glossary_d_wheel">Sảnh tính A là 1. Tùy luật: có thể là sảnh nhỏ nhất, sảnh lớn thứ hai, hoặc không tính là sảnh. Chỉnh trong Cài đặt › Luật.</string>
   <string-array name="glossary_p_wheel"><item>A-2-3-4-5</item></string-array>

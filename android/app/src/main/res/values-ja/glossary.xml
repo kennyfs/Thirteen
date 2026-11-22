@@ -8,7 +8,7 @@
   <string-array name="glossary_p_row"><item>トップ</item><item>ミドル</item><item>ボトム</item><item>3段</item><item>3つの段</item></string-array>
   <string name="glossary_t_rank">役</string>
   <string name="glossary_d_rank">1つの段のカードの組み合わせ。強い順にストレートフラッシュ、フォーカード、フルハウス、フラッシュ、ストレート、スリーカード、ツーペア、ワンペア、ハイカード。強い役が勝ち、同じ役なら数字で比べます（Aが最強、2が最弱、スートの強弱はなし）。トップは3枚だけなので、スリーカード・ワンペア・ハイカードの3種類のみです。</string>
-  <string-array name="glossary_p_rank"><item>役の組み合わせ</item><item>役の強さ</item><item>ストレートフラッシュ</item><item>ストフラ</item><item>フォーカード</item><item>4カード</item><item>フルハウス</item><item>フラッシュ</item><item>ストレート</item><item>スリーカード</item><item>3カード</item><item>ツーペア</item><item>ワンペア</item><item>ペア</item><item>ハイカード</item></string-array>
+  <string-array name="glossary_p_rank"><item>役の組み合わせ</item><item>役の強さ</item><item>ストレートフラッシュ</item><item>ストフラ</item><item>フォーカード</item><item>4カード</item><item>フルハウス</item><item>フラッシュ</item><item>ストレート</item><item>スリーカード</item><item>3カード</item><item>ツーペア</item><item>ワンペア</item><item>ハイカード</item></string-array>
   <string name="glossary_t_wheel">A-2-3-4-5</string>
   <string name="glossary_d_wheel">Aを1として数えるストレート。ルールにより、最弱のストレート・2番目に強いストレート・ストレートにしない、から「設定 › ルール」で選べます。</string>
   <string-array name="glossary_p_wheel"><item>A-2-3-4-5</item></string-array>
