@@ -19,7 +19,7 @@
     arrangeFit, cardHeight, deskFit, BIG_BUTTON, CARD_GAP, DESK_LABEL, HAND_GAP, HAND_LINE_GAP, HAND_LINE_GAP_TIGHT, ROW_PAD,
     ROW_STACK_GAP, ROWS_GAP, SUIT_GAP,
   } from '../lib/sizing';
-  import { signed, textRoom, ui } from '../lib/ui.svelte';
+  import { signed, textRoom, textWidth, ui } from '../lib/ui.svelte';
   import Card from './Card.svelte';
   import Dialog from './Dialog.svelte';
   import Icon from './Icon.svelte';
@@ -42,8 +42,20 @@
   const card = $derived(bare ? Math.min(ui.sizes.play, deskFit(areaW, areaH)) : fit.card);
   /** The hand's cards: on a wide page they may be larger than the rows' (sizing.ts, ROWS_TO_HAND). */
   const handCard = $derived(bare ? card : fit.hand);
-  // The labels beside the rows: sizes from the text's (capped on short landscape screens to match sizing.ts).
-  const labelWidth = $derived(Math.max(72, (wide && areaH <= 420 ? Math.min(ui.u, 14) : ui.u) * 4.6));
+  // The labels beside the rows: sizes from the text's (the normal size when sizing.ts says compact).
+  // The three tools lay out alike, as the app's do: their names all beside the icons, all under them, or none (icons
+  // only, the name still the button's label). Each is a third of the line, less the gaps, its padding and border.
+  let toolsW = $state(0);
+  let toolsH = $state(0);
+  const toolMode = $derived.by(() => {
+    const widths = [t('undo'), t('take_all'), t('help')].map((l) => textWidth(l, 16, 500));
+    const innerW = (toolsW - 16) / 3 - 12 - 2;
+    const innerH = toolsH - 8 - 2;
+    if (widths.every((w) => 24 + 6 + w <= innerW)) return 'beside';
+    if (widths.every((w) => w <= innerW) && 24 + 2 + textRoom(16) * 1.2 <= innerH) return 'under';
+    return 'none';
+  });
+  const labelWidth = $derived(Math.max(72, (fit.compact ? 14 : ui.u) * 4.6));
   const headerHeight = $derived(Math.max(32, textRoom(13) * 2));
   const labelHeight = $derived(textRoom(24) + textRoom(16) + 2);
   const above = $derived(!wide && fit.above);
@@ -299,15 +311,15 @@
         {@render tray()}
       </div>
     {:else if wide}
-      <div class="felt wide-felt" style:margin="0 12px 6px 8px" style:padding="6px">
+      <div class="felt wide-felt" class:compact={fit.compact} style:margin="0 12px 6px 8px" style:padding="6px">
         <div class="wide-top" style:gap="{ROWS_GAP}px">
           {@render rowsStack()}
           <div class="wide-buttons" style:gap="{ROW_STACK_GAP}px">
             <div class="wb" data-keep-picked><Toggle options={sortOptions} selected={vm.sortBySuit} onselect={(v) => (vm.sortBySuit = v)} felt big height={44} /></div>
-            <div class="wb tools">
-              <button class="tool" disabled={!vm.canUndo} onclick={() => vm.undo()}><Icon name="undo" /><span>{t('undo')}</span></button>
-              <button class="tool" disabled={!vm.canClear} onclick={() => vm.clearRows()}><Icon name="clearAll" /><span>{t('take_all')}</span></button>
-              <button class="tool" onclick={() => (help = true)}><Icon name="help" /><span>{t('help')}</span></button>
+            <div class="wb tools {toolMode}" bind:clientWidth={toolsW} bind:clientHeight={toolsH}>
+              <button class="tool" disabled={!vm.canUndo} onclick={() => vm.undo()} aria-label={t('undo')}><Icon name="undo" /><span aria-hidden="true">{t('undo')}</span></button>
+              <button class="tool" disabled={!vm.canClear} onclick={() => vm.clearRows()} aria-label={t('take_all')}><Icon name="clearAll" /><span aria-hidden="true">{t('take_all')}</span></button>
+              <button class="tool" onclick={() => (help = true)} aria-label={t('help')}><Icon name="help" /><span aria-hidden="true">{t('help')}</span></button>
             </div>
             <button class="wb confirm title-large" data-tour="confirm" disabled={!canConfirm} onclick={onconfirm}>{busy ? '…' : confirmLabel}</button>
           </div>
@@ -348,22 +360,17 @@
   .tall-rows { min-height: 0; overflow: auto; }
   .wide-felt { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
   .wide-top { display: flex; width: 100%; }
-  .wide-buttons { flex: 1; display: flex; flex-direction: column; min-width: 0; container-type: inline-size; }
+  .wide-buttons { flex: 1; display: flex; flex-direction: column; min-width: 0; }
   .wb { flex: 1 1 0; min-height: 0; display: flex; }
   .wb :global(.group) { flex: 1; }
-  .tools { gap: 6px; }
-  .tool { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 18px; cursor: pointer;
+  .tools { gap: 8px; }
+  .tool { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 18px; cursor: pointer;
     background: transparent; color: var(--on-felt); border: 1px solid color-mix(in srgb, var(--on-felt) 50%, transparent); font-size: 1rem; font-weight: 500;
-    overflow: hidden; padding: 4px 10px; }
+    overflow: hidden; padding: 4px 6px; }
   .tool:disabled { opacity: 0.4; cursor: default; }
-  .tool span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-  @container (max-width: 390px) {
-    .tool { gap: 4px; padding: 4px 6px; font-size: 0.875rem; }
-  }
-  @container (max-width: 310px) {
-    .tool { flex-direction: column; gap: 1px; padding: 2px 4px; font-size: 0.75rem; line-height: 1.1; }
-    .tool :global(.icon-svg) { width: 20px; height: 20px; }
-  }
+  .tool span { white-space: nowrap; }
+  .tools.under .tool { flex-direction: column; gap: 2px; line-height: 1.2; }
+  .tools.none .tool span { display: none; }
   .confirm { align-items: center; justify-content: center; border: none; border-radius: 18px; cursor: pointer; background: var(--action); color: var(--on-action); }
   .confirm:disabled { background: color-mix(in srgb, var(--on-felt) 14%, transparent); color: color-mix(in srgb, var(--on-felt) 55%, transparent); cursor: default; }
   .rows { display: flex; flex-direction: column; touch-action: none; }
@@ -373,11 +380,10 @@
   .slot-row.target { background: var(--target); outline: 2.5px dashed var(--highlight); outline-offset: -2.5px; }
   .row-header { display: flex; align-items: center; gap: 8px; padding-left: 4px; }
   .row-label { display: flex; flex-direction: column; gap: 2px; min-width: 0; color: var(--on-felt); }
-  @media (max-height: 460px) {
-    .wide-felt .row-label { gap: 0; }
-    .wide-felt .row-label .title-medium { font-size: min(1rem, 16px); line-height: 1.2; }
-    .wide-felt .row-label .state { font-size: min(0.8125rem, 13px); line-height: 1.15; }
-  }
+  /* A short page sideways at a large text size (sizing.ts's compact): the rows' labels at the normal size. */
+  .wide-felt.compact .row-label { gap: 0; }
+  .wide-felt.compact .row-label .title-medium { font-size: 16px; line-height: 1.2; }
+  .wide-felt.compact .row-label .state { font-size: 13px; line-height: 1.15; }
   .row-label.fill { flex: 1; }
   .state { color: var(--on-felt); font-weight: 500; overflow-wrap: anywhere; }
   .state.hl { color: var(--highlight); font-weight: 700; }
