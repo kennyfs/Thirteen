@@ -163,8 +163,8 @@
       <ul class="body-large list">{#each scoring as line (line)}<li><Linked text={line} /></li>{/each}</ul>
       <p class="body-medium dim"><Linked text={t('tut_score_change')} /></p>
     {:else if page === 4}
-      <h2 class="headline-small">{t('tut_try_title')}</h2>
       {#if judged && verdict}
+        <h2 class="headline-small">{t('tut_try_title')}</h2>
         <p class="title-medium" class:good={judged.good}>{judged.text}</p>
         {#if !judged.good}
           <p class="body-medium dim">{t('yours')}</p>
@@ -175,7 +175,10 @@
         {#if judged.why}<p class="body-large"><Linked text={t('tut_try_why')} /></p>{/if}
         <div class="buttons"><button class="btn outlined" onclick={() => resetTry()}><Icon name="replay" />{t('tut_try_again')}</button></div>
       {:else}
-        <p class="body-large">{ui.desk ? td('tut_try_text') : t('tut_try_text')}</p>
+        <div class="try-head">
+          <h2 class="headline-small">{t('tut_try_title')}</h2>
+          <p class="body-large">{ui.desk ? td('tut_try_text') : t('tut_try_text')}</p>
+        </div>
         <div class="trybox">
           {#if tryRules}
             {#if ui.desk}
@@ -233,13 +236,15 @@
   .kinds { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 12px; row-gap: 6px; }
   .list { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 8px; }
   .tips li::marker { color: var(--primary); font-weight: 700; }
+  .try-head { display: flex; flex-direction: column; gap: 6px; }
   .trybox { flex: 1; min-height: 420px; display: flex; flex-direction: column; gap: 8px; }
   @media (max-height: 540px) {
     .content.trying { padding: 0 8px 4px; gap: 4px; }
-    .content.trying h2 { margin: 0; font-size: 1.125rem; line-height: 1.3; }
-    .content.trying > p { font-size: 0.875rem; line-height: 1.25; }
+    .try-head { flex-direction: row; align-items: baseline; gap: 8px; flex-wrap: nowrap; overflow: hidden; }
+    .try-head h2 { margin: 0; font-size: 1rem; line-height: 1.25; white-space: nowrap; flex: none; }
+    .try-head p { font-size: 0.8125rem; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .trybox { min-height: 0; gap: 4px; }
-    .bar { padding: 4px 12px; }
+    .bar { padding: 2px 12px; }
   }
   .buttons { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .grow { flex: 1; }
