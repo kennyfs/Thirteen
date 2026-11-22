@@ -238,6 +238,7 @@ private fun EntryPage(vm: BattleViewModel) {
             if (editServer) OutlinedTextField(
               vm.server, { vm.server = it.trim() }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.battle_server)) },
               placeholder = { Text(stringResource(R.string.battle_server_hint)) }, singleLine = true,
+              keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrectEnabled = false),
             )
             else Row(verticalAlignment = Alignment.CenterVertically) {
               Text(stringResource(R.string.battle_server_is, vm.server), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -245,8 +245,16 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
         item(
           selected = selected,
           onClick = {
-            // Again on the current screen: back to its first page.
-            if (selected) stacks = stacks + (s.name to listOf(root(s).name)) else tab = s
+            // Again on the current screen: back to its first page (including ViewModel-opened pages).
+            if (selected) {
+              stacks = stacks + (s.name to listOf(root(s).name))
+              when (s) {
+                Screen.PLAY -> { vm.resultTab = 0; vm.peek = 0 }
+                Screen.ANALYZE -> vm.anaPage = 0
+                Screen.RECORDS -> vm.openedBattle = null
+                else -> {}
+              }
+            } else tab = s
           },
           // Practice's cards are held at the bottom, fanned out from there.
           icon = { Icon(if (selected) s.selectedIcon else s.icon, null, if (s == Screen.PLAY) Modifier.graphicsLayer(scaleY = -1f) else Modifier) },
