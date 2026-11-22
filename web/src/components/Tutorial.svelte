@@ -206,7 +206,8 @@
       </div>
     {/if}
   </div></div>
-  <div class="bar tutbar">
+  <!-- Its buttons keep to the page's column, as the title does: not at the far corners of a wide window. -->
+  <div class="bar tutbar"><div class="bar-in" style:max-width="{page === 4 ? 1100 : 760}px">
     <button class="btn text" disabled={page === 0} onclick={() => (page = Math.max(0, page - 1))}>{t('tut_prev')}</button>
     <span class="dots" aria-hidden="true">{#each Array(PAGES) as _, i (i)}<span class="dot" class:on={i === page}></span>{/each}</span>
     {#if page < PAGES - 1}
@@ -214,7 +215,7 @@
     {:else}
       <button class="btn filled" onclick={finish}>{t('tut_done')}</button>
     {/if}
-  </div>
+  </div></div>
 </div>
 
 <style>
@@ -235,8 +236,8 @@
   .trybox { flex: 1; min-height: 420px; display: flex; flex-direction: column; gap: 8px; }
   .buttons { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .grow { flex: 1; }
-  .bar { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px;
-    border-top: 1px solid var(--surface-container-highest); }
+  .bar { flex: none; padding: 8px 12px; border-top: 1px solid var(--surface-container-highest); }
+  .bar-in { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; margin: 0 auto; }
   .dots { display: flex; gap: 6px; }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--surface-container-highest); }
   .dot.on { background: var(--primary); }

@@ -287,7 +287,7 @@
 {:else}
 <div class="battle">
   {#if page === 'entry'}
-    <TitleBar title={t('nav_battle')} />
+    <TitleBar title={t('nav_battle')} max={ui.w >= 700 ? 1100 : 640} />
     <div class="progress">{#if b.busy}<span class="bar"></span>{/if}</div>
     <div class="scroll">
       <div class="entry" class:wide={ui.w >= 700}>
@@ -334,7 +334,7 @@
   {:else if page === 'lobby' && room}
     {@const s = room.settings}
     {@const host = room.host === b.me}
-    <TitleBar title={modeName(s.mode)} onback={() => b.leave()}>
+    <TitleBar title={modeName(s.mode)} onback={() => b.leave()} max={ui.w >= 720 ? 1100 : 640}>
       <button class="btn outlined" onclick={() => b.leave()}>{t('battle_leave')}</button>
     </TitleBar>
     <div class="scroll">
@@ -411,7 +411,7 @@
     {@render handTable(o, analysisMode && !puzzle && o ? (p) => b.analyzeHand(o.index, p) : null)}
 
   {:else if page === 'summary' && room}
-    <TitleBar title={(b.opened ? localTime(new Date(b.openedAt).toISOString()) : t('battle_over')) + ' · ' + modeName(room.settings.mode)}>
+    <TitleBar title={(b.opened ? localTime(new Date(b.openedAt).toISOString()) : t('battle_over')) + ' · ' + modeName(room.settings.mode)} max={1100}>
       {#if b.opened}
         {@const saved = app.favoriteBattleIds.has(b.opened)}
         <button class="btn icon text" aria-label={t(saved ? 'favorite_battle_remove' : 'favorite_battle_add')} onclick={() => app.toggleOpenedBattle()}>
