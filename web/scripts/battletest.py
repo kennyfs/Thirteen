@@ -13,9 +13,17 @@ VIEW = {'phone': dict(viewport={'width': 412, 'height': 915}, device_scale_facto
 errors = []
 
 
+def local(u):
+    return any(h in u for h in ('://localhost', '://127.0.0.1', '://[::1]'))
+
+
 def page(browser, name):
     ctx = browser.new_context(locale='zh-TW', **VIEW)
+    # Never the public server (the page's default): a socket to any other host is closed, and said.
+    ctx.route_web_socket(lambda u: not local(u), lambda ws: (errors.append(f'{name}: blocked socket to {ws.url}'), ws.close()))
+    ctx.add_init_script(f"localStorage.setItem('thirteen.battle.server', {server!r})")
     pg = ctx.new_page()
+    pg.on('websocket', lambda ws: print(f'{name}: socket {ws.url}') if '/ws' in ws.url else None)
     pg.on('pageerror', lambda e: errors.append(f'{name}: {e}'))
     pg.on('console', lambda m: m.type == 'error' and errors.append(f'{name}: {m.text}'))
     pg.goto(url + '?test#/battle')

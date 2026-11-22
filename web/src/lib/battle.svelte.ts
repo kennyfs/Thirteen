@@ -52,7 +52,9 @@ export function serverUrl(input: string): string | null {
   // A name alone: TLS, but not on this machine (a server run here, or reached through an SSH tunnel).
   else if (!s.startsWith('wss://') && !s.startsWith('ws://')) s = (/^(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/.test(s) ? 'ws://' : 'wss://') + s;
   const rest = s.slice(s.indexOf('://') + 3);
-  const host = rest.split('/')[0].replace(/^\[/, '').split(/[\]:]/)[0];
+  // The host: inside the brackets of an IPv6 address ("[::1]:8090"), else up to the port.
+  const authority = rest.split('/')[0];
+  const host = authority.startsWith('[') ? (authority.match(/^\[([^\]]*)\]/)?.[1] ?? '') : authority.split(':')[0];
   if (!host) return null;
   // Without TLS only on this machine.
   if (s.startsWith('ws://') && !['localhost', '127.0.0.1', '[::1]', '::1'].includes(host)) return null;
@@ -285,6 +287,8 @@ export class Battle {
   /** Sent once the room says welcome: create, join or resume. */
   private pending: ClientMsg | null = null;
   private reconnecting = false;
+  /** Counts the reconnect loops: a loop goes on only while it is the latest (a drop soon after a rejoin starts another). */
+  private retrySeq = 0;
   private battleId: string | null = null;
   private battleStart = 0;
   /** A battle of the records shown (openRecord), by its id: no room behind it. */
@@ -435,6 +439,7 @@ export class Battle {
     this.opened = null;
     saveSeat(null);
     this.reconnecting = false;
+    this.retrySeq++;
     const ws = this.ws;
     this.ws = null;
     ws?.close();
@@ -465,6 +470,7 @@ export class Battle {
         this.review.me = msg.you;
         this.busy = false;
         this.reconnecting = false;
+        this.retrySeq++;
         // A resume tells everything again.
         this.pending = { t: 'resume', room: msg.room, token: msg.token };
         saveSeat({ url: this.resumeUrl ?? '', room: msg.room, you: msg.you, token: msg.token, battle: this.battleId });
@@ -505,6 +511,7 @@ export class Battle {
         // A seat that cannot be taken back: the room is gone (or it went on without the player).
         if (this.joined && msg.code === 'NO_ROOM' && this.pending?.t === 'resume' && (this.reconnecting || !this.room)) {
           this.reconnecting = false;
+          this.retrySeq++;
           this.busy = false;
           if (!this.room) { this.clear(); return this.onError(t('battle_closed')); }
           return this.roomGone(t('battle_closed'));
@@ -539,15 +546,17 @@ export class Battle {
     this.reconnecting = true;
     this.busy = true;
     const url = this.resumeUrl ?? serverUrl(this.server);
+    const seq = ++this.retrySeq;
+    const current = () => this.reconnecting && seq === this.retrySeq;
     (async () => {
       for (let attempt = 0; attempt < 6 && url; attempt++) {
         await sleep(1000 * 2 ** attempt);
-        if (!this.reconnecting) return;
+        if (!current()) return;
         this.pending = { t: 'resume', room: j.room, token: j.token };
         this.open(url);
         const mine = this.ws;
         await sleep(8000);
-        if (!this.reconnecting) return;
+        if (!current()) return;
         if (this.ws === mine) { this.ws = null; mine?.close(); }
       }
       this.reconnecting = false;

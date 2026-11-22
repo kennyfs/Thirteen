@@ -43,7 +43,7 @@ interface LinkListener {
   fun onDown(link: Link, reason: String)
 }
 
-private val main = Handler(Looper.getMainLooper())
+private val main by lazy { Handler(Looper.getMainLooper()) }
 
 private fun decode(text: String): ServerMsg? = runCatching { BattleJson.decodeFromString(ServerMsg.serializer(), text) }.getOrNull()
 
@@ -63,7 +63,9 @@ fun serverUrl(input: String): String? {
     else -> "wss://$s"
   }
   val rest = s.substringAfter("://")
-  val host = rest.substringBefore("/").substringBefore(":").substringBefore("]").removePrefix("[")
+  // The host: inside the brackets of an IPv6 address ("[2001:db8::1]:443"), else up to the port.
+  val authority = rest.substringBefore("/")
+  val host = if (authority.startsWith("[")) authority.substringAfter("[").substringBefore("]", "") else authority.substringBefore(":")
   if (host.isEmpty()) return null
   if (s.startsWith("ws://") && host !in setOf("localhost", "127.0.0.1", "10.0.2.2")) return null
   return if ('/' in rest) s else "$s/ws"
