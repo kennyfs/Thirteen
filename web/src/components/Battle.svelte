@@ -48,9 +48,12 @@
   $effect(() => { nav.guard(back ? goBack : null); });
   $effect(() => () => nav.guard(null));
 
-  // ---- The room's clock ----
+  // ---- The room's clock: it ticks only while the room counts down (a page without one has nothing to redraw) ----
   let now = $state(Date.now());
+  const counting = $derived(room?.remainingMs != null);
   $effect(() => {
+    if (!counting) return;
+    now = Date.now();
     const id = setInterval(() => (now = Date.now()), 500);
     return () => clearInterval(id);
   });

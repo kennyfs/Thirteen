@@ -310,18 +310,24 @@ private fun JoinTile(vm: BattleViewModel, compact: Boolean = false, nearby: (() 
   }
 }
 
-/** Time left in the room's current phase, counting down from what the room last said. */
+/**
+ * The time left in the room's current phase, counting down from what the room last said. Its ticking state is its
+ * own, so that each tick redraws only the clock, not the header around it; nothing ticks without a countdown.
+ */
 @Composable
-private fun remaining(room: RoomView, at: Long): Long? {
-  val left = room.remainingMs ?: return null
+private fun RoomClock(left: Long, at: Long) {
   var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-  LaunchedEffect(room, at) {
+  LaunchedEffect(left, at) {
     while (true) {
       now = System.currentTimeMillis()
       delay(500)
     }
   }
-  return (left - (now - at)).coerceAtLeast(0)
+  val ms = (left - (now - at)).coerceAtLeast(0)
+  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    Icon(Icons.Outlined.Timer, null, tint = if (ms < 15_000) BAD else MaterialTheme.colorScheme.onSurfaceVariant)
+    Text(clock(ms), style = MaterialTheme.typography.titleMedium, color = if (ms < 15_000) BAD else MaterialTheme.colorScheme.onSurface)
+  }
 }
 
 private fun clock(ms: Long): String = (ms / 1000).let { "%d:%02d".format(it / 60, it % 60) }
@@ -474,12 +480,7 @@ private fun HandHeader(
     itemVerticalAlignment = Alignment.CenterVertically,
   ) {
     Text(stringResource(R.string.battle_hand_of, index + 1, room.settings.hands), style = MaterialTheme.typography.titleLarge)
-    if (clock) remaining(room, vm.roomAt)?.let { left ->
-      Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        Icon(Icons.Outlined.Timer, null, tint = if (left < 15_000) BAD else MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(clock(left), style = MaterialTheme.typography.titleMedium, color = if (left < 15_000) BAD else MaterialTheme.colorScheme.onSurface)
-      }
-    }
+    if (clock) room.remainingMs?.let { RoomClock(it, vm.roomAt) }
     // A hint in the counts' place: the table under the header stays where it is.
     if (hint != null) {
       Text(hint, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
