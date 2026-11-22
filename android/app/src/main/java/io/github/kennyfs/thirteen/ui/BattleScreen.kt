@@ -76,6 +76,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -132,6 +135,7 @@ fun BattleScreen(vm: BattleViewModel, app: AppViewModel) {
     },
   )
   Column(Modifier.fillMaxSize()) {
+    if (room != null && !over && vm.busy) ReconnectingBar()
     when {
       vm.review.detail != null && room != null -> if (vm.review.analyzed != null) PlayerAnalysisPage(vm.review, room) else DetailPage(vm.review, room)
       room == null -> EntryPage(vm)
@@ -163,6 +167,28 @@ private fun nearbyPermissions(): Array<String> = when {
     Manifest.permission.ACCESS_FINE_LOCATION,
   )
   else -> arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+}
+
+@Composable
+private fun ReconnectingBar() {
+  val colors = MaterialTheme.colorScheme
+  Column(
+    Modifier.fillMaxWidth().background(colors.secondaryContainer).semantics { liveRegion = LiveRegionMode.Polite },
+  ) {
+    Row(
+      Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+      CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = colors.onSecondaryContainer)
+      Text(
+        stringResource(R.string.battle_reconnecting),
+        style = MaterialTheme.typography.labelLarge,
+        color = colors.onSecondaryContainer,
+      )
+    }
+    LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp))
+  }
 }
 
 @Composable

@@ -207,6 +207,7 @@
   <string name="battle_permissions">Playing nearby needs the Bluetooth and nearby devices permissions.</string>
   <string name="battle_no_connection">Could not connect: %1$s</string>
   <string name="battle_lost">The connection to the room was lost.</string>
+  <string name="battle_reconnecting">Reconnecting…</string>
   <string name="battle_closed">The room was closed.</string>
   <string name="battle_err_version">The room runs another version of the app (the server or the phone that hosts it). Everyone needs the same version: update the app.</string>
   <string name="battle_err_no_room">No room with that number.</string>

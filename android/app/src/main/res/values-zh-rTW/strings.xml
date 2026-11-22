@@ -206,6 +206,7 @@
   <string name="battle_permissions">附近模式需要藍牙與附近裝置的權限。</string>
   <string name="battle_no_connection">無法連線：%1$s</string>
   <string name="battle_lost">與房間的連線中斷了。</string>
+  <string name="battle_reconnecting">重新連線中…</string>
   <string name="battle_closed">房間已關閉。</string>
   <string name="battle_err_version">房間（伺服器或開房的手機）使用的 app 版本不同，所有玩家必須使用相同版本，請更新 app。</string>
   <string name="battle_err_no_room">找不到這個房號的房間。</string>

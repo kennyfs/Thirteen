@@ -211,6 +211,7 @@
   <string name="battle_permissions">Chơi với điện thoại ở gần cần quyền Bluetooth và quyền thiết bị ở gần.</string>
   <string name="battle_no_connection">Không kết nối được: %1$s</string>
   <string name="battle_lost">Mất kết nối với phòng.</string>
+  <string name="battle_reconnecting">Đang kết nối lại…</string>
   <string name="battle_closed">Phòng đã đóng.</string>
   <string name="battle_err_version">Phòng đang chạy một phiên bản ứng dụng khác (ở máy chủ hoặc ở điện thoại làm chủ phòng). Mọi người cần cùng một phiên bản: hãy cập nhật ứng dụng.</string>
   <string name="battle_err_no_room">Không có phòng nào với mã PIN đó.</string>

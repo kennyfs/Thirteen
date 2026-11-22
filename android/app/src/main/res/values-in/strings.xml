@@ -211,6 +211,7 @@
   <string name="battle_permissions">Bermain di sekitar memerlukan izin Bluetooth dan perangkat di sekitar.</string>
   <string name="battle_no_connection">Tidak bisa terhubung: %1$s</string>
   <string name="battle_lost">Koneksi ke room terputus.</string>
+  <string name="battle_reconnecting">Menyambung kembali…</string>
   <string name="battle_closed">Room sudah ditutup.</string>
   <string name="battle_err_version">Room ini menjalankan versi aplikasi yang berbeda (server atau ponsel yang menjadi host). Semua orang perlu versi yang sama: perbarui aplikasi.</string>
   <string name="battle_err_no_room">Tidak ada room dengan PIN itu.</string>
