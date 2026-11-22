@@ -20,7 +20,7 @@ screenshots (1920 x 1080) come from `STORE=1 ../device-tests.sh`, in `../build/s
 
 新手教學
 • 幾頁就學會規則，點數依你目前選的規則說明
-• 擺一手讓 AI 評分，並附上 AI 分析一萬手牌得出的技巧
+• 擺一手讓 AI 評分，並附上 AI 分析一萬手牌得出的訣竅
 • 導覽帶你看過每個畫面
 
 練習
@@ -39,7 +39,7 @@ screenshots (1920 x 1080) come from `STORE=1 ../device-tests.sh`, in `../build/s
 • 賽後可以逐手查看每個人的擺法並分析
 
 其他
-• 計分規則可以調整（墩數計分、特殊牌型加分等）
+• 計分規則可以調整（墩數計分、特殊墩加分等）
 • 支援七種語言：繁體中文（台灣、香港）、简体中文、English、日本語、Tiếng Việt、Bahasa Indonesia
 • 對局紀錄存在手機上，可以匯出
 • 練習和分析完全在手機上離線運算
