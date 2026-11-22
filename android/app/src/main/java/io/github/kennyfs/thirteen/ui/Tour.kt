@@ -183,18 +183,24 @@ fun TourOverlay(tour: TourState, onTutorial: () -> Unit) {
 /** The welcome card of the first start: the tutorial, the tour, or play. Any way out counts as seen. */
 @Composable
 fun WelcomeDialog(onLearn: () -> Unit, onTour: () -> Unit, onClose: () -> Unit) {
-  androidx.compose.material3.AlertDialog(
-    onDismissRequest = onClose,
-    confirmButton = {},
-    title = { Text(stringResource(R.string.welcome_title)) },
-    text = {
-      // It scrolls: at a large font sideways its buttons would be below the dialog.
-      Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+  // A plain dialog, not an AlertDialog: that one keeps room for its (empty) button row, which put "Just play" below
+  // the fold sideways. Sideways the two first choices share a line; it still scrolls at a large font.
+  val window = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
+  val short = with(androidx.compose.ui.platform.LocalDensity.current) { window.height.toDp() < 480.dp }
+  androidx.compose.ui.window.Dialog(onDismissRequest = onClose) {
+    Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+      Column(
+        Modifier.verticalScroll(rememberScrollState()).padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+      ) {
+        Text(stringResource(R.string.welcome_title), style = MaterialTheme.typography.headlineSmall)
         Text(stringResource(R.string.welcome_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 6.dp))
-        Button(onClick = onLearn, Modifier.fillMaxWidth().testTag("welcome_learn")) { Text(stringResource(R.string.welcome_learn)) }
-        FilledTonalButton(onClick = onTour, Modifier.fillMaxWidth().testTag("welcome_tour")) { Text(stringResource(R.string.welcome_tour)) }
+        val learn = @Composable { m: Modifier -> Button(onClick = onLearn, m.testTag("welcome_learn")) { Text(stringResource(R.string.welcome_learn)) } }
+        val tour = @Composable { m: Modifier -> FilledTonalButton(onClick = onTour, m.testTag("welcome_tour")) { Text(stringResource(R.string.welcome_tour)) } }
+        if (short) Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { learn(Modifier.weight(1f)); tour(Modifier.weight(1f)) }
+        else { learn(Modifier.fillMaxWidth()); tour(Modifier.fillMaxWidth()) }
         TextButton(onClick = onClose, Modifier.fillMaxWidth().testTag("welcome_skip")) { Text(stringResource(R.string.welcome_skip)) }
       }
-    },
-  )
+    }
+  }
 }
