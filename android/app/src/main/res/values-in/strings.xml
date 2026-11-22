@@ -52,7 +52,6 @@
   <string name="seat_pos">CPU %1$d</string>
   <string name="this_hand">Ronde ini %1$s</string>
   <string name="analyze_go">Analisis</string>
-  <string name="to_candidates">Kembali ke kandidat</string>
   <string-array name="row_names">
     <item>Atas</item>
     <item>Tengah</item>
@@ -266,7 +265,6 @@
   <string name="change">Ubah</string>
   <string name="show_more">Tampilkan lagi</string>
   <string name="analyzing">Jaringan saraf sedang berpikir…</string>
-  <string name="hint_start">Pilih kartu, lalu ketuk baris untuk menaruhnya.</string>
   <string name="hint_selected">%1$d dipilih: ketuk baris untuk menaruhnya.</string>
   <string name="hint_armed">Ketuk kartu untuk baris %1$s: %2$d lagi.</string>
   <string name="hint_left">Sisa %1$d. Ketuk kartu yang sudah ditaruh untuk mengambilnya kembali.</string>
@@ -287,8 +285,6 @@
   <string name="remarks_title">Komentar</string>
   <string name="candidates">Kandidat</string>
   <string name="expected">Poin harapan</string>
-  <string name="less_than_best">%1$s di bawah yang terbaik</string>
-  <string name="more_than_yours">%1$s di atas punyamu</string>
   <string name="yours_rank">%1$s · #%2$d</string>
   <string name="pick_13_hint">Pilih 13 kartu</string>
   <string name="source">Dari…</string>
@@ -331,7 +327,6 @@
   <string name="legacy_note">Jaringan saraf lama: memainkan semua aturan sebagai aturan Sederhana</string>
   <string name="delete_network_confirm">Hapus jaringan saraf %1$s?</string>
   <string name="records_title">Riwayat</string>
-  <string name="records_summary">%1$d ronde tercatat · %2$d disimpan · grafik skor</string>
   <string name="records_info">Setiap ronde yang kamu mainkan dicatat di ponsel ini: kartunya, barismu, aturannya, dan waktu yang kamu pakai. Tidak ada yang lain, dan tidak ada yang dikirim kecuali kamu membagikannya. Membagikan file (JSONL) ini ke pengembang membantu melatih pemain komputer yang lebih baik.</string>
   <string name="records_list">Semua riwayat, terbaru dulu</string>
   <string name="about_source">Sumber terbuka (GPLv3), di GitHub</string>
@@ -423,7 +418,6 @@
   <string name="tour_note">Fungsi tiap layar</string>
   <string name="tut_next">Lanjut</string>
   <string name="tut_prev">Kembali</string>
-  <string name="tut_close">Tutup</string>
   <string name="tut_page">%1$d / %2$d</string>
   <string name="tut_done">Mulai main</string>
   <string name="tut_goal_title">Tiga baris</string>

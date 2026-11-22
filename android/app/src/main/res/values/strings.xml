@@ -48,7 +48,6 @@
   <string name="seat_pos">CPU %1$d</string>
   <string name="this_hand">This hand %1$s</string>
   <string name="analyze_go">Analyze</string>
-  <string name="to_candidates">Back to the candidates</string>
   <string-array name="row_names">
     <item>Front</item>
     <item>Middle</item>
@@ -75,7 +74,7 @@
     <item>Scoop</item>
     <item>Scooped</item>
     <item>Home run</item>
-    <item>Opponent home run</item>
+    <item>Home-run against</item>
     <item>Dealer</item>
     <item>Win front</item>
     <item>Win middle</item>
@@ -263,7 +262,6 @@
   <string name="change">Change</string>
   <string name="show_more">Show more</string>
   <string name="analyzing">The network is thinking…</string>
-  <string name="hint_start">Pick cards, then tap a row to put them in.</string>
   <string name="hint_selected">%1$d picked: tap a row to put them in.</string>
   <string name="hint_armed">Tap cards for the %1$s: %2$d more.</string>
   <string name="hint_left">%1$d left. Tap a placed card to take it back.</string>
@@ -284,8 +282,6 @@
   <string name="remarks_title">Remarks</string>
   <string name="candidates">Candidates</string>
   <string name="expected">Expected points</string>
-  <string name="less_than_best">%1$s less than the best</string>
-  <string name="more_than_yours">%1$s more than yours</string>
   <string name="yours_rank">%1$s · #%2$d</string>
   <string name="pick_13_hint">Pick 13 cards</string>
   <string name="source">From…</string>
@@ -328,7 +324,6 @@
   <string name="legacy_note">Older network: always plays under the simple rules</string>
   <string name="delete_network_confirm">Delete the network %1$s?</string>
   <string name="records_title">Records</string>
-  <string name="records_summary">%1$d hands recorded · %2$d saved · score chart</string>
   <string name="records_info">Every hand you play is recorded on this phone: the cards, your rows, the rules and the time you took. Nothing else, and nothing is sent unless you share it. Sharing the file (JSONL) with the developer helps train better computer players.</string>
   <string name="records_list">All records, newest first</string>
   <string name="about_source">Open source (GPLv3), on GitHub</string>
@@ -361,8 +356,8 @@
   <string name="battle_room_number">Room number</string>
   <string name="battle_room_number_info">Others enter this number under “Join a room”.</string>
   <string name="battle_settings">Settings</string>
-  <string name="battle_rules_page_named">Current rules: %1$s</string>
-  <string name="battle_start_mode">Start %1$s</string>
+  <string name="battle_rules_page_named">Rules page: %1$s</string>
+  <string name="battle_start_mode">Start the %1$s</string>
   <string name="battle_wait_host">Waiting for the host to start…</string>
   <string name="battle_submit">Submit rows</string>
   <string name="battle_standings">Standings</string>
@@ -420,7 +415,6 @@
   <string name="tour_note">What each screen does</string>
   <string name="tut_next">Next</string>
   <string name="tut_prev">Back</string>
-  <string name="tut_close">Close</string>
   <string name="tut_page">%1$d / %2$d</string>
   <string name="tut_done">Start playing</string>
   <string name="tut_goal_title">Three rows</string>

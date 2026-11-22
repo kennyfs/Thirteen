@@ -49,7 +49,6 @@
   <string name="seat_pos">電腦 %1$d</string>
   <string name="this_hand">本局 %1$s</string>
   <string name="analyze_go">開始分析</string>
-  <string name="to_candidates">回到候選擺法</string>
   <string-array name="row_names">
     <item>頭道</item>
     <item>中道</item>
@@ -262,7 +261,6 @@
   <string name="change">更改</string>
   <string name="show_more">顯示更多</string>
   <string name="analyzing">神經網絡思考中…</string>
-  <string name="hint_start">先選牌，再按要放進的那一道。</string>
   <string name="hint_selected">已選 %1$d 張，按一道放進去。</string>
   <string name="hint_armed">按牌放進%1$s，還要 %2$d 張。</string>
   <string name="hint_left">還剩 %1$d 張。按道上的牌可收回。</string>
@@ -283,8 +281,6 @@
   <string name="remarks_title">講評</string>
   <string name="candidates">候選擺法</string>
   <string name="expected">期望得分</string>
-  <string name="less_than_best">比首選少 %1$s 分</string>
-  <string name="more_than_yours">比你的擺法多 %1$s 分</string>
   <string name="yours_rank">%1$s · 第 %2$d 名</string>
   <string name="pick_13_hint">選出 13 張牌</string>
   <string name="source">來源</string>
@@ -327,7 +323,6 @@
   <string name="legacy_note">舊格式的網絡：不論規則都照簡單規則出牌</string>
   <string name="delete_network_confirm">刪除神經網絡 %1$s？</string>
   <string name="records_title">記錄</string>
-  <string name="records_summary">已記錄 %1$d 局 · 收藏 %2$d 手 · 得分走勢</string>
   <string name="records_info">你打的每一局都記錄在這部手機上：手牌、你的擺法、規則和花的時間，沒有其他資料，也不會自動傳出去。把這個檔案（JSONL）分享給開發者，可以用來訓練更好的電腦對手。</string>
   <string name="records_list">全部記錄（新的在前）</string>
   <string name="about_source">開放源碼（GPLv3），在 GitHub 上</string>
@@ -419,7 +414,6 @@
   <string name="tour_note">介紹每個畫面的功能</string>
   <string name="tut_next">下一頁</string>
   <string name="tut_prev">上一頁</string>
-  <string name="tut_close">關閉</string>
   <string name="tut_page">%1$d / %2$d</string>
   <string name="tut_done">開始玩</string>
   <string name="tut_goal_title">分成三道</string>

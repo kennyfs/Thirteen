@@ -51,7 +51,6 @@
   <string name="seat_pos">CPU %1$d</string>
   <string name="this_hand">今回 %1$s</string>
   <string name="analyze_go">分析する</string>
-  <string name="to_candidates">候補に戻る</string>
   <string-array name="row_names">
     <item>トップ</item>
     <item>ミドル</item>
@@ -265,7 +264,6 @@
   <string name="change">変更</string>
   <string name="show_more">もっと見る</string>
   <string name="analyzing">ニューラルネットが考え中…</string>
-  <string name="hint_start">カードを選んでから、入れたい段をタップします。</string>
   <string name="hint_selected">%1$d枚選択中：段をタップして入れます。</string>
   <string name="hint_armed">%1$sに入れるカードをタップ：あと%2$d枚。</string>
   <string name="hint_left">残り%1$d枚。置いたカードをタップすると戻せます。</string>
@@ -286,8 +284,6 @@
   <string name="remarks_title">コメント</string>
   <string name="candidates">候補</string>
   <string name="expected">期待得点</string>
-  <string name="less_than_best">最善より %1$s 点低い</string>
-  <string name="more_than_yours">あなたより %1$s 点高い</string>
   <string name="yours_rank">%1$s · %2$d位</string>
   <string name="pick_13_hint">13枚選ぶ</string>
   <string name="source">読み込み元</string>
@@ -330,7 +326,6 @@
   <string name="legacy_note">古い形式：どのルールでもシンプルルールで打ちます</string>
   <string name="delete_network_confirm">ニューラルネット %1$s を削除しますか？</string>
   <string name="records_title">記録</string>
-  <string name="records_summary">%1$dハンド記録 · %2$d件保存 · スコア推移</string>
   <string name="records_info">プレイしたハンドはすべてこのスマホに記録されます：カード、あなたの並べ方、ルール、かかった時間だけで、共有しない限りどこにも送信されません。このファイル（JSONL）を開発者と共有すると、より強い CPU の学習に役立ちます。</string>
   <string name="records_list">すべての記録（新しい順）</string>
   <string name="about_source">オープンソース（GPLv3）、GitHub で公開</string>
@@ -422,7 +417,6 @@
   <string name="tour_note">各画面でできること</string>
   <string name="tut_next">次へ</string>
   <string name="tut_prev">戻る</string>
-  <string name="tut_close">閉じる</string>
   <string name="tut_page">%1$d / %2$d</string>
   <string name="tut_done">遊んでみる</string>
   <string name="tut_goal_title">3つの段に分ける</string>

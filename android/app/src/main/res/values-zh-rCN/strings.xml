@@ -49,7 +49,6 @@
   <string name="seat_pos">电脑 %1$d</string>
   <string name="this_hand">本局 %1$s</string>
   <string name="analyze_go">开始分析</string>
-  <string name="to_candidates">回到候选摆法</string>
   <string-array name="row_names">
     <item>头道</item>
     <item>中道</item>
@@ -262,7 +261,6 @@
   <string name="change">更改</string>
   <string name="show_more">显示更多</string>
   <string name="analyzing">神经网络思考中…</string>
-  <string name="hint_start">先选牌，再点要放进的那一道。</string>
   <string name="hint_selected">已选 %1$d 张，点一道放进去。</string>
   <string name="hint_armed">点牌放进%1$s，还要 %2$d 张。</string>
   <string name="hint_left">还剩 %1$d 张。点道上的牌可收回。</string>
@@ -283,8 +281,6 @@
   <string name="remarks_title">点评</string>
   <string name="candidates">候选摆法</string>
   <string name="expected">期望得分</string>
-  <string name="less_than_best">比首选少 %1$s 分</string>
-  <string name="more_than_yours">比你的摆法多 %1$s 分</string>
   <string name="yours_rank">%1$s · 第 %2$d 名</string>
   <string name="pick_13_hint">选出 13 张牌</string>
   <string name="source">来源</string>
@@ -327,7 +323,6 @@
   <string name="legacy_note">旧格式的网络：不论规则都按简单规则打</string>
   <string name="delete_network_confirm">删除神经网络 %1$s？</string>
   <string name="records_title">记录</string>
-  <string name="records_summary">已记录 %1$d 局 · 收藏 %2$d 手 · 得分走势</string>
   <string name="records_info">你打的每一局都记录在这台手机上：手牌、你的摆法、规则和花的时间，没有其他数据，也不会自动传出去。把这个文件（JSONL）分享给开发者，可以用来训练更好的电脑对手。</string>
   <string name="records_list">全部记录（新的在前）</string>
   <string name="about_source">开源（GPLv3），在 GitHub 上</string>
@@ -419,7 +414,6 @@
   <string name="tour_note">介绍每个页面的功能</string>
   <string name="tut_next">下一页</string>
   <string name="tut_prev">上一页</string>
-  <string name="tut_close">关闭</string>
   <string name="tut_page">%1$d / %2$d</string>
   <string name="tut_done">开始玩</string>
   <string name="tut_goal_title">分成三道</string>
