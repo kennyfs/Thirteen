@@ -506,7 +506,6 @@ export class Battle {
         this.addOutcomes(msg.outcomes);
         break;
       case 'error': {
-        this.busy = false;
         this.submitting = false;
         // A seat that cannot be taken back: the room is gone (or it went on without the player).
         if (this.joined && msg.code === 'NO_ROOM' && this.pending?.t === 'resume' && (this.reconnecting || !this.room)) {
@@ -516,6 +515,7 @@ export class Battle {
           if (!this.room) { this.clear(); return this.onError(t('battle_closed')); }
           return this.roomGone(t('battle_closed'));
         }
+        if (!this.reconnecting) this.busy = false;
         this.onError(errorText(msg.code, msg.message ?? ''));
         if (!this.joined && ['VERSION', 'NO_ROOM', 'ROOM_FULL', 'STARTED', 'TOO_MANY', 'BUSY', 'RATE'].includes(msg.code)) {
           this.ws = null;
@@ -568,6 +568,9 @@ export class Battle {
   /** The room is gone; what it showed stays when anything was played. */
   private roomGone(message: string | null) {
     saveSeat(null);
+    this.reconnecting = false;
+    this.retrySeq++;
+    this.busy = false;
     if (message) this.onError(message);
     const ws = this.ws;
     this.ws = null;

@@ -128,6 +128,8 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   /** The nearby endpoint of the room, to reconnect to. */
   private var endpoint: String? = null
   private var reconnect: Job? = null
+  /** True only while a backup phone makes its one try at the old host before taking over the room. */
+  private var backupTrying = false
 
   private fun savePrefs() {
     prefs.edit().putString("name", name).putString("server", server).apply()
@@ -279,6 +281,8 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
 
   private fun clear() {
     reconnect?.cancel()
+    reconnect = null
+    backupTrying = false
     mover?.stop()
     mover = null
     moved = null
@@ -320,6 +324,9 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
         me = msg.you
         review.me = msg.you
         busy = false
+        backupTrying = false
+        reconnect?.cancel()
+        reconnect = null
         // In a room: no more looking for others (the endpoint to reconnect to is kept).
         stopSearch()
         mover?.stop()
@@ -357,8 +364,21 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
       is Backup -> backup = msg.snapshot
       is History -> addOutcomes(msg.outcomes)
       is Error -> {
-        busy = false
         submitting = false
+        // A seat that cannot be taken back: the room is gone (or it went on without the player).
+        // A backup phone's single try at the old host falls through to takeOver instead.
+        if (joined != null && msg.code == ErrorCode.NO_ROOM && pending is Resume && !backupTrying && (reconnect?.isActive == true || room == null)) {
+          reconnect?.cancel()
+          reconnect = null
+          busy = false
+          if (room == null) {
+            clear()
+            error = str(R.string.battle_closed)
+            return
+          }
+          return roomGone(str(R.string.battle_closed))
+        }
+        if (reconnect?.isActive != true) busy = false
         error = errorText(msg)
         if (joined == null && msg.code in setOf(ErrorCode.VERSION, ErrorCode.NO_ROOM, ErrorCode.ROOM_FULL, ErrorCode.STARTED, ErrorCode.TOO_MANY, ErrorCode.BUSY, ErrorCode.RATE)) {
           link.close()
@@ -394,16 +414,21 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
       if (r.backup == me && snap != null) {
         reconnect = viewModelScope.launch {
           busy = true
-          val l = endpoint?.let { NearbyLink(getApplication(), it, playerName, this@BattleViewModel) }
-          if (l != null) {
-            pending = Resume(j.room, j.token)
-            open(l)
-            delay(4000)
-            if (this@BattleViewModel.link === l && !busy) return@launch
-            if (this@BattleViewModel.link === l) {
-              l.close()
-              this@BattleViewModel.link = null
+          backupTrying = true
+          try {
+            val l = endpoint?.let { NearbyLink(getApplication(), it, playerName, this@BattleViewModel) }
+            if (l != null) {
+              pending = Resume(j.room, j.token)
+              open(l)
+              // Joined cancels this job; otherwise close the try and take over.
+              delay(4000)
+              if (this@BattleViewModel.link === l) {
+                l.close()
+                this@BattleViewModel.link = null
+              }
             }
+          } finally {
+            backupTrying = false
           }
           takeOver(snap, j, r)
         }
@@ -425,9 +450,8 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
           }
         } ?: break
         open(l)
-        // Up within a while, or the next attempt.
+        // Up within a while, or the next attempt (Joined cancels this job).
         delay(8000)
-        if (this@BattleViewModel.link === l && !busy) return@launch
         if (this@BattleViewModel.link === l) {
           l.close()
           this@BattleViewModel.link = null
@@ -472,6 +496,13 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
 
   /** The room is gone; what it showed stays when anything was played. */
   private fun roomGone(message: String?) {
+    reconnect?.cancel()
+    reconnect = null
+    backupTrying = false
+    mover?.stop()
+    mover = null
+    moved = null
+    busy = false
     message?.let { error = it }
     link?.close()
     link = null
