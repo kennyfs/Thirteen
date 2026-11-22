@@ -110,6 +110,9 @@
   const immersive = $derived(app.battle.immersive);
   $effect(() => { if (immersive && app.screen !== 'BATTLE') nav.go('BATTLE'); });
   $effect(() => { void immersive; tick().then(() => measure(TEXT_SCALE[app.textSize])); });
+  // The glossary is over everything, not on a screen: it closes when the page changes under it (the browser's Back too),
+  // as a screen's own dialogs go with their screen.
+  $effect(() => { void nav.route; glossaryLink.open = false; });
 </script>
 
 <svelte:window onkeydown={onKey} />
