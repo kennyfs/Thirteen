@@ -35,6 +35,8 @@
     return i >= 1 && i < points.length ? i : null;
   }
   const shown = $derived(hover ?? (picked !== null ? picked + 1 : null));
+  const firstDate = $derived(times[0]?.slice(0, 10) ?? '');
+  const lastDate = $derived(times[times.length - 1]?.slice(0, 10) ?? '');
 </script>
 
 <div class="chart" bind:clientWidth={w} bind:clientHeight={h}>
@@ -52,8 +54,8 @@
         <circle cx={x(shown)} cy={y(points[shown])} r="6" class="dot" />
       {/if}
       <circle cx={x(points.length - 1)} cy={y(points[points.length - 1])} r="4" class="dot" />
-      <text x={left} y={h - 6} class="label">{times[0]?.slice(0, 10)}</text>
-      <text x={w - right} y={h - 6} text-anchor="end" class="label">{times[times.length - 1]?.slice(0, 10)}</text>
+      <text x={left} y={h - 6} class="label">{firstDate}</text>
+      {#if firstDate !== lastDate}<text x={w - right} y={h - 6} text-anchor="end" class="label">{lastDate}</text>{/if}
     </svg>
     {#if shown !== null}
       {@const i = shown - 1}
