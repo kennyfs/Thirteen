@@ -51,8 +51,13 @@
       if (e.key === 'Escape') tour.end();
       else if (e.key === 'ArrowRight') tour.next();
       else if (e.key === 'ArrowLeft') tour.prev();
-      else if (!(e.key === 'Tab' || ((e.key === 'Enter' || e.key === ' ') && card?.contains(e.target as Node)))) e.preventDefault();
-      else return;
+      else if (e.key === 'Tab') {
+        const btns = [...(card?.querySelectorAll<HTMLElement>('button:not(:disabled)') ?? [])];
+        if (!btns.length) { e.preventDefault(); return; }
+        const i = btns.indexOf(document.activeElement as HTMLElement);
+        const next = e.shiftKey ? (i <= 0 ? btns.length - 1 : i - 1) : (i < 0 || i >= btns.length - 1 ? 0 : i + 1);
+        btns[next].focus();
+      } else if ((e.key === 'Enter' || e.key === ' ') && card?.contains(e.target as Node)) return;
       e.preventDefault();
     };
     // The browser's Back ends the tour; the tour's own going from screen to screen does not come here (it pushes).
@@ -71,7 +76,15 @@
   });
 
   const PAD = 6;
-  const hole = $derived(rect ? { x: rect.left - PAD, y: rect.top - PAD, w: rect.width + PAD * 2, h: rect.height + PAD * 2 } : null);
+  const EDGE = 3;
+  const hole = $derived.by(() => {
+    if (!rect) return null;
+    const x = Math.max(EDGE, rect.left - PAD);
+    const y = Math.max(EDGE, rect.top - PAD);
+    const r = Math.min(vw - EDGE, rect.right + PAD);
+    const b = Math.min(vh - EDGE, rect.bottom + PAD);
+    return { x, y, w: Math.max(0, r - x), h: Math.max(0, b - y) };
+  });
   // The card below the light if it fits, else above, else beside it, else over the bottom of the window.
   const place = $derived.by(() => {
     const m = 12;
@@ -122,10 +135,12 @@
   .shade { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.55); }
   .hole { position: absolute; border-radius: 14px; box-shadow: 0 0 0 200vmax rgba(0, 0, 0, 0.55); outline: 3px solid var(--highlight);
     transition: left 0.2s, top 0.2s, width 0.2s, height 0.2s; pointer-events: none; }
+  @media (prefers-reduced-motion: reduce) { .hole { transition: none; } }
   /* The hole lets nothing through: the page under the tour is not touched. */
   .tour::before { content: ''; position: absolute; inset: 0; }
   .card { position: absolute; background: var(--surface-container-high); color: var(--on-surface); border-radius: 20px; padding: 14px 16px 12px;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35); display: flex; flex-direction: column; gap: 6px; outline: none; }
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35); display: flex; flex-direction: column; gap: 6px; outline: none;
+    max-height: calc(100dvh - 24px); overflow-y: auto; }
   .card h2 { margin: 0; }
   .card p { margin: 0; }
   .top { display: flex; align-items: center; min-height: 32px; }
