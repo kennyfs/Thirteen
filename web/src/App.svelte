@@ -7,8 +7,8 @@
   import { App, TEXT_SCALE, type Screen } from './lib/app.svelte';
   import { nav } from './lib/nav.svelte';
   import * as engine from './lib/engine';
-  import { t } from './lib/i18n.svelte';
-  import { measure, ui } from './lib/ui.svelte';
+  import { currentLang, t } from './lib/i18n.svelte';
+  import { measure, textWidth, ui } from './lib/ui.svelte';
   import Analyze from './components/Analyze.svelte';
   import Battle from './components/Battle.svelte';
   import Dialog from './components/Dialog.svelte';
@@ -33,6 +33,14 @@
     ['ANALYZE', 'nav_analyze', 'assessmentOutlined', 'assessment'],
     ['RECORDS', 'nav_records', 'historyOutlined', 'historyFilled'], ['SETTINGS', 'nav_settings', 'settingsOutlined', 'settingsFilled'],
   ];
+  // The labels under the icons all at one size, smaller together where the longest would be cut (English at a large
+  // text size: "Practi…"), as the app's bar and rail; not under 0.6 of their own.
+  const navScale = $derived.by(() => {
+    currentLang();
+    const slot = (ui.wide ? 88 : (ui.w || innerWidth) / tabs.length) - 6;
+    const longest = Math.max(...tabs.map(([, label]) => textWidth(t(label), 12, 500)));
+    return longest > slot ? Math.max(0.6, slot / longest) : 1;
+  });
   let systemDark = $state(matchMedia('(prefers-color-scheme: dark)').matches);
   const dark = $derived(app.darkMode === 'DARK' || (app.darkMode === 'SYSTEM' && systemDark));
 
@@ -107,7 +115,7 @@
 <svelte:window onkeydown={onKey} />
 
 <div class="shell" class:wide={ui.wide}>
-  <nav aria-label={t('app_name')} hidden={immersive}>
+  <nav aria-label={t('app_name')} hidden={immersive} style:--nav-scale={navScale}>
     {#each tabs as [s, label, icon, chosen] (s)}
       <button class:on={app.screen === s} aria-current={app.screen === s ? 'page' : undefined} data-tour="nav-{s}" onclick={() => go(s)}>
         <span class="pill"><Icon name={app.screen === s ? chosen : icon} /></span><span class="label">{t(label)}</span>
@@ -158,7 +166,7 @@
   .wide nav { flex-direction: column; justify-content: flex-start; gap: 12px; height: auto; width: 88px; padding-top: 12px; background: var(--surface);
     overflow-y: auto; scrollbar-width: none; }
   nav button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: none; background: none;
-    color: var(--on-surface-variant); cursor: pointer; font-size: 0.75rem; font-weight: 500; padding: 0; min-width: 0; }
+    color: var(--on-surface-variant); cursor: pointer; font-size: calc(0.75rem * var(--nav-scale, 1)); font-weight: 500; padding: 0; min-width: 0; }
   .wide nav button { flex: none; padding: 4px 0; }
   nav button.on { color: var(--on-surface); }
   .pill { width: 64px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; }
