@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The glossary (Glossary.kt, and the web page's lib/glossary.ts), English (en-US, default fallback).
-  Localized copies live in values-*/glossary.xml.
+  The glossary (Glossary.kt, and the web page's lib/glossary.ts) in English, the default for a language without its
+  own (values-*/glossary.xml). Each definition uses only the terms before it (GlossaryTest). glossary_p_<id>: the
+  phrases that link to the entry in running text (case aside, whole words only; list each form that occurs).
 -->
 <resources>
   <string name="glossary_title">Glossary</string>
@@ -9,36 +10,53 @@
 
   <string name="glossary_t_row">Row (front, middle, back)</string>
   <string name="glossary_d_row">The three groups your 13 cards are split into: 3 cards in the front, 5 in the middle, and 5 in the back. When everyone reveals, each row is compared with every opponent\'s matching row.</string>
+  <string-array name="glossary_p_row"><item>front row</item><item>middle row</item><item>back row</item><item>three rows</item></string-array>
   <string name="glossary_t_rank">Hand rank</string>
   <string name="glossary_d_rank">The category of a row, from highest to lowest: straight flush, quads (four of a kind), full house (trips plus a pair), flush, straight, trips, two pair, pair, high card. A higher category always wins; within the same category, higher cards win (A highest, 2 lowest; suits never rank). The front has only 3 cards, so it can only be trips, a pair, or high card.</string>
+  <string-array name="glossary_p_rank"><item>hand rank</item><item>hand ranks</item><item>straight flush</item><item>straight flushes</item><item>quads</item><item>four of a kind</item><item>full house</item><item>flush</item><item>straight</item><item>trips</item><item>two pair</item><item>high card</item></string-array>
   <string name="glossary_t_wheel">A-2-3-4-5</string>
   <string name="glossary_d_wheel">A straight with A counted as 1. Rules vary by table: it can be the lowest straight, the second-highest straight, or not a straight at all. Set this in Settings › Rules.</string>
+  <string-array name="glossary_p_wheel"><item>A-2-3-4-5</item></string-array>
   <string name="glossary_t_foul">Foul</string>
   <string name="glossary_d_foul">The back must be at least as strong as the middle, and the middle at least as strong as the front. Any other order is a foul, which cannot be played.</string>
+  <string-array name="glossary_p_foul"><item>foul</item><item>fouls</item><item>fouled</item></string-array>
   <string name="glossary_t_strict">Strict rows</string>
   <string name="glossary_d_strict">A rule where equal rows (same category and ranks) also count as a foul: each row must be strictly stronger than the one in front of it.</string>
+  <string-array name="glossary_p_strict"><item>strict rows</item></string-array>
   <string name="glossary_t_scoop">Scoop</string>
   <string name="glossary_d_scoop">Winning all three rows against the same opponent, earning extra points depending on the rules. Losing all three rows to an opponent means being scooped.</string>
+  <string-array name="glossary_p_scoop"><item>scoop</item><item>scoops</item><item>scooped</item><item>scooping</item></string-array>
   <string name="glossary_t_home_run">Home run</string>
   <string name="glossary_d_home_run">Scooping all three opponents in a single hand, earning additional bonus points from each.</string>
+  <string-array name="glossary_p_home_run"><item>home run</item><item>home runs</item></string-array>
   <string name="glossary_t_front_trips">Front trips</string>
   <string name="glossary_d_front_trips">Three of a kind in the front row. Because the front has only 3 cards, trips is its strongest possible hand, and many rules award extra points for it.</string>
+  <string-array name="glossary_p_front_trips"><item>front trips</item></string-array>
   <string name="glossary_t_special">Special rows</string>
   <string name="glossary_d_special">Strong row hands that award bonus points: front trips, middle full house, quads or straight flush, and back quads or straight flush. Depending on the rules, every opponent pays regardless of who wins the row, or only opponents whose row you beat.</string>
+  <string-array name="glossary_p_special"><item>special row</item><item>special rows</item></string-array>
   <string name="glossary_t_dragon">Dragon</string>
   <string name="glossary_d_dragon">Holding all 13 ranks from 2 through A. As long as you do not foul, every opponent pays you bonus points according to the rules.</string>
+  <string-array name="glossary_p_dragon"><item>dragon</item></string-array>
   <string name="glossary_t_network">Neural network</string>
   <string name="glossary_d_network">The model used for computer players and analysis: given a hand and an arrangement, it estimates the average score that arrangement earns. It was trained by playing a large number of hands against itself.</string>
+  <string-array name="glossary_p_network"><item>neural network</item><item>neural networks</item></string-array>
   <string name="glossary_t_q">Q (expected points)</string>
   <string name="glossary_d_q">The average score an arrangement is expected to earn, estimated by the neural network against three opponents playing like it. Positive means winning points on average; negative means losing.</string>
-  <string name="glossary_t_best">Best</string>
+  <string-array name="glossary_p_q"><item>expected points</item><item>expected score</item></string-array>
+  <string name="glossary_t_best">Best one</string>
   <string name="glossary_d_best">The arrangement with the highest Q—what the AI considers the best play. Arrangements very close to it (within the neural network\'s margin of error) are just as good.</string>
+  <string-array name="glossary_p_best"><item>best one</item><item>best arrangement</item></string-array>
   <string name="glossary_t_style">Attacking / defending</string>
   <string name="glossary_d_style">The style of the best arrangement. Attacking: concentrates strength in one row, scooping more but also getting scooped more. Defending: balances the rows, getting scooped less while scooping less.</string>
+  <string-array name="glossary_p_style"><item>attacks</item><item>attacking</item><item>defends</item><item>defending</item></string-array>
   <string name="glossary_t_rows">Playing for rows</string>
   <string name="glossary_d_rows">An arrangement that focuses on winning individual rows rather than chasing scoops. Most important under rules that score every row.</string>
+  <string-array name="glossary_p_rows"><item>playing for rows</item><item>plays for rows</item></string-array>
   <string name="glossary_t_indep">Independent rows</string>
   <string name="glossary_d_indep">A simpler computer player that estimates each row\'s chance of winning on its own, without considering how the three rows interact.</string>
+  <string-array name="glossary_p_indep"><item>independent rows</item></string-array>
   <string name="glossary_t_mc">Monte Carlo</string>
   <string name="glossary_d_mc">A computer player that tests each arrangement against many random deals for the opponents (set by independent rows) and picks the one with the best average score.</string>
+  <string-array name="glossary_p_mc"><item>Monte Carlo</item></string-array>
 </resources>

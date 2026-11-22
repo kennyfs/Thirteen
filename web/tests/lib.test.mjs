@@ -46,6 +46,20 @@ try {
   const { serverUrl } = await server.ssrLoadModule('/src/lib/battle.svelte.ts');
   const engine = await server.ssrLoadModule('/src/lib/engine.ts');
 
+  await test('glossary links: Chinese anywhere, English whole words in any case, none where it is not shown', async () => {
+    const { setLang } = await server.ssrLoadModule('/src/lib/i18n.svelte.ts');
+    const { linkGlossary } = await server.ssrLoadModule('/src/lib/glossary.ts');
+    const linked = (text) => linkGlossary(text).filter((p) => p.termId).map((p) => [p.text, p.termId]);
+    setLang('zh');
+    assert.deepEqual(linked('三墩都贏叫打槍；頭墩衝三是特殊墩。'), [['三墩', 'row'], ['打槍', 'scoop'], ['頭墩', 'row'], ['衝三', 'front_trips'], ['特殊墩', 'special']]);
+    setLang('en');
+    assert.deepEqual(linked('Scooped twice, a scoopable front row; the best one attacks.'),
+      [['Scooped', 'scoop'], ['front row', 'row'], ['best one', 'best'], ['attacks', 'style']]);
+    setLang('ja');
+    assert.deepEqual(linked('Scooped twice'), []);
+    setLang('zh');
+  });
+
   await test('server addresses', () => {
     assert.equal(serverUrl('thirteen.example.com'), 'wss://thirteen.example.com/ws');
     assert.equal(serverUrl('localhost:8090'), 'ws://localhost:8090/ws');

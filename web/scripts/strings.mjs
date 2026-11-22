@@ -2,7 +2,7 @@
 // src/generated/strings.json ({"en": {...}, "zh": {...}, "ja": {...}, ...}, a name to a string or a string array), so
 // the two say the same. Each language is complete over English (a name it lacks is English's), as Android falls back.
 // Formats stay as Android writes them (%1$s, %2$d); src/lib/i18n.ts fills them in.
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -49,11 +49,15 @@ for (const [lang, dir] of Object.entries(DIRS)) {
   if (missing.length) console.warn(`strings: ${lang} lacks ${missing.length} (English instead): ${missing.slice(0, 8).join(' ')}…`);
   all[lang] = { ...en, ...own };
 }
-// Glossary strings: values/glossary.xml is English (default), and each language has its own values-*/glossary.xml.
+// The glossary: values/glossary.xml is English (and any language's without its own), values-*/glossary.xml each
+// language's. Whether a language shows it is its bool show_glossary (bools.xml, else the default's), here a string.
+const readIf = (file) => (existsSync(file) ? readFileSync(file, 'utf8') : '');
+const shows = (dir) => readIf(join(res, dir, 'bools.xml')).match(/<bool name="show_glossary">(\w+)<\/bool>/)?.[1];
 const enGlossary = read(join(res, 'values', 'glossary.xml'));
-Object.assign(all.en, enGlossary);
+Object.assign(all.en, enGlossary, { show_glossary: shows('values') ?? 'false' });
 for (const [lang, dir] of Object.entries(DIRS)) {
-  Object.assign(all[lang], enGlossary, read(join(res, dir, 'glossary.xml')));
+  const own = existsSync(join(res, dir, 'glossary.xml')) ? read(join(res, dir, 'glossary.xml')) : {};
+  Object.assign(all[lang], enGlossary, own, { show_glossary: shows(dir) ?? all.en.show_glossary });
 }
 mkdirSync(join(root, 'src', 'generated'), { recursive: true });
 writeFileSync(join(root, 'src', 'generated', 'strings.json'), JSON.stringify(all) + '\n');

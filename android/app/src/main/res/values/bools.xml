@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <!-- Whether this language has the glossary (values/glossary.xml): Taiwan Chinese only. -->
-  <bool name="show_glossary">false</bool>
+  <!-- Whether this language shows the glossary (values*/glossary.xml): English and Taiwan Chinese; the others until
+       their linking phrases (glossary_p_<id>) are checked. -->
+  <bool name="show_glossary">true</bool>
 </resources>

@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.booleanResource
 import androidx.compose.ui.res.stringResource
@@ -48,9 +49,17 @@ import io.github.kennyfs.thirteen.Glossary
 import io.github.kennyfs.thirteen.R
 import kotlinx.coroutines.launch
 
-/** Whether this language has the glossary (Taiwan Chinese only: res/values/glossary.xml). */
+/** Whether this language has the glossary (res/values-xx/bools.xml). */
 @Composable
 fun hasGlossary(): Boolean = booleanResource(R.bool.show_glossary)
+
+/** The glossary's links in the app's language (its glossary_p_<id> arrays). */
+@Composable
+private fun glossaryLinker(): Glossary.Linker {
+  val res = LocalResources.current
+  val locale = res.configuration.locales[0]
+  return remember(res, locale) { Glossary.Linker(Glossary.ENTRIES.associate { it.id to res.getStringArray(it.phrases).toList() }) }
+}
 
 /**
  * `text` with the glossary's terms as links that call `onTerm` (none in a language without the glossary). `beforeId`: a
@@ -60,8 +69,9 @@ fun hasGlossary(): Boolean = booleanResource(R.bool.show_glossary)
 fun linkedGlossaryText(text: String, onTerm: (String) -> Unit, beforeId: String? = null, linkColor: Color = MaterialTheme.colorScheme.primary,
   once: Boolean = false): AnnotatedString {
   val on = hasGlossary()
-  val parts = remember(text, on, beforeId, once) {
-    val all = if (on) Glossary.link(text, beforeId) else listOf(io.github.kennyfs.thirteen.TermPart(text))
+  val linker = glossaryLinker()
+  val parts = remember(text, on, linker, beforeId, once) {
+    val all = if (on) linker.link(text, beforeId) else listOf(io.github.kennyfs.thirteen.TermPart(text))
     if (!once) all else {
       val seen = HashSet<String>()
       all.map { p -> if (p.termId == null || seen.add(p.termId)) p else p.copy(termId = null) }
