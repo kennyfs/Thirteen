@@ -211,6 +211,7 @@
   <string name="battle_lost">ルームとの接続が切れました。</string>
   <string name="battle_reconnecting">再接続中…</string>
   <string name="battle_closed">ルームは閉じられました。</string>
+  <string name="battle_save_failed">この対戦を記録に保存できませんでした：%1$s</string>
   <string name="battle_err_version">ルーム（サーバーまたはホストのスマホ）のアプリのバージョンが違います。全員が同じバージョンを使う必要があります。アプリを更新してください。</string>
   <string name="battle_err_no_room">その番号のルームは見つかりません。</string>
   <string name="battle_err_full">ルームは満員です。</string>

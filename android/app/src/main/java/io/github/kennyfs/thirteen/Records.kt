@@ -84,7 +84,7 @@ class BattleStore(dir: File, name: String = "battles") {
     folder.mkdirs()
     val tmp = File(folder, "${b.id}.tmp")
     tmp.writeText(BattleJson.encodeToString(BattleRecord.serializer(), b))
-    tmp.renameTo(File(folder, "${b.id}.json"))
+    if (!tmp.renameTo(File(folder, "${b.id}.json"))) throw java.io.IOException("could not write ${b.id}.json")
   }
 
   /** Newest first. */

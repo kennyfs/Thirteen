@@ -212,6 +212,7 @@
   <string name="battle_lost">Mất kết nối với phòng.</string>
   <string name="battle_reconnecting">Đang kết nối lại…</string>
   <string name="battle_closed">Phòng đã đóng.</string>
+  <string name="battle_save_failed">Không thể lưu trận đấu này vào bản ghi: %1$s</string>
   <string name="battle_err_version">Phòng đang chạy một phiên bản ứng dụng khác (ở máy chủ hoặc ở điện thoại làm chủ phòng). Mọi người cần cùng một phiên bản: hãy cập nhật ứng dụng.</string>
   <string name="battle_err_no_room">Không có phòng nào với mã PIN đó.</string>
   <string name="battle_err_full">Phòng đã đầy.</string>

@@ -212,6 +212,7 @@
   <string name="battle_lost">Koneksi ke room terputus.</string>
   <string name="battle_reconnecting">Menyambung kembali…</string>
   <string name="battle_closed">Room sudah ditutup.</string>
+  <string name="battle_save_failed">Pertandingan ini tidak dapat disimpan ke catatan: %1$s</string>
   <string name="battle_err_version">Room ini menjalankan versi aplikasi yang berbeda (server atau ponsel yang menjadi host). Semua orang perlu versi yang sama: perbarui aplikasi.</string>
   <string name="battle_err_no_room">Tidak ada room dengan PIN itu.</string>
   <string name="battle_err_full">Room sudah penuh.</string>

@@ -128,6 +128,8 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
   /** The nearby endpoint of the room, to reconnect to. */
   private var endpoint: String? = null
   private var reconnect: Job? = null
+  /** Whether this battle's failure to be saved was said (once a battle). */
+  private var saveTold = false
   /** True only while a backup phone makes its one try at the old host before taking over the room. */
   private var backupTrying = false
 
@@ -314,6 +316,7 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     review.clear()
     battleId = null
     battleStart = 0L
+    saveTold = false
     lastSeen = false
     submitting = false
     finished = false
@@ -544,7 +547,13 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
     val r = room ?: return
     if (outcomes.isEmpty()) return
     val b = BattleRecord(id, battleStart, via.name.lowercase(), r.settings, r.rules, me, r.players, outcomes, left)
-    runCatching { battles.save(b) }
+    // Saved again at every hand: a failure (a full disk) is said once a battle, not at each hand.
+    runCatching { battles.save(b) }.onFailure {
+      if (!saveTold) {
+        saveTold = true
+        error = str(R.string.battle_save_failed, it.message ?: it.toString())
+      }
+    }
   }
 
   /** The player's play of a closed hand goes to the records, labelled "battle" (a table game) or "puzzle". */
