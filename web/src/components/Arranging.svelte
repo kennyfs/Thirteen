@@ -60,6 +60,8 @@
   const headerHeight = $derived(Math.max(32, textRoom(13) * 2 * labels));
   const labelHeight = $derived((textRoom(24) + textRoom(16)) * labels + 2);
   const above = $derived(!wide && fit.above);
+  const readyLines = $derived(wide ? 1 : Math.ceil(13 / fit.perLine));
+  const readyH = $derived(cardHeight(handCard) * readyLines + HAND_LINE_GAP * (readyLines - 1));
 
   const hand = $derived(skeleton ? PLACES : vm.unplaced);
   const counts = $derived.by(() => {
@@ -294,8 +296,9 @@
       </div>
     {/each}
     {#if hand.length === 0}
+      <!-- As high as the hand's line, which may be a small card's at a large text size: two lines of text fit it. -->
       <div class="ready title-medium bold" class:bad={readiness.bad} aria-live="polite"
-        style:height="{cardHeight(handCard) * (wide ? 1 : Math.ceil(13 / fit.perLine)) + HAND_LINE_GAP * ((wide ? 1 : Math.ceil(13 / fit.perLine)) - 1)}px">
+        style:height="{readyH}px" style:font-size="min(1rem, {Math.max(10, readyH / 2.4)}px)">
         {readiness.text}
       </div>
     {/if}
@@ -401,7 +404,7 @@
   .tray.left { align-items: flex-start; }
   .hand-line { display: flex; align-items: flex-end; }
   .gap { flex: none; display: block; }
-  .ready { display: flex; align-items: center; justify-content: center; text-align: center; color: var(--on-felt); width: 100%; }
+  .ready { display: flex; align-items: center; justify-content: center; text-align: center; color: var(--on-felt); width: 100%; line-height: 1.2; overflow: hidden; }
   .ready.bad { color: var(--felt-bad); }
   .bar { flex: none; display: flex; align-items: center; gap: 6px; padding: 8px 10px; }
   .sort { flex: none; height: 46px; padding: 0 10px; gap: 4px; }

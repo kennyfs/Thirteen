@@ -104,6 +104,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import io.github.kennyfs.thirteen.AppViewModel
 import io.github.kennyfs.thirteen.Arranger
@@ -522,7 +523,8 @@ private fun RowSlotTall(
 private fun labelWidth(d: androidx.compose.ui.unit.Density, labels: Float = 1f): Dp = maxOf(72.dp, with(d) { 14.sp.toDp() } * 4.6f * labels)
 private fun headerHeight(d: androidx.compose.ui.unit.Density, labels: Float = 1f): Dp = maxOf(32.dp, with(d) { 13.sp.toDp() } * 2 * labels)
 /** The height of a label beside the cards: the name and a line of state. */
-private fun labelHeight(d: androidx.compose.ui.unit.Density, labels: Float = 1f): Dp = with(d) { 24.sp.toDp() + 16.sp.toDp() } * labels + 2.dp
+private fun labelHeight(d: androidx.compose.ui.unit.Density, labels: Float = 1f): Dp =
+  with(d) { 24.sp.toDp() + 16.sp.toDp() } * labels * FALLBACK_LINES + 2.dp
 
 /** Returns a row's cards to the hand (as a long press on the row does). */
 @Composable
@@ -653,8 +655,12 @@ private fun HandTray(vm: Arranger, card: Dp, perLine: Int, modifier: Modifier = 
       val t = LocalTable.current
       val (text, bad) = readiness(vm)
       Box(Modifier.fillMaxWidth().height(cardHeight(card) * lines + HAND_LINE_GAP * (lines - 1)), contentAlignment = Alignment.Center) {
+        // As high as the hand's line, which may be a small card's at a large font: the text shrinks to fit it, its line
+        // height in em to shrink along.
+        val style = MaterialTheme.typography.titleMedium.copy(lineHeight = 1.2.em)
         Text(
-          text, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.titleMedium,
+          text, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = style, maxLines = 2,
+          autoSize = shrinking(style, 0.5f),
           fontWeight = FontWeight.Bold, color = if (bad) t.bad else t.onFelt, textAlign = TextAlign.Center,
         )
       }
