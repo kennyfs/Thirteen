@@ -31,7 +31,7 @@ const WEB: Record<'en' | 'zh', Table> = {
     // The app's say "app"; the page says here or reloads.
     tut_foul_text: 'The back must be at least as big as the middle, and the middle at least as big as the front. Rows in any other order are a foul (倒水), which you cannot play here.',
     welcome_body: 'New to Thirteen (Chinese poker)? The tutorial teaches the rules in a few minutes; the tour shows what you can do here. You can find both in Settings later.',
-    battle_err_version: 'The room runs another version (the server or the phone that hosts it). Everyone needs the same version: reload this page; players on the phone app update it.',
+    battle_err_version: 'The room runs another version (the server or the phone that hosts it). Everyone needs the same version: reload this page; players on the phone app should update it.',
     // One, where the app's string says "hands".
     n_recorded_one: '1 hand recorded',
     chart_summary_one: '1 hand · total %2$s · average %3$s a hand',
