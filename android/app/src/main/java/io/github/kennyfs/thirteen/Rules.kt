@@ -14,7 +14,10 @@ data class RuleSpec(val preset: String = "family", val overrides: Map<String, Do
       if (parts.isEmpty() || parts[0] !in Rules.PRESETS) return RuleSpec()
       return RuleSpec(parts[0], parts.drop(1).mapNotNull { p ->
         val kv = p.split("=")
-        kv.getOrNull(1)?.toDoubleOrNull()?.let { kv[0] to it }
+        if (kv.size != 2) return@mapNotNull null
+        val k = kv[0].trim()
+        val v = kv[1].trim().toDoubleOrNull()?.takeIf { it.isFinite() } ?: return@mapNotNull null
+        if (k.isEmpty()) null else k to v
       }.toMap())
     }
   }
@@ -44,11 +47,15 @@ object Rules {
     return lo..hi
   }
 
-  fun fmt(x: Double): String = if (x == kotlin.math.floor(x)) "%.0f".format(x) else x.toString()
+  fun fmt(x: Double): String = if (x == kotlin.math.floor(x)) String.format(java.util.Locale.US, "%.0f", x) else x.toString()
 
   /** The values of a full spec ("c=0,row=1,...", as the engine's toString and the records' rules field). */
   fun values(full: String): Map<String, Double> =
-    full.split(",").mapNotNull { p -> p.split("=").takeIf { it.size == 2 }?.let { (k, v) -> v.toDoubleOrNull()?.let { k.trim() to it } } }.toMap()
+    full.split(",").mapNotNull { p ->
+      p.split("=").takeIf { it.size == 2 }?.let { (k, v) ->
+        v.trim().toDoubleOrNull()?.takeIf { it.isFinite() }?.let { k.trim() to it }
+      }
+    }.toMap()
 
   /** Whether two sets of values are the same rules, whatever the dealer cost. */
   fun same(a: Map<String, Double>, b: Map<String, Double>) = (a.keys + b.keys).all { it == "c" || a[it] == b[it] }

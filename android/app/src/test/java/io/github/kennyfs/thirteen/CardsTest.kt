@@ -47,7 +47,17 @@ class CardsTest {
     assertEquals("taiwan,scoop=2,on_win=1", spec.spec())
     assertEquals(spec, RuleSpec.parse(spec.spec()))
     assertEquals(RuleSpec(), RuleSpec.parse("nonsense,row=1"))
-    val values = Rules.values("c=0,row=1,scoop=3,wheel=2")
+    // Empty, non-finite or malformed overrides are ignored; keys and values are trimmed.
+    assertEquals(RuleSpec("taiwan", mapOf("scoop" to 2.0)), RuleSpec.parse("taiwan, scoop = 2, row=, dragon=Infinity, bad=1=2"))
+    // Locale-independent ASCII digits in spec formatting.
+    val prevLocale = java.util.Locale.getDefault()
+    try {
+      java.util.Locale.setDefault(java.util.Locale("ar", "EG"))
+      assertEquals("taiwan,scoop=2", RuleSpec("taiwan", mapOf("scoop" to 2.0)).spec())
+    } finally {
+      java.util.Locale.setDefault(prevLocale)
+    }
+    val values = Rules.values("c=0,row=1,scoop=3,wheel=2,bad=NaN,inf=Infinity")
     assertEquals(2.0, values["wheel"]!!, 0.0)
     assertEquals(true, Rules.same(values, values + ("c" to 0.5)))
     assertEquals("taiwan", Rules.presetOf(values, mapOf("family" to emptyMap(), "taiwan" to values)))

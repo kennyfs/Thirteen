@@ -50,7 +50,7 @@ class RecordStore(dir: File) {
     if (!file.exists()) emptyList() else file.readLines().filter { it.isNotBlank() }.mapNotNull { runCatching { JSONObject(it) }.getOrNull() }
 
   @Synchronized
-  fun count(): Int = if (!file.exists()) 0 else file.readLines().count { it.isNotBlank() }
+  fun count(): Int = all().size
 
   @Synchronized
   fun clear() {

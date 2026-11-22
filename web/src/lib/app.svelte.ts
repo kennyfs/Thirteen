@@ -30,6 +30,17 @@ export type { Screen };
 
 const BUILT_IN_MODEL: Model = { name: 'run2_net10', path: engine.BUILT_IN, builtIn: true };
 const LOADED = '/models/loaded/';
+const COLOR_STYLES: ColorStyle[] = ['TABLE', 'MINIMAL'];
+const DARK_MODES: DarkMode[] = ['SYSTEM', 'LIGHT', 'DARK'];
+const TEXT_SIZES: TextSize[] = ['SMALL', 'NORMAL', 'LARGE'];
+function readEnum<T extends string>(key: string, allowed: T[], fallback: T): T {
+  const v = store.get(key, fallback) as T;
+  return allowed.includes(v) ? v : fallback;
+}
+function readTextSize(): TextSize {
+  const v = store.get('look.text', 'NORMAL');
+  return v === 'LARGER' ? 'LARGE' : TEXT_SIZES.includes(v as TextSize) ? (v as TextSize) : 'NORMAL';
+}
 
 export class App {
   error = $state<string | null>(null);
@@ -37,9 +48,9 @@ export class App {
   get screen(): Screen { return nav.screen; }
 
   // ---- Look ----
-  colorStyle = $state<ColorStyle>(store.get('look.colors', 'TABLE') as ColorStyle);
-  darkMode = $state<DarkMode>(store.get('look.dark', 'SYSTEM') as DarkMode);
-  textSize = $state<TextSize>(store.get('look.text', 'NORMAL') as TextSize);
+  colorStyle = $state<ColorStyle>(readEnum('look.colors', COLOR_STYLES, 'TABLE'));
+  darkMode = $state<DarkMode>(readEnum('look.dark', DARK_MODES, 'SYSTEM'));
+  textSize = $state<TextSize>(readTextSize());
   lang = $state<Lang>(((l: string) => (isLang(l) ? l : browserLang()))(store.get('lang', '')));
 
   chooseColorStyle(v: ColorStyle) { this.colorStyle = v; store.set('look.colors', v); }
@@ -362,7 +373,9 @@ export class App {
 
   /** The player's own hand `index` of battle `id`, as a record. */
   battleHandRecord(id: string, index: number): Rec | null {
-    return this.records.all().find((r) => r.battle === id && r.battle_hand === index) ?? null;
+    return this.records.all().find((r) => r.battle === id && r.battle_hand === index)
+      ?? this.favorites.all().find((r) => r.battle === id && r.battle_hand === index)
+      ?? null;
   }
 
   toggleFavorite(rec: Rec) {

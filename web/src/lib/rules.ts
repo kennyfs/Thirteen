@@ -27,9 +27,12 @@ export function parseSpec(s: string): RuleSpec {
   if (parts.length === 0 || !PRESETS.includes(parts[0])) return { preset: 'family', overrides: {} };
   const overrides: Values = {};
   for (const p of parts.slice(1)) {
-    const [k, v] = p.split('=');
-    const x = Number(v);
-    if (v !== undefined && !Number.isNaN(x)) overrides[k] = x;
+    const kv = p.split('=');
+    if (kv.length !== 2) continue;
+    const k = kv[0].trim();
+    const raw = kv[1].trim();
+    const x = Number(raw);
+    if (k && raw !== '' && Number.isFinite(x)) overrides[k] = x;
   }
   return { preset: parts[0], overrides };
 }
@@ -47,7 +50,7 @@ export function values(full: string): Values {
   const out: Values = {};
   for (const p of full.split(',')) {
     const kv = p.split('=');
-    if (kv.length === 2 && kv[1].trim() !== '' && !Number.isNaN(Number(kv[1]))) out[kv[0].trim()] = Number(kv[1]);
+    if (kv.length === 2 && kv[1].trim() !== '' && Number.isFinite(Number(kv[1]))) out[kv[0].trim()] = Number(kv[1]);
   }
   return out;
 }
