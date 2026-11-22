@@ -1,7 +1,7 @@
 <!--
   An (i) button that shows `text` in a dialog, under `title` (a setting's name) when there is one; the text's line
-  breaks stay. `small`: a setting's own, after its name (a 20 px icon in a 36 px round button, in the quiet color). The
-  app's InfoButton.
+  breaks stay. `small`: a setting's own, after its name (a 20 px icon in the quiet color, in a 44 px round button whose
+  negative margins keep its row's height). The app's InfoButton.
 -->
 <script lang="ts">
   import { t } from '../lib/i18n.svelte';
@@ -32,5 +32,5 @@
   @supports (word-break: auto-phrase) {
     :global(:root:lang(ja)) p span { text-wrap: balance; word-break: auto-phrase; }
   }
-  .small { flex: none; width: 36px; min-height: 36px; height: 36px; border-radius: 18px; color: var(--on-surface-variant); }
+  .small { flex: none; width: 44px; min-height: 44px; height: 44px; border-radius: 22px; margin: -4px 0; color: var(--on-surface-variant); }
 </style>

@@ -96,7 +96,10 @@ button { font: inherit; color: inherit; }
 .btn.big { min-height: 56px; border-radius: 18px; font-size: 1rem; font-weight: 700; }
 .btn.icon { padding: 0; width: 46px; min-height: 46px; border-radius: 23px; }
 .btn:not(:disabled):hover { filter: brightness(1.06); }
-.btn:focus-visible, .chip:focus-visible, [role="button"]:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+/* Every control's keyboard focus, not only the buttons drawn as .btn (Mahjong-TW's): tabs, switches, rows, links, fields. */
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .chip:focus-visible,
+[role="button"]:focus-visible, [role="radio"]:focus-visible, [role="switch"]:focus-visible, [role="tab"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .icon-svg { width: 24px; height: 24px; flex: none; fill: currentColor; }
 
 .chip { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 10px 0 14px; border-radius: 10px;
