@@ -13,6 +13,7 @@
   import { signed, ui } from '../../lib/ui.svelte';
   import Dialog from '../Dialog.svelte';
   import Icon from '../Icon.svelte';
+  import Linked from '../Linked.svelte';
   import SeatResults from '../SeatResults.svelte';
   import TitleBar from '../TitleBar.svelte';
   import PanelSkeleton from '../PanelSkeleton.svelte';
@@ -154,8 +155,8 @@
     {#if rem.length}
       <section class="card remarks">
         <div class="title-small">{t('remarks_title')}</div>
-        {#if mineRemark}<p class="title-medium bold" class:mistake={mineRemark.kind === 'mistake'}>{remarkText(mineRemark)}</p>{/if}
-        {#if restRemarks}<p class="body-large">{restRemarks}</p>{/if}
+        {#if mineRemark}<p class="title-medium bold" class:mistake={mineRemark.kind === 'mistake'}><Linked text={remarkText(mineRemark)} /></p>{/if}
+        {#if restRemarks}<p class="body-large"><Linked text={restRemarks} /></p>{/if}
       </section>
     {/if}
     <section class="card">
