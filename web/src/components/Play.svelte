@@ -94,9 +94,9 @@
   {:else}
     <div class="practice-head" class:one={ui.w >= 600}>
       <div class="titleline">
-        <span class="title-large">{app.replaying ? t('replay_title') : t('hand_n', app.session.hands + 1)}</span>
+        <span class="title-large nowrap">{app.replaying ? t('replay_title') : t('hand_n', app.session.hands + 1)}</span>
         {#if Object.keys(app.gameValues).length}
-          <button class="chip" data-tour="rules" onclick={onrules}>{app.rulesName(app.gameValues)}<Icon name="dropDown" /></button>
+          <button class="chip nowrap" data-tour="rules" onclick={onrules}>{app.rulesName(app.gameValues)}<Icon name="dropDown" /></button>
         {/if}
         {#if app.prev}
           <button class="btn text lastbtn" data-tour="last" data-keep-picked onclick={() => app.stepPrev()}><Icon name="history" />{t('last_hand')}</button>
@@ -128,6 +128,15 @@
   .scores { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
   .score { display: inline-flex; align-items: baseline; gap: 4px; padding: 3px 2px; border-radius: 10px; }
   .score.me { background: var(--secondary-container); padding: 3px 8px; }
+  @media (max-height: 460px) {
+    .practice-head.one { overflow-x: auto; scrollbar-width: none; }
+    .practice-head.one .titleline { min-height: 40px; flex: none; }
+    .practice-head.one .title-large { font-size: min(1.25rem, 20px); line-height: 1.25; }
+    .practice-head.one .chip { min-height: 34px; font-size: min(0.875rem, 15px); }
+    .practice-head.one .scores { flex-wrap: nowrap; white-space: nowrap; }
+    .practice-head.one .score .body-medium { font-size: min(0.875rem, 14px); line-height: 1.2; }
+    .practice-head.one .score .title-medium { font-size: min(1rem, 16px); line-height: 1.2; }
+  }
   .result-head { display: flex; align-items: center; gap: 10px; padding: 4px 12px 4px 16px; min-height: 56px; flex: none; }
   .result-head.wide { min-height: 48px; padding: 0 12px 0 16px; }
   .grow { flex: 1; min-width: 0; }

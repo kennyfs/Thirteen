@@ -43,14 +43,22 @@ export function arrangeFit(w0: number, h0: number, wide: boolean, u: number, max
   if (wide) {
     const w = w0 - 20 - 12;
     const h = h0 - 6 - 12;
-    const labels = Math.max(72, room(64)) + 8;
-    const buttons = Math.max(200, room(190));
+    // On a short landscape screen, row labels are capped in CSS so large fonts do not crush the cards.
+    const uRow = h0 <= 420 ? Math.min(u, 14) : u;
+    const labels = Math.max(72, uRow * (64 / 14)) + 8;
+    const buttons = Math.max(200, uRow * (190 / 14));
     const byRowsWidth = (w - buttons - ROWS_GAP - labels - ROW_PAD * 2 - CARD_GAP * 4) / 5;
     const byHandWidth = (w - HAND_GAP * 12 - (SUIT_GAP - HAND_GAP) * 3) / 13;
     const fixed = ROW_PAD * 6 + ROW_STACK_GAP * 2 + 6;
-    let byHeight = (h - fixed) / (1.4 * 4 + 0.22);
-    const label = room(40) + 2;
-    if (byHeight * 1.4 < label) byHeight = (h - fixed - label * 3) / (1.4 + 0.22);
+    const byHeight = (h - fixed) / (1.4 * 4 + 0.22);
+    const label = uRow * (40 / 14) + 2;
+    if (byHeight * 1.4 < label) {
+      // Rows are already at least `label` tall; only the hand shrinks for the remaining height, not the row cards.
+      const handByHeight = (h - fixed - label * 3) / (1.4 + 0.22);
+      const rowCard = Math.max(18, down(Math.min(byRowsWidth, label / 1.4, maxCard)));
+      const handCard = Math.max(18, down(Math.min(byHandWidth, handByHeight, maxCard)));
+      return { card: rowCard, hand: handCard, even: Math.min(rowCard, handCard), above: false, perLine: 13 };
+    }
     const card = Math.max(18, down(Math.min(byRowsWidth, byHandWidth, byHeight, maxCard)));
     // A larger hand, as wide as the felt at most, with the rows as large as the height then leaves them.
     const avail = h - fixed;

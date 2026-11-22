@@ -42,8 +42,8 @@
   const card = $derived(bare ? Math.min(ui.sizes.play, deskFit(areaW, areaH)) : fit.card);
   /** The hand's cards: on a wide page they may be larger than the rows' (sizing.ts, ROWS_TO_HAND). */
   const handCard = $derived(bare ? card : fit.hand);
-  // The labels beside the rows: sizes from the text's.
-  const labelWidth = $derived(Math.max(72, textRoom(14) * 4.6));
+  // The labels beside the rows: sizes from the text's (capped on short landscape screens to match sizing.ts).
+  const labelWidth = $derived(Math.max(72, (wide && areaH <= 420 ? Math.min(ui.u, 14) : ui.u) * 4.6));
   const headerHeight = $derived(Math.max(32, textRoom(13) * 2));
   const labelHeight = $derived(textRoom(24) + textRoom(16) + 2);
   const above = $derived(!wide && fit.above);
@@ -373,6 +373,11 @@
   .slot-row.target { background: var(--target); outline: 2.5px dashed var(--highlight); outline-offset: -2.5px; }
   .row-header { display: flex; align-items: center; gap: 8px; padding-left: 4px; }
   .row-label { display: flex; flex-direction: column; gap: 2px; min-width: 0; color: var(--on-felt); }
+  @media (max-height: 460px) {
+    .wide-felt .row-label { gap: 0; }
+    .wide-felt .row-label .title-medium { font-size: min(1rem, 16px); line-height: 1.2; }
+    .wide-felt .row-label .state { font-size: min(0.8125rem, 13px); line-height: 1.15; }
+  }
   .row-label.fill { flex: 1; }
   .state { color: var(--on-felt); font-weight: 500; overflow-wrap: anywhere; }
   .state.hl { color: var(--highlight); font-weight: 700; }
