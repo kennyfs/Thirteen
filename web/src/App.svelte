@@ -155,13 +155,19 @@
   main { flex: 1; min-height: 0; min-width: 0; position: relative; }
   nav[hidden] { display: none; }
   nav { flex: none; display: flex; justify-content: space-around; height: 80px; background: var(--surface-container); }
-  .wide nav { flex-direction: column; justify-content: flex-start; gap: 12px; height: auto; width: 88px; padding-top: 12px; background: var(--surface); }
+  .wide nav { flex-direction: column; justify-content: flex-start; gap: 12px; height: auto; width: 88px; padding-top: 12px; background: var(--surface);
+    overflow-y: auto; scrollbar-width: none; }
   nav button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: none; background: none;
     color: var(--on-surface-variant); cursor: pointer; font-size: 0.75rem; font-weight: 500; padding: 0; min-width: 0; }
   .wide nav button { flex: none; padding: 4px 0; }
   nav button.on { color: var(--on-surface); }
   .pill { width: 64px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; }
   .wide .pill { width: 56px; }
+  @media (max-height: 460px) {
+    .wide nav { gap: 4px; padding: 4px 0; justify-content: space-evenly; }
+    .wide nav button { gap: 2px; padding: 2px 0; }
+    .wide .pill { height: 28px; }
+  }
   nav button.on .pill { background: var(--secondary-container); color: var(--on-secondary-container); }
   nav button:hover .pill { background: var(--surface-container-highest); }
   .label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
