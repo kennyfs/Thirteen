@@ -65,6 +65,17 @@ val ROW_STACK_GAP = 6.dp
 /** The height of the wide page's buttons. */
 val BAR_HEIGHT = 44.dp
 
+/**
+ * The least height of a wide arranging table (arrangeFit's wide branch) with the hand's cards still finger-sized
+ * (36 dp wide): the felt's padding, three rows at least as tall as their labels, and the hand. A page that holds the
+ * table among other things (the tutorial's practice) scrolls below this rather than crush the cards.
+ */
+fun wideArrangeMinHeight(u: Dp): Dp {
+  val label = u * (40 / 14f) + 2.dp
+  val card = 36.dp
+  return 6.dp + 12.dp + ROW_PAD * 6 + ROW_STACK_GAP * 2 + 6.dp + maxOf(label, card * 1.4f) * 3 + card * (1.4f + 0.22f)
+}
+
 /** How the arranging page is laid out: the card's width (the rows' and the hand's), and how it is arranged. */
 /**
  * `card`: the rows' cards; `hand`: the hand's (larger on a wide page when that fills the width, see ROWS_TO_HAND);

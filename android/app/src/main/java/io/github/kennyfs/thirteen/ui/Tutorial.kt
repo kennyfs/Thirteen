@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -82,6 +84,16 @@ private const val PAGES = 7
 @Composable
 fun TutorialPage(vm: AppViewModel, onBack: () -> Unit, onPlay: () -> Unit, onTour: () -> Unit) {
   var page by rememberSaveable { mutableStateOf(0) }
+  // A short window (a phone sideways): on the practice page the page turns move up beside the title and the heading
+  // shares a line with its prompt, so the table keeps the height its cards need (the web's Tutorial.svelte alike).
+  val window = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
+  val short = with(androidx.compose.ui.platform.LocalDensity.current) { window.height.toDp() < 480.dp }
+  val turnsAbove = short && page == 4
+  val prev = @Composable { TextButton(onClick = { page = (page - 1).coerceAtLeast(0) }, enabled = page > 0) { Text(stringResource(R.string.tut_prev)) } }
+  val next = @Composable {
+    if (page < PAGES - 1) Button(onClick = { page++ }, Modifier.testTag("tut_next")) { Text(stringResource(R.string.tut_next)) }
+    else Button(onClick = onPlay, Modifier.testTag("tut_next")) { Text(stringResource(R.string.tut_done)) }
+  }
   Column(Modifier.fillMaxSize()) {
     TitleBar(stringResource(R.string.tut_title), onBack = onBack) {
       if (hasGlossary()) {
@@ -90,10 +102,11 @@ fun TutorialPage(vm: AppViewModel, onBack: () -> Unit, onPlay: () -> Unit, onTou
         if (glossary) GlossaryDialog(null) { glossary = false }
       }
       Text(stringResource(R.string.tut_page, page + 1, PAGES), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+      if (turnsAbove) { prev(); next() }
     }
     Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
       val content = Modifier.readable(760.dp).fillMaxWidth().padding(horizontal = 16.dp)
-      if (page == 4) TryPage(vm, content.fillMaxSize().padding(bottom = 8.dp))
+      if (page == 4) TryPage(vm, short, content.fillMaxSize().padding(bottom = 8.dp))
       else Column(content.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         when (page) {
           0 -> GoalPage()
@@ -105,9 +118,10 @@ fun TutorialPage(vm: AppViewModel, onBack: () -> Unit, onPlay: () -> Unit, onTou
         }
       }
     }
+    if (!turnsAbove) {
     HorizontalDivider()
     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-      TextButton(onClick = { page = (page - 1).coerceAtLeast(0) }, enabled = page > 0) { Text(stringResource(R.string.tut_prev)) }
+      prev()
       Spacer(Modifier.weight(1f))
       Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         repeat(PAGES) { i ->
@@ -115,8 +129,8 @@ fun TutorialPage(vm: AppViewModel, onBack: () -> Unit, onPlay: () -> Unit, onTou
         }
       }
       Spacer(Modifier.weight(1f))
-      if (page < PAGES - 1) Button(onClick = { page++ }, Modifier.testTag("tut_next")) { Text(stringResource(R.string.tut_next)) }
-      else Button(onClick = onPlay, Modifier.testTag("tut_next")) { Text(stringResource(R.string.tut_done)) }
+      next()
+    }
     }
   }
 }
@@ -240,7 +254,7 @@ private fun EndPage(onPlay: () -> Unit, onTour: () -> Unit) {
 
 /** The hand to try on the real table, then the AI's verdict on it: its rank, and the best rows. */
 @Composable
-private fun TryPage(vm: AppViewModel, modifier: Modifier) {
+private fun TryPage(vm: AppViewModel, short: Boolean, modifier: Modifier) {
   val scope = rememberCoroutineScope()
   val res = LocalContext.current.resources
   val arranger = remember { Arranger(scope, { vm.error = it }) { row, free -> res.getString(R.string.row_room, res.getStringArray(R.array.row_names)[row], free) } }
@@ -270,7 +284,24 @@ private fun TryPage(vm: AppViewModel, modifier: Modifier) {
     }
   }
   val v = verdict
-  if (v == null) Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+  if (v == null && short) BoxWithConstraints(modifier) {
+    // Sideways the table takes the height under the heading's line, but never less than its cards need: at a large
+    // font the page scrolls instead.
+    val density = LocalDensity.current
+    var head by remember { mutableStateOf(0.dp) }
+    val table = (maxHeight - head - 8.dp).coerceAtLeast(wideArrangeMinHeight(textRoom(14)))
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      Row(
+        Modifier.padding(top = 4.dp).onSizeChanged { head = with(density) { it.height.toDp() } },
+        horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Text(stringResource(R.string.tut_try_title), style = MaterialTheme.typography.titleLarge)
+        Box(Modifier.weight(1f)) { Body(stringResource(R.string.tut_try_text), small = true) }
+      }
+      if (rules.isNotEmpty())
+        Arranging(arranger, Rules.values(rules)["wheel"]?.toInt() ?: 0, checking, stringResource(R.string.tut_try_check), Modifier.height(table)) { check() }
+    }
+  } else if (v == null) Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
     Heading(R.string.tut_try_title)
     Body(stringResource(R.string.tut_try_text))
     if (rules.isNotEmpty())
