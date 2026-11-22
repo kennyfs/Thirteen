@@ -178,8 +178,14 @@ export class App {
     return { hands: store.getNum('session.hands', 0), totals: [0, 1, 2, 3].map((i) => store.getNum(`session.total${i}`, 0)) };
   }
 
+  /** Counts the deals: work begun for one hand writes nothing once another is dealt (a double tap on Next deals twice). */
+  private dealNo = 0;
+  /** A hand being confirmed: a second tap waits for nothing and does nothing. */
+  private confirming = false;
+
   /** Deals a new hand (`fixed`: the four hands, the player's first). */
   async deal(fixed?: number[][], again = false) {
+    const no = ++this.dealNo;
     const done = this.current;
     if (done) this.prev = done;
     nav.leave('last');
@@ -190,9 +196,12 @@ export class App {
     nav.leave('analysis');
     this.gameAnalysis = null;
     const hands = fixed ?? (await engine.deal());
+    if (no !== this.dealNo) return;
     this.hand = hands[0];
     this.others = hands.slice(1);
-    this.gameRules = await engine.rulesFull(R.specString(this.ruleSpec));
+    const full = await engine.rulesFull(R.specString(this.ruleSpec));
+    if (no !== this.dealNo) return;
+    this.gameRules = full;
     this.gameValues = R.values(this.gameRules);
     this.play.reset(hands[0], this.gameRules);
     // Totals under other rules are on another scale: they start over.
@@ -218,14 +227,19 @@ export class App {
   }
 
   confirm() {
+    if (this.confirming || this.result) return;
+    this.confirming = true;
+    const no = this.dealNo;
     this.catching((async () => {
       const ev = await this.play.eval();
+      if (no !== this.dealNo) return;
       if (ev.valid !== true) { this.error = t(ev.valid === null ? 'fill_rows_first' : 'fouled'); return; }
       this.waiting = true;
       try {
         const mine = $state.snapshot(this.play.rows) as Rows;
         const all = [mine, ...(await this.opponents!)];
         const sc = await engine.score(all, this.gameRules);
+        if (no !== this.dealNo) return;
         if (!this.replaying) {
           this.lastRecord = this.records.add(this.hand, mine, this.gameRules, Date.now() - this.dealtAt, sc.result[0]);
           this.recordCount = this.records.count();
@@ -236,7 +250,7 @@ export class App {
       } finally {
         this.waiting = false;
       }
-    })());
+    })().finally(() => { this.confirming = false; }));
   }
 
   /** The hand just finished, as its result pages show it; null while a hand is in play. */

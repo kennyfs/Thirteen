@@ -199,8 +199,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
   }
 
+  /** Counts the deals: work begun for one hand writes nothing once another is dealt (a double tap on Next deals twice). */
+  private var dealNo = 0
+  /** A hand being confirmed: a second tap does nothing. */
+  private var confirming = false
+
   /** Deals a new hand; tests pass `fixed` hands (the player's first). */
   fun deal(fixed: List<List<Int>>? = null, again: Boolean = false) = launchCatching {
+    val no = ++dealNo
     current?.let { prev = it }
     peek = 0
     replaying = again
@@ -209,9 +215,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     resultTab = 0
     gameAnalysis = null
     val hands = fixed ?: Engine.deal()
+    if (no != dealNo) return@launchCatching
     others = hands.drop(1)
     if (ruleValues.isEmpty()) loadRules()
-    gameRules = Engine.rulesFull(ruleSpec.spec())
+    val full = Engine.rulesFull(ruleSpec.spec())
+    if (no != dealNo) return@launchCatching
+    gameRules = full
     gameValues = Rules.values(gameRules)
     play.reset(hands[0], gameRules)
     // Totals under other rules are on another scale: they start over.
@@ -231,16 +240,27 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
   fun placeInto(row: Int) = play.placeInto(row)
 
-  fun confirm() = launchCatching {
+  fun confirm() {
+    if (confirming || result != null) return
+    confirming = true
+    val no = dealNo
+    launchCatching {
+      try { confirmNow(no) } finally { confirming = false }
+    }
+  }
+
+  private suspend fun confirmNow(no: Int) {
     val eval = play.eval()
+    if (no != dealNo) return
     if (eval.valid != true) {
       error = str(if (eval.valid == null) R.string.fill_rows_first else R.string.fouled)
-      return@launchCatching
+      return
     }
     waiting = true
     try {
       val all = listOf(rows) + opponents!!.await()
       val score = Engine.score(all, gameRules)
+      if (no != dealNo) return
       // A hand played again is practice: it is neither in the records nor in the totals.
       if (!replaying) {
         lastRecord = records.add(hand, rows, 0.0, gameRules, System.currentTimeMillis() - dealtAt, score.result[0])

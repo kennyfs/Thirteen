@@ -41,9 +41,13 @@ class RecordStore(dir: File) {
     return rec
   }
 
+  /**
+   * A line that does not read (a write cut short when the app was stopped) is skipped, not the whole file: the file
+   * is only ever added to, so the line stays there as it was.
+   */
   @Synchronized
   fun all(): List<JSONObject> =
-    if (!file.exists()) emptyList() else file.readLines().filter { it.isNotBlank() }.map(::JSONObject)
+    if (!file.exists()) emptyList() else file.readLines().filter { it.isNotBlank() }.mapNotNull { runCatching { JSONObject(it) }.getOrNull() }
 
   @Synchronized
   fun count(): Int = if (!file.exists()) 0 else file.readLines().count { it.isNotBlank() }
