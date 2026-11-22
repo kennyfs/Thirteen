@@ -11,6 +11,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import io.github.kennyfs.thirteen.ui.textRoom
+import io.github.kennyfs.thirteen.ui.shrinking
 import io.github.kennyfs.thirteen.ui.cardSizes
 import io.github.kennyfs.thirteen.ui.LocalCardSizes
 import android.util.Log
@@ -53,6 +54,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -237,6 +241,15 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
   // In a battle the other screens are out of reach (no bar or rail), until the player leaves it.
   LaunchedEffect(battle.inRoom) { if (battle.inRoom) tab = Screen.BATTLE }
   BackHandler(tab != Screen.PLAY && stack.size == 1 && !battle.inRoom) { tab = Screen.PLAY }
+  // The bar's labels on one line, all one size: at large font sizes a long word (English "Practice", "Settings") makes
+  // them all smaller rather than being cut or standing out smaller than the rest.
+  val navLabel = MaterialTheme.typography.labelMedium.let { style ->
+    val measurer = rememberTextMeasurer()
+    val labels = Screen.entries.map { stringResource(it.label) }
+    val slot = if (type == NavigationSuiteType.NavigationBar) window.width / Screen.entries.size - with(LocalDensity.current) { 16.dp.roundToPx() } else Int.MAX_VALUE
+    val widest = labels.maxOf { measurer.measure(it, style, maxLines = 1).size.width }
+    if (widest <= slot) style else style.copy(fontSize = style.fontSize * (slot.toFloat() / widest).coerceAtLeast(0.6f))
+  }
   CompositionLocalProvider(LocalTour provides tour, LocalOpenTutorial provides ::openTutorial) {
   NavigationSuiteScaffold(
     navigationSuiteItems = {
@@ -258,7 +271,7 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
           },
           // Practice's cards are held at the bottom, fanned out from there.
           icon = { Icon(if (selected) s.selectedIcon else s.icon, null, if (s == Screen.PLAY) Modifier.graphicsLayer(scaleY = -1f) else Modifier) },
-          label = { Text(stringResource(s.label), maxLines = 1) },
+          label = { Text(stringResource(s.label), style = navLabel, maxLines = 1, autoSize = shrinking(navLabel)) },
           modifier = Modifier.testTag("nav_${s.name}").tourAnchor("nav_${s.name}"),
           alwaysShowLabel = true,
         )
