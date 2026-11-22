@@ -241,14 +241,22 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
   // In a battle the other screens are out of reach (no bar or rail), until the player leaves it.
   LaunchedEffect(battle.inRoom) { if (battle.inRoom) tab = Screen.BATTLE }
   BackHandler(tab != Screen.PLAY && stack.size == 1 && !battle.inRoom) { tab = Screen.PLAY }
-  // The bar's labels on one line, all one size: at large font sizes a long word (English "Practice", "Settings") makes
-  // them all smaller rather than being cut or standing out smaller than the rest.
+  // The labels on one line, all one size: at large font sizes a long word on the bar (English "Practice", "Settings"),
+  // or the five items one above another on the rail of a short phone sideways, make them all smaller rather than cut.
   val navLabel = MaterialTheme.typography.labelMedium.let { style ->
     val measurer = rememberTextMeasurer()
     val labels = Screen.entries.map { stringResource(it.label) }
-    val slot = if (type == NavigationSuiteType.NavigationBar) window.width / Screen.entries.size - with(LocalDensity.current) { 16.dp.roundToPx() } else Int.MAX_VALUE
-    val widest = labels.maxOf { measurer.measure(it, style, maxLines = 1).size.width }
-    if (widest <= slot) style else style.copy(fontSize = style.fontSize * (slot.toFloat() / widest).coerceAtLeast(0.6f))
+    val d = LocalDensity.current
+    val scale = if (type == NavigationSuiteType.NavigationBar) {
+      val slot = window.width / Screen.entries.size - with(d) { 16.dp.roundToPx() }
+      slot.toFloat() / labels.maxOf { measurer.measure(it, style, maxLines = 1).size.width }
+    } else {
+      // A rail item is its indicator, the gaps (about 52 dp together) and a line of label.
+      val slot = window.height / Screen.entries.size - with(d) { 52.dp.roundToPx() }
+      slot.toFloat() / measurer.measure(labels.first(), style, maxLines = 1).size.height
+    }
+    if (scale >= 1f) style
+    else scale.coerceAtLeast(0.6f).let { k -> style.copy(fontSize = style.fontSize * k, lineHeight = style.lineHeight * k) }
   }
   CompositionLocalProvider(LocalTour provides tour, LocalOpenTutorial provides ::openTutorial) {
   NavigationSuiteScaffold(

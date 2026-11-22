@@ -289,7 +289,7 @@ private fun TryPage(vm: AppViewModel, short: Boolean, modifier: Modifier) {
     // font the page scrolls instead.
     val density = LocalDensity.current
     var head by remember { mutableStateOf(0.dp) }
-    val table = (maxHeight - head - 8.dp).coerceAtLeast(wideArrangeMinHeight(textRoom(14)))
+    val table = (maxHeight - head - 8.dp).coerceAtLeast(wideArrangeMinHeight())
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
       Row(
         Modifier.padding(top = 4.dp).onSizeChanged { head = with(density) { it.height.toDp() } },
