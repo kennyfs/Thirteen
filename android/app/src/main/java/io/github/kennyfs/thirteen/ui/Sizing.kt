@@ -92,10 +92,15 @@ fun arrangeFit(areaW: Dp, areaH: Dp, wide: Boolean, u: Dp, maxCard: Dp = MAX_PLA
     val byHandWidth = (w - HAND_GAP * 12 - (SUIT_GAP - HAND_GAP) * 3) / 13
     // The rows' padding and gaps, the gap above the hand; three rows' cards, then the hand's and a picked card's lift.
     val fixed = ROW_PAD * 6 + ROW_STACK_GAP * 2 + 6.dp
-    var byHeight = (h - fixed) / (1.4f * 4 + 0.22f)
-    // A label taller than the card makes its row taller.
+    val byHeight = (h - fixed) / (1.4f * 4 + 0.22f)
+    // A label taller than the card makes its row taller. Then each row is as tall as its label already: its cards may
+    // be as tall too, and only the hand takes the height that is left (the web's sizing.ts alike).
     val label = room(40) + 2.dp
-    if (byHeight * 1.4f < label) byHeight = (h - fixed - label * 3) / (1.4f + 0.22f)
+    if (byHeight * 1.4f < label) {
+      val rowCard = minOf(byRowsWidth, label / 1.4f, maxCard).down().coerceAtLeast(18.dp)
+      val handCard = minOf(byHandWidth, (h - fixed - label * 3) / (1.4f + 0.22f), maxCard).down().coerceAtLeast(18.dp)
+      return ArrangeFit(rowCard, false, 13, handCard, minOf(rowCard, handCard))
+    }
     val s = minOf(byRowsWidth, byHandWidth, byHeight, maxCard).down().coerceAtLeast(18.dp)
     // A larger hand, as wide as the felt at most, with the rows as large as the height then leaves them.
     val avail = h - fixed
