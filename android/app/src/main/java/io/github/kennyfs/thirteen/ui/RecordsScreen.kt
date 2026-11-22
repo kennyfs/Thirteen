@@ -270,7 +270,8 @@ fun RecordsPage(vm: AppViewModel) {
   var confirmResetScores by rememberSaveable { mutableStateOf(false) }
   var shown by rememberSaveable { mutableStateOf(20) }
   var kind by rememberSaveable { mutableStateOf(RecordKind.PRACTICE) }
-  var acting by remember { mutableStateOf<JSONObject?>(null) }
+  var actingJson by rememberSaveable { mutableStateOf<String?>(null) }
+  val acting = remember(actingJson) { actingJson?.let { runCatching { JSONObject(it) }.getOrNull() } }
   LaunchedEffect(Unit) { vm.refreshRecords() }
   // Newest first; re-read whenever the count changes.
   val recs = remember(vm.recordCount) { vm.records.all().asReversed() }
@@ -298,10 +299,10 @@ fun RecordsPage(vm: AppViewModel) {
       if (entries.isNotEmpty()) {
         SectionHeader(stringResource(if (kind == RecordKind.PRACTICE) R.string.records_list else R.string.records_battles))
         Column(Modifier.padding(horizontal = 16.dp)) {
-          if (kind == RecordKind.PRACTICE) RecordList(ofKind.take(shown), vm) { acting = it }
+          if (kind == RecordKind.PRACTICE) RecordList(ofKind.take(shown), vm) { actingJson = it.toString() }
           else for (e in entries.take(shown)) {
             if (e is BattleRecord) BattleLine(vm, e) { vm.openedBattle = e }
-            else RecordLine(e as JSONObject, Modifier.clickable { acting = e }, vm)
+            else RecordLine(e as JSONObject, Modifier.clickable { actingJson = e.toString() }, vm)
             HorizontalDivider()
           }
           if (entries.size > shown) TextButton(onClick = { shown += 50 }) { Text(stringResource(R.string.show_more)) }
@@ -320,7 +321,7 @@ fun RecordsPage(vm: AppViewModel) {
       SectionHeader(stringResource(R.string.favorites_title))
       if (saved.isEmpty())
         Text(stringResource(R.string.favorites_empty), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-      else Column(Modifier.padding(horizontal = 16.dp)) { RecordList(saved, vm) { acting = it } }
+      else Column(Modifier.padding(horizontal = 16.dp)) { RecordList(saved, vm) { actingJson = it.toString() } }
 
       SectionHeader(stringResource(R.string.records_share_title))
       Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -356,7 +357,7 @@ fun RecordsPage(vm: AppViewModel) {
       }
     }
   }
-  acting?.let { HandActions(vm, it) { acting = null } }
+  acting?.let { HandActions(vm, it) { actingJson = null } }
   if (confirmResetScores)
     AlertDialog(
       onDismissRequest = { confirmResetScores = false },

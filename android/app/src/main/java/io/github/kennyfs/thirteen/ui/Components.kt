@@ -177,7 +177,7 @@ fun <T> SelectRow(
   icons: Map<T, ImageVector> = emptyMap(),
   enabled: Boolean = true,
 ) {
-  var open by remember { mutableStateOf(false) }
+  var open by rememberSaveable { mutableStateOf(false) }
   val current = options.firstOrNull { it.first == value }?.second ?: options.firstOrNull()?.second
   SettingRow(
     title, current, arrow = false, onClick = { open = true }, modifier = modifier, enabled = enabled,
@@ -238,7 +238,7 @@ fun <T> SelectRow(
 /** A compact button that opens a menu of choices, for title bars: the current choice and a triangle. */
 @Composable
 fun <T> MenuChip(label: String, options: List<Pair<T, String>>, onPick: (T) -> Unit, modifier: Modifier = Modifier) {
-  var open by remember { mutableStateOf(false) }
+  var open by rememberSaveable { mutableStateOf(false) }
   Box(modifier) {
     Chip(label, onClick = { open = true }, trailingMenu = true)
     DropdownMenu(expanded = open, onDismissRequest = { open = false }) {

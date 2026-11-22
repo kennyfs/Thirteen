@@ -199,7 +199,7 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
   }
   fun open(page: SettingsPage) = push(Dest.valueOf(page.name))
   // The tutorial, on top of the screen it is opened from; and the tour, which goes from screen to screen.
-  val tour = remember { TourState() }
+  val tour = rememberSaveable(saver = TourState.Saver) { TourState() }
   fun openTutorial() { if (Dest.TUTORIAL !in pushed) push(Dest.TUTORIAL) }
   fun closeTutorial() { stacks = stacks + (tab.name to stacks.getValue(tab.name).filter { it != Dest.TUTORIAL.name }) }
   LaunchedEffect(tour.step) {

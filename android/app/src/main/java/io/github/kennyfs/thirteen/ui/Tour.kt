@@ -32,6 +32,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
@@ -81,9 +82,9 @@ val TOUR_STEPS = listOf(
  * The tour of the app: from screen to screen (the app shows each step's screen), a light on one element of it. It
  * deals, plays and records nothing, so leaving it at any step (Skip, or Back) leaves everything as it was.
  */
-class TourState {
+class TourState(initialStep: Int = -1) {
   /** The step shown, -1 when the tour is not on. */
-  var step by mutableIntStateOf(-1); private set
+  var step by mutableIntStateOf(initialStep); private set
   val on get() = step >= 0
   /** Where each anchored element is, in the root's coordinates. */
   val anchors = mutableStateMapOf<String, Rect>()
@@ -92,6 +93,10 @@ class TourState {
   fun next() { if (step >= TOUR_STEPS.size - 1) end() else step++ }
   fun prev() { if (step > 0) step-- }
   fun end() { step = -1 }
+
+  companion object {
+    val Saver = Saver<TourState, Int>(save = { it.step }, restore = { TourState(it) })
+  }
 }
 
 val LocalTour = staticCompositionLocalOf { TourState() }

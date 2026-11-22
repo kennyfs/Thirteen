@@ -246,10 +246,13 @@ fun Arranging(
   ) {
     val wide = maxWidth > maxHeight * 1.15f
     val fit = arrangeFit(maxWidth, maxHeight, wide, textRoom(14), maxCard)
+    // Hoisted above the wide/tall branch so rotating between portrait and landscape keeps the dialog open.
+    var helpOpen by rememberSaveable { mutableStateOf(false) }
     CompositionLocalProvider(LocalKeepPicked provides keep) {
-      if (wide) ArrangeWide(vm, wheel, busy, confirmLabel, confirmShort, fit.card, fit.hand, onConfirm)
-      else ArrangeTall(vm, wheel, busy, confirmLabel, confirmShort, fit, onConfirm)
+      if (wide) ArrangeWide(vm, wheel, busy, confirmLabel, confirmShort, fit.card, fit.hand, { helpOpen = true }, onConfirm)
+      else ArrangeTall(vm, wheel, busy, confirmLabel, confirmShort, fit, { helpOpen = true }, onConfirm)
     }
+    if (helpOpen) ArrangeHelpDialog { helpOpen = false }
   }
 }
 
@@ -282,7 +285,7 @@ private fun Felt(modifier: Modifier = Modifier, content: @Composable () -> Unit)
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, confirmShort: String, card: Dp, hand: Dp, onConfirm: () -> Unit) {
+private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, confirmShort: String, card: Dp, hand: Dp, onHelp: () -> Unit, onConfirm: () -> Unit) {
   Felt(Modifier.fillMaxSize().padding(start = 8.dp, end = 12.dp, bottom = 6.dp)) {
     Column(Modifier.fillMaxSize().padding(6.dp), verticalArrangement = Arrangement.SpaceBetween, horizontalAlignment = Alignment.CenterHorizontally) {
       val density = LocalDensity.current
@@ -310,7 +313,7 @@ private fun ArrangeWide(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
               val tool = Modifier.weight(1f).fillMaxHeight()
               FeltToolButton(labels[0], Icons.AutoMirrored.Filled.Undo, vm.canUndo, tool, mode) { vm.undo() }
               FeltToolButton(labels[1], Icons.Outlined.ClearAll, vm.canClear, tool, mode) { vm.clearRows() }
-              ArrangeHelp(modifier = tool, mode = mode)
+              FeltToolButton(labels[2], Icons.AutoMirrored.Outlined.HelpOutline, true, tool, mode, onHelp)
             }
           }
           ConfirmButton(vm, busy, confirmLabel, confirmShort, Modifier.fillMaxWidth().weight(1f), MaterialTheme.typography.titleLarge, onConfirm)
@@ -363,7 +366,7 @@ private fun Modifier.swipeUnplace(vm: Arranger, placed: List<Int>, bounds: Map<I
   }
 
 @Composable
-private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, confirmShort: String, fit: ArrangeFit, onConfirm: () -> Unit) {
+private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: String, confirmShort: String, fit: ArrangeFit, onHelp: () -> Unit, onConfirm: () -> Unit) {
   Column(Modifier.fillMaxSize()) {
     Felt(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp)) {
       BoxWithConstraints(Modifier.fillMaxSize().padding(8.dp)) {
@@ -399,7 +402,9 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
       OutlinedIconButton(onClick = vm::clearRows, Modifier.size(46.dp), enabled = vm.canClear) {
         Icon(Icons.Outlined.ClearAll, stringResource(R.string.take_all))
       }
-      ArrangeHelp(onFelt = false)
+      OutlinedIconButton(onClick = onHelp, Modifier.size(46.dp)) {
+        Icon(Icons.AutoMirrored.Outlined.HelpOutline, stringResource(R.string.help))
+      }
       Button(
         onClick = onConfirm, Modifier.weight(1f).height(BIG_BUTTON).tourAnchor("confirm"), enabled = !busy && vm.rowsEval?.valid == true,
         shape = RoundedCornerShape(18.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp),
@@ -411,23 +416,17 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
   }
 }
 
-/** A (?) button: how to set a hand, in a dialog. */
+/** How to set a hand, in a dialog. */
 @Composable
-private fun ArrangeHelp(onFelt: Boolean = true, modifier: Modifier = Modifier.width(52.dp), mode: LabelMode = LabelMode.NONE) {
-  var open by rememberSaveable { mutableStateOf(false) }
-  val t = LocalTable.current
+private fun ArrangeHelpDialog(onDismiss: () -> Unit) {
   val openTutorial = LocalOpenTutorial.current
-  val label = stringResource(R.string.help)
-  if (onFelt) FeltToolButton(label, Icons.AutoMirrored.Outlined.HelpOutline, true, modifier, mode) { open = true }
-  else OutlinedIconButton(onClick = { open = true }, Modifier.size(46.dp)) { Icon(Icons.AutoMirrored.Outlined.HelpOutline, label) }
-  if (open)
-    AlertDialog(
-      onDismissRequest = { open = false },
-      confirmButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.ok)) } },
-      dismissButton = { TextButton(onClick = { open = false; openTutorial() }) { Text(stringResource(R.string.tut_title)) } },
-      title = { Text(stringResource(R.string.arrange_help_title)) },
-      text = { Text(stringResource(R.string.arrange_help), Modifier.verticalScroll(rememberScrollState()), style = MaterialTheme.typography.bodyLarge) },
-    )
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.ok)) } },
+    dismissButton = { TextButton(onClick = { onDismiss(); openTutorial() }) { Text(stringResource(R.string.tut_title)) } },
+    title = { Text(stringResource(R.string.arrange_help_title)) },
+    text = { Text(stringResource(R.string.arrange_help), Modifier.verticalScroll(rememberScrollState()), style = MaterialTheme.typography.bodyLarge) },
+  )
 }
 
 /** What a row says next to its cards: where the picked cards can go, the row's hand, or how full it is. */
