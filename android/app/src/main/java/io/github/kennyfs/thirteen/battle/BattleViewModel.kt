@@ -142,9 +142,13 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
 
   // ---- Into a room ----
 
-  fun create(mode: Mode) = start(Create(defaults(mode)))
+  fun create(mode: Mode) {
+    if (busy || inRoom) return
+    start(Create(defaults(mode)))
+  }
 
   fun join() {
+    if (busy || inRoom) return
     if (!Regex("\\d{6}").matches(pin)) {
       error = str(R.string.battle_pin_bad)
       return
@@ -236,13 +240,22 @@ class BattleViewModel(app: Application) : AndroidViewModel(app), LinkListener {
 
   fun submit() {
     val d = deal ?: return
+    if (submitting) return
+    submitting = true
     viewModelScope.launch {
-      val eval = arranger.eval()
+      val eval = try {
+        arranger.eval()
+      } catch (e: Exception) {
+        if (deal === d) submitting = false
+        error = e.message ?: e.toString()
+        return@launch
+      }
+      if (deal !== d) return@launch
       if (eval.valid != true) {
+        submitting = false
         error = str(if (eval.valid == null) R.string.fill_rows_first else R.string.fouled)
         return@launch
       }
-      submitting = true
       link?.send(Submit(d.hand, arranger.rows))
     }
   }

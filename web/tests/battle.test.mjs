@@ -219,6 +219,34 @@ try {
     assert.equal(saved.players[1].total, 0.1, 'player 1 final total is saved');
     b.dismiss();
   });
+
+  await test('double-tap on create opens one socket, and double-tap on submit sends one submit', async () => {
+    const { b } = makeBattle();
+    b.create('PUZZLE');
+    b.create('PUZZLE');
+    assert.equal(sockets.length, 1, 'second create while busy is ignored');
+    const ws = sockets.at(-1);
+    ws.open();
+    ws.recv({ t: 'welcome', version: 2 });
+    ws.recv({ t: 'joined', room: 'r1', you: 0, token: 'tok' });
+    ws.recv({ t: 'state', room: ROOM });
+    ws.recv({ t: 'deal', hand: 0, cards: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] });
+
+    // Double-tap submit before arranger.eval() resolves.
+    const p1 = b.submit();
+    const p2 = b.submit();
+    await Promise.all([p1, p2]);
+    const submits = ws.sent.filter((m) => m.t === 'submit');
+    assert.equal(submits.length, 1, 'only one submit sent on double tap');
+
+    // A new deal arriving while submit is evaluating discards the stale submit.
+    ws.recv({ t: 'deal', hand: 1, cards: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] });
+    const p3 = b.submit();
+    ws.recv({ t: 'deal', hand: 2, cards: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] });
+    await p3;
+    assert.equal(ws.sent.filter((m) => m.t === 'submit' && m.hand === 1).length, 0, 'stale submit not sent');
+    b.dismiss();
+  });
 } finally {
   globalThis.setTimeout = realSetTimeout;
   await server.close();

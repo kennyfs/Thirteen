@@ -339,7 +339,10 @@ export class Battle {
 
   // ---- Into a room ----
 
-  create(mode: Mode) { this.start({ t: 'create', settings: this.defaults(mode) }); }
+  create(mode: Mode) {
+    if (this.busy || this.inRoom) return;
+    this.start({ t: 'create', settings: this.defaults(mode) });
+  }
 
   join() {
     if (this.busy || this.inRoom) return;
@@ -390,10 +393,20 @@ export class Battle {
 
   async submit() {
     const d = this.deal;
-    if (!d) return;
-    const ev = await this.arranger.eval();
-    if (ev.valid !== true) return this.onError(t(ev.valid === null ? 'fill_rows_first' : 'fouled'));
+    if (!d || this.submitting) return;
     this.submitting = true;
+    let ev;
+    try {
+      ev = await this.arranger.eval();
+    } catch (e) {
+      if (this.deal === d) this.submitting = false;
+      return this.onError((e as Error).message ?? String(e));
+    }
+    if (this.deal !== d) return;
+    if (ev.valid !== true) {
+      this.submitting = false;
+      return this.onError(t(ev.valid === null ? 'fill_rows_first' : 'fouled'));
+    }
     this.send({ t: 'submit', hand: d.hand, rows: $state.snapshot(this.arranger.rows) });
   }
 
