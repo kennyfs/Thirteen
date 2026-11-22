@@ -78,7 +78,8 @@
       {#if peek}<span class="chip static">{t('last_hand')}</span>{/if}
       <span class="title-large nowrap">{f.replaying ? t('replay_title') : t('hand_n', f.handNo)}</span>
       <span class="headline-small nowrap" class:good={mine > 0} class:bad={mine < 0}>{t('this_hand', signed(mine))}</span>
-      <span class="body-large dim ellipsis grow">{t('total_so_far', signed(f.totals[0]))}</span>
+      <!-- Wide, the player's own line under it says the total, as on the app. -->
+      {#if ui.wide}<span class="grow"></span>{:else}<span class="body-large dim ellipsis grow">{t('total_so_far', signed(f.totals[0]))}</span>{/if}
       {#if ui.wide}{@render keepers(true)}{@render resultActions(true)}{/if}
     </div>
     <div class="felt result-felt" class:wide={ui.wide}>
@@ -143,7 +144,7 @@
     .result-head.wide { gap: 6px; padding: 0 8px 0 12px; }
     .result-head.wide .headline-small { font-size: 1.125rem; }
     .result-head.wide :global(.btn) { padding: 0 10px; font-size: 0.8125rem; }
-    .result-head.wide :global(.btn.icon) { width: 38px; min-height: 38px; padding: 0; }
+    .result-head.wide :global(.btn.icon) { width: 44px; min-height: 44px; padding: 0; }
   }
   .grow { flex: 1; min-width: 0; }
   .result-felt { flex: 1; min-height: 0; margin: 0 4px; padding: 4px 2px; }
