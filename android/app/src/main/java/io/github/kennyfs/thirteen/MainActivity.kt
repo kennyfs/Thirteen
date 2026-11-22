@@ -57,6 +57,7 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -94,6 +95,7 @@ import io.github.kennyfs.thirteen.ui.RecordsPage
 import io.github.kennyfs.thirteen.ui.RulesPage
 import io.github.kennyfs.thirteen.ui.SettingsPage
 import io.github.kennyfs.thirteen.ui.SettingsScreen
+import io.github.kennyfs.thirteen.ui.theme.LocalTableDensity
 import io.github.kennyfs.thirteen.ui.theme.ThirteenTheme
 import io.github.kennyfs.thirteen.ui.theme.isDark
 
@@ -293,7 +295,7 @@ private fun App(vm: AppViewModel, battle: BattleViewModel) {
     else WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom
     BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(sides))) {
       // The two sizes of card, for the room the pages have.
-      val sizes = cardSizes(maxWidth, maxHeight, textRoom(14))
+      val sizes = cardSizes(maxWidth, maxHeight, textRoom(14), with(LocalTableDensity.current) { 14.sp.toDp() })
       LaunchedEffect(sizes.play, sizes.other, sizes.battle) { Log.i("CardSizes", "$maxWidth x $maxHeight: play ${sizes.play}, battle ${sizes.battle}, other ${sizes.other}") }
       CompositionLocalProvider(LocalCardSizes provides sizes) {
       // A new screen from the bar or rail shows at once; a page opened in a screen slides in, briefly.

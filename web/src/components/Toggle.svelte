@@ -13,9 +13,9 @@
 
 <style>
   .group { display: flex; gap: 2px; }
-  button { flex: 1 1 0; min-width: 0; border: none; padding: 6px 10px; cursor: pointer; border-radius: 6px; font-weight: 500; font-size: 0.875rem;
+  button { flex: 1 1 0; min-width: 0; border: none; padding: 6px 10px; cursor: pointer; border-radius: 6px; font-weight: 500; font-size: calc(0.875 * var(--r, 1rem));
     background: var(--surface-container-highest); color: var(--on-surface); white-space: nowrap; }
-  button.big { font-size: 1rem; }
+  button.big { font-size: calc(1 * var(--r, 1rem)); }
   button.first { border-radius: 24px 6px 6px 24px; }
   button.last { border-radius: 6px 24px 24px 6px; }
   button.first.last { border-radius: 24px; }

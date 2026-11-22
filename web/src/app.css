@@ -55,7 +55,7 @@ html, body { margin: 0; height: 100%; }
 body {
   background: var(--surface); color: var(--on-surface);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
-  font-size: 1rem; line-height: 1.45; overscroll-behavior: none;
+  font-size: calc(1 * var(--r, 1rem)); line-height: 1.45; overscroll-behavior: none;
 }
 /* Han characters in each language's own forms: the page's lang (i18n.svelte.ts) picks the CJK fonts. */
 :root:lang(ja) body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, "Noto Sans JP", "Noto Sans CJK JP", sans-serif; }
@@ -69,15 +69,18 @@ body {
 button { font: inherit; color: inherit; }
 
 /* Material's sizes, a little firmer (AppTypography). */
-.title-large { font-size: 1.25rem; line-height: 1.625rem; font-weight: 700; }
-.title-medium { font-size: 1rem; line-height: 1.375rem; font-weight: 500; }
-.title-small { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
-.headline-small { font-size: 1.375rem; line-height: 1.875rem; font-weight: 700; }
-.body-large { font-size: 1rem; line-height: 1.4375rem; }
-.body-medium { font-size: 0.875rem; line-height: 1.25rem; }
-.body-small { font-size: 0.8125rem; line-height: 1.125rem; }
-.label-large { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
-.label-small { font-size: 0.75rem; line-height: 1rem; font-weight: 500; }
+/* The arranging screens' words (the area, the practice and battle headers) at most TABLE_FONT_MAX of the browser's
+   size, times the page's text size (sizing.ts, ui.svelte.ts's --table-r); the text styles go by --r, 1rem elsewhere. */
+.table-text { --r: var(--table-r, 1rem); font-size: var(--r); }
+.title-large { font-size: calc(1.25 * var(--r, 1rem)); line-height: calc(1.625 * var(--r, 1rem)); font-weight: 700; }
+.title-medium { font-size: calc(1 * var(--r, 1rem)); line-height: calc(1.375 * var(--r, 1rem)); font-weight: 500; }
+.title-small { font-size: calc(0.875 * var(--r, 1rem)); line-height: calc(1.25 * var(--r, 1rem)); font-weight: 500; }
+.headline-small { font-size: calc(1.375 * var(--r, 1rem)); line-height: calc(1.875 * var(--r, 1rem)); font-weight: 700; }
+.body-large { font-size: calc(1 * var(--r, 1rem)); line-height: calc(1.4375 * var(--r, 1rem)); }
+.body-medium { font-size: calc(0.875 * var(--r, 1rem)); line-height: calc(1.25 * var(--r, 1rem)); }
+.body-small { font-size: calc(0.8125 * var(--r, 1rem)); line-height: calc(1.125 * var(--r, 1rem)); }
+.label-large { font-size: calc(0.875 * var(--r, 1rem)); line-height: calc(1.25 * var(--r, 1rem)); font-weight: 500; }
+.label-small { font-size: calc(0.75 * var(--r, 1rem)); line-height: calc(1 * var(--r, 1rem)); font-weight: 500; }
 .dim { color: var(--on-surface-variant); }
 .good { color: var(--good); }
 .bad { color: var(--bad); }
@@ -87,13 +90,13 @@ button { font: inherit; color: inherit; }
 
 /* Buttons as Material 3's. */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 16px;
-  border-radius: 20px; border: none; cursor: pointer; font-weight: 500; font-size: 0.875rem; white-space: nowrap; user-select: none; }
+  border-radius: 20px; border: none; cursor: pointer; font-weight: 500; font-size: calc(0.875 * var(--r, 1rem)); white-space: nowrap; user-select: none; }
 .btn:disabled { cursor: default; opacity: 0.45; }
 .btn.filled { background: var(--primary); color: var(--on-primary); }
 .btn.tonal { background: var(--secondary-container); color: var(--on-secondary-container); }
 .btn.outlined { background: transparent; border: 1px solid var(--outline); color: var(--primary); }
 .btn.text { background: transparent; color: var(--primary); padding: 0 12px; }
-.btn.big { min-height: 56px; border-radius: 18px; font-size: 1rem; font-weight: 700; }
+.btn.big { min-height: 56px; border-radius: 18px; font-size: calc(1 * var(--r, 1rem)); font-weight: 700; }
 .btn.icon { padding: 0; width: 46px; min-height: 46px; border-radius: 23px; }
 .btn:not(:disabled):hover { filter: brightness(1.06); }
 /* Every control's keyboard focus, not only the buttons drawn as .btn (Mahjong-TW's): tabs, switches, rows, links, fields. */
@@ -103,9 +106,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .icon-svg { width: 24px; height: 24px; flex: none; fill: currentColor; }
 
 .chip { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 10px 0 14px; border-radius: 10px;
-  border: 1px solid var(--outline); background: transparent; cursor: pointer; font-size: 0.875rem; font-weight: 500; }
-.badge { display: inline-block; padding: 1px 7px; border-radius: 8px; font-size: 0.8125rem; font-weight: 500; white-space: nowrap; }
-.section-header { padding: 16px 16px 6px; color: var(--primary); font-size: 0.875rem; font-weight: 500; }
+  border: 1px solid var(--outline); background: transparent; cursor: pointer; font-size: calc(0.875 * var(--r, 1rem)); font-weight: 500; }
+.badge { display: inline-block; padding: 1px 7px; border-radius: 8px; font-size: calc(0.8125 * var(--r, 1rem)); font-weight: 500; white-space: nowrap; }
+.section-header { padding: 16px 16px 6px; color: var(--primary); font-size: calc(0.875 * var(--r, 1rem)); font-weight: 500; }
 @media (max-height: 500px) { .section-header { padding: 10px 16px 4px; } }
 .felt { background: var(--felt); color: var(--on-felt); border-radius: 10px; }
 /*

@@ -105,15 +105,24 @@ function tallFit(w0: number, h0: number, lu: number, maxCard: number, least = 20
 
 export interface CardSizes { play: number; other: number; record: number }
 
+/**
+ * The arranging screens' words (the practice page's header and table, the battle's while a hand is set, the tutorial's
+ * practice) at most this much larger than the browser's own size, times the page's text size: a larger font took the
+ * cards' room for the words alone. As the app's TABLE_FONT_MAX.
+ */
+export const TABLE_FONT_MAX = 1.5;
+
 /** The sizes for a window area `w` x `h` (what the screens share, beside the rail or above the bar). */
-export function cardSizes(w: number, h: number, u: number): CardSizes {
+export function cardSizes(w: number, h: number, u: number, tableU = u): CardSizes {
   const wide = w > h * 1.15;
-  const room = (sp: number) => u * (sp / 14);
+  // The arranging pages' words at the table's text size (TABLE_FONT_MAX): `tableU` for them, `u` for the others.
+  const room = (sp: number) => tableU * (sp / 14);
+  const otherRoom = (sp: number) => u * (sp / 14);
   const scoreLines = (room(16) * 4.6 + 8) * 4 > w - 28 ? 2 : 1;
   const header = wide ? 54 : 6 + Math.max(48, room(26)) + (room(20) + 6) * scoreLines;
-  const play = arrangeFit(w, h - header, wide, u).even;
+  const play = arrangeFit(w, h - header, wide, tableU).even;
   const other = wide
-    ? Math.min(lineCard(w * 0.66 - PAGE_PAD * 2), down(((h - Math.max(48, room(32)) - 6 - 12 - 4 * 3) / 4 - room(18) - 12) / 1.4), MAX_OTHER)
+    ? Math.min(lineCard(w * 0.66 - PAGE_PAD * 2), down(((h - Math.max(48, otherRoom(32)) - 6 - 12 - 4 * 3) / 4 - otherRoom(18) - 12) / 1.4), MAX_OTHER)
     : Math.min(lineCard(w - PAGE_PAD * 2), MAX_OTHER);
   const record = w >= 560 + PAGE_PAD * 2 ? lineCard(w - PAGE_PAD * 2) : down(((w - PAGE_PAD * 2 - 12) / 2 - 8 - LINE_GAP * 4) / 5);
   return { play, other: Math.max(14, other), record: Math.max(14, Math.min(record, MAX_RECORD)) };

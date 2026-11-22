@@ -150,7 +150,7 @@
 
 {#snippet header(index: number, withClock: boolean, hint: string | null, o: HandOutcome | null, actions: boolean)}
   {#if room}
-    <div class="hand-head">
+    <div class="hand-head" class:table-text={page === 'playing'}>
       <div class="facts">
         <span class="title-large nowrap">{t('battle_hand_of', index + 1, room.settings.hands)}</span>
         {#if withClock && left !== null}
@@ -390,7 +390,7 @@
   {:else if page === 'playing' && room}
     {@render header(room.hand, true, null, null, false)}
     {#if b.deal}
-      <Arranging vm={b.arranger} {wheel} busy={b.submitting} confirmLabel={t('battle_submit')} onconfirm={() => b.submit()} />
+      <Arranging vm={b.arranger} {wheel} busy={b.submitting} confirmLabel={t('battle_submit')} confirmShort={t('battle_submit_short')} onconfirm={() => b.submit()} />
     {:else}
       <TableSkeleton />
     {/if}
@@ -543,8 +543,8 @@
   .lobby.wide .col { flex: 1; }
   .code { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 14px 18px; border-radius: 22px; }
   .code .sub { opacity: 0.8; }
-  .pin-big { font-size: 2.125rem; line-height: 1.25; font-weight: 700; letter-spacing: 4px; }
-  .section { font-size: 0.875rem; font-weight: 500; color: var(--primary); margin: 16px 0 4px; }
+  .pin-big { font-size: calc(2.125 * var(--r, 1rem)); line-height: 1.25; font-weight: 700; letter-spacing: 4px; }
+  .section { font-size: calc(0.875 * var(--r, 1rem)); font-weight: 500; color: var(--primary); margin: 16px 0 4px; }
   .player { display: flex; align-items: center; gap: 12px; min-height: 56px; }
   .avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
     background: var(--primary-container); color: var(--on-primary-container); font-weight: 700; }

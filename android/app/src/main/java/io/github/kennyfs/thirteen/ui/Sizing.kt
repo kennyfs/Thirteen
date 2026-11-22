@@ -188,22 +188,24 @@ private fun tallFit(areaW: Dp, areaH: Dp, lu: Dp, maxCard: Dp, least: Dp = 20.dp
 }
 
 /** The sizes for a window area `w` x `h` (what the screens share, below the system bars and beside the rail). */
-fun cardSizes(w: Dp, h: Dp, u: Dp): CardSizes {
+fun cardSizes(w: Dp, h: Dp, u: Dp, tableU: Dp = u): CardSizes {
   val wide = w > h * 1.15f
-  fun room(sp: Int) = u * (sp / 14f)
+  // The arranging pages' words at the table's text size (TableText): `tableU` for them, `u` for the others.
+  fun room(sp: Int) = tableU * (sp / 14f)
   // What the practice page's header takes of the height, the largest of the pages that arrange.
   // Tall: the title row and the scores, which take a second line when they do not fit side by side.
   val scoreLines = if ((room(16) * 4.6f + 8.dp) * 4f > w - 28.dp) 2 else 1
   val header = if (wide) 54.dp else 6.dp + maxOf(48.dp, room(26)) + (room(20) + 6.dp) * scoreLines
-  val play = arrangeFit(w, h - header, wide, u).even
+  val play = arrangeFit(w, h - header, wide, tableU).even
   // A battle's header: the hand, the time left and how many have set it, in a line of titleLarge (28 high) padded 4
   // above and under, or two when they do not fit side by side.
   val battleLines = if (room(16) * 15 + 60.dp > w - 28.dp) 2 else 1
-  val battle = arrangeFit(w, h - (room(28) + 2.dp) * battleLines - 8.dp, wide, u).even
+  val battle = arrangeFit(w, h - (room(28) + 2.dp) * battleLines - 8.dp, wide, tableU).even
+  fun otherRoom(sp: Int) = u * (sp / 14f)
   val other = if (wide) {
     // The result page's four players in the height left by its header (48), the felt's padding and the gaps: each a line
     // of hand names and the cards.
-    val perSeat = (h - maxOf(RESULT_HEADER, room(32)) - 6.dp - 12.dp - 4.dp * 3) / 4 - room(18) - 12.dp
+    val perSeat = (h - maxOf(RESULT_HEADER, otherRoom(32)) - 6.dp - 12.dp - 4.dp * 3) / 4 - otherRoom(18) - 12.dp
     // The analysis page's list takes two thirds of the width.
     minOf(lineCard(w * 0.66f - PAGE_PAD * 2), (perSeat / 1.4f).down(), MAX_OTHER)
   } else minOf(lineCard(w - PAGE_PAD * 2), MAX_OTHER)

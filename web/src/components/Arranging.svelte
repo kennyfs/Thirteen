@@ -19,7 +19,7 @@
     arrangeFit, cardHeight, deskFit, BIG_BUTTON, CARD_GAP, DESK_LABEL, HAND_GAP, HAND_LINE_GAP, HAND_LINE_GAP_TIGHT, ROW_PAD,
     ROW_STACK_GAP, ROWS_GAP, SUIT_GAP,
   } from '../lib/sizing';
-  import { signed, textRoom, textWidth, ui } from '../lib/ui.svelte';
+  import { signed, tableRoom, textWidth, ui } from '../lib/ui.svelte';
   import Card from './Card.svelte';
   import Dialog from './Dialog.svelte';
   import Icon from './Icon.svelte';
@@ -27,18 +27,21 @@
 
   interface Props {
     vm: Arranger; wheel: number; busy: boolean; confirmLabel: string; onconfirm: () => void; bare?: boolean;
+    /** The confirm button's name where the whole one does not fit. */
+    confirmShort?: string;
     /** Help asked for (the ? key, or the button): the page shows it when it has the buttons. */
     help?: boolean;
     skeleton?: boolean;
   }
-  let { vm, wheel, busy, confirmLabel, onconfirm, bare = false, help = $bindable(false), skeleton = false }: Props = $props();
+  let { vm, wheel, busy, confirmLabel, confirmShort = confirmLabel, onconfirm, bare = false, help = $bindable(false), skeleton = false }: Props = $props();
   /** A skeleton's hand: thirteen places. */
   const PLACES = Array.from({ length: 13 }, (_, i) => i);
 
   let areaW = $state(0);
   let areaH = $state(0);
   const wide = $derived(bare || areaW > areaH * 1.15);
-  const fit = $derived(arrangeFit(areaW, areaH, wide, ui.u, ui.sizes.play));
+  // At the table's text size (ui.tu, the .table-text class): see sizing.ts's TABLE_FONT_MAX.
+  const fit = $derived(arrangeFit(areaW, areaH, wide, ui.tu, ui.sizes.play));
   const card = $derived(bare ? Math.min(ui.sizes.play, deskFit(areaW, areaH)) : fit.card);
   /** The hand's cards: on a wide page they may be larger than the rows' (sizing.ts, ROWS_TO_HAND). */
   const handCard = $derived(bare ? card : fit.hand);
@@ -48,18 +51,30 @@
   let toolsW = $state(0);
   let toolsH = $state(0);
   const toolMode = $derived.by(() => {
-    const widths = [t('undo'), t('take_all'), t('help')].map((l) => textWidth(l, 16, 500));
+    const widths = [t('undo'), t('take_all'), t('help')].map((l) => textWidth(l, 16, 500, ui.tu));
     const innerW = (toolsW - 16) / 3 - 12 - 2;
     const innerH = toolsH - 8 - 2;
     if (widths.every((w) => 24 + 6 + w <= innerW)) return 'beside';
-    if (widths.every((w) => w <= innerW) && 24 + 2 + textRoom(16) * 1.2 <= innerH) return 'under';
+    if (widths.every((w) => w <= innerW) && 24 + 2 + tableRoom(16) * 1.2 <= innerH) return 'under';
     return 'none';
   });
   const labels = $derived(fit.labels ?? 1);
-  const labelWidth = $derived(Math.max(72, ui.u * 4.6 * labels));
-  const headerHeight = $derived(Math.max(32, textRoom(13) * 2 * labels));
-  const labelHeight = $derived((textRoom(24) + textRoom(16)) * labels + 2);
+  const labelWidth = $derived(Math.max(72, ui.tu * 4.6 * labels));
+  const headerHeight = $derived(Math.max(32, tableRoom(13) * 2 * labels));
+  const labelHeight = $derived((tableRoom(24) + tableRoom(16)) * labels + 2);
   const above = $derived(!wide && fit.above);
+  // The tall bar (its padding, gaps and three icon buttons fixed): the confirm button keeps the room for its short name
+  // at least, the sort button's name giving way first (to its short form, then to none), as the app's.
+  const barNames = $derived.by(() => {
+    const free = areaW - 10 * 2 - 6 * 4 - 46 * 3;
+    const goW = (s: string) => textWidth(s, 16, 700, ui.tu) + 16 * 2 + 2;
+    const sortW = (s: string) => 10 * 2 + 2 + 20 + (s ? 4 + textWidth(s, 14, 500, ui.tu) : 0);
+    const long = t(vm.sortBySuit ? 'sort_suit' : 'sort_rank');
+    const short = t(vm.sortBySuit ? 'sort_suit_short' : 'sort_rank_short');
+    const room = free - goW(confirmShort);
+    const sort = sortW(long) <= room ? long : sortW(short) <= room ? short : '';
+    return { sort, go: goW(confirmLabel) <= free - sortW(sort) ? confirmLabel : confirmShort };
+  });
   const readyLines = $derived(wide ? 1 : Math.ceil(13 / fit.perLine));
   const readyH = $derived(cardHeight(handCard) * readyLines + HAND_LINE_GAP * (readyLines - 1));
 
@@ -298,7 +313,7 @@
     {#if hand.length === 0}
       <!-- As high as the hand's line, which may be a small card's at a large text size: two lines of text fit it. -->
       <div class="ready title-medium bold" class:bad={readiness.bad} aria-live="polite"
-        style:height="{readyH}px" style:font-size="min(1rem, {Math.max(10, readyH / 2.4)}px)">
+        style:height="{readyH}px" style:font-size="min(var(--r, 1rem), {Math.max(10, readyH / 2.4)}px)">
         {readiness.text}
       </div>
     {/if}
@@ -307,7 +322,7 @@
 
 <svelte:window onkeydown={onKey} />
 
-<div class="area" class:skeleton bind:this={areaEl} bind:clientWidth={areaW} bind:clientHeight={areaH} aria-hidden={skeleton || undefined} inert={skeleton}>
+<div class="area table-text" class:skeleton bind:this={areaEl} bind:clientWidth={areaW} bind:clientHeight={areaH} aria-hidden={skeleton || undefined} inert={skeleton}>
   {#if areaW > 0}
     {#if bare}
       <div class="felt desk-felt">
@@ -337,12 +352,12 @@
       </div>
       <div class="bar" style:height="{BIG_BUTTON + 16}px">
         <button class="btn outlined sort" data-keep-picked aria-label={t(vm.sortBySuit ? 'sort_by_suit_on' : 'sort_by_rank_on')} onclick={() => (vm.sortBySuit = !vm.sortBySuit)}>
-          <Icon name="swap" size={20} /><span>{t(vm.sortBySuit ? 'sort_suit' : 'sort_rank')}</span>
+          <Icon name="swap" size={20} />{#if barNames.sort}<span>{barNames.sort}</span>{/if}
         </button>
         <button class="btn outlined icon" aria-label={t('undo')} disabled={!vm.canUndo} onclick={() => vm.undo()}><Icon name="undo" /></button>
         <button class="btn outlined icon" aria-label={t('take_all')} disabled={!vm.canClear} onclick={() => vm.clearRows()}><Icon name="clearAll" /></button>
         <button class="btn outlined icon" aria-label={t('help')} onclick={() => (help = true)}><Icon name="help" /></button>
-        <button class="btn filled big go" data-tour="confirm" disabled={!canConfirm} onclick={onconfirm}>{busy ? '…' : confirmLabel}</button>
+        <button class="btn filled big go" data-tour="confirm" aria-label={confirmLabel} disabled={!canConfirm} onclick={onconfirm}>{busy ? '…' : barNames.go}</button>
       </div>
     {/if}
   {/if}
@@ -369,7 +384,7 @@
   .wb :global(.group) { flex: 1; }
   .tools { gap: 8px; }
   .tool { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 18px; cursor: pointer;
-    background: transparent; color: var(--on-felt); border: 1px solid color-mix(in srgb, var(--on-felt) 50%, transparent); font-size: 1rem; font-weight: 500;
+    background: transparent; color: var(--on-felt); border: 1px solid color-mix(in srgb, var(--on-felt) 50%, transparent); font-size: calc(1 * var(--r, 1rem)); font-weight: 500;
     overflow: hidden; padding: 4px 6px; }
   .tool:disabled { opacity: 0.4; cursor: default; }
   .tool span { white-space: nowrap; }
@@ -386,10 +401,10 @@
   .row-label { display: flex; flex-direction: column; gap: 2px; min-width: 0; color: var(--on-felt); }
   /* At a large text size the rows' labels only as large as leaves the cards their size (sizing.ts's labels). */
   .felt .row-label .title-medium, .felt .row-header .title-medium {
-    font-size: calc(1rem * var(--labels, 1)); line-height: calc(1.375rem * var(--labels, 1));
+    font-size: calc(calc(1 * var(--r, 1rem)) * var(--labels, 1)); line-height: calc(calc(1.375 * var(--r, 1rem)) * var(--labels, 1));
   }
   .felt .row-label .state, .felt .row-header .state {
-    font-size: calc(0.8125rem * var(--labels, 1)); line-height: calc(1.125rem * var(--labels, 1));
+    font-size: calc(calc(0.8125 * var(--r, 1rem)) * var(--labels, 1)); line-height: calc(calc(1.125 * var(--r, 1rem)) * var(--labels, 1));
   }
   .row-label.fill { flex: 1; }
   .state { color: var(--on-felt); font-weight: 500; overflow-wrap: anywhere; }

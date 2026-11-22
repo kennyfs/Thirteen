@@ -93,7 +93,7 @@
       </div>
     {/if}
   {:else}
-    <div class="practice-head" class:one={ui.w >= 600}>
+    <div class="practice-head table-text" class:one={ui.w >= 600}>
       <div class="titleline">
         <span class="title-large nowrap">{app.replaying ? t('replay_title') : t('hand_n', app.session.hands + 1)}</span>
         {#if Object.keys(app.gameValues).length}
@@ -132,18 +132,18 @@
   @media (max-height: 460px) {
     .practice-head.one { overflow-x: auto; scrollbar-width: none; }
     .practice-head.one .titleline { min-height: 40px; flex: none; }
-    .practice-head.one .title-large { font-size: min(1.25rem, 20px); line-height: 1.25; }
-    .practice-head.one .chip { min-height: 34px; font-size: min(0.875rem, 15px); }
+    .practice-head.one .title-large { font-size: min(calc(1.25 * var(--r, 1rem)), 20px); line-height: 1.25; }
+    .practice-head.one .chip { min-height: 34px; font-size: min(calc(0.875 * var(--r, 1rem)), 15px); }
     .practice-head.one .scores { flex-wrap: nowrap; white-space: nowrap; }
-    .practice-head.one .score .body-medium { font-size: min(0.875rem, 14px); line-height: 1.2; }
-    .practice-head.one .score .title-medium { font-size: min(1rem, 16px); line-height: 1.2; }
+    .practice-head.one .score .body-medium { font-size: min(calc(0.875 * var(--r, 1rem)), 14px); line-height: 1.2; }
+    .practice-head.one .score .title-medium { font-size: min(calc(1 * var(--r, 1rem)), 16px); line-height: 1.2; }
   }
   .result-head { display: flex; align-items: center; gap: 10px; padding: 4px 12px 4px 16px; min-height: 56px; flex: none; }
   .result-head.wide { min-height: 48px; padding: 0 12px 0 16px; }
   @media (max-width: 780px) {
     .result-head.wide { gap: 6px; padding: 0 8px 0 12px; }
-    .result-head.wide .headline-small { font-size: 1.125rem; }
-    .result-head.wide :global(.btn) { padding: 0 10px; font-size: 0.8125rem; }
+    .result-head.wide .headline-small { font-size: calc(1.125 * var(--r, 1rem)); }
+    .result-head.wide :global(.btn) { padding: 0 10px; font-size: calc(0.8125 * var(--r, 1rem)); }
     .result-head.wide :global(.btn.icon) { width: 44px; min-height: 44px; padding: 0; }
   }
   .grow { flex: 1; min-width: 0; }

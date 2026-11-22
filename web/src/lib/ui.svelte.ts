@@ -1,13 +1,15 @@
 // What the screens share about the window: whether it is wide (a rail at the side) or tall (a bar under), whether it
 // is a computer's (`desk`: a mouse, and room for a side panel), the room the screens have, `u` (what a 14px text takes
 // now), and the card sizes worked out once for them (sizing.ts).
-import { cardSizes, deskCardSizes, type CardSizes } from './sizing';
+import { cardSizes, deskCardSizes, TABLE_FONT_MAX, type CardSizes } from './sizing';
 
 export const NAV_BAR = 80;
 export const NAV_RAIL = 88;
 
 // `showKeys`: a computer's pages show their keys (on the buttons, the rows, in a list) only after ? (KeyHint).
-export const ui = $state({ w: 0, h: 0, wide: false, desk: false, u: 14, sizes: { play: 44, other: 26, record: 26 } as CardSizes, showKeys: false });
+// `tu`: `u` on the arranging screens (the .table-text class), whose words are no larger than TABLE_FONT_MAX of the
+// browser's size, times the page's text size.
+export const ui = $state({ w: 0, h: 0, wide: false, desk: false, u: 14, tu: 14, sizes: { play: 44, other: 26, record: 26 } as CardSizes, showKeys: false });
 
 export function measure(textScale: number) {
   const root = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16 * textScale;
@@ -24,6 +26,9 @@ export function measure(textScale: number) {
   const w = wide && !bare ? W - NAV_RAIL : W;
   const h = wide || bare ? H : H - NAV_BAR;
   const u = 14 * (root / 16);
+  const tableRoot = Math.min(root / textScale, 16 * TABLE_FONT_MAX) * textScale;
+  document.documentElement.style.setProperty('--table-r', `${tableRoot}px`);
+  ui.tu = 14 * (tableRoot / 16);
   ui.w = w;
   ui.h = h;
   ui.wide = wide;
@@ -31,19 +36,21 @@ export function measure(textScale: number) {
   // A computer's (its own pages, Desk*.svelte): a mouse (or a touchpad) that hovers, and a window of 1024 x 600 or more.
   // A phone's or a tablet's pages otherwise, a computer's window made narrow too.
   ui.desk = matchMedia('(hover: hover) and (pointer: fine)').matches && wide && W >= 1024 && H >= 600;
-  ui.sizes = ui.desk ? deskCardSizes(w, h, u) : cardSizes(w, h, u);
+  ui.sizes = ui.desk ? deskCardSizes(w, h, u) : cardSizes(w, h, u, ui.tu);
 }
 
 /** Room for text: what a `px` text takes, as the app's textRoom. */
 export const textRoom = (px: number) => ui.u * (px / 14);
+/** textRoom on the arranging screens (ui.tu). */
+export const tableRoom = (px: number) => ui.tu * (px / 14);
 
 let probe: HTMLSpanElement | null = null;
 const widths = new Map<string, number>();
 /** How wide `text` is at a `px` size (as the app's dp: it follows the page's text size) in the page's font, for a
  *  layout that goes by its names' lengths (the probabilities' tiles, which differ a lot between languages). Measured
  *  as the page lays it out (a canvas's measureText is some 8% short in Firefox), once a language, size and text. */
-export function textWidth(text: string, px: number, weight = 400): number {
-  const size = textRoom(px);
+export function textWidth(text: string, px: number, weight = 400, u = ui.u): number {
+  const size = u * (px / 14);
   const key = `${document.documentElement.lang}|${weight}|${size}|${text}`;
   let v = widths.get(key);
   if (v === undefined) {

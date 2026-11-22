@@ -168,6 +168,20 @@ fun isDark(mode: DarkMode, system: Boolean) = when (mode) {
   DarkMode.DARK -> true
 }
 
+/**
+ * The arranging screens' words (the practice and battle pages while a hand is set, the tutorial's practice) at most
+ * this much larger than the system's standard size, times the app's own text size: a larger font took the cards' room
+ * for the words alone (the header, the rows' labels, the buttons). The rest of the app follows the system.
+ */
+const val TABLE_FONT_MAX = 1.5f
+
+/** The arranging screens' density: the font size no larger than TABLE_FONT_MAX (see TableText). */
+val LocalTableDensity = staticCompositionLocalOf { Density(1f) }
+
+/** `content` with the arranging screens' density, its words no larger than at TABLE_FONT_MAX. */
+@Composable
+fun TableText(content: @Composable () -> Unit) = CompositionLocalProvider(LocalDensity provides LocalTableDensity.current, content = content)
+
 @Composable
 fun ThirteenTheme(style: ColorStyle, darkMode: DarkMode, textSize: TextSize, content: @Composable () -> Unit) {
   val dark = isDark(darkMode, isSystemInDarkTheme())
@@ -185,6 +199,7 @@ fun ThirteenTheme(style: ColorStyle, darkMode: DarkMode, textSize: TextSize, con
     LocalOutcome provides outcome,
     LocalDark provides (dark && style == ColorStyle.MINIMAL),
     LocalDensity provides Density(density.density, density.fontScale * textSize.scale),
+    LocalTableDensity provides Density(density.density, minOf(density.fontScale, TABLE_FONT_MAX) * textSize.scale),
   ) {
     val japanese = LocalConfiguration.current.locales[0].language == "ja"
     MaterialTheme(colorScheme = scheme, typography = if (japanese) JapaneseTypography else AppTypography, shapes = AppShapes, content = content)

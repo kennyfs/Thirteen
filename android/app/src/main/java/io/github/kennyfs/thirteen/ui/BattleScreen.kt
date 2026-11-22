@@ -103,6 +103,7 @@ import io.github.kennyfs.thirteen.protocol.PlayerView
 import io.github.kennyfs.thirteen.protocol.RoomView
 import io.github.kennyfs.thirteen.protocol.RuleChoice
 import io.github.kennyfs.thirteen.ui.theme.LocalTable
+import io.github.kennyfs.thirteen.ui.theme.TableText
 import kotlinx.coroutines.delay
 
 /** Battles: the puzzle contest first, then the table game; online or with phones nearby. */
@@ -533,7 +534,8 @@ private fun HandHeader(
 }
 
 @Composable
-private fun PlayingPage(vm: BattleViewModel, room: RoomView) {
+private fun PlayingPage(vm: BattleViewModel, room: RoomView) = TableText {
+  // The header too at the table's text size: cardSizes counts it so.
   HandHeader(vm, room)
   Arranging(vm.arranger, Rules.values(room.rules)["wheel"]?.toInt() ?: 0, vm.submitting, stringResource(R.string.battle_submit), confirmShort = stringResource(R.string.battle_submit_short),
     maxCard = LocalCardSizes.current.battle) { vm.submit() }

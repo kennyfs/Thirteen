@@ -100,6 +100,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -115,6 +116,7 @@ import org.json.JSONObject
 import io.github.kennyfs.thirteen.R
 import io.github.kennyfs.thirteen.Score
 import io.github.kennyfs.thirteen.ui.theme.LocalTable
+import io.github.kennyfs.thirteen.ui.theme.TableText
 import io.github.kennyfs.thirteen.ui.theme.TableColors
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -129,9 +131,12 @@ private val SAME_RANK_CATEGORY = intArrayOf(0, 0, 2, 4, 8)
 @Composable
 fun PlayScreen(vm: AppViewModel, onRules: () -> Unit) {
   val result = vm.result
-  if (result == null) Column(Modifier.fillMaxSize()) {
-    PracticeHeader(vm, onRules)
-    Arranging(vm.play, vm.gameValues["wheel"]?.toInt() ?: 0, vm.waiting, stringResource(R.string.confirm), Modifier.weight(1f)) { vm.confirm() }
+  // The header too at the table's text size (TableText): cardSizes counts it so.
+  if (result == null) TableText {
+    Column(Modifier.fillMaxSize()) {
+      PracticeHeader(vm, onRules)
+      Arranging(vm.play, vm.gameValues["wheel"]?.toInt() ?: 0, vm.waiting, stringResource(R.string.confirm), Modifier.weight(1f)) { vm.confirm() }
+    }
   } else vm.current?.let { Finished(vm, it, peek = false) }
 }
 
@@ -233,6 +238,8 @@ fun Arranging(
   // A press on the table but not on the hand or the rows puts the picked cards down; what it lands on still does its
   // own thing (it is only looked at, in the first pass, before the buttons see it).
   val keep = remember { KeepPicked() }
+  // At the table's text size (TableText), wherever it is (the tutorial's practice among the tutorial's words).
+  TableText {
   BoxWithConstraints(
     modifier.fillMaxSize().onGloballyPositioned { keep.origin = it.positionInWindow() }.pointerInput(vm) {
       awaitPointerEventScope {
@@ -254,6 +261,7 @@ fun Arranging(
       else ArrangeTall(vm, wheel, busy, confirmLabel, confirmShort, fit, { helpOpen = true }, onConfirm)
     }
     if (helpOpen) ArrangeHelpDialog { helpOpen = false }
+  }
   }
 }
 
@@ -382,6 +390,13 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
         }
       }
     }
+    // The confirm button keeps the room for its short name at least: the sort button's name gives way first (to its
+    // short form), so a large font does not cut 出牌.
+    val confirmStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+    val measurer = rememberTextMeasurer()
+    val confirmMin = with(LocalDensity.current) { measurer.measure(confirmShort, confirmStyle).size.width.toDp() } + 24.dp + 4.dp
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+    val sortMax = (maxWidth - 20.dp - 6.dp * 4 - 46.dp * 3 - confirmMin).coerceAtLeast(46.dp)
     Row(
       Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -391,7 +406,7 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
       val sortTiny = stringResource(if (vm.sortBySuit) R.string.sort_suit_short else R.string.sort_rank_short)
       OutlinedButton(
         onClick = { vm.sortBySuit = !vm.sortBySuit },
-        Modifier.height(46.dp).keepsPicked("sortButton").semantics { contentDescription = sortLabel },
+        Modifier.height(46.dp).widthIn(max = sortMax).keepsPicked("sortButton").semantics { contentDescription = sortLabel },
         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp),
       ) {
         Icon(Icons.Filled.SwapVert, null, Modifier.size(20.dp))
@@ -411,8 +426,9 @@ private fun ArrangeTall(vm: Arranger, wheel: Int, busy: Boolean, confirmLabel: S
         shape = RoundedCornerShape(18.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp),
       ) {
         if (busy) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 3.dp, color = MaterialTheme.colorScheme.onPrimary)
-        else FitText(confirmLabel, confirmShort, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        else FitText(confirmLabel, confirmShort, style = confirmStyle)
       }
+    }
     }
   }
 }
