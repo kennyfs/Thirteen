@@ -47,7 +47,7 @@
   <string-array name="glossary_p_style"><item>攻撃型</item><item>守備型</item></string-array>
   <string name="glossary_t_rows">段の勝ち重視</string>
   <string name="glossary_d_rows">スクープを狙うより、1段ずつ多く勝つことを重視する並べ方。段ごとに得点がつくルールで特に重要です。</string>
-  <string-array name="glossary_p_rows"><item>段の勝ち重視</item><item>段の勝ち</item></string-array>
+  <string-array name="glossary_p_rows"><item>段の勝ち重視</item><item>段の勝ちを狙います</item><item>段の勝ちより</item><item>段の勝ちでも</item></string-array>
   <string name="glossary_t_indep">段ごとの独立評価（indep）</string>
   <string name="glossary_d_indep">シンプルなコンピュータ対戦相手。3段の関係を考えず、各段の勝率を個別に評価します。</string>
   <string-array name="glossary_p_indep"><item>段ごとの独立評価（indep）</item><item>段ごとの独立評価</item><item>独立評価</item></string-array>
