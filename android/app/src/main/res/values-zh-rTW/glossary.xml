@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The glossary (術語表: Glossary.kt, and the web page's lib/glossary.ts), in Taiwan Chinese (zh-TW).
+  Each definition uses only the terms before it (Glossary.ENTRIES's order, checked by GlossaryTest).
+-->
+<resources>
+  <string name="glossary_title">術語表</string>
+  <string name="glossary_note">從墩、牌型到打槍、首選</string>
+
+  <string name="glossary_t_row">墩（頭墩、中墩、尾墩）</string>
+  <string name="glossary_d_row">13 張牌分成的三組：頭墩 3 張、中墩 5 張、尾墩 5 張。亮牌後和每一位對手一墩一墩比大小。</string>
+  <string name="glossary_t_rank">牌型</string>
+  <string name="glossary_d_rank">一墩牌的組合，由大到小：同花順、鐵支（四張同點）、葫蘆（三條加一對）、同花、順子、三條、兩對、一對、散牌。牌型大的贏；牌型一樣就比點數，A 最大、2 最小，花色不分大小。頭墩只有 3 張，所以只會是三條、一對或散牌。</string>
+  <string name="glossary_t_wheel">A-2-3-4-5</string>
+  <string name="glossary_d_wheel">A 當成 1 用的順子。各地算法不同：可以是最小的順子、第二大的順子，或不算順子，在「設定 › 規則」裡選。</string>
+  <string name="glossary_t_foul">倒水</string>
+  <string name="glossary_d_foul">三墩的大小必須是尾墩不小於中墩、中墩不小於頭墩，順序反了就是倒水。倒水的擺法不能出。</string>
+  <string name="glossary_t_strict">嚴格墩</string>
+  <string name="glossary_d_strict">一種規則：兩墩一樣大（牌型和點數都相同）也算倒水，要嚴格一墩比一墩大。</string>
+  <string name="glossary_t_scoop">打槍</string>
+  <string name="glossary_d_scoop">三墩都贏過同一位對手，對方要另外多付分數，多少依規則而定。反過來三墩都輸給對方，就是被打槍。</string>
+  <string name="glossary_t_home_run">全壘打</string>
+  <string name="glossary_d_home_run">一手牌同時對三位對手都打槍，每一家再多付分數。</string>
+  <string name="glossary_t_front_trips">衝三</string>
+  <string name="glossary_d_front_trips">頭墩放三條。頭墩只有 3 張，三條是它最大的牌型，很多規則會另外加分。</string>
+  <string name="glossary_t_special">特殊墩</string>
+  <string name="glossary_d_special">放在某一墩會另外加分的大牌型：頭墩的衝三、中墩的葫蘆、鐵支或同花順、尾墩的鐵支或同花順。依規則，可能不論輸贏每家都付分，也可能要贏過對方那一墩才收分。</string>
+  <string name="glossary_t_dragon">一條龍</string>
+  <string name="glossary_d_dragon">13 張剛好是 2 到 A 各一張。只要沒有倒水，依規則每一家都會另外付你分數。</string>
+  <string name="glossary_t_network">神經網路</string>
+  <string name="glossary_d_network">電腦對手和分析用的模型：看一手牌和一種擺法，估計這樣擺平均能拿幾分。它是讓程式自己和自己對打大量牌局訓練出來的。</string>
+  <string name="glossary_t_q">Q（期望得分）</string>
+  <string name="glossary_d_q">一種擺法平均能拿到的分數，由神經網路估計，三位對手假設都像它一樣擺。正的代表平均會贏分，負的代表平均會輸分。</string>
+  <string name="glossary_t_best">首選</string>
+  <string name="glossary_d_best">Q 最高的擺法，也就是 AI 認為最好的擺法。和首選差得很少（在神經網路的誤差內）的擺法，可以算一樣好。</string>
+  <string name="glossary_t_style">攻擊型、防守型</string>
+  <string name="glossary_d_style">首選偏重的方向。攻擊型：大牌集中在某一墩，打槍多、被打槍也多。防守型：三墩比較平均，被打槍少、打槍也少。</string>
+  <string name="glossary_t_rows">搶墩</string>
+  <string name="glossary_d_rows">以多贏幾墩為主、不拚打槍的擺法。在每一墩都計分的規則下比較重要。</string>
+  <string name="glossary_t_indep">獨立墩</string>
+  <string name="glossary_d_indep">一種較簡單的電腦對手：把每一墩分開估計贏的機率，不考慮三墩之間的關係。</string>
+  <string name="glossary_t_mc">蒙地卡羅</string>
+  <string name="glossary_d_mc">一種電腦對手：把每種擺法對上許多副隨機發給對手的牌試算，選平均最好的；對手的牌用獨立墩的方式擺。</string>
+</resources>

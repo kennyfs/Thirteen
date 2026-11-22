@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="glossary_title">用語集</string>
+  <string name="glossary_note">段・役からスクープ・最善まで</string>
+
+  <string name="glossary_t_row">段（トップ・ミドル・ボトム）</string>
+  <string name="glossary_d_row">13枚のカードを分ける3つの組：トップ3枚、ミドル5枚、ボトム5枚。公開後、ほかの3人それぞれと段ごとに強さを比べます。</string>
+  <string name="glossary_t_rank">役</string>
+  <string name="glossary_d_rank">1つの段のカードの組み合わせ。強い順にストレートフラッシュ、フォーカード、フルハウス、フラッシュ、ストレート、スリーカード、ツーペア、ワンペア、ハイカード。強い役が勝ち、同じ役なら数字で比べます（Aが最強、2が最弱、スートの強弱はなし）。トップは3枚だけなので、スリーカード・ワンペア・ハイカードの3種類のみです。</string>
+  <string name="glossary_t_wheel">A-2-3-4-5</string>
+  <string name="glossary_d_wheel">Aを1として数えるストレート。ルールにより、最弱のストレート・2番目に強いストレート・ストレートにしない、から「設定 › ルール」で選べます。</string>
+  <string name="glossary_t_foul">ファウル</string>
+  <string name="glossary_d_foul">3つの段は「ボトム ≥ ミドル ≥ トップ」の強さにする必要があり、順番が逆になるとファウルです。ファウルの並べ方は出せません。</string>
+  <string name="glossary_t_strict">厳格</string>
+  <string name="glossary_d_strict">同じ強さの段（役も数字も完全に同じ）もファウルとするルール。段ごとに厳密に強くする必要があります。</string>
+  <string name="glossary_t_scoop">スクープ</string>
+  <string name="glossary_d_scoop">同じ相手に対して3段すべて勝つこと。ルールに応じて追加点が入ります。逆に3段すべて負けると被スクープになります。</string>
+  <string name="glossary_t_home_run">ホームラン</string>
+  <string name="glossary_d_home_run">1ハンドで3人の相手全員にスクープすること。全員からさらに追加点が入ります。</string>
+  <string name="glossary_t_front_trips">トップのスリーカード</string>
+  <string name="glossary_d_front_trips">トップにスリーカードを置くこと。トップは3枚しかないので最強の役であり、多くのルールでボーナス点がつきます。</string>
+  <string name="glossary_t_special">役ボーナス</string>
+  <string name="glossary_d_special">特定の段に強い役を置くと入るボーナス点：トップのスリーカード、ミドルのフルハウス・フォーカード・ストレートフラッシュ、ボトムのフォーカード・ストレートフラッシュ。ルールにより、勝敗に関わらず全員から受け取る場合と、その段で勝った相手からのみ受け取る場合があります。</string>
+  <string name="glossary_t_dragon">ドラゴン</string>
+  <string name="glossary_d_dragon">13枚が2からAまですべて1枚ずつそろった手札。ファウルしなければ、ルールに応じて全員からボーナス点を受け取れます。</string>
+  <string name="glossary_t_network">ニューラルネット</string>
+  <string name="glossary_d_network">コンピュータ対戦や分析に使うモデル。手札と並べ方から平均して何点取れるかを予測します。プログラム同士の大量の自己対戦で学習しています。</string>
+  <string name="glossary_t_q">Q（期待得点）</string>
+  <string name="glossary_d_q">その並べ方で平均して取れる点数の予測値。ほかの3人も同じニューラルネットのように並べると仮定しています。プラスなら平均して勝ち、マイナスなら平均して負けです。</string>
+  <string name="glossary_t_best">最善</string>
+  <string name="glossary_d_best">Qが最も高い並べ方、つまりAIが最善とみなす並べ方。最善との差がごくわずか（ニューラルネットの誤差の範囲内）なら、同じくらい良いと言えます。</string>
+  <string name="glossary_t_style">攻撃型・守備型</string>
+  <string name="glossary_d_style">最善の並べ方の傾向。攻撃型は特定の段に強い役を集め、スクープも被スクープも増えます。守備型は3段のバランスを取り、被スクープもスクープも減ります。</string>
+  <string name="glossary_t_rows">段取り重視</string>
+  <string name="glossary_d_rows">スクープを狙うより、1段ずつ多く勝つことを重視する並べ方。段ごとに得点がつくルールで特に重要です。</string>
+  <string name="glossary_t_indep">段ごとの独立評価（indep）</string>
+  <string name="glossary_d_indep">シンプルなコンピュータ対戦相手。3段の関係を考えず、各段の勝率を個別に評価します。</string>
+  <string name="glossary_t_mc">モンテカルロ</string>
+  <string name="glossary_d_mc">コンピュータ対戦相手の一種。相手にランダムな手札を何度も配り（相手は独立評価で並べる）、平均点が最も高い並べ方を選びます。</string>
+</resources>

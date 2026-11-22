@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="glossary_title">Thuật ngữ</string>
+  <string name="glossary_note">Từ chi, bộ bài đến bắt sập và cách xếp tốt nhất</string>
+
+  <string name="glossary_t_row">Chi (chi cuối, chi giữa, chi đầu)</string>
+  <string name="glossary_d_row">Ba nhóm chia từ 13 lá bài: chi cuối 3 lá, chi giữa 5 lá, chi đầu 5 lá. Khi mở bài, từng chi sẽ được so sánh với chi tương ứng của mỗi đối thủ.</string>
+  <string name="glossary_t_rank">Bộ bài</string>
+  <string name="glossary_d_rank">Tổ hợp bài trong một chi, từ lớn đến nhỏ: thùng phá sảnh, tứ quý, cù lũ, thùng, sảnh, sám, thú, đôi, mậu thầu. Bộ lớn hơn luôn thắng; cùng bộ thì so điểm (A lớn nhất, 2 nhỏ nhất, không so chất). Chi cuối chỉ có 3 lá nên chỉ có sám, đôi hoặc mậu thầu.</string>
+  <string name="glossary_t_wheel">A-2-3-4-5</string>
+  <string name="glossary_d_wheel">Sảnh tính A là 1. Tùy luật: có thể là sảnh nhỏ nhất, sảnh lớn thứ hai, hoặc không tính là sảnh. Chỉnh trong Cài đặt › Luật chơi.</string>
+  <string name="glossary_t_foul">Binh lủng</string>
+  <string name="glossary_d_foul">Chi đầu phải lớn hơn hoặc bằng chi giữa, và chi giữa lớn hơn hoặc bằng chi cuối. Xếp sai thứ tự là binh lủng và không được đánh.</string>
+  <string name="glossary_t_strict">Cấm chi bằng nhau</string>
+  <string name="glossary_d_strict">Luật tính hai chi bằng nhau (cùng bộ và cùng điểm) là binh lủng: mỗi chi sau phải mạnh hơn hẳn chi trước.</string>
+  <string name="glossary_t_scoop">Bắt sập</string>
+  <string name="glossary_d_scoop">Thắng cả 3 chi trước cùng một đối thủ để nhận thêm điểm thưởng tùy luật. Ngược lại, thua cả 3 chi là bị bắt sập.</string>
+  <string name="glossary_t_home_run">Sập làng</string>
+  <string name="glossary_d_home_run">Bắt sập cả 3 đối thủ trong cùng một ván, nhận thêm điểm thưởng từ mỗi nhà.</string>
+  <string name="glossary_t_front_trips">Sám chi cuối</string>
+  <string name="glossary_d_front_trips">Xếp sám ở chi cuối (3 lá). Vì chi cuối chỉ có 3 lá nên sám là bộ mạnh nhất ở đây và nhiều luật thưởng thêm điểm.</string>
+  <string name="glossary_t_special">Chi đặc biệt</string>
+  <string name="glossary_d_special">Các bộ bài mạnh được thưởng thêm điểm: sám chi cuối, cù lũ / tứ quý / thùng phá sảnh chi giữa, tứ quý / thùng phá sảnh chi đầu. Tùy luật, mọi đối thủ đều trả điểm hoặc chỉ người thua chi đó mới trả.</string>
+  <string name="glossary_t_dragon">Sảnh rồng</string>
+  <string name="glossary_d_dragon">13 lá đủ các quân từ 2 đến A. Miễn không bị binh lủng, mỗi đối thủ sẽ trả thêm điểm thưởng cho bạn theo luật.</string>
+  <string name="glossary_t_network">Mạng nơ-ron</string>
+  <string name="glossary_d_network">Mô hình dùng cho máy và phân tích: nhìn bài và cách xếp để ước lượng điểm trung bình. Mô hình được huấn luyện bằng cách tự đấu với chính mình rất nhiều ván.</string>
+  <string name="glossary_t_q">Q (Điểm kỳ vọng)</string>
+  <string name="glossary_d_q">Điểm trung bình dự kiến của một cách xếp, do mạng nơ-ron ước lượng khi 3 đối thủ cũng chơi như nó. Số dương là trung bình thắng điểm, số âm là thua.</string>
+  <string name="glossary_t_best">Tốt nhất</string>
+  <string name="glossary_d_best">Cách xếp có Q cao nhất theo AI. Những cách xếp chênh lệch rất nhỏ (trong sai số của mạng nơ-ron) có thể coi là tốt ngang nhau.</string>
+  <string name="glossary_t_style">Tấn công / Phòng thủ</string>
+  <string name="glossary_d_style">Xu hướng của cách xếp tốt nhất. Tấn công: dồn bài mạnh vào một chi, dễ bắt sập hơn nhưng cũng dễ bị bắt sập hơn. Phòng thủ: dàn đều 3 chi, ít bị bắt sập hơn nhưng cũng ít bắt sập hơn.</string>
+  <string name="glossary_t_rows">Ăn chi</string>
+  <string name="glossary_d_rows">Cách xếp ưu tiên thắng từng chi lẻ thay vì cố bắt sập. Quan trọng hơn ở luật tính điểm từng chi.</string>
+  <string name="glossary_t_indep">Chi độc lập</string>
+  <string name="glossary_d_indep">Đối thủ máy đơn giản hơn: ước lượng xác suất thắng của từng chi riêng lẻ mà không xét mối liên hệ giữa 3 chi.</string>
+  <string name="glossary_t_mc">Monte Carlo</string>
+  <string name="glossary_d_mc">Một kiểu đối thủ máy: thử từng cách xếp với nhiều bộ bài chia ngẫu nhiên cho đối thủ (xếp theo chi độc lập) rồi chọn cách có điểm trung bình cao nhất.</string>
+</resources>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="glossary_title">Glosarium</string>
+  <string name="glossary_note">Dari baris dan jenis kartu hingga sapu bersih dan terbaik</string>
+
+  <string name="glossary_t_row">Baris (atas, tengah, bawah)</string>
+  <string name="glossary_d_row">Tiga kelompok dari 13 kartu: atas 3 kartu, tengah 5 kartu, bawah 5 kartu. Setelah kartu dibuka, tiap baris dibandingkan dengan baris yang sama milik setiap lawan.</string>
+  <string name="glossary_t_rank">Jenis kartu</string>
+  <string name="glossary_d_rank">Kombinasi dalam satu baris, dari tertinggi ke terendah: straight flush, bom (four of a kind), full house, flush, straight, triss, two pair, pair, high card. Jenis lebih tinggi selalu menang; jika sama, angka lebih tinggi menang (A tertinggi, 2 terendah, lambang tidak berperingkat). Baris atas hanya 3 kartu sehingga hanya bisa triss, pair, atau high card.</string>
+  <string name="glossary_t_wheel">A-2-3-4-5</string>
+  <string name="glossary_d_wheel">Straight dengan A dihitung sebagai 1. Tergantung aturan: bisa menjadi straight terendah, straight tertinggi kedua, atau bukan straight. Atur di Setelan › Aturan.</string>
+  <string name="glossary_t_foul">Salah susun</string>
+  <string name="glossary_d_foul">Baris bawah harus minimal sekuat tengah, dan tengah minimal sekuat atas. Urutan terbalik disebut salah susun dan tidak bisa dimainkan.</string>
+  <string name="glossary_t_strict">Baris ketat</string>
+  <string name="glossary_d_strict">Aturan di mana dua baris yang sama kuat (jenis dan angka sama) juga dihitung salah susun: tiap baris harus benar-benar lebih kuat dari baris di atasnya.</string>
+  <string name="glossary_t_scoop">Sapu bersih</string>
+  <string name="glossary_d_scoop">Menang di ketiga baris melawan lawan yang sama untuk mendapat poin tambahan sesuai aturan. Sebaliknya, kalah di ketiga baris berarti disapu bersih.</string>
+  <string name="glossary_t_home_run">Home run</string>
+  <string name="glossary_d_home_run">Menyapu bersih ketiga lawan sekaligus dalam satu ronde, mendapat bonus tambahan dari masing-masing lawan.</string>
+  <string name="glossary_t_front_trips">Triss di atas</string>
+  <string name="glossary_d_front_trips">Menaruh triss di baris atas. Karena baris atas hanya 3 kartu, triss adalah kombinasi terkuat di sana dan banyak aturan memberi bonus poin.</string>
+  <string name="glossary_t_special">Bonus baris</string>
+  <string name="glossary_d_special">Kombinasi kuat yang memberi poin bonus: triss di atas, full house / bom / straight flush di tengah, dan bom / straight flush di bawah. Tergantung aturan, semua lawan membayar atau hanya lawan yang barisnya kamu kalahkan.</string>
+  <string name="glossary_t_dragon">Naga</string>
+  <string name="glossary_d_dragon">Memegang 13 kartu lengkap dari 2 sampai A. Selama tidak salah susun, tiap lawan membayar poin bonus sesuai aturan.</string>
+  <string name="glossary_t_network">Jaringan saraf</string>
+  <string name="glossary_d_network">Model untuk lawan komputer dan analisis: melihat kartu dan susunan untuk memperkirakan poin rata-rata. Dilatih dengan bermain melawan dirinya sendiri dalam banyak ronde.</string>
+  <string name="glossary_t_q">Q (Poin harapan)</string>
+  <string name="glossary_d_q">Perkiraan poin rata-rata dari suatu susunan menurut jaringan saraf, dengan asumsi ketiga lawan bermain sepertinya. Positif berarti rata-rata menang poin, negatif berarti kalah.</string>
+  <string name="glossary_t_best">Terbaik</string>
+  <string name="glossary_d_best">Susunan dengan Q tertinggi menurut AI. Susunan yang selisihnya sangat kecil (dalam batas galat jaringan saraf) bisa dianggap sama baiknya.</string>
+  <string name="glossary_t_style">Menyerang / Bertahan</string>
+  <string name="glossary_d_style">Kecenderungan susunan terbaik. Menyerang: memusatkan kartu kuat di satu baris, lebih sering sapu bersih tetapi juga lebih sering disapu bersih. Bertahan: menyeimbangkan ketiga baris, lebih jarang disapu bersih maupun menyapu bersih.</string>
+  <string name="glossary_t_rows">Kejar baris</string>
+  <string name="glossary_d_rows">Susunan yang fokus memenangkan lebih banyak baris daripada mengejar sapu bersih. Lebih penting pada aturan yang menghitung poin tiap baris.</string>
+  <string name="glossary_t_indep">Baris independen</string>
+  <string name="glossary_d_indep">Lawan komputer yang lebih sederhana: memperkirakan peluang menang tiap baris secara terpisah tanpa mempertimbangkan hubungan antarbaris.</string>
+  <string name="glossary_t_mc">Monte Carlo</string>
+  <string name="glossary_d_mc">Jenis lawan komputer yang menguji tiap susunan terhadap banyak pembagian kartu acak untuk lawan (disusun dengan baris independen) dan memilih rata-rata terbaik.</string>
+</resources>

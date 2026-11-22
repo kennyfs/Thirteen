@@ -5,10 +5,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** The glossary's order and linking (Glossary.kt; its words in res/values/glossary.xml). */
+/** The glossary's order and linking (Glossary.kt; its Taiwan Chinese words in res/values-zh-rTW/glossary.xml). */
 class GlossaryTest {
   private val strings: Map<String, String> by lazy {
-    val xml = File("src/main/res/values/glossary.xml").readText()
+    val xml = File("src/main/res/values-zh-rTW/glossary.xml").readText()
     Regex("""<string name="([^"]+)">([^<]*)</string>""").findAll(xml).associate { it.groupValues[1] to it.groupValues[2] }
   }
 

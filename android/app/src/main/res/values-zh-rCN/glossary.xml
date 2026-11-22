@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="glossary_title">术语表</string>
+  <string name="glossary_note">从道、牌型到打枪、首选</string>
+
+  <string name="glossary_t_row">道（头道、中道、尾道）</string>
+  <string name="glossary_d_row">13 张牌分成的三组：头道 3 张、中道 5 张、尾道 5 张。亮牌后与每一位对手逐道比大小。</string>
+  <string name="glossary_t_rank">牌型</string>
+  <string name="glossary_d_rank">一道牌的组合，从大到小：同花顺、铁支（四张同点）、葫芦（三条加一对）、同花、顺子、三条、两对、一对、乌龙。牌型大的赢；牌型相同比点数，A 最大、2 最小，花色不分大小。头道只有 3 张，因此只会是三条、一对或乌龙。</string>
+  <string name="glossary_t_wheel">A-2-3-4-5</string>
+  <string name="glossary_d_wheel">A 当作 1 用的顺子。各地规则不同：可以是最小的顺子、第二大的顺子，或不算顺子，可在“设置 › 规则”中选择。</string>
+  <string name="glossary_t_foul">倒水</string>
+  <string name="glossary_d_foul">三道的大小必须满足尾道不小于中道、中道不小于头道，顺序反了就是倒水。倒水的摆法不能出。</string>
+  <string name="glossary_t_strict">严格道</string>
+  <string name="glossary_d_strict">一种规则：两道一样大（牌型和点数都相同）也算倒水，必须严格一道比一道大。</string>
+  <string name="glossary_t_scoop">打枪</string>
+  <string name="glossary_d_scoop">三道都赢过同一位对手，对方需额外多付分数，具体依规则而定。反过来三道都输给对方，就是被打枪。</string>
+  <string name="glossary_t_home_run">全垒打</string>
+  <string name="glossary_d_home_run">一手牌同时对三位对手都打枪，每家再多付分数。</string>
+  <string name="glossary_t_front_trips">冲三</string>
+  <string name="glossary_d_front_trips">头道摆三条。头道只有 3 张，三条是头道最大的牌型，许多规则会额外加分。</string>
+  <string name="glossary_t_special">特殊加分</string>
+  <string name="glossary_d_special">放在某一道会额外加分的大牌型：头道冲三、中道葫芦、铁支或同花顺、尾道铁支或同花顺。依规则，可能不论输赢每家都付分，也可能要赢过对方那一道才收分。</string>
+  <string name="glossary_t_dragon">一条龙</string>
+  <string name="glossary_d_dragon">13 张正好是 2 到 A 各一张。只要没有倒水，依规则每家都会额外付你分数。</string>
+  <string name="glossary_t_network">神经网络</string>
+  <string name="glossary_d_network">电脑对手和分析使用的模型：根据一手牌和一种摆法，估计这样摆平均能拿几分。它通过程序自我对弈大量牌局训练而成。</string>
+  <string name="glossary_t_q">Q（期望得分）</string>
+  <string name="glossary_d_q">一种摆法平均能拿到的分数，由神经网络估计，假设三位对手都像它一样摆。正数表示平均赢分，负数表示平均输分。</string>
+  <string name="glossary_t_best">首选</string>
+  <string name="glossary_d_best">Q 最高的摆法，即 AI 认为最好的摆法。与首选差距极小（在神经网络误差内）的摆法，可视为一样好。</string>
+  <string name="glossary_t_style">攻击型、防守型</string>
+  <string name="glossary_d_style">首选偏重的方向。攻击型：大牌集中在某一道，打枪多、被打枪也多。防守型：三道较均衡，被打枪少、打枪也少。</string>
+  <string name="glossary_t_rows">抢道</string>
+  <string name="glossary_d_rows">以多赢几道为主、不拼打枪的摆法。在每道都计分的规则下较为重要。</string>
+  <string name="glossary_t_indep">独立道</string>
+  <string name="glossary_d_indep">一种较简单的电脑对手：分别估计每一道赢的概率，不考虑三道之间的关系。</string>
+  <string name="glossary_t_mc">蒙特卡洛</string>
+  <string name="glossary_d_mc">一种电脑对手：将每种摆法对上多副随机发给对手的牌试算，选平均最好的；对手的牌按独立道方式摆。</string>
+</resources>
