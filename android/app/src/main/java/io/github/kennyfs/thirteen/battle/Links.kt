@@ -23,6 +23,7 @@ import io.github.kennyfs.thirteen.protocol.Hub
 import io.github.kennyfs.thirteen.protocol.ServerMsg
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -68,7 +69,9 @@ fun serverUrl(input: String): String? {
   val host = if (authority.startsWith("[")) authority.substringAfter("[").substringBefore("]", "") else authority.substringBefore(":")
   if (host.isEmpty()) return null
   if (s.startsWith("ws://") && host !in setOf("localhost", "127.0.0.1", "10.0.2.2")) return null
-  return if ('/' in rest) s else "$s/ws"
+  val url = if ('/' in rest) s else "$s/ws"
+  // As OkHttp will read it (it throws on a host it cannot take, such as one typed with an IME's full-width colon).
+  return url.takeIf { (if (it.startsWith("wss://")) "https://" else "http://").plus(it.substringAfter("://")).toHttpUrlOrNull() != null }
 }
 
 class WsLink(url: String, private val listener: LinkListener) : Link {

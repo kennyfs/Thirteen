@@ -30,5 +30,8 @@ class LinksTest {
     // Without TLS only on this device or the emulator's host.
     assertNull(serverUrl("ws://thirteen.example.com"))
     assertNull(serverUrl("http://[2001:db8::1]:8090"))
+    // What OkHttp cannot take: an IME's full-width colon, a port out of range. It threw, and the app closed.
+    assertNull(serverUrl("半歐安歐兜兜："))
+    assertNull(serverUrl("thirteen.example.com:99999"))
   }
 }
