@@ -46,8 +46,9 @@ def wait(pg, cond, timeout=60000):
 
 
 def arrange(pg):
-    """Sets the dealt hand as the independent arranger would."""
-    wait(pg, 'B.deal !== null')
+    """Sets the dealt hand as the independent arranger would (once this hand's cards are in: the last hand's stay
+    in B.deal until the next deal)."""
+    wait(pg, 'B.deal !== null && B.room.phase === "PLAYING" && B.deal.hand === B.room.hand')
     pg.evaluate(f"""async () => {{ const {{ engine }} = window.thirteen; const b = {B};
       const rows = await engine.arrange('indep', b.deal.cards, b.room.rules); b.arranger.reset(b.deal.cards, b.room.rules, rows); }}""")
     wait(pg, 'B.arranger.rowsEval && B.arranger.rowsEval.valid === true')
