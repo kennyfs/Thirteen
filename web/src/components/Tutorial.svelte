@@ -234,6 +234,13 @@
   .list { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 8px; }
   .tips li::marker { color: var(--primary); font-weight: 700; }
   .trybox { flex: 1; min-height: 420px; display: flex; flex-direction: column; gap: 8px; }
+  @media (max-height: 540px) {
+    .content.trying { padding: 0 8px 4px; gap: 4px; }
+    .content.trying h2 { margin: 0; font-size: 1.125rem; line-height: 1.3; }
+    .content.trying > p { font-size: 0.875rem; line-height: 1.25; }
+    .trybox { min-height: 0; gap: 4px; }
+    .bar { padding: 4px 12px; }
+  }
   .buttons { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .grow { flex: 1; }
   .bar { flex: none; padding: 8px 12px; border-top: 1px solid var(--surface-container-highest); }
