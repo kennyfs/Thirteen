@@ -125,9 +125,13 @@
   </div>
 {/snippet}
 
-<div class="page">
+<div class="page" class:trying-page={page === 4}>
   <TitleBar title={t('tut_title')} onback={() => nav.back()} max={page === 4 ? 1100 : 760}>
     {#if hasGlossary()}<button class="btn text" onclick={() => openGlossary()}>{t('glossary_title')}</button>{/if}
+    {#if page === 4}
+      <button class="btn text compact-nav" onclick={() => (page = Math.max(0, page - 1))}>{t('tut_prev')}</button>
+      <button class="btn filled compact-nav" onclick={() => (page = page + 1)}>{t('tut_next')}</button>
+    {/if}
     <span class="body-medium dim">{t('tut_page', page + 1, PAGES)}</span>
   </TitleBar>
   <div class="scroll"><div class="content" class:trying={page === 4}>
@@ -236,15 +240,21 @@
   .kinds { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 12px; row-gap: 6px; }
   .list { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 8px; }
   .tips li::marker { color: var(--primary); font-weight: 700; }
-  .try-head { display: flex; flex-direction: column; gap: 6px; }
+  .try-head { flex: none; display: flex; flex-direction: column; gap: 6px; }
   .trybox { flex: 1; min-height: 420px; display: flex; flex-direction: column; gap: 8px; }
+  .compact-nav { display: none; }
   @media (max-height: 540px) {
     .content.trying { padding: 0 8px 4px; gap: 4px; }
     .try-head { flex-direction: row; align-items: baseline; gap: 8px; flex-wrap: nowrap; overflow: hidden; }
     .try-head h2 { margin: 0; font-size: 1rem; line-height: 1.25; white-space: nowrap; flex: none; }
     .try-head p { font-size: 0.8125rem; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .trybox { min-height: 0; gap: 4px; }
+    /* Keep enough room so the hand cards stay large enough to tap/swipe with a finger, scrolling if needed. */
+    .trybox { min-height: 280px; gap: 4px; }
     .bar { padding: 2px 12px; }
+  }
+  @media (max-height: 460px) {
+    .trying-page .compact-nav { display: inline-flex; min-height: 36px; padding: 0 12px; }
+    .trying-page .tutbar { display: none; }
   }
   .buttons { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .grow { flex: 1; }
