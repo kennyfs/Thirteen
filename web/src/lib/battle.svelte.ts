@@ -290,7 +290,8 @@ export class Battle {
   private joined: { room: string; you: number; token: string } | null = null;
   /** Sent once the room says welcome: create, join or resume. */
   private pending: ClientMsg | null = null;
-  private reconnecting = false;
+  /** Taking the seat back after a dropped connection (the room shows it). */
+  reconnecting = $state(false);
   /** Counts the reconnect loops: a loop goes on only while it is the latest (a drop soon after a rejoin starts another). */
   private retrySeq = 0;
   private battleId: string | null = null;

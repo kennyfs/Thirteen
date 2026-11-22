@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
   import type { App } from '../../lib/app.svelte';
+  import Reconnecting from '../Reconnecting.svelte';
   import {
     fmtLoss, HAND_CHOICES, NAME_LENGTH, rankOf, standings, TIME_LIMITS,
     type HandOutcome, type PlayerView,
@@ -247,6 +248,7 @@
 {/snippet}
 
 <div class="battle">
+  {#if b.room && !b.over && b.reconnecting}<Reconnecting />{/if}
   {#if page === 'entry'}
     <!-- 1112: the title over the cards' edge (the column, 1080, is inside 24 px; the title's words are 16 px in). -->
     <TitleBar title={t('nav_battle')} max={1112} />

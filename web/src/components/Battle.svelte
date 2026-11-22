@@ -5,6 +5,7 @@
 -->
 <script lang="ts">
   import type { App } from '../lib/app.svelte';
+  import Reconnecting from './Reconnecting.svelte';
   import {
     fmtLoss, HAND_CHOICES, NAME_LENGTH, rankOf, standings, TIME_LIMITS,
     type HandOutcome, type PlayerView,
@@ -289,6 +290,7 @@
 <DeskBattle {app} {page} {reviewing} {left} {analysisMode} onanalyze={analyzeButton} />
 {:else}
 <div class="battle">
+  {#if b.room && !b.over && b.reconnecting}<Reconnecting />{/if}
   {#if page === 'entry'}
     <TitleBar title={t('nav_battle')} max={ui.w >= 700 ? 1100 : 640} />
     <div class="progress">{#if b.busy}<span class="bar"></span>{/if}</div>
