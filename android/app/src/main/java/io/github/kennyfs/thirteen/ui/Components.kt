@@ -256,7 +256,7 @@ fun Chip(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, trai
     color = MaterialTheme.colorScheme.surface, border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
   ) {
     Row(Modifier.padding(start = 12.dp, end = if (trailingMenu) 6.dp else 12.dp), verticalAlignment = Alignment.CenterVertically) {
-      Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 220.dp))
+      Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
       if (trailingMenu) Icon(Icons.Filled.ArrowDropDown, null)
     }
   }

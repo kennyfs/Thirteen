@@ -709,7 +709,8 @@ private fun Finished(vm: AppViewModel, f: FinishedHand, peek: Boolean) {
           stringResource(R.string.this_hand, signed(mine)), style = MaterialTheme.typography.headlineSmall,
           color = if (mine > 0) GOOD else if (mine < 0) BAD else MaterialTheme.colorScheme.onSurface, maxLines = 1, softWrap = false,
         )
-        Text(
+        if (wide) Spacer(Modifier.weight(1f))
+        else Text(
           stringResource(R.string.total_so_far, signed(f.totals[0])), Modifier.weight(1f),
           style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
           maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -852,7 +853,7 @@ fun SeatResults(
 ) {
   BoxWithConstraints(modifier.fillMaxSize()) {
     val seats = arrangements.size
-    val nameWidth = textRoom(92)
+    val nameWidth = textRoom(108)
     // On a wide window the players' lines, as many as there are players, fill the height: their cards as large as the
     // height and the width allow. Each line: its padding (2 above and under), its labels' line (as measured: with a
     // badge, a CJK line is taller than the style's line height; until then a guess), 2 under it, and each row's border
@@ -972,7 +973,10 @@ private fun SeatName(s: Int, names: List<String>, notes: List<String?>, score: S
         Text(names[s], Modifier.weight(1f, fill = false), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(signed(x), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = color, maxLines = 1)
       }
-      Text(seatSub(s, score, totals), style = MaterialTheme.typography.bodySmall, color = t.onFeltDim, maxLines = 1, overflow = TextOverflow.Ellipsis)
+      Text(
+        seatSub(s, score, totals), style = MaterialTheme.typography.bodySmall, color = t.onFeltDim,
+        maxLines = 1, overflow = TextOverflow.Ellipsis, autoSize = shrinking(MaterialTheme.typography.bodySmall, 0.75f),
+      )
     }
     return
   }
@@ -989,6 +993,7 @@ private fun SeatName(s: Int, names: List<String>, notes: List<String?>, score: S
  * Narrow screens: a block per player, one under another, the full width: the name, points and scoops in a header, then
  * the three rows side by side when the width allows, else each row on its own line.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SeatGrid(
   arrangements: List<Rows>, score: Score, wheel: Int, names: List<String>, notes: List<String?>, totals: List<Double>, width: Dp,
@@ -1027,12 +1032,12 @@ private fun SeatGrid(
               Text(names[s], style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1)
               notes[s]?.let { Text(it, Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodySmall, color = t.onFeltDim, maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), itemVerticalAlignment = Alignment.CenterVertically) {
               Text(seatSub(s, score, totals), style = MaterialTheme.typography.bodySmall, color = t.onFeltDim, maxLines = 1)
               if (scooped.isNotEmpty())
-                Text("$scoop → " + scooped.joinToString(stringResource(R.string.list_sep)) { names[it] }, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = if (s == 0) t.good else t.onFelt, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("$scoop → " + scooped.joinToString(stringResource(R.string.list_sep)) { names[it] }, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = if (s == 0) t.good else t.onFelt)
               if (by.isNotEmpty())
-                Text(stringResource(R.string.scooped_by, by.joinToString(stringResource(R.string.list_sep)) { names[it] }), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = if (s == 0) t.bad else t.onFeltDim, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(stringResource(R.string.scooped_by, by.joinToString(stringResource(R.string.list_sep)) { names[it] }), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = if (s == 0) t.bad else t.onFeltDim)
             }
           }
           if (score.homeRun[s]) Text(stringResource(R.string.home_run), style = MaterialTheme.typography.labelLarge, color = t.highlight)

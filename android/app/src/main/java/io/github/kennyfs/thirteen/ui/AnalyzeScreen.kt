@@ -571,7 +571,7 @@ private fun ProbTile(name: String, p: Double, tone: Int, diff: Double, modifier:
   ) {
     Text(
       name, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
-      autoSize = shrinking(MaterialTheme.typography.bodySmall),
+      autoSize = shrinking(MaterialTheme.typography.bodySmall, 0.65f),
     )
     Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
       Text(

@@ -788,7 +788,10 @@ fun SummaryPage(
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
               ) {
                 Text(stringResource(R.string.battle_place, place), style = if (place == 1) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium)
-                Text(p.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, fontWeight = if (mine) FontWeight.Bold else FontWeight.Normal)
+                Text(
+                  p.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge,
+                  fontWeight = if (mine) FontWeight.Bold else FontWeight.Normal, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                )
                 Text(if (puzzle) stringResource(R.string.battle_total_loss, fmtLoss(p.total)) else signed(p.total), style = MaterialTheme.typography.titleMedium)
               }
             }
